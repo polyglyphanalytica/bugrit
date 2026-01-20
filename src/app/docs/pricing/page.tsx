@@ -162,6 +162,20 @@ export default function PricingDocs() {
         </p>
       </div>
 
+      {/* Why It Matters */}
+      <section className="p-6 bg-primary/5 border border-primary/20 rounded-xl">
+        <h2 className="text-xl font-bold mb-3">Why Understanding Pricing Matters</h2>
+        <p className="text-muted-foreground mb-4">
+          Credit-based pricing gives you control and predictability over your scanning costs:
+        </p>
+        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+          <li><strong>Pay for what you use</strong> - No surprise charges, full transparency on costs</li>
+          <li><strong>Optimize your scans</strong> - Toggle expensive features only when you need them</li>
+          <li><strong>Scale smoothly</strong> - Start free, upgrade as you grow, buy top-ups for burst usage</li>
+          <li><strong>Budget accurately</strong> - Use the calculator below to estimate your real monthly costs</li>
+        </ul>
+      </section>
+
       {/* How Credits Work */}
       <section>
         <h2 className="text-2xl font-bold mb-4">How Credits Work</h2>
@@ -756,6 +770,107 @@ export default function PricingDocs() {
               <div className="text-xs text-muted-foreground">$0.10/credit</div>
             </CardContent>
           </Card>
+        </div>
+      </section>
+
+      {/* AI Prompts for Vibe Coding */}
+      <section>
+        <h2 className="text-2xl font-bold mb-4">AI Prompts for Vibe Coding</h2>
+        <p className="text-muted-foreground mb-6">
+          Use these prompts to quickly build pricing and subscription features into your app.
+        </p>
+
+        <div className="space-y-6">
+          <div className="p-4 bg-muted/50 rounded-lg">
+            <h4 className="font-semibold mb-2">Pricing Page with Tier Comparison</h4>
+            <p className="text-sm text-muted-foreground mb-3">Create a marketing pricing page</p>
+            <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
+              <pre>{`Create a responsive pricing page with 4 tiers: Free, Starter ($29), Pro ($99), Business ($249).
+Each card should show:
+- Tier name and price (monthly/yearly toggle)
+- Monthly credits included with rollover amount
+- Max repo size and project limits
+- Team member limit
+- List of features with checkmarks
+Highlight the Pro plan as "Most Popular".
+Add a "Get Started" button for Free, "Subscribe" for paid tiers.
+Include a FAQ section answering common pricing questions.`}</pre>
+            </GlassCard>
+          </div>
+
+          <div className="p-4 bg-muted/50 rounded-lg">
+            <h4 className="font-semibold mb-2">Interactive Cost Calculator Widget</h4>
+            <p className="text-sm text-muted-foreground mb-3">Embed a calculator on your landing page</p>
+            <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
+              <pre>{`Create a React cost calculator widget for Bugrit scanning.
+Inputs:
+- Slider: Scans per month (1-100)
+- Slider: Average lines of code (5K-500K)
+- Checkboxes: Security scan, Accessibility, Performance
+- Checkboxes: AI Summary, AI Explanations, AI Fix Suggestions
+Calculate credits per scan using:
+- Base: 1 credit
+- Lines: 1 credit per 10K lines
+- Security: +1, Accessibility: +2, Performance: +3
+- AI Summary: +1, Explanations: +2 per 50 issues, Fixes: +3 per 50 issues
+Show monthly total and recommend the cheapest tier that covers it.
+Display a cost breakdown chart using Recharts.`}</pre>
+            </GlassCard>
+          </div>
+
+          <div className="p-4 bg-muted/50 rounded-lg">
+            <h4 className="font-semibold mb-2">Subscription Management Dashboard</h4>
+            <p className="text-sm text-muted-foreground mb-3">Build a complete subscription settings page</p>
+            <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
+              <pre>{`Create a subscription management dashboard with these sections:
+
+1. Current Plan Card
+- Show tier name, status badge (active/canceled), renewal date
+- Progress bar for credits used vs included
+- Upgrade/Manage Billing buttons
+
+2. Usage Overview
+- Credits: used/limit with progress bar, show rollover
+- Projects: used/limit
+- Team Members: used/limit
+
+3. Credit Purchase Section
+- Grid of 4 credit packages with prices
+- Click to open purchase modal
+- Link to Stripe checkout on confirm
+
+4. Auto Top-up Settings
+- Toggle to enable/disable
+- Threshold input (when to top up)
+- Package selector dropdown
+- Max per month input
+- Save button
+
+Fetch data from GET /api/settings/subscription.
+Save auto-topup with POST /api/settings/subscription/auto-topup.`}</pre>
+            </GlassCard>
+          </div>
+
+          <div className="p-4 bg-muted/50 rounded-lg">
+            <h4 className="font-semibold mb-2">Usage Tracking Hook</h4>
+            <p className="text-sm text-muted-foreground mb-3">React hook for real-time credit tracking</p>
+            <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
+              <pre>{`Create a React custom hook called useBugritCredits that:
+1. Fetches credit balance from GET /api/billing/status
+2. Returns { credits, tier, loading, error, refetch }
+3. Polls every 30 seconds when the tab is active
+4. Pauses polling when tab is hidden (use visibilitychange)
+5. Provides a refetch function to manually update
+6. Caches the last value to prevent flash of loading state
+
+Also create a CreditWarning component that uses this hook and shows:
+- Nothing when credits > 20% remaining
+- Yellow banner when credits < 20%
+- Red banner with "Buy Credits" when credits < 10%
+
+Export both from a useBugritCredits.ts file.`}</pre>
+            </GlassCard>
+          </div>
         </div>
       </section>
 

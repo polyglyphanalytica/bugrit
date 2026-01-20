@@ -10,6 +10,21 @@ export default function BillingApiDocs() {
           Check balances, get quotes, purchase credits, and manage subscriptions programmatically.
         </p>
 
+        {/* Why It Matters */}
+        <section className="mb-12 p-6 bg-primary/5 border border-primary/20 rounded-xl">
+          <h2 className="text-xl font-bold mb-3">Why It Matters</h2>
+          <p className="text-muted-foreground mb-4">
+            The Billing API enables you to build seamless credit management into your workflow.
+            Instead of manually checking balances or being surprised by scan costs, you can:
+          </p>
+          <ul className="list-disc list-inside space-y-2 text-muted-foreground">
+            <li><strong>Prevent failed scans</strong> - Check balance before running, not after</li>
+            <li><strong>Manage costs predictably</strong> - Get quotes and let users toggle features</li>
+            <li><strong>Never run out unexpectedly</strong> - Auto top-up keeps your workflow uninterrupted</li>
+            <li><strong>Integrate with your tools</strong> - Build credit checks into CI/CD pipelines</li>
+          </ul>
+        </section>
+
         {/* Overview */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4">Overview</h2>
@@ -623,6 +638,110 @@ if (userConfirmed && quote.canAfford) {
                 </tr>
               </tbody>
             </table>
+          </div>
+        </section>
+
+        {/* Vibe Coding Prompts */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">AI Prompts for Vibe Coding</h2>
+          <p className="text-muted-foreground mb-6">
+            Copy these prompts to quickly integrate billing features into your app using AI coding assistants.
+          </p>
+
+          <div className="space-y-6">
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <h4 className="font-semibold mb-2">Credit Balance Display</h4>
+              <p className="text-sm text-muted-foreground mb-3">Add a credit balance indicator to your app header</p>
+              <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
+                <pre>{`Create a React component that displays my Bugrit credit balance in the app header.
+Use the Bugrit API at /api/billing/status with my API key in the x-api-key header.
+Show credits as "X / Y credits" with a progress bar.
+When credits fall below 20%, show a yellow warning.
+When credits fall below 10%, show a red warning with a "Buy Credits" button.
+The button should link to /settings/subscription.`}</pre>
+              </GlassCard>
+            </div>
+
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <h4 className="font-semibold mb-2">Pre-Scan Cost Estimator</h4>
+              <p className="text-sm text-muted-foreground mb-3">Show users what a scan will cost before running it</p>
+              <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
+                <pre>{`Create a React component that estimates scan cost before running.
+Call POST /api/billing/quote with the scan configuration.
+Display a breakdown showing: base cost, lines cost, tool costs, and AI feature costs.
+Show the total and whether the user can afford it.
+Include toggles for each premium tool category (security, accessibility, performance)
+and AI features (summary, explanations, fix suggestions).
+Update the cost estimate live as users toggle options.
+Show a "Run Scan" button that's disabled if user can't afford it.`}</pre>
+              </GlassCard>
+            </div>
+
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <h4 className="font-semibold mb-2">CI/CD Credit Check</h4>
+              <p className="text-sm text-muted-foreground mb-3">Add a credit check to your CI pipeline</p>
+              <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
+                <pre>{`Write a shell script for CI/CD that checks Bugrit credits before running a scan.
+Use curl to call GET /api/billing/status with the BUGRIT_API_KEY env var.
+Parse the JSON response to get credits.remaining.
+If credits < 5, print a warning and exit with code 0 (soft fail).
+If credits < 1, print an error and exit with code 1 (hard fail).
+Otherwise, print "Credits OK: X remaining" and continue.
+This prevents CI from failing mid-scan due to insufficient credits.`}</pre>
+              </GlassCard>
+            </div>
+
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <h4 className="font-semibold mb-2">Auto Top-up Settings Page</h4>
+              <p className="text-sm text-muted-foreground mb-3">Build a settings page for auto top-up configuration</p>
+              <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
+                <pre>{`Create a React settings component for configuring auto top-up.
+Fetch current settings from GET /api/settings/subscription.
+Fetch available packages from GET /api/credit-packages.
+Include:
+- Toggle to enable/disable auto top-up
+- Number input for trigger threshold (when to top up)
+- Dropdown to select which credit package to buy
+- Number input for max purchases per month (1-10)
+On save, POST to /api/settings/subscription/auto-topup.
+Show success/error toast notifications.
+Add a note that auto top-up requires a payment method on file.`}</pre>
+              </GlassCard>
+            </div>
+
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <h4 className="font-semibold mb-2">Usage Analytics Dashboard</h4>
+              <p className="text-sm text-muted-foreground mb-3">Create a dashboard showing credit usage patterns</p>
+              <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
+                <pre>{`Create a React dashboard showing Bugrit usage analytics.
+Fetch data from GET /api/billing/usage?include=both.
+Display:
+1. A summary card: total scans, total credits used, total issues found
+2. A bar chart showing credits used by category (linting, security, etc)
+3. A line chart showing daily credit usage over the billing period
+4. A table of recent transactions with scan details
+5. Top projects by credit usage
+Use Recharts or Chart.js for visualizations.
+Add a dropdown to switch between current and previous billing period.`}</pre>
+              </GlassCard>
+            </div>
+
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <h4 className="font-semibold mb-2">Credit Purchase Flow</h4>
+              <p className="text-sm text-muted-foreground mb-3">Build a complete credit purchase UI</p>
+              <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
+                <pre>{`Create a React component for purchasing Bugrit credit packages.
+Fetch packages from GET /api/credit-packages.
+Display packages as cards showing name, credits, price, and price per credit.
+Highlight the "isFeatured" package with a "Best Value" badge.
+When user clicks a package:
+1. Show a confirmation modal with package details
+2. On confirm, POST to /api/billing/purchase-credits with packageId
+3. Redirect to the returned checkoutUrl for Stripe payment
+4. Handle the success/canceled query params on return
+Show loading states and error handling throughout.`}</pre>
+              </GlassCard>
+            </div>
           </div>
         </section>
       </div>
