@@ -5,3 +5,13 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+  # Memory allocation (Chromium needs more memory)
+  memoryMiB: 1024
+  cpu: 1
+
+# Environment variables for Puppeteer
+env:
+  - variable: PUPPETEER_SKIP_DOWNLOAD
+    value: "true"
+  - variable: PUPPETEER_EXECUTABLE_PATH
+    value: "/usr/bin/chromium"
