@@ -1,0 +1,544 @@
+import { db } from '@/lib/firebase/admin';
+import {
+  PlatformAdmin,
+  StripeConfig,
+  PricingConfig,
+  FeatureFlag,
+  AuditLog,
+  hasAdminPermission as hasAdminPermissionFn,
+  AdminPermission,
+} from './types';
+
+// Re-export hasAdminPermission for use by middleware
+export const hasAdminPermission = hasAdminPermissionFn;
+import { DEFAULT_SUPERADMIN_EMAIL, isProtectedSuperadmin } from './constants';
+import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
+
+// Encryption helpers for sensitive data
+const ENCRYPTION_KEY = process.env.ADMIN_ENCRYPTION_KEY || 'default-key-change-in-production-32';
+const ALGORITHM = 'aes-256-gcm';
+
+function encrypt(text: string): string {
+  const iv = randomBytes(16);
+  const key = scryptSync(ENCRYPTION_KEY, 'salt', 32);
+  const cipher = createCipheriv(ALGORITHM, key, iv);
+  const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted.toString('hex')}`;
+}
+
+function decrypt(encryptedText: string): string {
+  const [ivHex, authTagHex, encryptedHex] = encryptedText.split(':');
+  const iv = Buffer.from(ivHex, 'hex');
+  const authTag = Buffer.from(authTagHex, 'hex');
+  const encrypted = Buffer.from(encryptedHex, 'hex');
+  const key = scryptSync(ENCRYPTION_KEY, 'salt', 32);
+  const decipher = createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(authTag);
+  return decipher.update(encrypted) + decipher.final('utf8');
+}
+
+// ==================== ADMIN MANAGEMENT ====================
+
+export async function isPlatformAdmin(userId: string): Promise<boolean> {
+  const doc = await db.collection('platform_admins').doc(userId).get();
+  return doc.exists;
+}
+
+export async function isPlatformAdminByEmail(email: string): Promise<boolean> {
+  // Check if it's the hardcoded superadmin
+  if (email.toLowerCase() === DEFAULT_SUPERADMIN_EMAIL.toLowerCase()) {
+    return true;
+  }
+
+  const snapshot = await db
+    .collection('platform_admins')
+    .where('email', '==', email.toLowerCase())
+    .limit(1)
+    .get();
+  return !snapshot.empty;
+}
+
+export async function getPlatformAdminByEmail(email: string): Promise<PlatformAdmin | null> {
+  // Return hardcoded superadmin for the default email
+  if (email.toLowerCase() === DEFAULT_SUPERADMIN_EMAIL.toLowerCase()) {
+    const snapshot = await db
+      .collection('platform_admins')
+      .where('email', '==', email.toLowerCase())
+      .limit(1)
+      .get();
+
+    if (!snapshot.empty) {
+      return snapshot.docs[0].data() as PlatformAdmin;
+    }
+
+    // Return a virtual superadmin record if not in database yet
+    return {
+      userId: 'default-superadmin',
+      email: DEFAULT_SUPERADMIN_EMAIL,
+      displayName: 'Platform Owner',
+      role: 'superadmin',
+      createdAt: new Date(),
+      createdBy: 'system',
+    };
+  }
+
+  const snapshot = await db
+    .collection('platform_admins')
+    .where('email', '==', email.toLowerCase())
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) return null;
+  return snapshot.docs[0].data() as PlatformAdmin;
+}
+
+export async function getPlatformAdmin(userId: string): Promise<PlatformAdmin | null> {
+  const doc = await db.collection('platform_admins').doc(userId).get();
+  if (!doc.exists) return null;
+  return doc.data() as PlatformAdmin;
+}
+
+export async function getAllPlatformAdmins(): Promise<PlatformAdmin[]> {
+  const snapshot = await db.collection('platform_admins').get();
+  return snapshot.docs.map((doc) => doc.data() as PlatformAdmin);
+}
+
+export async function addPlatformAdmin(
+  userId: string,
+  email: string,
+  role: 'superadmin' | 'admin',
+  createdBy: string,
+  displayName?: string
+): Promise<PlatformAdmin> {
+  const admin: PlatformAdmin = {
+    userId,
+    email,
+    displayName,
+    role,
+    createdAt: new Date(),
+    createdBy,
+  };
+
+  await db.collection('platform_admins').doc(userId).set(admin);
+  await logAuditEvent(createdBy, 'admin.create', 'platform_admin', userId, { email, role });
+
+  return admin;
+}
+
+export async function removePlatformAdmin(userId: string, removedBy: string): Promise<void> {
+  const admin = await getPlatformAdmin(userId);
+  if (!admin) return;
+
+  // Prevent removing protected superadmins
+  if (isProtectedSuperadmin(admin.email)) {
+    throw new Error('Cannot remove the platform owner');
+  }
+
+  // Prevent removing the last superadmin
+  if (admin.role === 'superadmin') {
+    const allAdmins = await getAllPlatformAdmins();
+    const superadminCount = allAdmins.filter((a) => a.role === 'superadmin').length;
+    if (superadminCount <= 1) {
+      throw new Error('Cannot remove the last superadmin');
+    }
+  }
+
+  await db.collection('platform_admins').doc(userId).delete();
+  await logAuditEvent(removedBy, 'admin.delete', 'platform_admin', userId, { email: admin.email });
+}
+
+export async function updateAdminLastLogin(userId: string): Promise<void> {
+  await db.collection('platform_admins').doc(userId).update({
+    lastLoginAt: new Date(),
+  });
+}
+
+// ==================== STRIPE CONFIG ====================
+
+export async function getStripeConfig(): Promise<StripeConfig | null> {
+  const doc = await db.collection('platform_settings').doc('stripe').get();
+  if (!doc.exists) return null;
+
+  const data = doc.data() as StripeConfig;
+  return {
+    ...data,
+    // Don't decrypt here - keep encrypted for security
+    secretKeyEncrypted: data.secretKeyEncrypted ? '••••••••' : '',
+    webhookSecretEncrypted: data.webhookSecretEncrypted ? '••••••••' : '',
+  };
+}
+
+export async function getStripeSecretKey(): Promise<string | null> {
+  const doc = await db.collection('platform_settings').doc('stripe').get();
+  if (!doc.exists) return null;
+
+  const data = doc.data() as StripeConfig;
+  if (!data.secretKeyEncrypted) return null;
+
+  try {
+    return decrypt(data.secretKeyEncrypted);
+  } catch {
+    return null;
+  }
+}
+
+export async function getStripeWebhookSecret(): Promise<string | null> {
+  const doc = await db.collection('platform_settings').doc('stripe').get();
+  if (!doc.exists) return null;
+
+  const data = doc.data() as StripeConfig;
+  if (!data.webhookSecretEncrypted) return null;
+
+  try {
+    return decrypt(data.webhookSecretEncrypted);
+  } catch {
+    return null;
+  }
+}
+
+export async function updateStripeConfig(
+  config: {
+    secretKey?: string;
+    publishableKey?: string;
+    webhookSecret?: string;
+    mode?: 'test' | 'live';
+  },
+  updatedBy: string
+): Promise<void> {
+  const updates: Partial<StripeConfig> = {};
+
+  if (config.secretKey) {
+    updates.secretKeyEncrypted = encrypt(config.secretKey);
+  }
+  if (config.publishableKey) {
+    updates.publishableKey = config.publishableKey;
+  }
+  if (config.webhookSecret) {
+    updates.webhookSecretEncrypted = encrypt(config.webhookSecret);
+  }
+  if (config.mode) {
+    updates.mode = config.mode;
+  }
+
+  updates.isConfigured = !!(config.secretKey || config.publishableKey);
+
+  await db.collection('platform_settings').doc('stripe').set(updates, { merge: true });
+  await logAuditEvent(updatedBy, 'stripe.config.update', 'stripe_config', 'stripe', {
+    hasSecretKey: !!config.secretKey,
+    hasPublishableKey: !!config.publishableKey,
+    hasWebhookSecret: !!config.webhookSecret,
+    mode: config.mode,
+  });
+}
+
+// ==================== PRICING CONFIG ====================
+
+export async function getAllPricingConfigs(): Promise<PricingConfig[]> {
+  const snapshot = await db
+    .collection('platform_settings')
+    .doc('pricing')
+    .collection('tiers')
+    .orderBy('sortOrder')
+    .get();
+
+  return snapshot.docs.map((doc) => ({ tierName: doc.id, ...doc.data() } as PricingConfig));
+}
+
+export async function getPricingConfig(tierName: string): Promise<PricingConfig | null> {
+  const doc = await db
+    .collection('platform_settings')
+    .doc('pricing')
+    .collection('tiers')
+    .doc(tierName)
+    .get();
+
+  if (!doc.exists) return null;
+  return { tierName: doc.id, ...doc.data() } as PricingConfig;
+}
+
+export async function updatePricingConfig(
+  tierName: string,
+  config: Partial<PricingConfig>,
+  updatedBy: string
+): Promise<void> {
+  const { tierName: _, ...updateData } = config;
+
+  await db
+    .collection('platform_settings')
+    .doc('pricing')
+    .collection('tiers')
+    .doc(tierName)
+    .set(updateData, { merge: true });
+
+  await logAuditEvent(updatedBy, 'pricing.update', 'pricing_tier', tierName, config);
+}
+
+export async function createPricingTier(
+  config: PricingConfig,
+  createdBy: string
+): Promise<void> {
+  const { tierName, ...data } = config;
+
+  await db
+    .collection('platform_settings')
+    .doc('pricing')
+    .collection('tiers')
+    .doc(tierName)
+    .set(data);
+
+  await logAuditEvent(createdBy, 'pricing.create', 'pricing_tier', tierName, config);
+}
+
+export async function deletePricingTier(tierName: string, deletedBy: string): Promise<void> {
+  // Don't allow deleting the free tier
+  if (tierName === 'starter') {
+    throw new Error('Cannot delete the free tier');
+  }
+
+  await db
+    .collection('platform_settings')
+    .doc('pricing')
+    .collection('tiers')
+    .doc(tierName)
+    .delete();
+
+  await logAuditEvent(deletedBy, 'pricing.delete', 'pricing_tier', tierName, {});
+}
+
+// ==================== FEATURE FLAGS ====================
+
+export async function getAllFeatureFlags(): Promise<FeatureFlag[]> {
+  const snapshot = await db.collection('feature_flags').get();
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as FeatureFlag));
+}
+
+export async function getFeatureFlag(flagId: string): Promise<FeatureFlag | null> {
+  const doc = await db.collection('feature_flags').doc(flagId).get();
+  if (!doc.exists) return null;
+  return { id: doc.id, ...doc.data() } as FeatureFlag;
+}
+
+export async function updateFeatureFlag(
+  flagId: string,
+  updates: Partial<FeatureFlag>,
+  updatedBy: string
+): Promise<void> {
+  const { id: _, ...updateData } = updates;
+  updateData.updatedAt = new Date();
+
+  await db.collection('feature_flags').doc(flagId).set(updateData, { merge: true });
+  await logAuditEvent(updatedBy, 'feature.update', 'feature_flag', flagId, updates);
+}
+
+export async function createFeatureFlag(
+  flag: Omit<FeatureFlag, 'id' | 'createdAt' | 'updatedAt'>,
+  createdBy: string
+): Promise<FeatureFlag> {
+  const now = new Date();
+  const ref = db.collection('feature_flags').doc();
+
+  const newFlag: FeatureFlag = {
+    ...flag,
+    id: ref.id,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await ref.set(newFlag);
+  await logAuditEvent(createdBy, 'feature.create', 'feature_flag', ref.id, flag);
+
+  return newFlag;
+}
+
+export async function deleteFeatureFlag(flagId: string, deletedBy: string): Promise<void> {
+  await db.collection('feature_flags').doc(flagId).delete();
+  await logAuditEvent(deletedBy, 'feature.delete', 'feature_flag', flagId, {});
+}
+
+// ==================== AUDIT LOGGING ====================
+
+export async function logAuditEvent(
+  adminId: string,
+  action: string,
+  resource: string,
+  resourceId: string,
+  details: Record<string, unknown>,
+  ipAddress?: string
+): Promise<void> {
+  const admin = await getPlatformAdmin(adminId);
+
+  const log: Omit<AuditLog, 'id'> = {
+    adminId,
+    adminEmail: admin?.email || 'unknown',
+    action,
+    resource,
+    resourceId,
+    details,
+    timestamp: new Date(),
+    ipAddress,
+  };
+
+  await db.collection('audit_logs').add(log);
+}
+
+export async function getAuditLogs(
+  options: {
+    limit?: number;
+    adminId?: string;
+    resource?: string;
+    startDate?: Date;
+    endDate?: Date;
+  } = {}
+): Promise<AuditLog[]> {
+  let query = db.collection('audit_logs').orderBy('timestamp', 'desc');
+
+  if (options.adminId) {
+    query = query.where('adminId', '==', options.adminId);
+  }
+  if (options.resource) {
+    query = query.where('resource', '==', options.resource);
+  }
+  if (options.startDate) {
+    query = query.where('timestamp', '>=', options.startDate);
+  }
+  if (options.endDate) {
+    query = query.where('timestamp', '<=', options.endDate);
+  }
+
+  const snapshot = await query.limit(options.limit || 100).get();
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as AuditLog));
+}
+
+// ==================== INITIALIZATION ====================
+
+/**
+ * Initialize the default superadmin if not exists
+ */
+export async function initializeDefaultSuperadmin(userId: string): Promise<void> {
+  // Check if already exists
+  const existing = await db
+    .collection('platform_admins')
+    .where('email', '==', DEFAULT_SUPERADMIN_EMAIL.toLowerCase())
+    .limit(1)
+    .get();
+
+  if (!existing.empty) return;
+
+  // Create the default superadmin
+  const admin: PlatformAdmin = {
+    userId,
+    email: DEFAULT_SUPERADMIN_EMAIL,
+    displayName: 'Platform Owner',
+    role: 'superadmin',
+    createdAt: new Date(),
+    createdBy: 'system',
+  };
+
+  await db.collection('platform_admins').doc(userId).set(admin);
+}
+
+/**
+ * Check if user is a superadmin (bypasses all subscription limits)
+ */
+export async function isSuperadmin(emailOrUserId: string): Promise<boolean> {
+  // Check by email first
+  if (emailOrUserId.includes('@')) {
+    if (emailOrUserId.toLowerCase() === DEFAULT_SUPERADMIN_EMAIL.toLowerCase()) {
+      return true;
+    }
+    const admin = await getPlatformAdminByEmail(emailOrUserId);
+    return admin?.role === 'superadmin';
+  }
+
+  // Check by userId
+  const admin = await getPlatformAdmin(emailOrUserId);
+  return admin?.role === 'superadmin';
+}
+
+export async function initializeDefaultPricing(): Promise<void> {
+  const existing = await getAllPricingConfigs();
+  if (existing.length > 0) return;
+
+  const defaultTiers: PricingConfig[] = [
+    {
+      tierName: 'starter',
+      displayName: 'Free',
+      description: 'Perfect for trying out the platform',
+      isActive: true,
+      priceMonthly: 0,
+      priceYearly: 0,
+      currency: 'usd',
+      sortOrder: 0,
+      limits: {
+        scansPerMonth: 5,
+        projects: 1,
+        teamMembers: 1,
+        historyDays: 7,
+        platforms: { web: true, mobile: false, desktop: false },
+      },
+      features: {
+        aiReports: true,
+        customRules: false,
+        apiAccess: false,
+        prioritySupport: false,
+        whiteLabeling: false,
+        ssoIntegration: false,
+      },
+    },
+    {
+      tierName: 'pro',
+      displayName: 'Pro',
+      description: 'For professional developers and small teams',
+      isActive: true,
+      priceMonthly: 29,
+      priceYearly: 290,
+      currency: 'usd',
+      sortOrder: 1,
+      limits: {
+        scansPerMonth: 50,
+        projects: 5,
+        teamMembers: 3,
+        historyDays: 30,
+        platforms: { web: true, mobile: true, desktop: false },
+      },
+      features: {
+        aiReports: true,
+        customRules: true,
+        apiAccess: false,
+        prioritySupport: false,
+        whiteLabeling: false,
+        ssoIntegration: false,
+      },
+    },
+    {
+      tierName: 'business',
+      displayName: 'Business',
+      description: 'For teams that need everything',
+      isActive: true,
+      priceMonthly: 99,
+      priceYearly: 990,
+      currency: 'usd',
+      sortOrder: 2,
+      limits: {
+        scansPerMonth: -1,
+        projects: -1,
+        teamMembers: 10,
+        historyDays: 365,
+        platforms: { web: true, mobile: true, desktop: true },
+      },
+      features: {
+        aiReports: true,
+        customRules: true,
+        apiAccess: true,
+        prioritySupport: true,
+        whiteLabeling: false,
+        ssoIntegration: false,
+      },
+    },
+  ];
+
+  for (const tier of defaultTiers) {
+    await createPricingTier(tier, 'system');
+  }
+}
