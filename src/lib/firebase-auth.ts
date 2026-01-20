@@ -1,4 +1,3 @@
-
 // Firebase Authentication utilities
 // Separate from main Firebase config for auth-specific functions
 
@@ -16,7 +15,7 @@ import { User } from './types';
 
 // Check if running in demo mode (Firebase not configured)
 export function isDemoMode(): boolean {
-  return !auth;
+  return !isAuthConfigured();
 }
 
 // Convert Firebase user to our User type
@@ -37,7 +36,7 @@ export async function loginWithEmailPassword(
   email: string,
   password: string
 ): Promise<User> {
-  if (!auth) {
+  if (!isAuthConfigured()) {
     throw new Error('Authentication service not configured. Please configure Firebase environment variables.');
   }
 
@@ -75,7 +74,7 @@ export async function loginWithEmailPassword(
  * Logout the current user
  */
 export async function logout(): Promise<void> {
-  if (!auth) {
+  if (!isAuthConfigured()) {
     // In demo mode, this will be a no-op client-side
     return;
   }
@@ -96,7 +95,7 @@ export async function logout(): Promise<void> {
 export function onAuthChange(
   callback: (user: User | null) => void
 ): () => void {
-  if (!auth) {
+  if (!isAuthConfigured()) {
     // If Firebase is not configured, call callback with null
     console.warn("Auth not configured, onAuthChange will not fire.");
     callback(null);
@@ -112,7 +111,7 @@ export function onAuthChange(
  * Get the current user synchronously
  */
 export function getCurrentUser(): User | null {
-  if (!auth) {
+  if (!isAuthConfigured()) {
     return null;
   }
   return convertUser(auth.currentUser);
@@ -122,7 +121,7 @@ export function getCurrentUser(): User | null {
  * Check if Firebase is configured
  */
 export function isAuthConfigured(): boolean {
-  return !!auth;
+  return !!auth?.app?.options?.apiKey;
 }
 
 /**
@@ -133,7 +132,7 @@ export async function registerWithEmailPassword(
   password: string,
   displayName?: string
 ): Promise<User> {
-    if (!auth) {
+    if (!isAuthConfigured()) {
     throw new Error('Authentication service not configured. Please configure Firebase environment variables.');
   }
 
@@ -181,7 +180,7 @@ export async function registerWithEmailPassword(
  * Send password reset email
  */
 export async function resetPassword(email: string): Promise<void> {
-  if (!auth) {
+  if (!isAuthConfigured()) {
     throw new Error('Authentication service not configured. Please configure Firebase environment variables.');
   }
 

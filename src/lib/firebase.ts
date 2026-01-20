@@ -17,16 +17,20 @@ function isFirebaseConfigured(): boolean {
   return !!(firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId);
 }
 
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
-let db: Firestore | null = null;
-let storage: FirebaseStorage | null = null;
-
-if (typeof window !== 'undefined' && isFirebaseConfigured()) {
-    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
+let app: FirebaseApp;
+if (!isFirebaseConfigured()) {
+  console.error("Firebase is not configured. Please check your environment variables.");
+  // Mock app for environments without firebase config
+  app = {} as FirebaseApp;
+} else if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
 }
+
+
+const auth: Auth = isFirebaseConfigured() ? getAuth(app) : ({} as Auth);
+const db: Firestore = isFirebaseConfigured() ? getFirestore(app) : ({} as Firestore);
+const storage: FirebaseStorage = isFirebaseConfigured() ? getStorage(app) : ({} as FirebaseStorage);
 
 export { app, auth, db, storage };
