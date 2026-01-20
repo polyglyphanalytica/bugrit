@@ -3,6 +3,7 @@
 // Website: https://stoplight.io/open-source/spectral
 
 import { ToolIntegration, ToolConfig, AuditTarget, AuditResult, AuditFinding, Severity } from '../types';
+import { safeRequire } from '@/lib/utils/safe-require';
 
 interface SpectralResult {
   code: string;
@@ -39,7 +40,7 @@ export class SpectralIntegration implements ToolIntegration {
 
     try {
       const { execSync } = await import('child_process');
-      const glob = await import('glob');
+      const glob = safeRequire<typeof import('glob')>('glob');
       const targetDir = target.directory || '.';
 
       const apiFiles = await glob.glob('**/{openapi,swagger,asyncapi}*.{json,yaml,yml}', { cwd: targetDir, ignore: ['**/node_modules/**'], absolute: true });

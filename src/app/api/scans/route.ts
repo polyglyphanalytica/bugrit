@@ -3,6 +3,7 @@ import { runTools, ToolResult } from '@/lib/tools/runner';
 import { generateId } from '@/lib/firestore';
 import { validateUpload, scanFileForThreats } from '@/lib/scan/security';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
+import { safeRequire } from '@/lib/utils/safe-require';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -397,7 +398,7 @@ async function extractUploadedZip(file: File, targetDir: string) {
   await fs.writeFile(zipPath, buffer);
 
   try {
-    const AdmZip = (await import('adm-zip')).default;
+    const AdmZip = safeRequire<typeof import('adm-zip')>('adm-zip').default;
     const zip = new AdmZip(zipPath);
     zip.extractAllTo(targetDir, true);
     await fs.unlink(zipPath);
@@ -414,7 +415,7 @@ async function extractUploadedFile(file: File, targetDir: string) {
   // If it's a ZIP-based format (APK is a ZIP), try to extract
   if (file.name.endsWith('.apk')) {
     try {
-      const AdmZip = (await import('adm-zip')).default;
+      const AdmZip = safeRequire<typeof import('adm-zip')>('adm-zip').default;
       const zip = new AdmZip(filePath);
       const extractDir = path.join(targetDir, 'extracted');
       await fs.mkdir(extractDir, { recursive: true });
@@ -431,7 +432,7 @@ async function cloneRepository(
   branch?: string,
   accessToken?: string
 ) {
-  const simpleGit = (await import('simple-git')).default;
+  const simpleGit = safeRequire<typeof import('simple-git')>('simple-git').default;
   const git = simpleGit();
 
   // Build URL with auth token if provided
@@ -501,7 +502,7 @@ async function downloadNpmPackage(packageName: string, version: string, targetDi
     // Extract tarball (npm packages are .tar.gz files)
     // Using tar package or node's built-in zlib
     const zlib = await import('zlib');
-    const tar = await import('tar');
+    const tar = safeRequire<typeof import('tar')>('tar');
 
     await tar.extract({
       file: tarballPath,

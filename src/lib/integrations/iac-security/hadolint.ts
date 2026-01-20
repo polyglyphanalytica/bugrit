@@ -3,6 +3,7 @@
 // Website: https://github.com/hadolint/hadolint
 
 import { ToolIntegration, ToolConfig, AuditTarget, AuditResult, AuditFinding, Severity } from '../types';
+import { safeRequire } from '@/lib/utils/safe-require';
 
 interface HadolintResult {
   line: number;
@@ -39,7 +40,7 @@ export class HadolintIntegration implements ToolIntegration {
 
     try {
       const { execSync } = await import('child_process');
-      const glob = await import('glob');
+      const glob = safeRequire<typeof import('glob')>('glob');
       const targetDir = target.directory || '.';
 
       const dockerfiles = await glob.glob('**/Dockerfile*', { cwd: targetDir, ignore: ['**/node_modules/**'], absolute: true });

@@ -1,6 +1,7 @@
 // Stylelint Pure JS Runner
 
 import { AuditFinding, AuditResult, Severity } from '../types';
+import { safeRequire } from '@/lib/utils/safe-require';
 
 interface StylelintWarning {
   line: number;
@@ -29,7 +30,7 @@ export async function runStylelint(
   const findings: AuditFinding[] = [];
 
   try {
-    const stylelint = await import('stylelint');
+    const stylelint = safeRequire<typeof import('stylelint')>('stylelint');
 
     const result = await stylelint.default.lint({
       files: `${targetDir}/**/*.{css,scss,sass,less}`,
