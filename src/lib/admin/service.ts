@@ -16,12 +16,28 @@ import { DEFAULT_SUPERADMIN_EMAIL, isProtectedSuperadmin } from './constants';
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 
 // Encryption helpers for sensitive data
-const ENCRYPTION_KEY = process.env.ADMIN_ENCRYPTION_KEY || 'default-key-change-in-production-32';
+// ADMIN_ENCRYPTION_KEY must be set in production via Google Secret Manager
+// Generate with: openssl rand -hex 32
+const ENCRYPTION_KEY = process.env.ADMIN_ENCRYPTION_KEY;
 const ALGORITHM = 'aes-256-gcm';
+
+// Warn if encryption key is not set in production
+if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !ENCRYPTION_KEY) {
+  console.error('🔴 CRITICAL: ADMIN_ENCRYPTION_KEY not set! Admin features requiring encryption will fail.');
+}
+
+// Development fallback (only for local development)
+const getEncryptionKey = () => {
+  if (ENCRYPTION_KEY) return ENCRYPTION_KEY;
+  if (process.env.NODE_ENV === 'development') {
+    return 'dev-only-key-not-for-production-32';
+  }
+  throw new Error('ADMIN_ENCRYPTION_KEY must be set in production');
+};
 
 function encrypt(text: string): string {
   const iv = randomBytes(16);
-  const key = scryptSync(ENCRYPTION_KEY, 'salt', 32);
+  const key = scryptSync(getEncryptionKey(), 'salt', 32);
   const cipher = createCipheriv(ALGORITHM, key, iv);
   const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
   const authTag = cipher.getAuthTag();
@@ -33,7 +49,7 @@ function decrypt(encryptedText: string): string {
   const iv = Buffer.from(ivHex, 'hex');
   const authTag = Buffer.from(authTagHex, 'hex');
   const encrypted = Buffer.from(encryptedHex, 'hex');
-  const key = scryptSync(ENCRYPTION_KEY, 'salt', 32);
+  const key = scryptSync(getEncryptionKey(), 'salt', 32);
   const decipher = createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(authTag);
   return decipher.update(encrypted) + decipher.final('utf8');

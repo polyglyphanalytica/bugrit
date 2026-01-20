@@ -9,9 +9,52 @@ runConfig:
   memoryMiB: 1024
   cpu: 1
 
-# Environment variables for Puppeteer
+# Environment variables
 env:
+  # Puppeteer configuration
   - variable: PUPPETEER_SKIP_DOWNLOAD
     value: "true"
   - variable: PUPPETEER_EXECUTABLE_PATH
     value: "/usr/bin/chromium"
+
+  # ============================================================
+  # SECRETS - Reference Google Secret Manager
+  # Create these secrets in Cloud Console > Secret Manager first
+  # ============================================================
+
+  # Platform Admin Configuration
+  - variable: PLATFORM_SUPERADMIN_EMAIL
+    secret: platform-superadmin-email
+
+  # Encryption key for admin-stored secrets (generate with: openssl rand -hex 32)
+  - variable: ADMIN_ENCRYPTION_KEY
+    secret: admin-encryption-key
+
+  # Stripe Payment Processing
+  - variable: STRIPE_SECRET_KEY
+    secret: stripe-secret-key
+  - variable: STRIPE_WEBHOOK_SECRET
+    secret: stripe-webhook-secret
+
+  # GitHub OAuth Integration
+  - variable: GITHUB_CLIENT_ID
+    secret: github-client-id
+  - variable: GITHUB_CLIENT_SECRET
+    secret: github-client-secret
+
+  # Email Notifications (Resend)
+  - variable: RESEND_API_KEY
+    secret: resend-api-key
+
+  # ============================================================
+  # NON-SECRET CONFIGURATION
+  # These can be plain values, not secrets
+  # ============================================================
+
+  # GitHub OAuth callback URL (update to your domain)
+  - variable: GITHUB_REDIRECT_URI
+    value: "https://your-domain.web.app/api/auth/github/callback"
+
+  # Email sender configuration
+  - variable: EMAIL_FROM_ADDRESS
+    value: "noreply@bugrit.app"
