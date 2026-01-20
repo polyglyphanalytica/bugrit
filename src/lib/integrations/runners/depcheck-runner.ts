@@ -2,6 +2,7 @@
 // Finds unused dependencies
 
 import { AuditFinding, AuditResult } from '../types';
+import { safeRequire } from '@/lib/utils/safe-require';
 
 interface DepcheckResults {
   dependencies: string[];
@@ -22,7 +23,7 @@ export async function runDepcheck(
   const findings: AuditFinding[] = [];
 
   try {
-    const depcheck = await import('depcheck');
+    const depcheck = safeRequire<typeof import('depcheck')>('depcheck');
 
     const depcheckOptions = {
       ignoreDirs: options.ignoreDirs || ['node_modules', 'dist', 'build', '.next'],

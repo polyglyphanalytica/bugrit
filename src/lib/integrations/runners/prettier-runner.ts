@@ -4,6 +4,7 @@
 import { AuditFinding, AuditResult } from '../types';
 import { promises as fs } from 'fs';
 import * as path from 'path';
+import { safeRequire } from '@/lib/utils/safe-require';
 
 export async function runPrettier(
   targetDir: string,
@@ -17,8 +18,8 @@ export async function runPrettier(
   const findings: AuditFinding[] = [];
 
   try {
-    const prettier = await import('prettier');
-    const glob = await import('glob');
+    const prettier = safeRequire<typeof import('prettier')>('prettier');
+    const glob = safeRequire<typeof import('glob')>('glob');
 
     const extensions = options.extensions || ['js', 'jsx', 'ts', 'tsx', 'css', 'scss', 'json', 'md', 'html'];
     const pattern = `**/*.{${extensions.join(',')}}`;

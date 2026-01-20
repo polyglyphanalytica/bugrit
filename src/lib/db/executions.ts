@@ -9,6 +9,7 @@ import {
 } from '../firestore';
 import { TestExecution, ExecutionResult, BrowserType } from '../types';
 import { store } from '../store';
+import { safeRequire } from '@/lib/utils/safe-require';
 
 /**
  * Get all executions
@@ -192,7 +193,7 @@ export async function addExecutionResult(
   }
 
   try {
-    const { FieldValue } = await import('firebase-admin/firestore');
+    const { FieldValue } = safeRequire<typeof import('firebase-admin/firestore')>('firebase-admin/firestore');
     await db
       .collection(COLLECTIONS.EXECUTIONS)
       .doc(executionId)

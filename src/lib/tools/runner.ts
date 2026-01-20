@@ -7,16 +7,7 @@
 
 import { TOOL_REGISTRY, ToolDefinition } from './registry';
 import { execSync } from 'child_process';
-
-/**
- * Safely require a module at runtime (not bundled/analyzed at build time)
- * This prevents Turbopack/Webpack from trying to bundle these packages
- */
-function safeRequire<T = unknown>(moduleName: string): T {
-  // Using eval to prevent static analysis by bundlers
-  // eslint-disable-next-line no-eval
-  return eval('require')(moduleName) as T;
-}
+import { safeRequire } from '@/lib/utils/safe-require';
 
 export interface ToolResult {
   toolId: string;

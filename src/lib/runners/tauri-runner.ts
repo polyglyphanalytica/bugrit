@@ -10,6 +10,7 @@ import {
   StepResult,
 } from './types';
 import { spawn, ChildProcess } from 'child_process';
+import { safeRequire } from '@/lib/utils/safe-require';
 
 // WebdriverIO Browser type for Tauri
 interface WDIOBrowser {
@@ -62,7 +63,7 @@ export class TauriRunner implements TestRunner {
       await this.waitForDriverReady();
 
       // Connect using WebDriverIO
-      const { remote } = await import('webdriverio');
+      const { remote } = safeRequire<typeof import('webdriverio')>('webdriverio');
 
       this.driver = await remote({
         hostname: 'localhost',

@@ -9,6 +9,7 @@ import {
 } from '../firestore';
 import { TestRun } from '../types';
 import { store } from '../store';
+import { safeRequire } from '@/lib/utils/safe-require';
 
 /**
  * Get all test runs
@@ -239,7 +240,7 @@ export async function addTestRunLog(id: string, log: string): Promise<boolean> {
   }
 
   try {
-    const { FieldValue } = await import('firebase-admin/firestore');
+    const { FieldValue } = safeRequire<typeof import('firebase-admin/firestore')>('firebase-admin/firestore');
     await db
       .collection(COLLECTIONS.TEST_RUNS)
       .doc(id)

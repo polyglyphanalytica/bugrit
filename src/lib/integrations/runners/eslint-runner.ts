@@ -2,6 +2,7 @@
 // Runs ESLint directly via npm package without spawning processes
 
 import { AuditFinding, AuditResult, Severity } from '../types';
+import { safeRequire } from '@/lib/utils/safe-require';
 
 interface ESLintMessage {
   ruleId: string | null;
@@ -38,7 +39,7 @@ export async function runESLint(
 
   try {
     // Dynamic import to avoid bundling issues
-    const { ESLint } = await import('eslint');
+    const { ESLint } = safeRequire<typeof import('eslint')>('eslint');
 
     const eslint = new ESLint({
       cwd: targetDir,

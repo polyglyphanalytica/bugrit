@@ -9,6 +9,7 @@ import {
   AppiumCapabilities,
   StepResult,
 } from './types';
+import { safeRequire } from '@/lib/utils/safe-require';
 
 // WebdriverIO Browser type
 interface WDIOBrowser {
@@ -50,7 +51,7 @@ export class AppiumRunner implements TestRunner {
 
     try {
       // Dynamically import webdriverio
-      const { remote } = await import('webdriverio');
+      const { remote } = safeRequire<typeof import('webdriverio')>('webdriverio');
 
       this.driver = await remote({
         protocol: 'http',

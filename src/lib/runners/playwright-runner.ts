@@ -2,6 +2,7 @@
 
 import { BrowserType, NativePlatform } from '../types';
 import { TestRunner, RunnerConfig, TestResult, ExecutionContext, StepResult } from './types';
+import { safeRequire } from '@/lib/utils/safe-require';
 
 type PlaywrightBrowser = {
   newContext: (options?: Record<string, unknown>) => Promise<PlaywrightContext>;
@@ -41,7 +42,7 @@ export class PlaywrightRunner implements TestRunner {
     let launcher: { launch: (options: Record<string, unknown>) => Promise<PlaywrightBrowser> };
 
     try {
-      const playwright = await import('playwright');
+      const playwright = safeRequire<typeof import('playwright')>('playwright');
 
       switch (browserType) {
         case 'webkit':
