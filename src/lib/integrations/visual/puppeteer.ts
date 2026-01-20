@@ -120,13 +120,18 @@ export class PuppeteerIntegration implements ToolIntegration {
     const viewport = config?.options?.viewport || { width: 1920, height: 1080 };
     const timeout = config?.options?.timeout || 30000;
 
+        // Detect Chrome executable path for system Chrome usage
+    const chromePath = await this.detectChromePath();
+    const chromePathOption = chromePath ? `executablePath: '${chromePath}',` : '';
+
     const script = `
 const puppeteer = require('puppeteer');
 
 (async () => {
   const browser = await puppeteer.launch({
     headless: 'new',
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    ${chromePathOption}
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
   });
 
   const page = await browser.newPage();
@@ -479,5 +484,60 @@ Data: ${JSON.stringify(data, null, 2)}
         requests: analysis.networkRequests.length,
       },
     };
+  }
+
+  /**
+   * Detect Chrome/Chromium executable path for system Chrome usage.
+   * This allows Puppeteer to work when PUPPETEER_SKIP_DOWNLOAD=true.
+   */
+  private async detectChromePath(): Promise<string | null> {
+    const fs = await import('fs');
+
+    // Check environment variable first
+    const envPath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    if (envPath && fs.existsSync(envPath)) {
+      return envPath;
+    }
+
+    // Common Chrome/Chromium paths on different platforms
+    const possiblePaths = [
+      // Linux paths
+      '/usr/bin/google-chrome',
+      '/usr/bin/google-chrome-stable',
+      '/usr/bin/chromium',
+      '/usr/bin/chromium-browser',
+      '/snap/bin/chromium',
+      // Debian/Ubuntu
+      '/usr/lib/chromium/chromium',
+      '/usr/lib/chromium-browser/chromium-browser',
+      // Alpine
+      '/usr/bin/chromium-browser',
+      // macOS
+      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+      '/Applications/Chromium.app/Contents/MacOS/Chromium',
+      // Windows (WSL)
+      '/mnt/c/Program Files/Google/Chrome/Application/chrome.exe',
+      '/mnt/c/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+    ];
+
+    for (const chromePath of possiblePaths) {
+      if (fs.existsSync(chromePath)) {
+        return chromePath;
+      }
+    }
+
+    // Try using 'which' command on Unix systems
+    try {
+      const { execSync } = await import('child_process');
+      const whichResult = execSync('which google-chrome chromium chromium-browser 2>/dev/null', { encoding: 'utf-8' });
+      const foundPath = whichResult.trim().split('\n')[0];
+      if (foundPath && fs.existsSync(foundPath)) {
+        return foundPath;
+      }
+    } catch {
+      // Ignore errors from 'which' command
+    }
+
+    return null;
   }
 }
