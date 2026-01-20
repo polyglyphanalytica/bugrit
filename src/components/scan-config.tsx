@@ -158,10 +158,10 @@ export function ScanConfigPanel({
                       <span className="font-medium">{CATEGORY_LABELS[category]}</span>
                     </div>
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${
+                      className={`text-xs font-medium px-2 py-1 rounded-full ${
                         cost === 0
-                          ? 'bg-green-500/20 text-green-400'
-                          : 'bg-orange-500/20 text-orange-400'
+                          ? 'bg-green-900 text-green-200'
+                          : 'bg-orange-900 text-orange-200'
                       }`}
                     >
                       {cost === 0 ? 'Free' : `+${cost} credits`}
@@ -204,11 +204,11 @@ export function ScanConfigPanel({
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-medium">{name}</span>
                     {isAvailable ? (
-                      <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400">
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-blue-900 text-blue-200">
                         +{cost} {isPerIssue ? 'per 50 issues' : 'credits'}
                       </span>
                     ) : (
-                      <span className="text-xs px-2 py-1 rounded-full bg-gray-500/20 text-gray-400">
+                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-700 text-gray-200">
                         Upgrade required
                       </span>
                     )}

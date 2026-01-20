@@ -318,11 +318,11 @@ function StatusBadge({ connected, mode }: { connected: boolean; mode?: string })
     <div
       className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
         connected
-          ? 'bg-green-500/10 text-green-600 border border-green-500/20'
-          : 'bg-red-500/10 text-red-500 border border-red-500/20'
+          ? 'bg-green-900 text-green-200 border border-green-700'
+          : 'bg-red-900 text-red-200 border border-red-700'
       }`}
     >
-      <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
+      <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} />
       {connected ? `Connected (${mode})` : 'Not Connected'}
     </div>
   );
@@ -1364,8 +1364,8 @@ function AdminsPanel() {
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-medium ${
                     admin.role === 'superadmin'
-                      ? 'bg-red-500/10 text-red-500 border border-red-500/20'
-                      : 'bg-primary/10 text-primary border border-primary/20'
+                      ? 'bg-red-900 text-red-200 border border-red-700'
+                      : 'bg-primary/20 text-primary-foreground border border-primary/40'
                   }`}
                 >
                   {admin.role}
