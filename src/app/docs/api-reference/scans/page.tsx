@@ -39,7 +39,7 @@ export default function ScansApiPage() {
         <h2 className="text-xl font-bold mb-3 text-white flex items-center gap-2">
           <span>🤖</span> Vibe Coding Prompts
         </h2>
-        <p className="text-slate-400 mb-4 text-sm">
+        <p className="text-slate-300 mb-4 text-sm">
           Copy these prompts into your AI assistant to implement scan functionality.
         </p>
 

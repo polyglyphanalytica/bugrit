@@ -5,6 +5,7 @@ import {
   PricingConfig,
   FeatureFlag,
   AuditLog,
+  CreditPackage,
   hasAdminPermission as hasAdminPermissionFn,
   AdminPermission,
 } from './types';
@@ -456,84 +457,268 @@ export async function isSuperadmin(emailOrUserId: string): Promise<boolean> {
   return admin?.role === 'superadmin';
 }
 
+// ==================== CREDIT PACKAGES ====================
+
+export async function getAllCreditPackages(): Promise<CreditPackage[]> {
+  const snapshot = await db
+    .collection('platform_settings')
+    .doc('credit_packages')
+    .collection('packages')
+    .orderBy('sortOrder')
+    .get();
+
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as CreditPackage));
+}
+
+export async function getCreditPackage(packageId: string): Promise<CreditPackage | null> {
+  const doc = await db
+    .collection('platform_settings')
+    .doc('credit_packages')
+    .collection('packages')
+    .doc(packageId)
+    .get();
+
+  if (!doc.exists) return null;
+  return { id: doc.id, ...doc.data() } as CreditPackage;
+}
+
+export async function createCreditPackage(
+  pkg: Omit<CreditPackage, 'id' | 'createdAt' | 'updatedAt'>,
+  createdBy: string
+): Promise<CreditPackage> {
+  const now = new Date();
+  const ref = db
+    .collection('platform_settings')
+    .doc('credit_packages')
+    .collection('packages')
+    .doc();
+
+  const newPackage: CreditPackage = {
+    ...pkg,
+    id: ref.id,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await ref.set(newPackage);
+  await logAuditEvent(createdBy, 'credit_package.create', 'credit_package', ref.id, pkg);
+
+  return newPackage;
+}
+
+export async function updateCreditPackage(
+  packageId: string,
+  updates: Partial<CreditPackage>,
+  updatedBy: string
+): Promise<void> {
+  const { id: _, createdAt: __, ...updateData } = updates;
+  (updateData as { updatedAt: Date }).updatedAt = new Date();
+
+  await db
+    .collection('platform_settings')
+    .doc('credit_packages')
+    .collection('packages')
+    .doc(packageId)
+    .set(updateData, { merge: true });
+
+  await logAuditEvent(updatedBy, 'credit_package.update', 'credit_package', packageId, updates);
+}
+
+export async function deleteCreditPackage(packageId: string, deletedBy: string): Promise<void> {
+  await db
+    .collection('platform_settings')
+    .doc('credit_packages')
+    .collection('packages')
+    .doc(packageId)
+    .delete();
+
+  await logAuditEvent(deletedBy, 'credit_package.delete', 'credit_package', packageId, {});
+}
+
+export async function initializeDefaultCreditPackages(): Promise<void> {
+  const existing = await getAllCreditPackages();
+  if (existing.length > 0) return;
+
+  const defaultPackages: Omit<CreditPackage, 'id' | 'createdAt' | 'updatedAt'>[] = [
+    {
+      name: 'Starter Pack',
+      description: '25 credits to get you started',
+      credits: 25,
+      price: 5,
+      currency: 'usd',
+      isActive: true,
+      isFeatured: false,
+      sortOrder: 0,
+    },
+    {
+      name: 'Pro Pack',
+      description: '100 credits - Save 20%',
+      credits: 100,
+      price: 16,
+      currency: 'usd',
+      isActive: true,
+      isFeatured: true,
+      sortOrder: 1,
+    },
+    {
+      name: 'Power Pack',
+      description: '500 credits - Save 40%',
+      credits: 500,
+      price: 60,
+      currency: 'usd',
+      isActive: true,
+      isFeatured: false,
+      sortOrder: 2,
+    },
+    {
+      name: 'Enterprise Pack',
+      description: '2000 credits - Best value',
+      credits: 2000,
+      price: 200,
+      currency: 'usd',
+      isActive: true,
+      isFeatured: false,
+      sortOrder: 3,
+    },
+  ];
+
+  for (const pkg of defaultPackages) {
+    await createCreditPackage(pkg, 'system');
+  }
+}
+
 export async function initializeDefaultPricing(): Promise<void> {
   const existing = await getAllPricingConfigs();
   if (existing.length > 0) return;
 
   const defaultTiers: PricingConfig[] = [
     {
-      tierName: 'starter',
+      tierName: 'free',
       displayName: 'Free',
-      description: 'Perfect for trying out the platform',
+      description: 'Try it out',
       isActive: true,
       priceMonthly: 0,
       priceYearly: 0,
       currency: 'usd',
       sortOrder: 0,
       limits: {
-        scansPerMonth: 5,
+        credits: 10,
+        creditsRollover: 0,
+        overageRate: null,
+        maxRepoSize: 10_000,
         projects: 1,
         teamMembers: 1,
         historyDays: 7,
+        apiRequestsPerMinute: 5,
         platforms: { web: true, mobile: false, desktop: false },
       },
       features: {
-        aiReports: true,
-        customRules: false,
+        aiSummary: false,
+        aiExplanations: false,
+        aiFixSuggestions: false,
+        aiPrioritization: false,
+        githubIntegration: false,
+        slackIntegration: false,
+        webhooks: false,
         apiAccess: false,
         prioritySupport: false,
-        whiteLabeling: false,
-        ssoIntegration: false,
+      },
+    },
+    {
+      tierName: 'starter',
+      displayName: 'Starter',
+      description: 'For side projects',
+      isActive: true,
+      priceMonthly: 15,
+      priceYearly: 150,
+      currency: 'usd',
+      sortOrder: 1,
+      limits: {
+        credits: 50,
+        creditsRollover: 0,
+        overageRate: 0.35,
+        maxRepoSize: 50_000,
+        projects: 3,
+        teamMembers: 1,
+        historyDays: 14,
+        apiRequestsPerMinute: 10,
+        platforms: { web: true, mobile: false, desktop: false },
+      },
+      features: {
+        aiSummary: true,
+        aiExplanations: false,
+        aiFixSuggestions: false,
+        aiPrioritization: false,
+        githubIntegration: false,
+        slackIntegration: false,
+        webhooks: false,
+        apiAccess: false,
+        prioritySupport: false,
       },
     },
     {
       tierName: 'pro',
       displayName: 'Pro',
-      description: 'For professional developers and small teams',
+      description: 'For serious builders',
       isActive: true,
-      priceMonthly: 29,
-      priceYearly: 290,
+      highlighted: true,
+      priceMonthly: 39,
+      priceYearly: 390,
       currency: 'usd',
-      sortOrder: 1,
+      sortOrder: 2,
       limits: {
-        scansPerMonth: 50,
-        projects: 5,
+        credits: 200,
+        creditsRollover: 100,
+        overageRate: 0.25,
+        maxRepoSize: 150_000,
+        projects: 10,
         teamMembers: 3,
         historyDays: 30,
+        apiRequestsPerMinute: 60,
         platforms: { web: true, mobile: true, desktop: false },
       },
       features: {
-        aiReports: true,
-        customRules: true,
+        aiSummary: true,
+        aiExplanations: true,
+        aiFixSuggestions: false,
+        aiPrioritization: true,
+        githubIntegration: true,
+        slackIntegration: false,
+        webhooks: false,
         apiAccess: false,
         prioritySupport: false,
-        whiteLabeling: false,
-        ssoIntegration: false,
       },
     },
     {
       tierName: 'business',
       displayName: 'Business',
-      description: 'For teams that need everything',
+      description: 'For teams',
       isActive: true,
-      priceMonthly: 99,
-      priceYearly: 990,
+      priceMonthly: 79,
+      priceYearly: 790,
       currency: 'usd',
-      sortOrder: 2,
+      sortOrder: 3,
       limits: {
-        scansPerMonth: -1,
+        credits: 600,
+        creditsRollover: 300,
+        overageRate: 0.15,
+        maxRepoSize: 500_000,
         projects: -1,
         teamMembers: 10,
-        historyDays: 365,
+        historyDays: 90,
+        apiRequestsPerMinute: 300,
         platforms: { web: true, mobile: true, desktop: true },
       },
       features: {
-        aiReports: true,
-        customRules: true,
+        aiSummary: true,
+        aiExplanations: true,
+        aiFixSuggestions: true,
+        aiPrioritization: true,
+        githubIntegration: true,
+        slackIntegration: true,
+        webhooks: true,
         apiAccess: true,
         prioritySupport: true,
-        whiteLabeling: false,
-        ssoIntegration: false,
       },
     },
   ];

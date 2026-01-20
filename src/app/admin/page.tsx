@@ -6,7 +6,7 @@ import { GlassCard } from '@/components/ui/glass-card';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Logo } from '@/components/ui/logo';
 
-type TabType = 'stripe' | 'pricing' | 'features' | 'admins' | 'audit';
+type TabType = 'stripe' | 'pricing' | 'credit-packages' | 'features' | 'admins' | 'audit';
 
 const tabs: { id: TabType; label: string; icon: JSX.Element }[] = [
   {
@@ -24,6 +24,15 @@ const tabs: { id: TabType; label: string; icon: JSX.Element }[] = [
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'credit-packages',
+    label: 'Credit Packs',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
       </svg>
     ),
   },
@@ -117,6 +126,7 @@ export default function AdminDashboard() {
             <div className="animate-fade-up">
               {activeTab === 'stripe' && <StripeConfigPanel />}
               {activeTab === 'pricing' && <PricingPanel />}
+              {activeTab === 'credit-packages' && <CreditPackagesPanel />}
               {activeTab === 'features' && <FeaturesPanel />}
               {activeTab === 'admins' && <AdminsPanel />}
               {activeTab === 'audit' && <AuditPanel />}
@@ -308,11 +318,11 @@ function StatusBadge({ connected, mode }: { connected: boolean; mode?: string })
     <div
       className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium ${
         connected
-          ? 'bg-green-500/10 text-green-600 border border-green-500/20'
-          : 'bg-red-500/10 text-red-500 border border-red-500/20'
+          ? 'bg-green-900 text-green-200 border border-green-700'
+          : 'bg-red-900 text-red-200 border border-red-700'
       }`}
     >
-      <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
+      <span className={`w-2 h-2 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} />
       {connected ? `Connected (${mode})` : 'Not Connected'}
     </div>
   );
@@ -324,6 +334,7 @@ function PricingPanel() {
   const [tiers, setTiers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTier, setEditingTier] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     fetchTiers();
@@ -355,6 +366,31 @@ function PricingPanel() {
     }
   };
 
+  const handleSyncToStripe = async () => {
+    setSyncing(true);
+    try {
+      const res = await fetch('/api/admin/stripe/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ direction: 'toStripe' }),
+      });
+      const data = await res.json();
+      alert(data.success ? `Synced to Stripe: ${data.synced.join(', ')}` : `Errors: ${JSON.stringify(data.errors)}`);
+      fetchTiers();
+    } catch (error) {
+      console.error('Sync failed:', error);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const formatNumber = (num: number) => {
+    if (num === -1) return '∞';
+    if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(0)}M`;
+    if (num >= 1_000) return `${(num / 1_000).toFixed(0)}K`;
+    return num.toString();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -365,9 +401,14 @@ function PricingPanel() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Pricing Tiers</h2>
-        <p className="text-muted-foreground">Manage subscription plans and limits</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Pricing Tiers</h2>
+          <p className="text-muted-foreground">Manage subscription plans and limits</p>
+        </div>
+        <GradientButton onClick={handleSyncToStripe} disabled={syncing}>
+          {syncing ? 'Syncing...' : 'Sync All to Stripe'}
+        </GradientButton>
       </div>
 
       <div className="grid gap-6">
@@ -377,11 +418,16 @@ function PricingPanel() {
               <div>
                 <div className="flex items-center gap-3 mb-1">
                   <h3 className="text-xl font-bold">{tier.displayName}</h3>
+                  {tier.highlighted && (
+                    <span className="px-2 py-0.5 rounded text-xs bg-gradient-to-r from-primary/20 to-accent/20 text-primary border border-primary/20">
+                      Most Popular
+                    </span>
+                  )}
                   {!tier.isActive && (
                     <span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">Inactive</span>
                   )}
                   {tier.stripeProductId && (
-                    <span className="px-2 py-0.5 rounded text-xs bg-primary/10 text-primary border border-primary/20">
+                    <span className="px-2 py-0.5 rounded text-xs bg-green-500/10 text-green-600 border border-green-500/20">
                       Stripe Linked
                     </span>
                   )}
@@ -405,22 +451,43 @@ function PricingPanel() {
               />
             ) : (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <StatBox label="Scans/Month" value={tier.limits?.scansPerMonth === -1 ? '∞' : tier.limits?.scansPerMonth} />
-                  <StatBox label="Projects" value={tier.limits?.projects === -1 ? '∞' : tier.limits?.projects} />
-                  <StatBox label="Team Members" value={tier.limits?.teamMembers} />
-                  <StatBox label="History" value={`${tier.limits?.historyDays}d`} />
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6">
+                  <StatBox label="Credits/Month" value={formatNumber(tier.limits?.credits || 0)} />
+                  <StatBox label="Max Lines" value={formatNumber(tier.limits?.maxRepoSize || 0)} />
+                  <StatBox label="Projects" value={formatNumber(tier.limits?.projects || 0)} />
+                  <StatBox label="Team Members" value={tier.limits?.teamMembers || 1} />
+                  <StatBox label="History" value={`${tier.limits?.historyDays || 7}d`} />
+                  <StatBox label="Rollover" value={formatNumber(tier.limits?.creditsRollover || 0)} />
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Overage Rate:</span>
+                    <span className="font-medium">
+                      {tier.limits?.overageRate != null ? `$${tier.limits.overageRate}/credit` : 'Not allowed'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">API Rate:</span>
+                    <span className="font-medium">{tier.limits?.apiRequestsPerMinute || 0} req/min</span>
+                  </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-4">
+                  <span className="text-sm text-muted-foreground mr-2">Platforms:</span>
                   {tier.limits?.platforms?.web && <FeaturePill>Web</FeaturePill>}
                   {tier.limits?.platforms?.mobile && <FeaturePill>Mobile</FeaturePill>}
                   {tier.limits?.platforms?.desktop && <FeaturePill>Desktop</FeaturePill>}
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {tier.features?.aiReports && <FeaturePill variant="secondary">AI Reports</FeaturePill>}
-                  {tier.features?.customRules && <FeaturePill variant="secondary">Custom Rules</FeaturePill>}
+                  <span className="text-sm text-muted-foreground mr-2">Features:</span>
+                  {tier.features?.aiSummary && <FeaturePill variant="secondary">AI Summary</FeaturePill>}
+                  {tier.features?.aiExplanations && <FeaturePill variant="secondary">AI Explanations</FeaturePill>}
+                  {tier.features?.aiFixSuggestions && <FeaturePill variant="secondary">AI Fix Suggestions</FeaturePill>}
+                  {tier.features?.githubIntegration && <FeaturePill variant="secondary">GitHub</FeaturePill>}
+                  {tier.features?.slackIntegration && <FeaturePill variant="secondary">Slack</FeaturePill>}
+                  {tier.features?.webhooks && <FeaturePill variant="secondary">Webhooks</FeaturePill>}
                   {tier.features?.apiAccess && <FeaturePill variant="secondary">API Access</FeaturePill>}
                   {tier.features?.prioritySupport && <FeaturePill variant="secondary">Priority Support</FeaturePill>}
                 </div>
@@ -461,15 +528,42 @@ function FeaturePill({ children, variant = 'primary' }: { children: React.ReactN
 }
 
 function TierEditor({ tier, onSave, onCancel }: { tier: any; onSave: (updates: any) => void; onCancel: () => void }) {
+  const defaultLimits = {
+    credits: 10,
+    creditsRollover: 0,
+    overageRate: null as number | null,
+    maxRepoSize: 10000,
+    projects: 1,
+    teamMembers: 1,
+    historyDays: 7,
+    apiRequestsPerMinute: 5,
+    platforms: { web: true, mobile: false, desktop: false },
+  };
+
+  const defaultFeatures = {
+    aiSummary: false,
+    aiExplanations: false,
+    aiFixSuggestions: false,
+    aiPrioritization: false,
+    githubIntegration: false,
+    slackIntegration: false,
+    webhooks: false,
+    apiAccess: false,
+    prioritySupport: false,
+  };
+
   const [form, setForm] = useState({
-    displayName: tier.displayName,
-    description: tier.description,
-    priceMonthly: tier.priceMonthly,
-    priceYearly: tier.priceYearly,
-    isActive: tier.isActive,
-    limits: { ...tier.limits },
-    features: { ...tier.features },
+    displayName: tier.displayName || '',
+    description: tier.description || '',
+    priceMonthly: tier.priceMonthly || 0,
+    priceYearly: tier.priceYearly || 0,
+    isActive: tier.isActive ?? true,
+    highlighted: tier.highlighted ?? false,
+    limits: { ...defaultLimits, ...tier.limits },
+    features: { ...defaultFeatures, ...tier.features },
   });
+
+  const [allowOverage, setAllowOverage] = useState(tier.limits?.overageRate != null);
 
   const updateLimits = (key: string, value: any) => {
     setForm({ ...form, limits: { ...form.limits, [key]: value } });
@@ -489,8 +583,21 @@ function TierEditor({ tier, onSave, onCancel }: { tier: any; onSave: (updates: a
     });
   };
 
+  const featureLabels: Record<string, string> = {
+    aiSummary: 'AI Scan Summaries',
+    aiExplanations: 'AI Explanations',
+    aiFixSuggestions: 'AI Fix Suggestions',
+    aiPrioritization: 'AI Prioritization',
+    githubIntegration: 'GitHub Integration',
+    slackIntegration: 'Slack Integration',
+    webhooks: 'Webhooks',
+    apiAccess: 'API Access',
+    prioritySupport: 'Priority Support',
+  };
+
   return (
     <div className="space-y-6 pt-4 border-t border-border">
+      {/* Basic Info */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-2">Display Name</label>
@@ -510,77 +617,153 @@ function TierEditor({ tier, onSave, onCancel }: { tier: any; onSave: (updates: a
         </div>
       </div>
 
+      {/* Pricing */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-2">Monthly Price ($)</label>
           <input
             type="number"
+            step="0.01"
             value={form.priceMonthly}
-            onChange={(e) => setForm({ ...form, priceMonthly: parseFloat(e.target.value) })}
+            onChange={(e) => setForm({ ...form, priceMonthly: parseFloat(e.target.value) || 0 })}
             className="input-modern"
-            disabled={tier.tierName === 'starter'}
+            disabled={tier.tierName === 'free'}
           />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Yearly Price ($)</label>
           <input
             type="number"
+            step="0.01"
             value={form.priceYearly}
-            onChange={(e) => setForm({ ...form, priceYearly: parseFloat(e.target.value) })}
+            onChange={(e) => setForm({ ...form, priceYearly: parseFloat(e.target.value) || 0 })}
             className="input-modern"
-            disabled={tier.tierName === 'starter'}
+            disabled={tier.tierName === 'free'}
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-2">Scans/Month</label>
-          <input
-            type="number"
-            value={form.limits.scansPerMonth}
-            onChange={(e) => updateLimits('scansPerMonth', parseInt(e.target.value))}
-            className="input-modern"
-            placeholder="-1 for unlimited"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Projects</label>
-          <input
-            type="number"
-            value={form.limits.projects}
-            onChange={(e) => updateLimits('projects', parseInt(e.target.value))}
-            className="input-modern"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Team Members</label>
-          <input
-            type="number"
-            value={form.limits.teamMembers}
-            onChange={(e) => updateLimits('teamMembers', parseInt(e.target.value))}
-            className="input-modern"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">History (days)</label>
-          <input
-            type="number"
-            value={form.limits.historyDays}
-            onChange={(e) => updateLimits('historyDays', parseInt(e.target.value))}
-            className="input-modern"
-          />
-        </div>
-      </div>
-
+      {/* Credits & Usage */}
       <div>
-        <label className="block text-sm font-medium mb-3">Platforms</label>
+        <h4 className="text-sm font-semibold mb-3 text-primary">Credits & Usage</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Credits/Month</label>
+            <input
+              type="number"
+              value={form.limits.credits}
+              onChange={(e) => updateLimits('credits', parseInt(e.target.value) || 0)}
+              className="input-modern"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Credit Rollover</label>
+            <input
+              type="number"
+              value={form.limits.creditsRollover}
+              onChange={(e) => updateLimits('creditsRollover', parseInt(e.target.value) || 0)}
+              className="input-modern"
+              placeholder="0 = no rollover"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Allow Overage</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={allowOverage}
+                onChange={(e) => {
+                  setAllowOverage(e.target.checked);
+                  if (!e.target.checked) {
+                    updateLimits('overageRate', null);
+                  } else {
+                    updateLimits('overageRate', 0.25);
+                  }
+                }}
+                className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+              />
+              {allowOverage && (
+                <input
+                  type="number"
+                  step="0.01"
+                  value={form.limits.overageRate || 0}
+                  onChange={(e) => updateLimits('overageRate', parseFloat(e.target.value) || 0)}
+                  className="input-modern w-24"
+                  placeholder="$/credit"
+                />
+              )}
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">API Rate Limit</label>
+            <input
+              type="number"
+              value={form.limits.apiRequestsPerMinute}
+              onChange={(e) => updateLimits('apiRequestsPerMinute', parseInt(e.target.value) || 0)}
+              className="input-modern"
+              placeholder="req/min"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Resource Limits */}
+      <div>
+        <h4 className="text-sm font-semibold mb-3 text-primary">Resource Limits</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Max Lines of Code</label>
+            <input
+              type="number"
+              value={form.limits.maxRepoSize}
+              onChange={(e) => updateLimits('maxRepoSize', parseInt(e.target.value) || 0)}
+              className="input-modern"
+              placeholder="-1 for unlimited"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              {form.limits.maxRepoSize >= 1000 ? `${(form.limits.maxRepoSize / 1000).toFixed(0)}K lines` : `${form.limits.maxRepoSize} lines`}
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Projects</label>
+            <input
+              type="number"
+              value={form.limits.projects}
+              onChange={(e) => updateLimits('projects', parseInt(e.target.value) || 0)}
+              className="input-modern"
+              placeholder="-1 for unlimited"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Team Members</label>
+            <input
+              type="number"
+              value={form.limits.teamMembers}
+              onChange={(e) => updateLimits('teamMembers', parseInt(e.target.value) || 0)}
+              className="input-modern"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">History (days)</label>
+            <input
+              type="number"
+              value={form.limits.historyDays}
+              onChange={(e) => updateLimits('historyDays', parseInt(e.target.value) || 0)}
+              className="input-modern"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Platforms */}
+      <div>
+        <h4 className="text-sm font-semibold mb-3 text-primary">Platforms</h4>
         <div className="flex gap-6">
           {['web', 'mobile', 'desktop'].map((platform) => (
             <label key={platform} className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={form.limits.platforms?.[platform]}
+                checked={form.limits.platforms?.[platform] ?? false}
                 onChange={(e) => updatePlatforms(platform, e.target.checked)}
                 className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
               />
@@ -590,35 +773,340 @@ function TierEditor({ tier, onSave, onCancel }: { tier: any; onSave: (updates: a
         </div>
       </div>
 
+      {/* Features */}
       <div>
-        <label className="block text-sm font-medium mb-3">Features</label>
-        <div className="grid grid-cols-3 gap-3">
+        <h4 className="text-sm font-semibold mb-3 text-primary">Features</h4>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {Object.keys(form.features).map((feature) => (
             <label key={feature} className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={form.features[feature]}
+                checked={form.features[feature] ?? false}
                 onChange={(e) => updateFeatures(feature, e.target.checked)}
                 className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
               />
-              <span className="text-sm">{feature.replace(/([A-Z])/g, ' $1').trim()}</span>
+              <span className="text-sm">{featureLabels[feature] || feature}</span>
             </label>
           ))}
         </div>
       </div>
 
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={form.isActive}
-          onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-          className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
-        />
-        <span className="text-sm font-medium">Active</span>
-      </label>
+      {/* Status */}
+      <div className="flex gap-6">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.isActive}
+            onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+            className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+          />
+          <span className="text-sm font-medium">Active</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.highlighted}
+            onChange={(e) => setForm({ ...form, highlighted: e.target.checked })}
+            className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+          />
+          <span className="text-sm font-medium">Highlighted (Most Popular)</span>
+        </label>
+      </div>
 
       <div className="flex gap-3">
         <GradientButton onClick={() => onSave(form)}>Save Changes</GradientButton>
+        <GradientButton variant="ghost" onClick={onCancel}>Cancel</GradientButton>
+      </div>
+    </div>
+  );
+}
+
+// ==================== CREDIT PACKAGES PANEL ====================
+
+function CreditPackagesPanel() {
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingPackage, setEditingPackage] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newPackage, setNewPackage] = useState({
+    name: '',
+    description: '',
+    credits: 50,
+    price: 10,
+    isFeatured: false,
+  });
+
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  const fetchPackages = async () => {
+    try {
+      const res = await fetch('/api/admin/credit-packages');
+      const data = await res.json();
+      setPackages(data.packages || []);
+    } catch (error) {
+      console.error('Failed to fetch packages:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreate = async () => {
+    if (!newPackage.name) return;
+    try {
+      await fetch('/api/admin/credit-packages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPackage),
+      });
+      setNewPackage({ name: '', description: '', credits: 50, price: 10, isFeatured: false });
+      setShowCreate(false);
+      fetchPackages();
+    } catch (error) {
+      console.error('Failed to create package:', error);
+    }
+  };
+
+  const handleUpdate = async (packageId: string, updates: any) => {
+    try {
+      await fetch(`/api/admin/credit-packages/${packageId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      fetchPackages();
+      setEditingPackage(null);
+    } catch (error) {
+      console.error('Failed to update package:', error);
+    }
+  };
+
+  const handleDelete = async (packageId: string) => {
+    if (!confirm('Delete this credit package?')) return;
+    try {
+      await fetch(`/api/admin/credit-packages/${packageId}`, { method: 'DELETE' });
+      fetchPackages();
+    } catch (error) {
+      console.error('Failed to delete package:', error);
+    }
+  };
+
+  const formatPrice = (price: number, credits: number) => {
+    const perCredit = (price / credits).toFixed(2);
+    return `$${price} ($${perCredit}/credit)`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Credit Packages</h2>
+          <p className="text-muted-foreground">Manage credit top-up packages for users</p>
+        </div>
+        <GradientButton onClick={() => setShowCreate(true)}>
+          + New Package
+        </GradientButton>
+      </div>
+
+      {showCreate && (
+        <GlassCard className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Create New Package</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Name</label>
+              <input
+                value={newPackage.name}
+                onChange={(e) => setNewPackage({ ...newPackage, name: e.target.value })}
+                placeholder="e.g., Starter Pack"
+                className="input-modern"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Credits</label>
+              <input
+                type="number"
+                value={newPackage.credits}
+                onChange={(e) => setNewPackage({ ...newPackage, credits: parseInt(e.target.value) || 0 })}
+                className="input-modern"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Price ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={newPackage.price}
+                onChange={(e) => setNewPackage({ ...newPackage, price: parseFloat(e.target.value) || 0 })}
+                className="input-modern"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Description</label>
+              <input
+                value={newPackage.description}
+                onChange={(e) => setNewPackage({ ...newPackage, description: e.target.value })}
+                placeholder="Optional description"
+                className="input-modern"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-4 mb-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={newPackage.isFeatured}
+                onChange={(e) => setNewPackage({ ...newPackage, isFeatured: e.target.checked })}
+                className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+              />
+              <span className="text-sm">Featured (Best Value)</span>
+            </label>
+          </div>
+          <div className="flex gap-3">
+            <GradientButton onClick={handleCreate}>Create Package</GradientButton>
+            <GradientButton variant="ghost" onClick={() => setShowCreate(false)}>Cancel</GradientButton>
+          </div>
+        </GlassCard>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {packages.map((pkg) => (
+          <GlassCard key={pkg.id} hover className={`p-6 ${pkg.isFeatured ? 'ring-2 ring-primary' : ''}`}>
+            {pkg.isFeatured && (
+              <div className="text-xs font-semibold text-primary mb-2">BEST VALUE</div>
+            )}
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-bold">{pkg.name}</h3>
+                <p className="text-sm text-muted-foreground">{pkg.description}</p>
+              </div>
+              {!pkg.isActive && (
+                <span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">Inactive</span>
+              )}
+            </div>
+
+            {editingPackage === pkg.id ? (
+              <CreditPackageEditor
+                pkg={pkg}
+                onSave={(updates) => handleUpdate(pkg.id, updates)}
+                onCancel={() => setEditingPackage(null)}
+              />
+            ) : (
+              <>
+                <div className="mb-4">
+                  <div className="text-3xl font-bold text-primary">{pkg.credits}</div>
+                  <div className="text-sm text-muted-foreground">credits</div>
+                </div>
+                <div className="mb-4">
+                  <div className="text-xl font-semibold">${pkg.price}</div>
+                  <div className="text-xs text-muted-foreground">
+                    ${(pkg.price / pkg.credits).toFixed(3)} per credit
+                  </div>
+                </div>
+                {pkg.stripeProductId && (
+                  <div className="mb-4">
+                    <span className="px-2 py-0.5 rounded text-xs bg-green-500/10 text-green-600 border border-green-500/20">
+                      Stripe Linked
+                    </span>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <GradientButton variant="outline" size="sm" onClick={() => setEditingPackage(pkg.id)}>
+                    Edit
+                  </GradientButton>
+                  <GradientButton variant="ghost" size="sm" onClick={() => handleDelete(pkg.id)}>
+                    Delete
+                  </GradientButton>
+                </div>
+              </>
+            )}
+          </GlassCard>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CreditPackageEditor({ pkg, onSave, onCancel }: { pkg: any; onSave: (updates: any) => void; onCancel: () => void }) {
+  const [form, setForm] = useState({
+    name: pkg.name || '',
+    description: pkg.description || '',
+    credits: pkg.credits || 50,
+    price: pkg.price || 10,
+    isActive: pkg.isActive ?? true,
+    isFeatured: pkg.isFeatured ?? false,
+    sortOrder: pkg.sortOrder || 0,
+  });
+
+  return (
+    <div className="space-y-4 pt-4 border-t border-border">
+      <div>
+        <label className="block text-sm font-medium mb-2">Name</label>
+        <input
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          className="input-modern"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-2">Description</label>
+        <input
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          className="input-modern"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-2">Credits</label>
+          <input
+            type="number"
+            value={form.credits}
+            onChange={(e) => setForm({ ...form, credits: parseInt(e.target.value) || 0 })}
+            className="input-modern"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Price ($)</label>
+          <input
+            type="number"
+            step="0.01"
+            value={form.price}
+            onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })}
+            className="input-modern"
+          />
+        </div>
+      </div>
+      <div className="flex gap-4">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.isActive}
+            onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+            className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+          />
+          <span className="text-sm">Active</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.isFeatured}
+            onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })}
+            className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+          />
+          <span className="text-sm">Featured</span>
+        </label>
+      </div>
+      <div className="flex gap-3">
+        <GradientButton onClick={() => onSave(form)}>Save</GradientButton>
         <GradientButton variant="ghost" onClick={onCancel}>Cancel</GradientButton>
       </div>
     </div>
@@ -876,8 +1364,8 @@ function AdminsPanel() {
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-medium ${
                     admin.role === 'superadmin'
-                      ? 'bg-red-500/10 text-red-500 border border-red-500/20'
-                      : 'bg-primary/10 text-primary border border-primary/20'
+                      ? 'bg-red-900 text-red-200 border border-red-700'
+                      : 'bg-primary/20 text-primary-foreground border border-primary/40'
                   }`}
                 >
                   {admin.role}
