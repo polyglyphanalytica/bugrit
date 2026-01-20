@@ -1,4 +1,5 @@
 import { GlassCard } from '@/components/ui/glass-card';
+import Link from 'next/link';
 
 export default function BillingApiDocs() {
   return (
@@ -6,22 +7,31 @@ export default function BillingApiDocs() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-4">Billing API</h1>
         <p className="text-xl text-muted-foreground mb-8">
-          Check balances, get quotes, and track usage programmatically. Perfect for integrating Bugrit into your own apps.
+          Check balances, get quotes, purchase credits, and manage subscriptions programmatically.
         </p>
 
         {/* Overview */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4">Overview</h2>
           <p className="text-muted-foreground mb-4">
-            The Billing API lets you build custom integrations that show users their credit balance,
-            estimate scan costs before running, and track usage over time. This enables you to:
+            The Billing API lets you manage your account&apos;s credits and subscription programmatically using your API key.
+            All endpoints return data for your authenticated account only. Use these endpoints to:
           </p>
           <ul className="list-disc list-inside space-y-2 text-muted-foreground mb-4">
-            <li>Display real-time credit balance in your dashboard</li>
-            <li>Show users exactly what a scan will cost before they click &quot;Run&quot;</li>
-            <li>Let users toggle tools on/off and see cost updates instantly</li>
-            <li>Track usage patterns and spending over time</li>
+            <li>Check your current credit balance and subscription status</li>
+            <li>Get a cost estimate before running a scan</li>
+            <li>View your usage history and transaction details</li>
+            <li>Purchase additional credit packages</li>
+            <li>Configure automatic top-ups to avoid running out of credits</li>
+            <li>Access the billing portal to manage payment methods</li>
           </ul>
+          <p className="text-muted-foreground">
+            For information on how pricing is calculated, see the{' '}
+            <Link href="/docs/pricing" className="text-primary hover:underline">
+              Pricing Guide
+            </Link>
+            .
+          </p>
         </section>
 
         {/* Authentication */}
@@ -304,6 +314,206 @@ if (userConfirmed && quote.canAfford) {
     projectId: 'my-project',
     config: quote.config,
   });
+}`}</pre>
+          </GlassCard>
+        </section>
+
+        {/* GET /api/credit-packages */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">Get Credit Packages</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-sm font-mono">GET</span>
+            <code className="text-sm">/api/credit-packages</code>
+          </div>
+          <p className="text-muted-foreground mb-4">
+            Returns all available credit packages for purchase. No authentication required.
+          </p>
+
+          <h4 className="font-semibold mb-2">Response</h4>
+          <GlassCard className="p-4 font-mono text-sm bg-slate-950 overflow-x-auto">
+            <pre>{`{
+  "packages": [
+    {
+      "id": "starter-pack",
+      "name": "Starter Pack",
+      "description": "Perfect for trying out premium features",
+      "credits": 25,
+      "price": 5,
+      "currency": "usd",
+      "isFeatured": false
+    },
+    {
+      "id": "pro-pack",
+      "name": "Pro Pack",
+      "description": "Great value for regular users",
+      "credits": 100,
+      "price": 16,
+      "currency": "usd",
+      "isFeatured": true
+    },
+    {
+      "id": "power-pack",
+      "name": "Power Pack",
+      "description": "For power users and small teams",
+      "credits": 500,
+      "price": 60,
+      "currency": "usd",
+      "isFeatured": false
+    },
+    {
+      "id": "enterprise-pack",
+      "name": "Enterprise Pack",
+      "description": "Best value for high-volume usage",
+      "credits": 2000,
+      "price": 200,
+      "currency": "usd",
+      "isFeatured": false
+    }
+  ]
+}`}</pre>
+          </GlassCard>
+        </section>
+
+        {/* POST /api/billing/purchase-credits */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">Purchase Credits</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-sm font-mono">POST</span>
+            <code className="text-sm">/api/billing/purchase-credits</code>
+          </div>
+          <p className="text-muted-foreground mb-4">
+            Initiates a credit package purchase. Returns a Stripe checkout URL for payment.
+          </p>
+
+          <h4 className="font-semibold mb-2">Request Body</h4>
+          <GlassCard className="p-4 font-mono text-sm bg-slate-950 overflow-x-auto mb-4">
+            <pre>{`{
+  "packageId": "pro-pack"
+}`}</pre>
+          </GlassCard>
+
+          <h4 className="font-semibold mb-2">Response</h4>
+          <GlassCard className="p-4 font-mono text-sm bg-slate-950 overflow-x-auto">
+            <pre>{`{
+  "checkoutUrl": "https://checkout.stripe.com/c/pay/cs_...",
+  "sessionId": "cs_live_..."
+}`}</pre>
+          </GlassCard>
+
+          <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              After successful payment, credits are automatically added to the user&apos;s account.
+              The webhook handles credit allocation and sends a confirmation email.
+            </p>
+          </div>
+        </section>
+
+        {/* GET /api/settings/subscription */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">Get Subscription Status</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-sm font-mono">GET</span>
+            <code className="text-sm">/api/settings/subscription</code>
+          </div>
+          <p className="text-muted-foreground mb-4">
+            Returns detailed subscription information including usage limits and auto top-up settings.
+          </p>
+
+          <h4 className="font-semibold mb-2">Response</h4>
+          <GlassCard className="p-4 font-mono text-sm bg-slate-950 overflow-x-auto">
+            <pre>{`{
+  "subscription": {
+    "tier": "pro",
+    "status": "active",
+    "currentPeriodEnd": "2024-02-15T00:00:00Z",
+    "cancelAtPeriodEnd": false
+  },
+  "usage": {
+    "credits": {
+      "used": 47,
+      "limit": 200,
+      "rollover": 25
+    },
+    "projects": {
+      "used": 5,
+      "limit": 10
+    },
+    "teamMembers": {
+      "used": 3,
+      "limit": 5
+    }
+  },
+  "autoTopup": {
+    "enabled": true,
+    "triggerThreshold": 10,
+    "packageId": "pro-pack",
+    "maxPerMonth": 3,
+    "purchasesThisMonth": 1
+  }
+}`}</pre>
+          </GlassCard>
+        </section>
+
+        {/* POST /api/settings/subscription/auto-topup */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">Configure Auto Top-up</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-sm font-mono">POST</span>
+            <code className="text-sm">/api/settings/subscription/auto-topup</code>
+          </div>
+          <p className="text-muted-foreground mb-4">
+            Configure automatic credit purchases when balance falls below a threshold.
+            Requires a payment method on file.
+          </p>
+
+          <h4 className="font-semibold mb-2">Request Body</h4>
+          <GlassCard className="p-4 font-mono text-sm bg-slate-950 overflow-x-auto mb-4">
+            <pre>{`{
+  "enabled": true,
+  "triggerThreshold": 10,   // Trigger when credits fall below this
+  "packageId": "pro-pack",  // Which package to purchase
+  "maxPerMonth": 3          // Maximum auto-purchases per month
+}`}</pre>
+          </GlassCard>
+
+          <h4 className="font-semibold mb-2">Response</h4>
+          <GlassCard className="p-4 font-mono text-sm bg-slate-950 overflow-x-auto">
+            <pre>{`{
+  "success": true,
+  "autoTopup": {
+    "enabled": true,
+    "triggerThreshold": 10,
+    "packageId": "pro-pack",
+    "maxPerMonth": 3
+  }
+}`}</pre>
+          </GlassCard>
+
+          <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+            <p className="text-sm text-yellow-200">
+              <strong>Note:</strong> Auto top-up requires a valid payment method. If the payment
+              fails, the user will be notified and auto top-up will be temporarily disabled until
+              the payment method is updated.
+            </p>
+          </div>
+        </section>
+
+        {/* POST /api/billing/portal */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">Open Billing Portal</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-sm font-mono">POST</span>
+            <code className="text-sm">/api/billing/portal</code>
+          </div>
+          <p className="text-muted-foreground mb-4">
+            Returns a URL to the Stripe Customer Portal where users can manage their
+            subscription, payment methods, and billing history.
+          </p>
+
+          <h4 className="font-semibold mb-2">Response</h4>
+          <GlassCard className="p-4 font-mono text-sm bg-slate-950 overflow-x-auto">
+            <pre>{`{
+  "url": "https://billing.stripe.com/p/session/..."
 }`}</pre>
           </GlassCard>
         </section>

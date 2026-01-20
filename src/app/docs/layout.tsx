@@ -48,11 +48,13 @@ const navItems = [
       { href: '/docs/api-reference/scans', label: 'Scans' },
       { href: '/docs/api-reference/tests', label: 'Tests' },
       { href: '/docs/api-reference/reports', label: 'Reports' },
+      { href: '/docs/api-reference/billing', label: 'Billing' },
     ],
   },
   {
     title: 'Reference',
     items: [
+      { href: '/docs/pricing', label: 'Pricing & Credits' },
       { href: '/docs/rate-limits', label: 'Rate Limits' },
       { href: '/docs/errors', label: 'Error Codes' },
       { href: '/docs/roadmap', label: 'Roadmap' },
