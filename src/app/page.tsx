@@ -45,12 +45,12 @@ export default function HomePage() {
         <div className="container-wide">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20 mb-8 animate-fade-down">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-950 border border-red-700 mb-8 animate-fade-down">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-400"></span>
               </span>
-              <span className="text-sm font-medium text-red-400">Your code has problems you don&apos;t know about</span>
+              <span className="text-sm font-medium text-red-200">Your code has problems you don&apos;t know about</span>
             </div>
 
             {/* Title */}
@@ -92,21 +92,21 @@ export default function HomePage() {
 
             {/* Scary Stats - Vibe Coder Focused */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 animate-fade-up delay-500 fill-both">
-              <div className="p-4 rounded-xl bg-red-950/60 border-2 border-red-500/50 backdrop-blur-sm">
-                <span className="text-3xl font-bold text-red-400">62%</span>
-                <p className="text-sm text-gray-300 mt-1">of AI-generated code contains known vulnerabilities</p>
+              <div className="p-4 rounded-xl bg-red-950 border-2 border-red-700 backdrop-blur-sm">
+                <span className="text-3xl font-bold text-red-300">62%</span>
+                <p className="text-sm text-gray-200 mt-1">of AI-generated code contains known vulnerabilities</p>
               </div>
-              <div className="p-4 rounded-xl bg-orange-950/60 border-2 border-orange-500/50 backdrop-blur-sm">
-                <span className="text-3xl font-bold text-orange-400">60%</span>
-                <p className="text-sm text-gray-300 mt-1">of small businesses close within 6 months of a breach</p>
+              <div className="p-4 rounded-xl bg-orange-950 border-2 border-orange-700 backdrop-blur-sm">
+                <span className="text-3xl font-bold text-orange-300">60%</span>
+                <p className="text-sm text-gray-200 mt-1">of small businesses close within 6 months of a breach</p>
               </div>
-              <div className="p-4 rounded-xl bg-yellow-950/60 border-2 border-yellow-500/50 backdrop-blur-sm">
-                <span className="text-3xl font-bold text-yellow-400">85%</span>
-                <p className="text-sm text-gray-300 mt-1">of ransomware attacks target small businesses</p>
+              <div className="p-4 rounded-xl bg-yellow-950 border-2 border-yellow-700 backdrop-blur-sm">
+                <span className="text-3xl font-bold text-yellow-300">85%</span>
+                <p className="text-sm text-gray-200 mt-1">of ransomware attacks target small businesses</p>
               </div>
-              <div className="p-4 rounded-xl bg-violet-950/60 border-2 border-violet-500/50 backdrop-blur-sm">
-                <span className="text-3xl font-bold text-violet-300">1,000+</span>
-                <p className="text-sm text-gray-300 mt-1">individual checks across {TOOL_REGISTRY.length} tools</p>
+              <div className="p-4 rounded-xl bg-violet-950 border-2 border-violet-700 backdrop-blur-sm">
+                <span className="text-3xl font-bold text-violet-200">1,000+</span>
+                <p className="text-sm text-gray-200 mt-1">individual checks across {TOOL_REGISTRY.length} tools</p>
               </div>
             </div>
           </div>
@@ -348,11 +348,11 @@ export default function HomePage() {
           </div>
 
           {/* Scary call-out */}
-          <div className="mt-16 p-8 rounded-2xl bg-gradient-to-r from-red-950/50 via-orange-950/50 to-yellow-950/50 border-2 border-red-500/50 text-center">
-            <p className="text-2xl font-bold mb-4">
-              <span className="text-red-400">45% of AI-generated code</span> introduces security vulnerabilities. <span className="text-orange-400">Only 14%</span> of small businesses are prepared.
+          <div className="mt-16 p-8 rounded-2xl bg-gradient-to-r from-red-950 via-orange-950 to-yellow-950 border-2 border-red-500/50 text-center">
+            <p className="text-2xl font-bold mb-4 text-white">
+              <span className="text-red-300">45% of AI-generated code</span> introduces security vulnerabilities. <span className="text-orange-300">Only 14%</span> of small businesses are prepared.
             </p>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-gray-300 text-lg">
               You&apos;re building fast. That&apos;s great. But one breach could end everything. Bugrit has your back.
             </p>
           </div>
