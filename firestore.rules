@@ -2,6 +2,12 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // =====================================================
+    // SECURITY MODEL: Read-only for clients
+    // All writes must go through server-side API routes
+    // using firebase-admin (which bypasses these rules)
+    // =====================================================
+
     // Helper function to check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
@@ -12,78 +18,148 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Projects - users can only access their own projects
+    // Projects - users can only read their own projects
     match /projects/{projectId} {
-      allow read, write: if isAuthenticated() &&
-        (resource == null || resource.data.userId == request.auth.uid);
-      allow create: if isAuthenticated() &&
-        request.resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+      allow write: if false; // Server-side only via API
     }
 
-    // Scans - users can access scans for their projects
+    // Scans - users can read scans for their projects
     match /scans/{scanId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if false; // Server-side only via API
     }
 
-    // Scan test cases
+    // Scan test cases - read only
     match /scanTestCases/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if false; // Server-side only via API
     }
 
-    // Scan issues
+    // Scan issues - read only
     match /scanIssues/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if false; // Server-side only via API
     }
 
-    // Reports
+    // Reports - read only
     match /reports/{reportId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if false; // Server-side only via API
     }
 
-    // Organizations - members can read, admins can write
+    // Organizations - read only for members
     match /organizations/{orgId} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow write: if false; // Server-side only via API
     }
 
-    // API Keys - users can manage their own keys
+    // API Keys - users can read their own keys
     match /apiKeys/{keyId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if false; // Server-side only via API
     }
 
-    // Test cases, runs, scripts
+    // Test cases - read only
     match /testCases/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if false; // Server-side only via API
     }
 
+    // Test runs - read only
     match /testRuns/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if false; // Server-side only via API
     }
 
+    // Test scripts - read only
     match /testScripts/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if false; // Server-side only via API
     }
 
-    // Executions
+    // Executions - read only
     match /executions/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if false; // Server-side only via API
     }
 
-    // Workers and Jobs - system collections
+    // Workers - system collection, read only
     match /workers/{docId} {
       allow read: if isAuthenticated();
       allow write: if false; // Server-side only
     }
 
+    // Jobs - system collection, read only
     match /jobs/{docId} {
       allow read: if isAuthenticated();
       allow write: if false; // Server-side only
     }
 
-    // Stats - read only for authenticated users
+    // Stats - system collection, read only
     match /stats/{docId} {
       allow read: if isAuthenticated();
       allow write: if false; // Server-side only
+    }
+
+    // User profiles/subscriptions - read own data only
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if false; // Server-side only via API
+
+      // User creations subcollection - read own data only
+      match /creations/{creationId} {
+        allow read: if isOwner(userId);
+        allow write: if false; // Server-side only via API
+      }
+    }
+
+    // Subscriptions - read own data only
+    match /subscriptions/{subId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Server-side only via API
+    }
+
+    // Platform settings - admin only (server-side)
+    match /platform_settings/{docId} {
+      allow read: if false; // Admin API only
+      allow write: if false; // Admin API only
+
+      // Nested collections under platform_settings
+      match /{subcollection}/{subDocId} {
+        allow read: if false;
+        allow write: if false;
+      }
+    }
+
+    // Platform admins - admin only (server-side)
+    match /platform_admins/{docId} {
+      allow read: if false; // Admin API only
+      allow write: if false; // Admin API only
+    }
+
+    // Feature flags - read only for feature checking
+    match /feature_flags/{flagId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Admin API only
+    }
+
+    // Audit logs - admin only (server-side)
+    match /audit_logs/{logId} {
+      allow read: if false; // Admin API only
+      allow write: if false; // Admin API only
+    }
+
+    // Credit packages - read only for pricing display
+    match /credit_packages/{packageId} {
+      allow read: if true; // Public for pricing page
+      allow write: if false; // Admin API only
+    }
+
+    // Deny all other collections by default
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

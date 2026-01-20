@@ -84,6 +84,7 @@
     "remark-cli": "^12.0.0",
     "remark-preset-lint-recommended": "^7.0.0",
     "secretlint": "^8.0.0",
+    "server-only": "^0.0.1",
     "simple-git": "^3.22.0",
     "size-limit": "^11.0.0",
     "stripe": "^14.0.0",

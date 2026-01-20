@@ -4,8 +4,6 @@ import { useFormState, useFormStatus } from "react-dom";
 import { createContent, type ActionResult } from "@/app/actions";
 import { useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -29,35 +27,24 @@ export default function ContentGenerator() {
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    async function handleResult() {
-      if (state?.data && user && formRef.current) {
-        const topic = (formRef.current.elements.namedItem("topic") as HTMLInputElement)?.value;
-        try {
-          await addDoc(collection(db, `users/${user.uid}/creations`), {
-            topic: topic,
-            paragraph: state.data.paragraph,
-            imageUrl: state.data.imageUrl,
-            createdAt: serverTimestamp(),
-          });
-          formRef.current?.reset();
-        } catch (error) {
-          console.error("Error saving to Firestore:", error);
-          toast({
-            variant: "destructive",
-            title: "Database Error",
-            description: "Could not save content to your collection.",
-          });
-        }
-      } else if (state?.error) {
+    if (state?.data) {
+      // Content was generated and saved on the server
+      formRef.current?.reset();
+      if (!state.data.saved) {
         toast({
           variant: "destructive",
-          title: "Generation Error",
-          description: state.error,
+          title: "Save Warning",
+          description: "Content generated but could not be saved to your collection.",
         });
       }
+    } else if (state?.error) {
+      toast({
+        variant: "destructive",
+        title: "Generation Error",
+        description: state.error,
+      });
     }
-    handleResult();
-  }, [state, user, toast]);
+  }, [state, toast]);
 
   return (
     <Card className="shadow-md transition-shadow hover:shadow-lg">
@@ -73,6 +60,8 @@ export default function ContentGenerator() {
             required
             className="flex-grow text-base"
           />
+          {/* Pass userId to server action for server-side Firestore write */}
+          <input type="hidden" name="userId" value={user?.uid || ""} />
           <SubmitButton />
         </form>
       </CardContent>
