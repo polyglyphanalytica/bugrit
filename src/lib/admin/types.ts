@@ -26,11 +26,40 @@ export interface StripeConfig {
   mode: 'test' | 'live';
 }
 
+export interface PricingLimits {
+  credits: number;              // Monthly credits included
+  creditsRollover: number;      // Max credits that can roll over (0 = no rollover)
+  overageRate: number | null;   // Cost per overage credit (null = no overage allowed)
+  maxRepoSize: number;          // Max lines of code per scan
+  projects: number;             // Max projects (-1 = unlimited)
+  teamMembers: number;          // Max team members
+  historyDays: number;          // Scan history retention in days
+  apiRequestsPerMinute: number; // Rate limiting
+  platforms: {
+    web: boolean;
+    mobile: boolean;
+    desktop: boolean;
+  };
+}
+
+export interface PricingFeatures {
+  aiSummary: boolean;
+  aiExplanations: boolean;
+  aiFixSuggestions: boolean;
+  aiPrioritization: boolean;
+  githubIntegration: boolean;
+  slackIntegration: boolean;
+  webhooks: boolean;
+  apiAccess: boolean;
+  prioritySupport: boolean;
+}
+
 export interface PricingConfig {
   tierName: string;
   displayName: string;
   description: string;
   isActive: boolean;
+  highlighted?: boolean;        // Show as "Most Popular"
 
   // Stripe product/price IDs
   stripeProductId?: string;
@@ -43,27 +72,10 @@ export interface PricingConfig {
   currency: string;
 
   // Limits
-  limits: {
-    scansPerMonth: number; // -1 = unlimited
-    projects: number;
-    teamMembers: number;
-    historyDays: number;
-    platforms: {
-      web: boolean;
-      mobile: boolean;
-      desktop: boolean;
-    };
-  };
+  limits: PricingLimits;
 
   // Features
-  features: {
-    aiReports: boolean;
-    customRules: boolean;
-    apiAccess: boolean;
-    prioritySupport: boolean;
-    whiteLabeling: boolean;
-    ssoIntegration: boolean;
-  };
+  features: PricingFeatures;
 
   // Display order
   sortOrder: number;
@@ -77,6 +89,29 @@ export interface FeatureFlag {
   enabledForTiers: string[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface CreditPackage {
+  id: string;
+  name: string;
+  description: string;
+  credits: number;           // Number of credits in package
+  price: number;             // Price in dollars
+  currency: string;
+  isActive: boolean;
+  isFeatured: boolean;       // Show as "Best Value" or similar
+  stripePriceId?: string;    // Stripe price ID for one-time purchase
+  stripeProductId?: string;  // Stripe product ID
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AutoTopupConfig {
+  enabled: boolean;
+  triggerThreshold: number;   // Trigger when credits fall below this
+  packageId: string;          // Which package to purchase
+  maxPerMonth: number;        // Maximum auto-topups per month
 }
 
 export interface AuditLog {
