@@ -35,23 +35,40 @@ import {
   AIFeature,
 } from '@/lib/billing/credits';
 import { TOOL_REGISTRY, CATEGORY_LABELS, ToolCategory } from '@/lib/tools/registry';
+import { authenticateRequest, ApiKeyContext } from '@/lib/api/auth';
+import { ApiException } from '@/lib/api/errors';
+import { logger } from '@/lib/logger';
 
-// Mock auth
-function getUserFromRequest(req: NextRequest): {
+// Map tier names to SubscriptionTier
+function mapTierToSubscriptionTier(tier: string): SubscriptionTier {
+  const tierMap: Record<string, SubscriptionTier> = {
+    starter: 'starter',
+    pro: 'pro',
+    business: 'business',
+    enterprise: 'enterprise',
+  };
+  return tierMap[tier] || 'starter';
+}
+
+// Get user from authenticated request
+async function getUserFromRequest(req: NextRequest): Promise<{
   userId: string;
   tier: SubscriptionTier;
-} | null {
-  const apiKey = req.headers.get('x-api-key');
-  const authHeader = req.headers.get('authorization');
-
-  if (!apiKey && !authHeader) {
-    return null;
+  context: ApiKeyContext;
+} | null> {
+  try {
+    const context = await authenticateRequest(req);
+    return {
+      userId: context.apiKey.ownerId,
+      tier: mapTierToSubscriptionTier(context.tier),
+      context,
+    };
+  } catch (error) {
+    if (error instanceof ApiException) {
+      return null;
+    }
+    throw error;
   }
-
-  return {
-    userId: 'user_123',
-    tier: 'pro',
-  };
 }
 
 // Mock - get user's billing info
@@ -144,7 +161,7 @@ interface QuoteResponse {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = getUserFromRequest(req);
+    const user = await getUserFromRequest(req);
 
     if (!user) {
       return NextResponse.json(
@@ -280,7 +297,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Quote error:', error);
+    logger.error('Quote error', {
+      path: '/api/billing/quote',
+      method: 'POST',
+      error,
+    });
     return NextResponse.json(
       { error: 'Internal error', message: 'Failed to generate quote' },
       { status: 500 }
@@ -304,7 +325,7 @@ function getCategoryDescription(category: ToolCategory): string {
 
 // Also support GET for simple balance check
 export async function GET(req: NextRequest) {
-  const user = getUserFromRequest(req);
+  const user = await getUserFromRequest(req);
 
   if (!user) {
     return NextResponse.json(

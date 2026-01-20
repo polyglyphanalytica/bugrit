@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedUser, errorResponse } from '@/lib/api-auth';
 import { getCreditPackage } from '@/lib/admin/service';
 import { getStripeSecretKey } from '@/lib/admin/service';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
   try {
@@ -80,7 +81,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Create Stripe Checkout session
-    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL;
+
+    if (!origin) {
+      if (process.env.NODE_ENV === 'production') {
+        return errorResponse('NEXT_PUBLIC_APP_URL environment variable is required in production', 500);
+      }
+      return errorResponse('Missing origin header and NEXT_PUBLIC_APP_URL environment variable', 400);
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -106,7 +114,11 @@ export async function POST(req: NextRequest) {
       sessionId: session.id,
     });
   } catch (error) {
-    console.error('Purchase credits error:', error);
+    logger.error('Purchase credits error', {
+      path: '/api/billing/purchase-credits',
+      method: 'POST',
+      error,
+    });
     return errorResponse('Failed to initiate purchase', 500);
   }
 }

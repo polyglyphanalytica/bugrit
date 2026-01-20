@@ -12,20 +12,36 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SubscriptionTier } from '@/lib/billing/credits';
 import { UsageSummary, CreditTransaction } from '@/lib/billing/types';
 import { ToolCategory } from '@/lib/tools/registry';
+import { authenticateRequest, ApiKeyContext } from '@/lib/api/auth';
+import { ApiException } from '@/lib/api/errors';
+import { logger } from '@/lib/logger';
 
-// Mock auth
-function getUserFromRequest(req: NextRequest): { userId: string; tier: SubscriptionTier } | null {
-  const apiKey = req.headers.get('x-api-key');
-  const authHeader = req.headers.get('authorization');
-
-  if (!apiKey && !authHeader) {
-    return null;
-  }
-
-  return {
-    userId: 'user_123',
-    tier: 'pro',
+// Map tier names to SubscriptionTier
+function mapTierToSubscriptionTier(tier: string): SubscriptionTier {
+  const tierMap: Record<string, SubscriptionTier> = {
+    starter: 'starter',
+    pro: 'pro',
+    business: 'business',
+    enterprise: 'enterprise',
   };
+  return tierMap[tier] || 'starter';
+}
+
+// Get user from authenticated request
+async function getUserFromRequest(req: NextRequest): Promise<{ userId: string; tier: SubscriptionTier; context: ApiKeyContext } | null> {
+  try {
+    const context = await authenticateRequest(req);
+    return {
+      userId: context.apiKey.ownerId,
+      tier: mapTierToSubscriptionTier(context.tier),
+      context,
+    };
+  } catch (error) {
+    if (error instanceof ApiException) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 // Mock - get usage summary
@@ -113,7 +129,7 @@ async function getTransactions(
 
 export async function GET(req: NextRequest) {
   try {
-    const user = getUserFromRequest(req);
+    const user = await getUserFromRequest(req);
 
     if (!user) {
       return NextResponse.json(
@@ -164,7 +180,11 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Usage error:', error);
+    logger.error('Usage error', {
+      path: '/api/billing/usage',
+      method: 'GET',
+      error,
+    });
     return NextResponse.json(
       { error: 'Internal error', message: 'Failed to fetch usage data' },
       { status: 500 }

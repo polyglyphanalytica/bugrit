@@ -4,6 +4,7 @@ import { generateId } from '@/lib/firestore';
 import { validateUpload, scanFileForThreats } from '@/lib/scan/security';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { safeRequire } from '@/lib/utils/safe-require';
+import { logger } from '@/lib/logger';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -170,7 +171,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ scan }, { status: 201 });
   } catch (error) {
-    console.error('Error creating scan:', error);
+    logger.error('Error creating scan', {
+      path: '/api/scans',
+      method: 'POST',
+      error,
+    });
     return NextResponse.json(
       { error: 'Failed to create scan' },
       { status: 500 }
@@ -213,7 +218,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ scans });
   } catch (error) {
-    console.error('Error fetching scans:', error);
+    logger.error('Error fetching scans', {
+      path: '/api/scans',
+      method: 'GET',
+      error,
+    });
     return NextResponse.json({ error: 'Failed to fetch scans' }, { status: 500 });
   }
 }
@@ -341,7 +350,7 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
     }
 
     // Run all tools
-    console.log(`Running tools on ${targetPath}${targetUrl ? ` (URL: ${targetUrl})` : ''}`);
+    logger.info('Running scan tools', { scanId, targetPath, targetUrl });
     const results = await runTools({
       targetPath,
       targetUrl,
@@ -373,9 +382,9 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
     scan.completedAt = new Date().toISOString();
     scansStore.set(scanId, scan);
 
-    console.log(`Scan ${scanId} completed with ${summary.totalFindings} findings`);
+    logger.info('Scan completed', { scanId, totalFindings: summary.totalFindings });
   } catch (error) {
-    console.error(`Scan ${scanId} failed:`, error);
+    logger.error('Scan failed', { scanId, error });
     scan.status = 'failed';
     scan.error = error instanceof Error ? error.message : 'Unknown error';
     scan.completedAt = new Date().toISOString();
@@ -386,7 +395,7 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
       try {
         await fs.rm(tempDir, { recursive: true, force: true });
       } catch {
-        console.warn('Failed to cleanup temp directory:', tempDir);
+        logger.warn('Failed to cleanup temp directory', { tempDir });
       }
     }
   }
@@ -421,7 +430,7 @@ async function extractUploadedFile(file: File, targetDir: string) {
       await fs.mkdir(extractDir, { recursive: true });
       zip.extractAllTo(extractDir, true);
     } catch {
-      console.warn('Could not extract APK as ZIP');
+      logger.warn('Could not extract APK as ZIP', { fileName: file.name });
     }
   }
 }
@@ -446,7 +455,7 @@ async function cloneRepository(
     }
   }
 
-  console.log(`Cloning ${repoUrl} (branch: ${branch || 'main'}) to ${targetDir}`);
+  logger.info('Cloning repository', { repoUrl, branch: branch || 'main', targetDir });
 
   try {
     await git.clone(cloneUrl, targetDir, [
@@ -454,14 +463,14 @@ async function cloneRepository(
       '--branch', branch || 'main',
       '--single-branch',
     ]);
-    console.log('Repository cloned successfully');
+    logger.info('Repository cloned successfully', { repoUrl });
   } catch (error) {
     throw new Error(`Failed to clone repository: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 async function downloadNpmPackage(packageName: string, version: string, targetDir: string) {
-  console.log(`Downloading npm package ${packageName}@${version}`);
+  logger.info('Downloading npm package', { packageName, version });
 
   try {
     // Fetch package metadata from npm registry
@@ -511,7 +520,7 @@ async function downloadNpmPackage(packageName: string, version: string, targetDi
     });
 
     await fs.unlink(tarballPath);
-    console.log(`Downloaded and extracted ${packageName}@${resolvedVersion}`);
+    logger.info('Downloaded and extracted npm package', { packageName, version: resolvedVersion });
   } catch (error) {
     throw new Error(`Failed to download npm package: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
