@@ -32,6 +32,8 @@ const CATEGORY_ICONS: Record<ToolCategory, string> = {
   documentation: '📚',
   git: '🔀',
   performance: '⚡',
+  container: '🐳',
+  sbom: '📋',
 };
 
 const AI_FEATURE_LABELS: Record<AIFeature, { name: string; description: string }> = {

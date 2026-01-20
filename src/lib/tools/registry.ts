@@ -24,7 +24,9 @@ export type ToolCategory =
   | 'quality'
   | 'documentation'
   | 'git'
-  | 'performance';
+  | 'performance'
+  | 'container'
+  | 'sbom';
 
 export const TOOL_REGISTRY: ToolDefinition[] = [
   // ═══════════════════════════════════════════════════════════════
@@ -285,6 +287,46 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     dependencies: ['@size-limit/preset-small-lib'],
     filePatterns: ['package.json'],
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // CONTAINER SECURITY (3 tools) - Binary tools included in Docker
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'hadolint',
+    name: 'Hadolint',
+    description: 'Dockerfile linter with best practice rules',
+    category: 'container',
+    npm: 'hadolint',  // Binary tool, npm is placeholder
+    filePatterns: ['**/Dockerfile', '**/Dockerfile.*', '**/*.dockerfile'],
+  },
+  {
+    id: 'dockle',
+    name: 'Dockle',
+    description: 'Container image linter for security best practices',
+    category: 'container',
+    npm: 'dockle',  // Binary tool, npm is placeholder
+    filePatterns: ['**/Dockerfile'],
+  },
+  {
+    id: 'gitleaks',
+    name: 'Gitleaks',
+    description: 'Detect hardcoded secrets and credentials in git repos',
+    category: 'security',
+    npm: 'gitleaks',  // Binary tool, npm is placeholder
+    filePatterns: ['**/*'],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // SBOM & SUPPLY CHAIN (1 tool)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'syft',
+    name: 'Syft',
+    description: 'Generate Software Bill of Materials (SBOM) for supply chain security',
+    category: 'sbom',
+    npm: 'syft',  // Binary tool, npm is placeholder
+    filePatterns: ['package.json', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml'],
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -314,7 +356,7 @@ export function getAllNpmPackages(): string[] {
   return Array.from(packages);
 }
 
-export const TOOL_COUNT = TOOL_REGISTRY.length;  // 26
+export const TOOL_COUNT = TOOL_REGISTRY.length;  // 30
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   linting: 'Linting & Formatting',
@@ -325,4 +367,6 @@ export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   documentation: 'Documentation',
   git: 'Git & Commits',
   performance: 'Performance',
+  container: 'Container Security',
+  sbom: 'SBOM & Supply Chain',
 };

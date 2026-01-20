@@ -402,6 +402,8 @@ export default function HomePage() {
                     {category === 'documentation' && '📚'}
                     {category === 'git' && '🔀'}
                     {category === 'performance' && '⚡'}
+                    {category === 'container' && '🐳'}
+                    {category === 'sbom' && '📋'}
                   </span>
                   {CATEGORY_LABELS[category as ToolCategory]}
                 </h3>
@@ -493,6 +495,29 @@ export default function HomePage() {
                   <p><strong>Commitlint</strong> - Enforces conventional commit messages</p>
                   <p><strong>remark-lint</strong> - Markdown best practices</p>
                   <p>Ensures your repo is professional and maintainable</p>
+                </div>
+              </GlassCard>
+
+              <GlassCard className="p-6">
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <span className="text-cyan-400">🐳</span> Container Security
+                </h4>
+                <div className="space-y-3 text-sm">
+                  <p><strong>Hadolint</strong> - Dockerfile best practices and security rules</p>
+                  <p><strong>Dockle</strong> - Container image security scanning</p>
+                  <p><strong>Gitleaks</strong> - Detect hardcoded secrets in your codebase</p>
+                  <p>Ensures your Docker deployments are secure by default</p>
+                </div>
+              </GlassCard>
+
+              <GlassCard className="p-6">
+                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <span className="text-emerald-400">📋</span> SBOM & Supply Chain
+                </h4>
+                <div className="space-y-3 text-sm">
+                  <p><strong>Syft</strong> - Generates Software Bill of Materials</p>
+                  <p>Catalogs all packages in your application for compliance</p>
+                  <p>Essential for supply chain security and auditing</p>
                 </div>
               </GlassCard>
             </div>

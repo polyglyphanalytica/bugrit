@@ -298,6 +298,8 @@ function getCategoryDescription(category: ToolCategory): string {
     documentation: 'Markdown linting, docs quality',
     git: 'Commit message conventions',
     performance: 'Lighthouse audits, bundle size',
+    container: 'Dockerfile security and container image scanning',
+    sbom: 'Software Bill of Materials for supply chain security',
   };
   return descriptions[category];
 }

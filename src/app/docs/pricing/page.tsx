@@ -248,7 +248,7 @@ export default function PricingDocs() {
 
           {/* Tool Categories */}
           <div>
-            <h3 className="font-semibold mb-3">Tool Categories</h3>
+            <h3 className="font-semibold mb-3">Tool Categories (30 Tools)</h3>
             <table className="w-full text-sm">
               <tbody>
                 <tr className="border-b border-border/50">
@@ -257,6 +257,14 @@ export default function PricingDocs() {
                 </tr>
                 <tr className="border-b border-border/50">
                   <td className="py-2">Security</td>
+                  <td className="text-right font-mono">1 credit</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2">Container Security (Hadolint, Dockle)</td>
+                  <td className="text-right font-mono">1 credit</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2">SBOM & Supply Chain (Syft)</td>
                   <td className="text-right font-mono">1 credit</td>
                 </tr>
                 <tr className="border-b border-border/50">
