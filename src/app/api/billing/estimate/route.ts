@@ -13,45 +13,138 @@ import {
   SubscriptionTier,
 } from '@/lib/billing/credits';
 import { ScanEstimateRequest, ScanEstimateResponse } from '@/lib/billing/types';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
+import { getDb } from '@/lib/firestore';
 
-// Mock auth - replace with actual implementation
-function getUserFromRequest(req: NextRequest): { userId: string; tier: SubscriptionTier } | null {
-  const apiKey = req.headers.get('x-api-key');
-  const authHeader = req.headers.get('authorization');
+interface UserBillingContext {
+  userId: string;
+  tier: SubscriptionTier;
+  credits: number;
+}
 
-  if (!apiKey && !authHeader) {
+// Get user's billing context (tier and remaining credits)
+async function getUserBillingContext(userId: string): Promise<UserBillingContext> {
+  const db = getDb();
+
+  if (!db) {
+    // Demo/development fallback
+    return {
+      userId,
+      tier: 'starter',
+      credits: 50,
+    };
+  }
+
+  try {
+    // Check user's default organization first
+    const userDoc = await db.collection('users').doc(userId).get();
+
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      const defaultOrgId = userData?.defaultOrganizationId;
+
+      if (defaultOrgId) {
+        const orgDoc = await db.collection('organizations').doc(defaultOrgId).get();
+
+        if (orgDoc.exists) {
+          const orgData = orgDoc.data();
+          const subscription = orgData?.subscription || {};
+          const billing = orgData?.billing || {};
+
+          return {
+            userId,
+            tier: (subscription.tier as SubscriptionTier) || 'starter',
+            credits: billing.creditsRemaining ?? 50,
+          };
+        }
+      }
+    }
+
+    // Fallback: Check individual billing account
+    const billingDoc = await db.collection('billingAccounts').doc(userId).get();
+
+    if (billingDoc.exists) {
+      const data = billingDoc.data()!;
+      return {
+        userId,
+        tier: (data.tier as SubscriptionTier) || 'starter',
+        credits: data.credits?.remaining ?? 50,
+      };
+    }
+
+    // No billing account - return free tier defaults
+    return {
+      userId,
+      tier: 'free',
+      credits: SUBSCRIPTION_TIERS.free.credits,
+    };
+  } catch (error) {
+    console.error('Error fetching user billing context:', error);
+    return {
+      userId,
+      tier: 'free',
+      credits: SUBSCRIPTION_TIERS.free.credits,
+    };
+  }
+}
+
+// Estimate repo size from previous scans
+async function estimateRepoSize(repoUrl?: string, projectId?: string): Promise<number | null> {
+  const db = getDb();
+
+  if (!db || (!repoUrl && !projectId)) {
     return null;
   }
 
-  return {
-    userId: 'user_123',
-    tier: 'pro',
-  };
-}
+  try {
+    // If we have a projectId, look up the most recent scan for that project
+    if (projectId) {
+      const scansSnapshot = await db
+        .collection('scans')
+        .where('projectId', '==', projectId)
+        .orderBy('createdAt', 'desc')
+        .limit(1)
+        .get();
 
-// Mock - get user's remaining credits
-async function getUserCredits(userId: string): Promise<number> {
-  // TODO: Fetch from Firestore
-  return 153;
-}
+      if (!scansSnapshot.empty) {
+        const lastScan = scansSnapshot.docs[0].data();
+        return lastScan.linesScanned || null;
+      }
+    }
 
-// Mock - estimate repo size from URL or project
-async function estimateRepoSize(repoUrl?: string, projectId?: string): Promise<number | null> {
-  // TODO: If we've scanned this repo before, return known size
-  // TODO: Could also do a quick GitHub API call to estimate
-  return null;
+    // If we have a repoUrl, look up scans for that repo
+    if (repoUrl) {
+      const scansSnapshot = await db
+        .collection('scans')
+        .where('repoUrl', '==', repoUrl)
+        .orderBy('createdAt', 'desc')
+        .limit(1)
+        .get();
+
+      if (!scansSnapshot.empty) {
+        const lastScan = scansSnapshot.docs[0].data();
+        return lastScan.linesScanned || null;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error estimating repo size:', error);
+    return null;
+  }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const user = getUserFromRequest(req);
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'Valid API key or auth token required' },
-        { status: 401 }
-      );
+    // Authenticate user via API key or session
+    const authResult = requireAuthenticatedUser(req);
+    if (authResult instanceof NextResponse) {
+      return authResult;
     }
+    const userId = authResult;
+
+    // Get user's billing context (tier and credits)
+    const userContext = await getUserBillingContext(userId);
 
     const body: ScanEstimateRequest = await req.json();
 
@@ -81,14 +174,14 @@ export async function POST(req: NextRequest) {
     // Calculate credits
     const estimate = calculateCredits(configWithEstimates);
 
-    // Get user's balance
-    const currentBalance = await getUserCredits(user.userId);
+    // Use credits from user context
+    const currentBalance = userContext.credits;
 
     // Check affordability
-    const affordCheck = canAffordScan(currentBalance, estimate, user.tier);
+    const affordCheck = canAffordScan(currentBalance, estimate, userContext.tier);
 
     // Calculate overage if applicable
-    const tierConfig = SUBSCRIPTION_TIERS[user.tier];
+    const tierConfig = SUBSCRIPTION_TIERS[userContext.tier];
     let overageAmount: number | undefined;
     let overageCost: number | undefined;
 

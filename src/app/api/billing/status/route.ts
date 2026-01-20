@@ -8,55 +8,150 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@/lib/billing/credits';
 import { BillingStatus } from '@/lib/billing/types';
+import { requireAuthenticatedUser, errorResponse } from '@/lib/api-auth';
+import { getDb, toDate } from '@/lib/firestore';
 
-// Mock function - replace with actual auth
-function getUserFromRequest(req: NextRequest): { userId: string; tier: SubscriptionTier } | null {
-  const apiKey = req.headers.get('x-api-key');
-  const authHeader = req.headers.get('authorization');
-
-  if (!apiKey && !authHeader) {
-    return null;
-  }
-
-  // TODO: Validate API key or JWT and get user
-  // For now, return mock data
-  return {
-    userId: 'user_123',
-    tier: 'pro',
+interface BillingAccountData {
+  tier: SubscriptionTier;
+  credits: {
+    included: number;
+    used: number;
+    remaining: number;
+    rollover: number;
+  };
+  subscription: {
+    status: 'active' | 'past_due' | 'canceled' | 'trialing';
+    currentPeriodEnd: Date;
+    cancelAtPeriodEnd: boolean;
   };
 }
 
-// Mock function - replace with Firestore lookup
-async function getBillingAccount(userId: string) {
-  // TODO: Fetch from Firestore
-  return {
-    tier: 'pro' as SubscriptionTier,
-    credits: {
-      included: 200,
-      used: 47,
-      remaining: 153,
-      rollover: 0,
-    },
-    subscription: {
-      status: 'active' as const,
-      currentPeriodEnd: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days
-      cancelAtPeriodEnd: false,
-    },
-  };
+async function getBillingAccount(userId: string): Promise<BillingAccountData> {
+  const db = getDb();
+
+  if (!db) {
+    // Fallback for demo/development mode - return starter tier defaults
+    return {
+      tier: 'starter',
+      credits: {
+        included: 50,
+        used: 0,
+        remaining: 50,
+        rollover: 0,
+      },
+      subscription: {
+        status: 'active',
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        cancelAtPeriodEnd: false,
+      },
+    };
+  }
+
+  try {
+    // First try to find user's default organization billing
+    const userDoc = await db.collection('users').doc(userId).get();
+
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      const defaultOrgId = userData?.defaultOrganizationId;
+
+      if (defaultOrgId) {
+        // Get organization billing data
+        const orgDoc = await db.collection('organizations').doc(defaultOrgId).get();
+
+        if (orgDoc.exists) {
+          const orgData = orgDoc.data();
+          const subscription = orgData?.subscription || {};
+          const billing = orgData?.billing || {};
+
+          return {
+            tier: (subscription.tier as SubscriptionTier) || 'starter',
+            credits: {
+              included: billing.creditsIncluded || SUBSCRIPTION_TIERS[subscription.tier || 'starter']?.credits || 50,
+              used: billing.creditsUsed || 0,
+              remaining: billing.creditsRemaining ?? (billing.creditsIncluded || 50) - (billing.creditsUsed || 0),
+              rollover: billing.creditsRollover || 0,
+            },
+            subscription: {
+              status: subscription.status || 'active',
+              currentPeriodEnd: subscription.currentPeriodEnd
+                ? toDate(subscription.currentPeriodEnd)
+                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              cancelAtPeriodEnd: subscription.cancelAtPeriodEnd || false,
+            },
+          };
+        }
+      }
+    }
+
+    // Fallback: Check for individual billing account
+    const billingDoc = await db.collection('billingAccounts').doc(userId).get();
+
+    if (billingDoc.exists) {
+      const data = billingDoc.data()!;
+      return {
+        tier: (data.tier as SubscriptionTier) || 'starter',
+        credits: {
+          included: data.credits?.included || 50,
+          used: data.credits?.used || 0,
+          remaining: data.credits?.remaining ?? 50,
+          rollover: data.credits?.rollover || 0,
+        },
+        subscription: {
+          status: data.subscription?.status || 'active',
+          currentPeriodEnd: data.subscription?.currentPeriodEnd
+            ? toDate(data.subscription.currentPeriodEnd)
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          cancelAtPeriodEnd: data.subscription?.cancelAtPeriodEnd || false,
+        },
+      };
+    }
+
+    // No billing account found - return free tier defaults
+    return {
+      tier: 'free',
+      credits: {
+        included: SUBSCRIPTION_TIERS.free.credits,
+        used: 0,
+        remaining: SUBSCRIPTION_TIERS.free.credits,
+        rollover: 0,
+      },
+      subscription: {
+        status: 'active',
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        cancelAtPeriodEnd: false,
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching billing account:', error);
+    // Return free tier on error
+    return {
+      tier: 'free',
+      credits: {
+        included: SUBSCRIPTION_TIERS.free.credits,
+        used: 0,
+        remaining: SUBSCRIPTION_TIERS.free.credits,
+        rollover: 0,
+      },
+      subscription: {
+        status: 'active',
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        cancelAtPeriodEnd: false,
+      },
+    };
+  }
 }
 
 export async function GET(req: NextRequest) {
   try {
-    const user = getUserFromRequest(req);
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'Valid API key or auth token required' },
-        { status: 401 }
-      );
+    // Authenticate user via API key or session
+    const authResult = requireAuthenticatedUser(req);
+    if (authResult instanceof NextResponse) {
+      return authResult;
     }
+    const userId = authResult;
 
-    const account = await getBillingAccount(user.userId);
+    const account = await getBillingAccount(userId);
     const tierConfig = SUBSCRIPTION_TIERS[account.tier];
 
     const status: BillingStatus = {

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { getApps, initializeApp, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import {
   getOrganization,
   getOrganizationMembers,
@@ -9,6 +11,39 @@ import {
   hasPermission,
   MemberRole,
 } from '@/lib/organizations';
+
+// Initialize Firebase Admin if not already initialized
+function getFirebaseAuth() {
+  if (getApps().length === 0) {
+    const projectId =
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+      process.env.FIREBASE_PROJECT_ID ||
+      process.env.GOOGLE_CLOUD_PROJECT;
+
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      initializeApp({
+        credential: cert(serviceAccount),
+        projectId,
+      });
+    } else {
+      initializeApp({ projectId });
+    }
+  }
+  return getAuth();
+}
+
+// Verify session cookie and return user ID
+async function verifySessionAndGetUserId(sessionCookie: string): Promise<string | null> {
+  try {
+    const auth = getFirebaseAuth();
+    const decodedToken = await auth.verifySessionCookie(sessionCookie);
+    return decodedToken.uid;
+  } catch (error) {
+    console.error('Session verification failed:', error);
+    return null;
+  }
+}
 
 interface RouteParams {
   params: Promise<{ orgId: string }>;
@@ -27,8 +62,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
+    // Verify session and get user ID
+    const userId = await verifySessionAndGetUserId(sessionCookie);
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
+    }
+
     const { orgId } = await params;
-    const userId = 'mock-user-id';
 
     // Verify user has permission to view invites
     const members = await getOrganizationMembers(orgId);
@@ -64,8 +104,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
+    // Verify session and get user ID
+    const userId = await verifySessionAndGetUserId(sessionCookie);
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
+    }
+
     const { orgId } = await params;
-    const userId = 'mock-user-id';
     const { email, role = 'member' } = await request.json();
 
     if (!email || typeof email !== 'string') {
@@ -129,8 +174,13 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
+    // Verify session and get user ID
+    const userId = await verifySessionAndGetUserId(sessionCookie);
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
+    }
+
     const { orgId } = await params;
-    const userId = 'mock-user-id';
     const { token } = await request.json();
 
     if (!token) {

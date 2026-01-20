@@ -80,7 +80,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Create Stripe Checkout session
-    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    // Get origin from headers or environment variable (do NOT fall back to hardcoded URLs)
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL;
+
+    if (!origin) {
+      return errorResponse(
+        'Application URL not configured. Set NEXT_PUBLIC_APP_URL environment variable.',
+        503
+      );
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
