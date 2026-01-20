@@ -8,6 +8,16 @@
 import { TOOL_REGISTRY, ToolDefinition } from './registry';
 import { execSync } from 'child_process';
 
+/**
+ * Safely require a module at runtime (not bundled/analyzed at build time)
+ * This prevents Turbopack/Webpack from trying to bundle these packages
+ */
+function safeRequire<T = unknown>(moduleName: string): T {
+  // Using eval to prevent static analysis by bundlers
+  // eslint-disable-next-line no-eval
+  return eval('require')(moduleName) as T;
+}
+
 export interface ToolResult {
   toolId: string;
   toolName: string;
@@ -143,7 +153,7 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   // ESLint
   // ─────────────────────────────────────────────────────────────
   eslint: async ({ targetPath }) => {
-    const { ESLint } = await import('eslint');
+    const { ESLint } = safeRequire<typeof import('eslint')>('eslint');
     const eslint = new ESLint({ cwd: targetPath });
     const results = await eslint.lintFiles(['**/*.{js,jsx,ts,tsx}']);
 
@@ -201,7 +211,7 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   // Stylelint
   // ─────────────────────────────────────────────────────────────
   stylelint: async ({ targetPath }) => {
-    const stylelint = await import('stylelint');
+    const stylelint = safeRequire<typeof import('stylelint')>('stylelint');
     const result = await stylelint.default.lint({
       files: `${targetPath}/**/*.{css,scss,less}`,
       formatter: 'json',
@@ -285,7 +295,7 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   // Depcheck
   // ─────────────────────────────────────────────────────────────
   depcheck: async ({ targetPath }) => {
-    const depcheck = await import('depcheck');
+    const depcheck = safeRequire<typeof import('depcheck')>('depcheck');
     const result = await depcheck.default(targetPath, {});
 
     const findings: Finding[] = [];
@@ -331,7 +341,7 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   // License Checker
   // ─────────────────────────────────────────────────────────────
   'license-checker': async ({ targetPath }) => {
-    const checker = await import('license-checker');
+    const checker = safeRequire<typeof import('license-checker')>('license-checker');
 
     return new Promise((resolve) => {
       checker.init({ start: targetPath }, (err, packages) => {
@@ -376,7 +386,7 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   // TypeScript
   // ─────────────────────────────────────────────────────────────
   typescript: async ({ targetPath }) => {
-    const ts = await import('typescript');
+    const ts = safeRequire<typeof import('typescript')>('typescript');
     const path = await import('path');
     const fs = await import('fs');
 
@@ -578,7 +588,7 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   // ESLint Security Plugin
   // ─────────────────────────────────────────────────────────────
   'eslint-security': async ({ targetPath }) => {
-    const { ESLint } = await import('eslint');
+    const { ESLint } = safeRequire<typeof import('eslint')>('eslint');
     const eslint = new ESLint({
       cwd: targetPath,
       overrideConfig: {
