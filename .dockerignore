@@ -1,0 +1,25 @@
+# Dependencies
+node_modules
+
+# Build output
+.next
+out
+
+# Development files
+.git
+.gitignore
+*.md
+.env*.local
+
+# IDE
+.vscode
+.idea
+
+# Testing
+coverage
+.nyc_output
+
+# Misc
+*.log
+npm-debug.log*
+.DS_Store
