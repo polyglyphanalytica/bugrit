@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createCheckoutSession } from '@/lib/subscriptions/stripe';
 import { TierName } from '@/lib/subscriptions/tiers';
+import { verifySession } from '@/lib/auth/session';
 
 /**
  * POST /api/subscription/checkout
@@ -31,28 +31,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user from session (replace with your auth method)
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
+    const user = await verifySession();
 
-    if (!sessionCookie) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
       );
     }
 
-    // Get user details (replace with your auth method)
-    // const user = await verifySession(sessionCookie);
-    const user = {
-      id: 'mock-user-id',
-      email: 'user@example.com',
-    };
-
     // Create checkout session
     const { url } = await createCheckoutSession({
-      userId: user.id,
-      userEmail: user.email,
+      userId: user.uid,
+      userEmail: user.email || '',
       tier,
       interval,
       successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?subscription=success`,

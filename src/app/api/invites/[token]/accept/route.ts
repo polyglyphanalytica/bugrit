@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { acceptInvite } from '@/lib/organizations';
+import { verifySession } from '@/lib/auth/session';
+import { getAuth } from 'firebase-admin/auth';
+import { getApps } from 'firebase-admin/app';
 
 interface RouteParams {
   params: Promise<{ token: string }>;
@@ -12,21 +14,26 @@ interface RouteParams {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
+    const user = await verifySession();
 
-    if (!sessionCookie) {
+    if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const { token } = await params;
 
-    // Replace with your auth method to get real user info
-    const userId = 'mock-user-id';
-    const userEmail = 'user@example.com';
-    const displayName = 'Mock User';
+    // Get display name from Firebase Auth
+    let displayName = user.email?.split('@')[0] || 'User';
+    if (getApps().length > 0) {
+      try {
+        const firebaseUser = await getAuth().getUser(user.uid);
+        displayName = firebaseUser.displayName || displayName;
+      } catch {
+        // Use fallback display name
+      }
+    }
 
-    const result = await acceptInvite(token, userId, userEmail, displayName);
+    const result = await acceptInvite(token, user.uid, user.email || '', displayName);
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });

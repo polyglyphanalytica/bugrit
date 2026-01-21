@@ -2,8 +2,27 @@
 // Validates API keys and manages permissions
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { store } from './store';
 import { ApiKey, ApiKeyPermission } from './types';
+
+/**
+ * Constant-time string comparison to prevent timing attacks
+ */
+function secureCompare(a: string, b: string): boolean {
+  try {
+    const bufA = Buffer.from(a, 'utf8');
+    const bufB = Buffer.from(b, 'utf8');
+    // If lengths differ, compare with itself to maintain constant time
+    if (bufA.length !== bufB.length) {
+      timingSafeEqual(bufA, bufA);
+      return false;
+    }
+    return timingSafeEqual(bufA, bufB);
+  } catch {
+    return false;
+  }
+}
 
 // Check if we're in development mode (no auth required)
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -174,7 +193,7 @@ export function validateAdminKey(request: NextRequest): AuthResult {
     };
   }
 
-  if (adminKey !== expectedAdminKey) {
+  if (!secureCompare(adminKey, expectedAdminKey)) {
     return {
       success: false,
       error: 'Invalid admin key',

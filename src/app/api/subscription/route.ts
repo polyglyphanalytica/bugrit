@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { db } from '@/lib/firebase/admin';
+import { verifySession } from '@/lib/auth/session';
 
 /**
  * GET /api/subscription
@@ -8,22 +8,16 @@ import { db } from '@/lib/firebase/admin';
  */
 export async function GET() {
   try {
-    // Get user from session (you'd replace this with your auth method)
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
+    const user = await verifySession();
 
-    if (!sessionCookie) {
+    if (!user) {
       return NextResponse.json(
         { subscription: { tier: 'starter', status: 'none', scansUsedThisMonth: 0, projectCount: 0 } },
         { status: 200 }
       );
     }
 
-    // Verify session and get user ID (implement based on your auth)
-    // const userId = await verifySession(sessionCookie);
-
-    // For now, return mock data - replace with actual Firestore query
-    const userId = 'mock-user-id';
+    const userId = user.uid;
 
     // Get subscription from Firestore
     const subscriptionDoc = await db

@@ -1,18 +1,40 @@
 /**
  * Platform Admin Constants
  *
- * Hardcoded superadmin configuration
+ * Superadmin configuration via environment variables
  */
 
-// Default superadmin email - bypasses all subscription limits
-export const DEFAULT_SUPERADMIN_EMAIL = 'polyglyph.analytica@gmail.com';
+/**
+ * Get the default superadmin email from environment
+ * Falls back to empty string if not configured (requires DB setup)
+ */
+export function getDefaultSuperadminEmail(): string {
+  return process.env.SUPERADMIN_EMAIL || '';
+}
 
-// List of emails that are always superadmins (can't be removed)
-export const PROTECTED_SUPERADMIN_EMAILS = [
-  'polyglyph.analytica@gmail.com',
-];
+/**
+ * Get list of protected superadmin emails from environment
+ * Format: comma-separated list of emails
+ * Example: PROTECTED_SUPERADMIN_EMAILS=admin@example.com,super@example.com
+ */
+export function getProtectedSuperadminEmails(): string[] {
+  const envEmails = process.env.PROTECTED_SUPERADMIN_EMAILS;
+  if (!envEmails) {
+    // Fall back to SUPERADMIN_EMAIL if PROTECTED_SUPERADMIN_EMAILS not set
+    const defaultEmail = getDefaultSuperadminEmail();
+    return defaultEmail ? [defaultEmail] : [];
+  }
+  return envEmails.split(',').map(email => email.trim().toLowerCase()).filter(Boolean);
+}
 
-// Check if an email is a protected superadmin
+// Legacy exports for backward compatibility (read from env)
+export const DEFAULT_SUPERADMIN_EMAIL = getDefaultSuperadminEmail();
+export const PROTECTED_SUPERADMIN_EMAILS = getProtectedSuperadminEmails();
+
+/**
+ * Check if an email is a protected superadmin
+ */
 export function isProtectedSuperadmin(email: string): boolean {
-  return PROTECTED_SUPERADMIN_EMAILS.includes(email.toLowerCase());
+  const protectedEmails = getProtectedSuperadminEmails();
+  return protectedEmails.includes(email.toLowerCase());
 }

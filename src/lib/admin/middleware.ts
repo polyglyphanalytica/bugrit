@@ -1,11 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { getAuth } from 'firebase-admin/auth';
+import { getApps } from 'firebase-admin/app';
 import { getPlatformAdmin, hasAdminPermission, updateAdminLastLogin } from './service';
 import { AdminPermission, PlatformAdmin } from './types';
 
 export interface AdminContext {
   admin: PlatformAdmin;
   userId: string;
+}
+
+/**
+ * Verify Firebase session cookie and extract user ID
+ */
+async function verifySessionCookie(sessionCookie: string): Promise<string | null> {
+  // Check if Firebase Admin is initialized
+  if (getApps().length === 0) {
+    console.error('Firebase Admin not initialized');
+    return null;
+  }
+
+  try {
+    const auth = getAuth();
+    // Verify the session cookie and check if it's been revoked
+    const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
+    return decodedClaims.uid;
+  } catch (error) {
+    console.error('Session verification failed:', error);
+    return null;
+  }
 }
 
 /**
@@ -25,9 +48,15 @@ export async function verifyAdmin(
       };
     }
 
-    // TODO: Replace with your auth method to decode session
-    // This should verify the Firebase session cookie and extract userId
-    const userId = 'mock-admin-id'; // Replace with actual session decoding
+    // Verify the Firebase session cookie and extract userId
+    const userId = await verifySessionCookie(sessionCookie);
+
+    if (!userId) {
+      return {
+        success: false,
+        response: NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 }),
+      };
+    }
 
     const admin = await getPlatformAdmin(userId);
 

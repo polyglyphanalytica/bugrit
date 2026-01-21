@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import {
-  getOrganization,
   getOrganizationMembers,
   removeMember,
   updateMemberRole,
   MemberRole,
 } from '@/lib/organizations';
+import { verifySession } from '@/lib/auth/session';
 
 interface RouteParams {
   params: Promise<{ orgId: string }>;
@@ -18,15 +17,14 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
+    const user = await verifySession();
 
-    if (!sessionCookie) {
+    if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const { orgId } = await params;
-    const userId = 'mock-user-id';
+    const userId = user.uid;
 
     // Verify user is a member
     const members = await getOrganizationMembers(orgId);
@@ -49,15 +47,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
+    const user = await verifySession();
 
-    if (!sessionCookie) {
+    if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const { orgId } = await params;
-    const removerId = 'mock-user-id';
+    const removerId = user.uid;
     const { userId } = await request.json();
 
     if (!userId) {
@@ -83,15 +80,14 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
+    const user = await verifySession();
 
-    if (!sessionCookie) {
+    if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const { orgId } = await params;
-    const updaterId = 'mock-user-id';
+    const updaterId = user.uid;
     const { userId, role } = await request.json();
 
     if (!userId || !role) {

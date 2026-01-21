@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createOrganization, getUserOrganizations } from '@/lib/organizations';
+import { verifySession } from '@/lib/auth/session';
 
 /**
  * GET /api/organizations
@@ -8,17 +8,13 @@ import { createOrganization, getUserOrganizations } from '@/lib/organizations';
  */
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
+    const user = await verifySession();
 
-    if (!sessionCookie) {
+    if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Replace with your auth method
-    const userId = 'mock-user-id';
-
-    const organizations = await getUserOrganizations(userId);
+    const organizations = await getUserOrganizations(user.uid);
 
     return NextResponse.json({ organizations });
   } catch (error) {
@@ -36,16 +32,11 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
+    const user = await verifySession();
 
-    if (!sessionCookie) {
+    if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
-
-    // Replace with your auth method
-    const userId = 'mock-user-id';
-    const userEmail = 'user@example.com';
 
     const { name } = await request.json();
 
@@ -56,7 +47,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const organization = await createOrganization(userId, userEmail, name.trim());
+    const organization = await createOrganization(user.uid, user.email || '', name.trim());
 
     return NextResponse.json({ organization }, { status: 201 });
   } catch (error) {
