@@ -10,10 +10,16 @@
  * 3. Cloud Build runs the Docker image with source code
  * 4. Results are written to Cloud Storage
  * 5. Worker fetches results and returns to client
+ *
+ * Version Management:
+ * - Docker image versions are pinned in ./docker-versions.ts
+ * - Use getDockerImage(toolId) to get pinned image:tag
+ * - See MAINTENANCE.md for update procedures
  */
 
 import { google } from 'googleapis';
 import { Storage } from '@google-cloud/storage';
+import { getDockerImage, DOCKER_VERSIONS } from './docker-versions';
 
 const cloudbuild = google.cloudbuild('v1');
 
@@ -1309,4 +1315,43 @@ export function createCloudBuildRunner(): CloudBuildRunner | null {
     projectId,
     outputBucket,
   });
+}
+
+/**
+ * Get the pinned Docker image for a tool
+ * Falls back to the image defined in DOCKER_TOOLS if not pinned
+ */
+export function getPinnedImage(toolId: DockerToolId): string {
+  // Try to get pinned version first
+  const pinnedVersion = DOCKER_VERSIONS[toolId];
+  if (pinnedVersion) {
+    return `${pinnedVersion.image}:${pinnedVersion.version}`;
+  }
+
+  // Fall back to DOCKER_TOOLS definition
+  const toolConfig = DOCKER_TOOLS[toolId];
+  if (toolConfig) {
+    console.warn(`Tool ${toolId} not pinned in docker-versions.ts, using default image`);
+    return toolConfig.image;
+  }
+
+  throw new Error(`Unknown tool: ${toolId}`);
+}
+
+/**
+ * Check if all Docker tools have pinned versions
+ */
+export function validateVersionPinning(): { valid: boolean; missing: string[] } {
+  const missing: string[] = [];
+
+  for (const toolId of Object.keys(DOCKER_TOOLS)) {
+    if (!DOCKER_VERSIONS[toolId]) {
+      missing.push(toolId);
+    }
+  }
+
+  return {
+    valid: missing.length === 0,
+    missing,
+  };
 }
