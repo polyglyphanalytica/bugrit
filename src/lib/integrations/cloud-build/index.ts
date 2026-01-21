@@ -1722,4 +1722,5 @@ export const CLOUD_BUILD_INTEGRATIONS: ToolIntegration[] = [
 ];
 
 // Export count for verification
-export const CLOUD_BUILD_TOOL_COUNT = CLOUD_BUILD_INTEGRATIONS.length;  // 44 tools
+// Note: 44 integrations because spectral has both npm and Docker support
+export const CLOUD_BUILD_TOOL_COUNT = CLOUD_BUILD_INTEGRATIONS.length;  // 44 Docker integrations

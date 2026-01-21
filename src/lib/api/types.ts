@@ -328,33 +328,34 @@ export type WebhookEventType =
 // ============================================================================
 
 export const AVAILABLE_TOOLS = [
-  // Linting
+  // Linting (4)
   'eslint', 'biome', 'stylelint', 'prettier',
-  // Security
+  // Security (19)
   'semgrep', 'gitleaks', 'trivy', 'grype', 'nuclei', 'checkov', 'secretlint',
-  'npm-audit', 'bandit', 'gosec', 'brakeman', 'owasp-zap', 'flawfinder',
-  'garak', 'modelscan',
-  // Dependencies
+  'npm-audit', 'bandit', 'gosec', 'brakeman', 'owasp-zap', 'dependency-check',
+  'tfsec', 'dockle', 'syft', 'flawfinder', 'garak', 'modelscan',
+  // Dependencies (7)
   'depcheck', 'license-checker', 'madge', 'dependency-cruiser', 'osv-scanner',
   'pip-audit', 'cargo-audit',
-  // Accessibility
+  // Accessibility (2)
   'axe-core', 'pa11y',
-  // Quality
+  // Quality (16)
   'typescript', 'knip', 'jscpd', 'cspell', 'publint', 'codeclimate', 'phpstan',
-  'rubocop', 'detekt', 'cppcheck', 'clippy', 'shellcheck',
-  // Documentation
+  'psalm', 'spotbugs', 'pmd', 'checkstyle', 'rubocop', 'detekt', 'cppcheck',
+  'clippy', 'shellcheck',
+  // Documentation (3)
   'markdownlint', 'remark-lint', 'alex',
-  // Git
+  // Git (1)
   'commitlint',
-  // Performance
-  'lighthouse', 'size-limit',
-  // Mobile
+  // Performance (3)
+  'lighthouse', 'sitespeed', 'size-limit',
+  // Mobile (4)
   'mobsf', 'apkleaks', 'androguard', 'swiftlint',
-  // API Security
+  // API Security (4)
   'spectral', 'dredd', 'graphql-cop', 'schemathesis',
-  // Cloud Native
+  // Cloud Native (5)
   'kubesec', 'kube-bench', 'polaris', 'terrascan', 'kube-hunter',
-] as const;
+] as const;  // Total: 68 tools
 
 export type ToolName = (typeof AVAILABLE_TOOLS)[number];
 
