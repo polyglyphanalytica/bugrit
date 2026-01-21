@@ -31,6 +31,7 @@ const TOOL_METADATA: Record<
     targetType: 'url' | 'source' | 'image';
   }
 > = {
+  // Wave 1 tools
   'owasp-zap': {
     category: 'security',
     description: 'OWASP ZAP web application security scanner',
@@ -67,6 +68,7 @@ const TOOL_METADATA: Record<
     website: 'https://github.com/anchore/grype',
     targetType: 'source',
   },
+  // Wave 2 tools
   semgrep: {
     category: 'security',
     description: 'Semgrep static analysis for security and bugs',
@@ -125,6 +127,170 @@ const TOOL_METADATA: Record<
     category: 'security',
     description: 'gosec Go security checker',
     website: 'https://securego.io/',
+    targetType: 'source',
+  },
+  // Wave 3: Language-specific tools
+  phpstan: {
+    category: 'code-quality',
+    description: 'PHPStan static analysis for PHP',
+    website: 'https://phpstan.org/',
+    targetType: 'source',
+  },
+  psalm: {
+    category: 'code-quality',
+    description: 'Psalm type-safe PHP analysis',
+    website: 'https://psalm.dev/',
+    targetType: 'source',
+  },
+  brakeman: {
+    category: 'security',
+    description: 'Brakeman Ruby on Rails security scanner',
+    website: 'https://brakemanscanner.org/',
+    targetType: 'source',
+  },
+  rubocop: {
+    category: 'code-quality',
+    description: 'RuboCop Ruby style linter',
+    website: 'https://rubocop.org/',
+    targetType: 'source',
+  },
+  spotbugs: {
+    category: 'code-quality',
+    description: 'SpotBugs Java static analysis',
+    website: 'https://spotbugs.github.io/',
+    targetType: 'source',
+  },
+  pmd: {
+    category: 'code-quality',
+    description: 'PMD Java source analyzer',
+    website: 'https://pmd.github.io/',
+    targetType: 'source',
+  },
+  checkstyle: {
+    category: 'code-quality',
+    description: 'Checkstyle Java code style checker',
+    website: 'https://checkstyle.org/',
+    targetType: 'source',
+  },
+  detekt: {
+    category: 'code-quality',
+    description: 'Detekt Kotlin static analysis',
+    website: 'https://detekt.dev/',
+    targetType: 'source',
+  },
+  // Wave 4: API, Mobile, Cloud Native, AI/ML tools
+  'osv-scanner': {
+    category: 'security',
+    description: 'Google OSV vulnerability scanner',
+    website: 'https://google.github.io/osv-scanner/',
+    targetType: 'source',
+  },
+  'pip-audit': {
+    category: 'security',
+    description: 'pip-audit Python dependency scanner',
+    website: 'https://github.com/pypa/pip-audit',
+    targetType: 'source',
+  },
+  'cargo-audit': {
+    category: 'security',
+    description: 'Cargo Audit Rust dependency scanner',
+    website: 'https://github.com/RustSec/rustsec',
+    targetType: 'source',
+  },
+  spectral: {
+    category: 'security',
+    description: 'Spectral OpenAPI/AsyncAPI linter',
+    website: 'https://stoplight.io/open-source/spectral',
+    targetType: 'source',
+  },
+  schemathesis: {
+    category: 'security',
+    description: 'Schemathesis API fuzzing',
+    website: 'https://schemathesis.io/',
+    targetType: 'url',
+  },
+  'graphql-cop': {
+    category: 'security',
+    description: 'GraphQL Cop security scanner',
+    website: 'https://github.com/dolevf/graphql-cop',
+    targetType: 'url',
+  },
+  mobsf: {
+    category: 'security',
+    description: 'MobSF mobile security framework',
+    website: 'https://mobsf.github.io/Mobile-Security-Framework-MobSF/',
+    targetType: 'source',
+  },
+  apkleaks: {
+    category: 'security',
+    description: 'APKLeaks Android secrets scanner',
+    website: 'https://github.com/dwisiswant0/apkleaks',
+    targetType: 'source',
+  },
+  swiftlint: {
+    category: 'code-quality',
+    description: 'SwiftLint Swift style linter',
+    website: 'https://github.com/realm/SwiftLint',
+    targetType: 'source',
+  },
+  kubesec: {
+    category: 'security',
+    description: 'Kubesec Kubernetes manifest scanner',
+    website: 'https://kubesec.io/',
+    targetType: 'source',
+  },
+  'kube-bench': {
+    category: 'security',
+    description: 'Kube-bench CIS Kubernetes benchmark',
+    website: 'https://github.com/aquasecurity/kube-bench',
+    targetType: 'source',
+  },
+  polaris: {
+    category: 'security',
+    description: 'Polaris Kubernetes best practices',
+    website: 'https://www.fairwinds.com/polaris',
+    targetType: 'source',
+  },
+  terrascan: {
+    category: 'security',
+    description: 'Terrascan multi-cloud IaC scanner',
+    website: 'https://runterrascan.io/',
+    targetType: 'source',
+  },
+  'kube-hunter': {
+    category: 'security',
+    description: 'Kube-hunter Kubernetes penetration testing',
+    website: 'https://github.com/aquasecurity/kube-hunter',
+    targetType: 'url',
+  },
+  cppcheck: {
+    category: 'code-quality',
+    description: 'Cppcheck C/C++ static analysis',
+    website: 'https://cppcheck.sourceforge.io/',
+    targetType: 'source',
+  },
+  flawfinder: {
+    category: 'security',
+    description: 'Flawfinder C/C++ security scanner',
+    website: 'https://dwheeler.com/flawfinder/',
+    targetType: 'source',
+  },
+  clippy: {
+    category: 'code-quality',
+    description: 'Clippy Rust linter',
+    website: 'https://github.com/rust-lang/rust-clippy',
+    targetType: 'source',
+  },
+  garak: {
+    category: 'security',
+    description: 'Garak LLM vulnerability scanner',
+    website: 'https://github.com/leondz/garak',
+    targetType: 'url',
+  },
+  modelscan: {
+    category: 'security',
+    description: 'ModelScan ML model security scanner',
+    website: 'https://github.com/protectai/modelscan',
     targetType: 'source',
   },
 };

@@ -85,7 +85,10 @@ export type ToolCategory =
   | 'code-quality'
   | 'accessibility'
   | 'performance'
-  | 'dependencies';
+  | 'dependencies'
+  | 'mobile'
+  | 'api-security'
+  | 'cloud-native';
 
 export interface SelectableTool {
   id: string;
@@ -168,6 +171,9 @@ export const CATEGORY_INFO: Record<ToolCategory, { displayName: string; icon: st
   accessibility: { displayName: 'Accessibility', icon: '♿', description: 'Ensure your app works for everyone' },
   performance: { displayName: 'Performance', icon: '⚡', description: 'Optimize speed and user experience' },
   dependencies: { displayName: 'Dependencies', icon: '📦', description: 'Manage and audit third-party packages' },
+  mobile: { displayName: 'Mobile Security', icon: '📱', description: 'Security scanning for iOS and Android apps' },
+  'api-security': { displayName: 'API Security', icon: '🔌', description: 'Validate and secure your APIs' },
+  'cloud-native': { displayName: 'Cloud Native', icon: '☁️', description: 'Kubernetes and cloud infrastructure security' },
 };
 
 const TOOL_DATABASE: ToolInfo[] = [
@@ -222,6 +228,41 @@ const TOOL_DATABASE: ToolInfo[] = [
   { id: 'syft', name: 'Syft SBOM', description: 'Generate software bill of materials for your project', category: 'dependencies', credits: 2, timeEstimate: '2-3 min', tags: ['sbom', 'inventory'] },
   { id: 'license-checker', name: 'License Checker', description: 'Verify dependency licenses for compliance', category: 'dependencies', credits: 1, timeEstimate: '30 sec', tags: ['compliance', 'licenses'] },
   { id: 'depcheck', name: 'Depcheck', description: 'Find unused or missing dependencies in your project', category: 'dependencies', credits: 1, timeEstimate: '30 sec', languages: ['javascript', 'typescript'], tags: ['unused', 'missing'] },
+  { id: 'osv-scanner', name: 'OSV Scanner', description: 'Google vulnerability scanner using OSV database', category: 'dependencies', credits: 1, timeEstimate: '1-2 min', tags: ['cve', 'google', 'vulnerabilities'] },
+  { id: 'pip-audit', name: 'pip-audit', description: 'Audit Python dependencies for known vulnerabilities', category: 'dependencies', credits: 1, timeEstimate: '1-2 min', languages: ['python'], tags: ['python', 'cve'] },
+  { id: 'cargo-audit', name: 'Cargo Audit', description: 'Audit Rust Cargo.lock for vulnerable dependencies', category: 'dependencies', credits: 1, timeEstimate: '30 sec', languages: ['rust'], tags: ['rust', 'cve'] },
+
+  // API Security
+  { id: 'spectral', name: 'Spectral', description: 'OpenAPI and AsyncAPI linter for API contract validation', category: 'api-security', credits: 1, timeEstimate: '30 sec', appTypes: ['api'], tags: ['openapi', 'asyncapi', 'linting'] },
+  { id: 'dredd', name: 'Dredd', description: 'API contract testing against documentation', category: 'api-security', credits: 3, timeEstimate: '3-5 min', appTypes: ['api'], tags: ['contract-testing', 'openapi'] },
+  { id: 'graphql-cop', name: 'GraphQL Cop', description: 'Security audit for GraphQL endpoints', category: 'api-security', credits: 2, timeEstimate: '2-3 min', appTypes: ['api'], tags: ['graphql', 'security'] },
+  { id: 'schemathesis', name: 'Schemathesis', description: 'Property-based testing for OpenAPI schemas', category: 'api-security', credits: 3, timeEstimate: '3-5 min', appTypes: ['api'], tags: ['openapi', 'fuzzing'] },
+
+  // Mobile Security
+  { id: 'mobsf', name: 'MobSF', description: 'Mobile Security Framework - Android/iOS static analysis', category: 'mobile', credits: 5, timeEstimate: '5-10 min', appTypes: ['mobile-native'], tags: ['android', 'ios', 'sast'] },
+  { id: 'apkleaks', name: 'APKLeaks', description: 'Scan Android APKs for hardcoded secrets and URLs', category: 'mobile', credits: 2, timeEstimate: '2-3 min', appTypes: ['mobile-native'], tags: ['android', 'secrets'] },
+  { id: 'androguard', name: 'Androguard', description: 'Android APK reverse engineering and analysis', category: 'mobile', credits: 3, timeEstimate: '3-5 min', appTypes: ['mobile-native'], tags: ['android', 'analysis'] },
+  { id: 'swiftlint', name: 'SwiftLint', description: 'Linter for Swift style and conventions', category: 'mobile', credits: 1, timeEstimate: '1-2 min', languages: ['swift'], appTypes: ['mobile-native', 'desktop-native'], tags: ['swift', 'ios', 'style'] },
+
+  // Cloud Native / Kubernetes
+  { id: 'kubesec', name: 'Kubesec', description: 'Security risk analysis for Kubernetes manifests', category: 'cloud-native', credits: 1, timeEstimate: '30 sec', tags: ['kubernetes', 'security'] },
+  { id: 'kube-bench', name: 'Kube-bench', description: 'CIS Kubernetes benchmark compliance checker', category: 'cloud-native', credits: 2, timeEstimate: '2-3 min', tags: ['kubernetes', 'cis', 'compliance'] },
+  { id: 'polaris', name: 'Polaris', description: 'Kubernetes deployment best practices validation', category: 'cloud-native', credits: 2, timeEstimate: '1-2 min', tags: ['kubernetes', 'best-practices'] },
+  { id: 'terrascan', name: 'Terrascan', description: 'Multi-cloud IaC security scanner (Terraform, K8s, Helm)', category: 'cloud-native', credits: 2, timeEstimate: '2-4 min', tags: ['iac', 'terraform', 'kubernetes', 'helm'] },
+  { id: 'kube-hunter', name: 'Kube-hunter', description: 'Hunt for security weaknesses in Kubernetes clusters', category: 'cloud-native', credits: 3, timeEstimate: '3-5 min', tags: ['kubernetes', 'penetration-testing'] },
+
+  // Additional Language Tools
+  { id: 'cppcheck', name: 'Cppcheck', description: 'Static analysis for C/C++ code', category: 'code-quality', credits: 2, timeEstimate: '2-4 min', languages: ['c', 'cpp'], tags: ['c', 'cpp', 'static-analysis'] },
+  { id: 'flawfinder', name: 'Flawfinder', description: 'Security-focused scanner for C/C++ source code', category: 'security', credits: 2, timeEstimate: '1-3 min', languages: ['c', 'cpp'], tags: ['c', 'cpp', 'security'] },
+  { id: 'clippy', name: 'Clippy', description: 'Rust linter for idiomatic code and common mistakes', category: 'code-quality', credits: 1, timeEstimate: '1-2 min', languages: ['rust'], tags: ['rust', 'linting'] },
+
+  // AI/ML Security
+  { id: 'garak', name: 'Garak', description: 'LLM vulnerability scanner - prompt injection, jailbreaks', category: 'security', credits: 4, timeEstimate: '5-10 min', tags: ['llm', 'ai-security', 'prompt-injection'] },
+  { id: 'modelscan', name: 'ModelScan', description: 'Scan ML models for security issues and malicious code', category: 'security', credits: 3, timeEstimate: '2-4 min', tags: ['ml', 'ai-security', 'model-security'] },
+
+  // Test Quality
+  { id: 'stryker', name: 'Stryker', description: 'Mutation testing for JavaScript/TypeScript', category: 'code-quality', credits: 4, timeEstimate: '5-15 min', languages: ['javascript', 'typescript'], tags: ['mutation-testing', 'test-quality'] },
+  { id: 'coverage-js', name: 'Istanbul/nyc', description: 'JavaScript code coverage reporting', category: 'code-quality', credits: 2, timeEstimate: '2-4 min', languages: ['javascript', 'typescript'], tags: ['coverage', 'testing'] },
 ];
 
 // ============================================================
@@ -237,68 +278,68 @@ interface SensitivityProfile {
 
 const SENSITIVITY_PROFILES: Record<AppSensitivity, SensitivityProfile> = {
   financial: {
-    requiredCategories: ['security', 'dependencies'],
-    priorityTools: ['semgrep', 'owasp-zap', 'gitleaks', 'trivy', 'nuclei'],
+    requiredCategories: ['security', 'dependencies', 'api-security'],
+    priorityTools: ['semgrep', 'owasp-zap', 'gitleaks', 'trivy', 'nuclei', 'osv-scanner', 'spectral'],
     complianceFrameworks: ['pci-dss', 'soc2'],
     extraScrutiny: ['authentication', 'encryption', 'injection'],
   },
   healthcare: {
-    requiredCategories: ['security', 'dependencies', 'accessibility'],
-    priorityTools: ['semgrep', 'gitleaks', 'trivy', 'axe-core'],
+    requiredCategories: ['security', 'dependencies', 'accessibility', 'api-security'],
+    priorityTools: ['semgrep', 'gitleaks', 'trivy', 'axe-core', 'osv-scanner', 'spectral'],
     complianceFrameworks: ['soc2', 'iso-27001'],
     extraScrutiny: ['data-protection', 'access-control', 'audit-logging'],
   },
   government: {
-    requiredCategories: ['security', 'dependencies', 'accessibility'],
-    priorityTools: ['semgrep', 'owasp-zap', 'gitleaks', 'trivy', 'checkov'],
+    requiredCategories: ['security', 'dependencies', 'accessibility', 'cloud-native'],
+    priorityTools: ['semgrep', 'owasp-zap', 'gitleaks', 'trivy', 'checkov', 'kube-bench', 'osv-scanner'],
     complianceFrameworks: ['nist-csf', 'cis-controls'],
     extraScrutiny: ['access-control', 'encryption', 'audit-logging'],
   },
   enterprise: {
-    requiredCategories: ['security', 'code-quality', 'dependencies'],
-    priorityTools: ['semgrep', 'gitleaks', 'trivy', 'codeclimate'],
+    requiredCategories: ['security', 'code-quality', 'dependencies', 'api-security'],
+    priorityTools: ['semgrep', 'gitleaks', 'trivy', 'codeclimate', 'osv-scanner', 'spectral'],
     complianceFrameworks: ['soc2'],
     extraScrutiny: ['authentication', 'access-control'],
   },
   ecommerce: {
-    requiredCategories: ['security', 'performance', 'accessibility'],
-    priorityTools: ['owasp-zap', 'semgrep', 'gitleaks', 'lighthouse'],
+    requiredCategories: ['security', 'performance', 'accessibility', 'mobile'],
+    priorityTools: ['owasp-zap', 'semgrep', 'gitleaks', 'lighthouse', 'mobsf'],
     complianceFrameworks: ['pci-dss'],
     extraScrutiny: ['payment', 'injection', 'xss'],
   },
   social: {
-    requiredCategories: ['security', 'accessibility'],
-    priorityTools: ['semgrep', 'gitleaks', 'owasp-zap', 'axe-core'],
+    requiredCategories: ['security', 'accessibility', 'mobile'],
+    priorityTools: ['semgrep', 'gitleaks', 'owasp-zap', 'axe-core', 'mobsf'],
     complianceFrameworks: ['owasp-top-10'],
     extraScrutiny: ['xss', 'access-control', 'data-exposure'],
   },
   entertainment: {
-    requiredCategories: ['performance', 'accessibility'],
-    priorityTools: ['lighthouse', 'axe-core', 'semgrep'],
+    requiredCategories: ['performance', 'accessibility', 'mobile'],
+    priorityTools: ['lighthouse', 'axe-core', 'semgrep', 'mobsf'],
     complianceFrameworks: ['owasp-top-10'],
     extraScrutiny: ['performance', 'user-experience'],
   },
   education: {
-    requiredCategories: ['security', 'accessibility'],
-    priorityTools: ['semgrep', 'gitleaks', 'axe-core', 'pa11y'],
+    requiredCategories: ['security', 'accessibility', 'mobile'],
+    priorityTools: ['semgrep', 'gitleaks', 'axe-core', 'pa11y', 'mobsf'],
     complianceFrameworks: ['owasp-top-10'],
     extraScrutiny: ['data-protection', 'accessibility'],
   },
   iot: {
-    requiredCategories: ['security', 'dependencies'],
-    priorityTools: ['semgrep', 'trivy', 'checkov', 'gitleaks'],
+    requiredCategories: ['security', 'dependencies', 'cloud-native'],
+    priorityTools: ['semgrep', 'trivy', 'checkov', 'gitleaks', 'flawfinder', 'kubesec'],
     complianceFrameworks: ['owasp-top-10', 'cis-controls'],
     extraScrutiny: ['authentication', 'encryption', 'firmware'],
   },
   'developer-tool': {
-    requiredCategories: ['security', 'code-quality'],
-    priorityTools: ['semgrep', 'gitleaks', 'trivy', 'codeclimate'],
+    requiredCategories: ['security', 'code-quality', 'dependencies'],
+    priorityTools: ['semgrep', 'gitleaks', 'trivy', 'codeclimate', 'osv-scanner', 'pip-audit', 'cargo-audit'],
     complianceFrameworks: ['owasp-top-10'],
     extraScrutiny: ['supply-chain', 'dependencies'],
   },
   personal: {
     requiredCategories: ['security'],
-    priorityTools: ['semgrep', 'gitleaks', 'trivy'],
+    priorityTools: ['semgrep', 'gitleaks', 'osv-scanner'],
     complianceFrameworks: [],
     extraScrutiny: [],
   },
@@ -805,16 +846,16 @@ export class ScanRecommendationEngine {
 
   private static getToolsForConcern(concern: DeveloperConcern): string[] {
     const concernMap: Record<DeveloperConcern, string[]> = {
-      'security-vulnerabilities': ['semgrep', 'owasp-zap', 'trivy', 'nuclei'],
-      'data-leaks': ['gitleaks', 'secretlint'],
-      compliance: ['semgrep', 'checkov', 'license-checker'],
+      'security-vulnerabilities': ['semgrep', 'owasp-zap', 'trivy', 'nuclei', 'osv-scanner', 'garak'],
+      'data-leaks': ['gitleaks', 'secretlint', 'apkleaks'],
+      compliance: ['semgrep', 'checkov', 'license-checker', 'kube-bench', 'terrascan'],
       performance: ['lighthouse', 'sitespeed'],
       accessibility: ['axe-core', 'pa11y'],
-      'code-quality': ['eslint', 'codeclimate', 'biome'],
-      'dependency-risks': ['trivy', 'grype', 'dependency-check', 'npm-audit'],
-      'secrets-exposure': ['gitleaks', 'secretlint'],
-      'ai-generated-bugs': ['semgrep', 'eslint', 'codeclimate'],
-      'not-sure': ['semgrep', 'gitleaks', 'trivy'],
+      'code-quality': ['eslint', 'codeclimate', 'biome', 'stryker', 'coverage-js'],
+      'dependency-risks': ['trivy', 'grype', 'dependency-check', 'npm-audit', 'osv-scanner', 'pip-audit', 'cargo-audit'],
+      'secrets-exposure': ['gitleaks', 'secretlint', 'apkleaks'],
+      'ai-generated-bugs': ['semgrep', 'eslint', 'codeclimate', 'garak', 'modelscan', 'stryker'],
+      'not-sure': ['semgrep', 'gitleaks', 'trivy', 'osv-scanner'],
     };
 
     return concernMap[concern] || [];

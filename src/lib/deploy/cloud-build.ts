@@ -533,6 +533,426 @@ export const DOCKER_TOOLS = {
       },
     ],
   },
+  // ============================================================
+  // Wave 4: API, Mobile, Cloud Native, AI/ML Tools
+  // ============================================================
+
+  // Dependency & Supply Chain
+  'osv-scanner': {
+    image: 'ghcr.io/google/osv-scanner:latest',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'ghcr.io/google/osv-scanner:latest',
+        args: ['--format', 'json', '--output', '/workspace/osv-report.json', '/workspace/source'],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/osv-report.json', `gs://${outputBucket}/${jobId}/osv-report.json`],
+      },
+    ],
+  },
+  'pip-audit': {
+    image: 'python:3.12-slim',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'python:3.12-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'pip install pip-audit -q && cd /workspace/source && pip-audit --format json --output /workspace/pip-audit-report.json -r requirements.txt 2>/dev/null || pip-audit --format json --output /workspace/pip-audit-report.json . || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/pip-audit-report.json', `gs://${outputBucket}/${jobId}/pip-audit-report.json`],
+      },
+    ],
+  },
+  'cargo-audit': {
+    image: 'rust:1.75',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'rust:1.75',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cargo install cargo-audit && cd /workspace/source && cargo audit --json > /workspace/cargo-audit-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/cargo-audit-report.json', `gs://${outputBucket}/${jobId}/cargo-audit-report.json`],
+      },
+    ],
+  },
+
+  // API Security
+  'spectral': {
+    image: 'stoplight/spectral:latest',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'stoplight/spectral:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'find /workspace/source -name "openapi*.json" -o -name "openapi*.yaml" -o -name "swagger*.json" -o -name "swagger*.yaml" | xargs -I {} spectral lint {} --format json --output /workspace/spectral-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/spectral-report.json', `gs://${outputBucket}/${jobId}/spectral-report.json`],
+      },
+    ],
+  },
+  'schemathesis': {
+    image: 'python:3.12-slim',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (targetUrl: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'python:3.12-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          `pip install schemathesis -q && schemathesis run ${targetUrl} --hypothesis-max-examples=50 --report /workspace/schemathesis-report.json || true`,
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/schemathesis-report.json', `gs://${outputBucket}/${jobId}/schemathesis-report.json`],
+      },
+    ],
+  },
+  'graphql-cop': {
+    image: 'python:3.12-slim',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (targetUrl: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'python:3.12-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          `pip install graphql-cop -q && graphql-cop -t ${targetUrl} -o json > /workspace/graphql-cop-report.json || true`,
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/graphql-cop-report.json', `gs://${outputBucket}/${jobId}/graphql-cop-report.json`],
+      },
+    ],
+  },
+
+  // Mobile Security
+  'mobsf': {
+    image: 'opensecurity/mobile-security-framework-mobsf:latest',
+    timeout: '900s',
+    memory: '8GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'opensecurity/mobile-security-framework-mobsf:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /home/mobsf/Mobile-Security-Framework-MobSF && python manage.py runserver 0.0.0.0:8000 & sleep 10 && find /workspace/source -name "*.apk" -o -name "*.ipa" | head -1 | xargs -I {} curl -F "file=@{}" http://localhost:8000/api/v1/upload -H "Authorization: env.MOBSF_API_KEY" && curl http://localhost:8000/api/v1/report_json -o /workspace/mobsf-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/mobsf-report.json', `gs://${outputBucket}/${jobId}/mobsf-report.json`],
+      },
+    ],
+  },
+  'apkleaks': {
+    image: 'python:3.12-slim',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'python:3.12-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'pip install apkleaks -q && find /workspace/source -name "*.apk" | head -1 | xargs -I {} apkleaks -f {} -o /workspace/apkleaks-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/apkleaks-report.json', `gs://${outputBucket}/${jobId}/apkleaks-report.json`],
+      },
+    ],
+  },
+  'swiftlint': {
+    image: 'swift:5.9',
+    timeout: '300s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'swift:5.9',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'apt-get update && apt-get install -y curl && curl -L https://github.com/realm/SwiftLint/releases/download/0.54.0/swiftlint_linux.zip -o /tmp/swiftlint.zip && unzip /tmp/swiftlint.zip -d /usr/local/bin && swiftlint lint /workspace/source --reporter json > /workspace/swiftlint-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/swiftlint-report.json', `gs://${outputBucket}/${jobId}/swiftlint-report.json`],
+      },
+    ],
+  },
+
+  // Cloud Native / Kubernetes
+  'kubesec': {
+    image: 'kubesec/kubesec:v2',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'kubesec/kubesec:v2',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'find /workspace/source -name "*.yaml" -o -name "*.yml" | xargs -I {} kubesec scan {} > /workspace/kubesec-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/kubesec-report.json', `gs://${outputBucket}/${jobId}/kubesec-report.json`],
+      },
+    ],
+  },
+  'kube-bench': {
+    image: 'aquasec/kube-bench:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'aquasec/kube-bench:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'kube-bench --json > /workspace/kube-bench-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/kube-bench-report.json', `gs://${outputBucket}/${jobId}/kube-bench-report.json`],
+      },
+    ],
+  },
+  'polaris': {
+    image: 'quay.io/fairwinds/polaris:latest',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'quay.io/fairwinds/polaris:latest',
+        args: ['audit', '--audit-path', '/workspace/source', '--format', 'json', '--output-file', '/workspace/polaris-report.json'],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/polaris-report.json', `gs://${outputBucket}/${jobId}/polaris-report.json`],
+      },
+    ],
+  },
+  'terrascan': {
+    image: 'tenable/terrascan:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'tenable/terrascan:latest',
+        args: ['scan', '-d', '/workspace/source', '-o', 'json'],
+        env: ['OUTPUT_FILE=/workspace/terrascan-report.json'],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/terrascan-report.json', `gs://${outputBucket}/${jobId}/terrascan-report.json`],
+      },
+    ],
+  },
+  'kube-hunter': {
+    image: 'aquasec/kube-hunter:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (targetUrl: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'aquasec/kube-hunter:latest',
+        args: ['--remote', targetUrl, '--report', 'json', '--log', 'none'],
+        env: ['OUTPUT_FILE=/workspace/kube-hunter-report.json'],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/kube-hunter-report.json', `gs://${outputBucket}/${jobId}/kube-hunter-report.json`],
+      },
+    ],
+  },
+
+  // C/C++ Tools
+  'cppcheck': {
+    image: 'ubuntu:22.04',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'ubuntu:22.04',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'apt-get update && apt-get install -y cppcheck && cppcheck --enable=all --xml --xml-version=2 /workspace/source 2> /workspace/cppcheck-report.xml || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/cppcheck-report.xml', `gs://${outputBucket}/${jobId}/cppcheck-report.xml`],
+      },
+    ],
+  },
+  'flawfinder': {
+    image: 'python:3.12-slim',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'python:3.12-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'pip install flawfinder -q && flawfinder --json /workspace/source > /workspace/flawfinder-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/flawfinder-report.json', `gs://${outputBucket}/${jobId}/flawfinder-report.json`],
+      },
+    ],
+  },
+
+  // Rust Tools
+  'clippy': {
+    image: 'rust:1.75',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'rust:1.75',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'rustup component add clippy && cd /workspace/source && cargo clippy --message-format=json > /workspace/clippy-report.json 2>&1 || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/clippy-report.json', `gs://${outputBucket}/${jobId}/clippy-report.json`],
+      },
+    ],
+  },
+
+  // AI/ML Security
+  'garak': {
+    image: 'python:3.12-slim',
+    timeout: '900s',
+    memory: '8GB',
+    buildSteps: (targetUrl: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'python:3.12-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          `pip install garak -q && garak --model_type rest --model_name ${targetUrl} --probes all --report_prefix /workspace/garak || true`,
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/garak.report.jsonl', `gs://${outputBucket}/${jobId}/garak-report.jsonl`],
+      },
+    ],
+  },
+  'modelscan': {
+    image: 'python:3.12-slim',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'python:3.12-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'pip install modelscan -q && modelscan -p /workspace/source --output-format json > /workspace/modelscan-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/modelscan-report.json', `gs://${outputBucket}/${jobId}/modelscan-report.json`],
+      },
+    ],
+  },
 } as const;
 
 export type DockerToolId = keyof typeof DOCKER_TOOLS;
@@ -788,6 +1208,26 @@ export class CloudBuildRunner {
       'pmd': 'pmd-report.json',
       'checkstyle': 'checkstyle-report.xml',
       'detekt': 'detekt-report.json',
+      // Wave 4: API, Mobile, Cloud Native, AI/ML tools
+      'osv-scanner': 'osv-report.json',
+      'pip-audit': 'pip-audit-report.json',
+      'cargo-audit': 'cargo-audit-report.json',
+      'spectral': 'spectral-report.json',
+      'schemathesis': 'schemathesis-report.json',
+      'graphql-cop': 'graphql-cop-report.json',
+      'mobsf': 'mobsf-report.json',
+      'apkleaks': 'apkleaks-report.json',
+      'swiftlint': 'swiftlint-report.json',
+      'kubesec': 'kubesec-report.json',
+      'kube-bench': 'kube-bench-report.json',
+      'polaris': 'polaris-report.json',
+      'terrascan': 'terrascan-report.json',
+      'kube-hunter': 'kube-hunter-report.json',
+      'cppcheck': 'cppcheck-report.xml',
+      'flawfinder': 'flawfinder-report.json',
+      'clippy': 'clippy-report.json',
+      'garak': 'garak-report.jsonl',
+      'modelscan': 'modelscan-report.json',
     };
 
     const outputFile = outputFiles[toolId];
