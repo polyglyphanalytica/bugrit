@@ -5,7 +5,7 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { GlassCard } from '@/components/ui/glass-card';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Logo } from '@/components/ui/logo';
-import { TOOL_REGISTRY, CATEGORY_LABELS, ToolCategory } from '@/lib/tools/registry';
+import { TOOL_REGISTRY, CATEGORY_LABELS, CATEGORY_ICONS, ToolCategory } from '@/lib/tools/registry';
 
 export default function HomePage() {
   // Group tools by category
@@ -394,14 +394,7 @@ export default function HomePage() {
               <GlassCard key={category} className="p-6">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <span className="text-xl">
-                    {category === 'linting' && '📝'}
-                    {category === 'security' && '🔒'}
-                    {category === 'dependencies' && '📦'}
-                    {category === 'accessibility' && '♿'}
-                    {category === 'quality' && '✨'}
-                    {category === 'documentation' && '📚'}
-                    {category === 'git' && '🔀'}
-                    {category === 'performance' && '⚡'}
+                    {CATEGORY_ICONS[category as ToolCategory]}
                   </span>
                   {CATEGORY_LABELS[category as ToolCategory]}
                 </h3>
@@ -410,6 +403,9 @@ export default function HomePage() {
                     <li key={tool.id} className="text-sm text-muted-foreground flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
                       {tool.name}
+                      {tool.credits > 0 && (
+                        <span className="text-xs text-primary/70">({tool.credits} cr)</span>
+                      )}
                     </li>
                   ))}
                 </ul>

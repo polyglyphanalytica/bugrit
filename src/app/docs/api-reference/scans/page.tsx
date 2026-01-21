@@ -6,7 +6,7 @@ export default function ScansApiPage() {
       <div>
         <h1 className="text-4xl font-bold mb-4">Scans API</h1>
         <p className="text-lg text-muted-foreground">
-          Trigger scans to run 25 analysis tools on your code and retrieve reports.
+          Trigger scans to run 52 analysis tools on your code and retrieve reports.
         </p>
       </div>
 
@@ -189,7 +189,7 @@ Use secrets.BUGGERED_API_KEY for Authorization: Bearer header.`}</pre>
     "applicationId": "app-abc123",
     "status": "running",
     "sourceType": "github",
-    "toolsTotal": 25,
+    "toolsTotal": 52,
     "toolsCompleted": 0,
     "createdAt": "2026-01-19T10:30:00Z",
     "estimatedCompletion": "2026-01-19T10:31:00Z"
@@ -216,7 +216,7 @@ Use secrets.BUGGERED_API_KEY for Authorization: Bearer header.`}</pre>
   "scan": {
     "id": "scn-xyz789",
     "status": "completed",
-    "toolsTotal": 25,
+    "toolsTotal": 52,
     "toolsCompleted": 25,
     "reportId": "rpt-abc123",
     "completedAt": "2026-01-19T10:30:47Z",
@@ -301,7 +301,7 @@ Use secrets.BUGGERED_API_KEY for Authorization: Bearer header.`}</pre>
             </tr>
             <tr className="border-b">
               <td className="py-2 px-2"><code>running</code></td>
-              <td className="py-2 px-2 text-muted-foreground">25 tools currently analyzing your code</td>
+              <td className="py-2 px-2 text-muted-foreground">52 tools currently analyzing your code</td>
             </tr>
             <tr className="border-b">
               <td className="py-2 px-2"><code>completed</code></td>

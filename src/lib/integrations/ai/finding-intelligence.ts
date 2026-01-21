@@ -438,8 +438,12 @@ export class FindingIntelligence {
     // Category importance
     const categoryWeights: Partial<Record<ToolCategory, number>> = {
       security: 30,
+      mobile: 28,          // Mobile security is critical
+      'api-security': 26,  // API security is high priority
+      'cloud-native': 25,  // K8s/cloud misconfigs are serious
       accessibility: 20,
       performance: 15,
+      dependencies: 18,    // Supply chain security matters
       'code-quality': 10,
     };
     if (categoryWeights[finding.category]) {

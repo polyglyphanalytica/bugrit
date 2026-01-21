@@ -269,7 +269,7 @@ export default function PricingDocs() {
         <h3 className="text-xl font-bold mb-4">Tool Category Costs</h3>
         <p className="text-muted-foreground mb-4">
           Different tool categories have different infrastructure costs. Linting runs quickly in memory,
-          but Lighthouse needs a full headless browser.
+          but Lighthouse needs a full headless browser, and Docker-based tools have container overhead.
         </p>
 
         <div className="overflow-x-auto mb-8">
@@ -284,52 +284,70 @@ export default function PricingDocs() {
             </thead>
             <tbody>
               <tr className="border-b border-border/50">
-                <td className="py-3 px-2 font-medium">Linting & Formatting</td>
+                <td className="py-3 px-2 font-medium">📝 Linting & Formatting</td>
                 <td className="py-3 px-2 text-muted-foreground">ESLint, Biome, Stylelint, Prettier</td>
                 <td className="text-center py-3 px-2 text-green-400 font-mono">Free</td>
                 <td className="py-3 px-2 text-muted-foreground">Fast, low memory, runs in Node.js</td>
               </tr>
               <tr className="border-b border-border/50">
-                <td className="py-3 px-2 font-medium">Dependencies</td>
-                <td className="py-3 px-2 text-muted-foreground">npm audit, depcheck, license-checker, madge</td>
-                <td className="text-center py-3 px-2 text-green-400 font-mono">Free</td>
-                <td className="py-3 px-2 text-muted-foreground">Analyzes package.json, minimal compute</td>
+                <td className="py-3 px-2 font-medium">📦 Dependencies</td>
+                <td className="py-3 px-2 text-muted-foreground">depcheck, madge (+ OSV, pip-audit, cargo-audit)</td>
+                <td className="text-center py-3 px-2 font-mono">0-1 credit</td>
+                <td className="py-3 px-2 text-muted-foreground">Some tools use Docker for multi-language support</td>
               </tr>
               <tr className="border-b border-border/50">
-                <td className="py-3 px-2 font-medium">Code Quality</td>
-                <td className="py-3 px-2 text-muted-foreground">TypeScript, knip, jscpd, cspell</td>
-                <td className="text-center py-3 px-2 text-green-400 font-mono">Free</td>
-                <td className="py-3 px-2 text-muted-foreground">Static analysis, runs in Node.js</td>
+                <td className="py-3 px-2 font-medium">✨ Code Quality</td>
+                <td className="py-3 px-2 text-muted-foreground">TypeScript, knip, jscpd, cspell, PHPStan, RuboCop</td>
+                <td className="text-center py-3 px-2 font-mono">0-3 credits</td>
+                <td className="py-3 px-2 text-muted-foreground">JS tools free; Docker-based tools cost more</td>
               </tr>
               <tr className="border-b border-border/50">
-                <td className="py-3 px-2 font-medium">Documentation</td>
+                <td className="py-3 px-2 font-medium">📚 Documentation</td>
                 <td className="py-3 px-2 text-muted-foreground">markdownlint, remark-lint, alex</td>
                 <td className="text-center py-3 px-2 text-green-400 font-mono">Free</td>
                 <td className="py-3 px-2 text-muted-foreground">Text analysis, very fast</td>
               </tr>
               <tr className="border-b border-border/50">
-                <td className="py-3 px-2 font-medium">Git</td>
+                <td className="py-3 px-2 font-medium">🔀 Git</td>
                 <td className="py-3 px-2 text-muted-foreground">commitlint</td>
                 <td className="text-center py-3 px-2 text-green-400 font-mono">Free</td>
                 <td className="py-3 px-2 text-muted-foreground">Checks git history only</td>
               </tr>
               <tr className="border-b border-border/50 bg-yellow-500/5">
-                <td className="py-3 px-2 font-medium">Security</td>
-                <td className="py-3 px-2 text-muted-foreground">ESLint security, secretlint, lockfile-lint</td>
-                <td className="text-center py-3 px-2 font-mono font-semibold">1 credit</td>
-                <td className="py-3 px-2 text-muted-foreground">Deep analysis, pattern matching</td>
+                <td className="py-3 px-2 font-medium">🔒 Security</td>
+                <td className="py-3 px-2 text-muted-foreground">Semgrep, Trivy, Nuclei, Bandit, Gosec, Gitleaks, etc.</td>
+                <td className="text-center py-3 px-2 font-mono font-semibold">1-5 credits</td>
+                <td className="py-3 px-2 text-muted-foreground">DAST tools (OWASP ZAP) cost more than SAST</td>
               </tr>
               <tr className="border-b border-border/50 bg-orange-500/5">
-                <td className="py-3 px-2 font-medium">Accessibility</td>
+                <td className="py-3 px-2 font-medium">♿ Accessibility</td>
                 <td className="py-3 px-2 text-muted-foreground">axe-core, Pa11y</td>
                 <td className="text-center py-3 px-2 font-mono font-semibold">4 credits</td>
                 <td className="py-3 px-2 text-muted-foreground">Requires Puppeteer headless browser</td>
               </tr>
               <tr className="border-b border-border/50 bg-red-500/5">
-                <td className="py-3 px-2 font-medium">Performance</td>
+                <td className="py-3 px-2 font-medium">⚡ Performance</td>
                 <td className="py-3 px-2 text-muted-foreground">Lighthouse, size-limit</td>
-                <td className="text-center py-3 px-2 font-mono font-semibold">5 credits</td>
+                <td className="text-center py-3 px-2 font-mono font-semibold">1-5 credits</td>
                 <td className="py-3 px-2 text-muted-foreground">Full browser render, network simulation</td>
+              </tr>
+              <tr className="border-b border-border/50 bg-purple-500/5">
+                <td className="py-3 px-2 font-medium">📱 Mobile Security</td>
+                <td className="py-3 px-2 text-muted-foreground">MobSF, APKLeaks, Androguard, SwiftLint</td>
+                <td className="text-center py-3 px-2 font-mono font-semibold">1-5 credits</td>
+                <td className="py-3 px-2 text-muted-foreground">APK/IPA analysis requires specialized containers</td>
+              </tr>
+              <tr className="border-b border-border/50 bg-blue-500/5">
+                <td className="py-3 px-2 font-medium">🔌 API Security</td>
+                <td className="py-3 px-2 text-muted-foreground">Spectral, Dredd, GraphQL Cop, Schemathesis</td>
+                <td className="text-center py-3 px-2 font-mono font-semibold">1-3 credits</td>
+                <td className="py-3 px-2 text-muted-foreground">API contract validation and security testing</td>
+              </tr>
+              <tr className="border-b border-border/50 bg-cyan-500/5">
+                <td className="py-3 px-2 font-medium">☁️ Cloud Native</td>
+                <td className="py-3 px-2 text-muted-foreground">Kubesec, Kube-bench, Polaris, Terrascan, Kube-hunter</td>
+                <td className="text-center py-3 px-2 font-mono font-semibold">1-3 credits</td>
+                <td className="py-3 px-2 text-muted-foreground">Kubernetes and IaC security scanning</td>
               </tr>
             </tbody>
           </table>

@@ -328,37 +328,53 @@ export type WebhookEventType =
 // ============================================================================
 
 export const AVAILABLE_TOOLS = [
-  'eslint',
-  'typecheck',
-  'complexity',
-  'security',
-  'a11y',
-  'perf',
-  'deps',
-  'dupes',
-  'deadcode',
-  'bundle',
-  'coverage',
-  'regex',
-  'memory',
-  'imports',
-  'api',
-  'secrets',
-  'license',
-  'docs',
-  'css',
-  'html',
-  'json',
-  'env',
-  'git',
-  'size',
-  'ai',
+  // Linting
+  'eslint', 'biome', 'stylelint', 'prettier',
+  // Security
+  'semgrep', 'gitleaks', 'trivy', 'grype', 'nuclei', 'checkov', 'secretlint',
+  'npm-audit', 'bandit', 'gosec', 'brakeman', 'owasp-zap', 'flawfinder',
+  'garak', 'modelscan',
+  // Dependencies
+  'depcheck', 'license-checker', 'madge', 'dependency-cruiser', 'osv-scanner',
+  'pip-audit', 'cargo-audit',
+  // Accessibility
+  'axe-core', 'pa11y',
+  // Quality
+  'typescript', 'knip', 'jscpd', 'cspell', 'publint', 'codeclimate', 'phpstan',
+  'rubocop', 'detekt', 'cppcheck', 'clippy', 'shellcheck',
+  // Documentation
+  'markdownlint', 'remark-lint', 'alex',
+  // Git
+  'commitlint',
+  // Performance
+  'lighthouse', 'size-limit',
+  // Mobile
+  'mobsf', 'apkleaks', 'androguard', 'swiftlint',
+  // API Security
+  'spectral', 'dredd', 'graphql-cop', 'schemathesis',
+  // Cloud Native
+  'kubesec', 'kube-bench', 'polaris', 'terrascan', 'kube-hunter',
 ] as const;
 
 export type ToolName = (typeof AVAILABLE_TOOLS)[number];
 
+export type ToolCategory =
+  | 'linting'
+  | 'security'
+  | 'dependencies'
+  | 'accessibility'
+  | 'quality'
+  | 'documentation'
+  | 'git'
+  | 'performance'
+  | 'mobile'
+  | 'api-security'
+  | 'cloud-native';
+
 export interface ToolConfig {
   name: ToolName;
   enabled: boolean;
+  category?: ToolCategory;
+  credits?: number;
   options?: Record<string, unknown>;
 }

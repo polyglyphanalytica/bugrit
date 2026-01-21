@@ -216,39 +216,51 @@ export default function PricingPage() {
 
         {/* Credit Costs Reference */}
         <div className="max-w-4xl mx-auto mt-20">
-          <h2 className="text-2xl font-bold text-center mb-8">Credit Costs</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">Credit Costs (52 Tools)</h2>
 
           <div className="grid md:grid-cols-2 gap-8">
             <GlassCard className="p-6">
               <h3 className="font-semibold mb-4">Tool Categories</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Linting & Formatting</span>
+                  <span>📝 Linting & Formatting</span>
                   <span className="text-green-500">Free</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Dependencies</span>
+                  <span>📦 Dependencies</span>
+                  <span>0-1 credit</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>✨ Code Quality</span>
+                  <span>0-3 credits</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>📚 Documentation</span>
                   <span className="text-green-500">Free</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Code Quality</span>
-                  <span className="text-green-500">Free</span>
+                  <span>🔒 Security (15 tools)</span>
+                  <span>1-5 credits</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Documentation</span>
-                  <span className="text-green-500">Free</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Security</span>
-                  <span>+1 credit</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Accessibility (Puppeteer)</span>
+                  <span>♿ Accessibility</span>
                   <span>+4 credits</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Performance (Lighthouse)</span>
-                  <span>+5 credits</span>
+                  <span>⚡ Performance</span>
+                  <span>1-5 credits</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>📱 Mobile Security</span>
+                  <span>1-5 credits</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>🔌 API Security</span>
+                  <span>1-3 credits</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>☁️ Cloud Native</span>
+                  <span>1-3 credits</span>
                 </div>
               </div>
             </GlassCard>

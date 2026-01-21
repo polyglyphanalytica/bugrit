@@ -8,7 +8,7 @@ export default function DocsPage() {
         <h1 className="text-4xl font-bold mb-4">Bugrit Documentation</h1>
         <p className="text-lg text-muted-foreground">
           Bugrit is a testing and code scanning platform. Run automated tests across web, mobile,
-          and desktop with Playwright, Appium, and Tauri. Scan your code with 25 analysis tools.
+          and desktop with Playwright, Appium, and Tauri. Scan your code with 52 analysis tools.
           Get one unified, AI-powered report.
         </p>
       </div>
@@ -31,7 +31,7 @@ export default function DocsPage() {
               <span className="font-semibold">Code Scanning</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              25 analysis tools for security, linting, dependencies, accessibility, and more
+              52 analysis tools for security, linting, mobile, API, cloud native, and more
             </p>
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function DocsPage() {
           <span>🔍</span> Code Scanning Tools
         </h2>
         <p className="text-muted-foreground mb-4">
-          25 analysis tools run in parallel and consolidate findings into one report.
+          52 analysis tools run in parallel and consolidate findings into one report.
         </p>
         <div className="grid md:grid-cols-4 gap-3 text-sm">
           <div className="p-3 bg-muted/50 rounded-lg">
@@ -163,15 +163,15 @@ export default function DocsPage() {
           </div>
           <div className="p-3 bg-muted/50 rounded-lg">
             <div className="font-semibold flex items-center gap-1">
-              <span>🔒</span> Security
+              <span>🔒</span> Security (15)
             </div>
-            <div className="text-xs text-muted-foreground">Secretlint, audit-ci, lockfile-lint, eslint-security</div>
+            <div className="text-xs text-muted-foreground">Semgrep, Trivy, Nuclei, Gitleaks, Bandit, Gosec, OWASP ZAP</div>
           </div>
           <div className="p-3 bg-muted/50 rounded-lg">
             <div className="font-semibold flex items-center gap-1">
               <span>📦</span> Dependencies
             </div>
-            <div className="text-xs text-muted-foreground">npm audit, depcheck, license-checker, madge, dep-cruiser</div>
+            <div className="text-xs text-muted-foreground">OSV, pip-audit, cargo-audit, license-checker, madge</div>
           </div>
           <div className="p-3 bg-muted/50 rounded-lg">
             <div className="font-semibold flex items-center gap-1">
@@ -181,40 +181,44 @@ export default function DocsPage() {
           </div>
           <div className="p-3 bg-muted/50 rounded-lg">
             <div className="font-semibold flex items-center gap-1">
-              <span>✨</span> Quality
+              <span>✨</span> Quality (12)
             </div>
-            <div className="text-xs text-muted-foreground">TypeScript, knip, jscpd, cspell, publint</div>
+            <div className="text-xs text-muted-foreground">TypeScript, PHPStan, RuboCop, Detekt, Cppcheck, Clippy</div>
           </div>
           <div className="p-3 bg-muted/50 rounded-lg">
             <div className="font-semibold flex items-center gap-1">
-              <span>📚</span> Documentation
+              <span>📱</span> Mobile
             </div>
-            <div className="text-xs text-muted-foreground">markdownlint, remark-lint, alex</div>
+            <div className="text-xs text-muted-foreground">MobSF, APKLeaks, Androguard, SwiftLint</div>
           </div>
           <div className="p-3 bg-muted/50 rounded-lg">
             <div className="font-semibold flex items-center gap-1">
-              <span>🔀</span> Git
+              <span>🔌</span> API Security
             </div>
-            <div className="text-xs text-muted-foreground">commitlint</div>
+            <div className="text-xs text-muted-foreground">Spectral, Dredd, GraphQL Cop, Schemathesis</div>
           </div>
           <div className="p-3 bg-muted/50 rounded-lg">
             <div className="font-semibold flex items-center gap-1">
-              <span>⚡</span> Performance
+              <span>☁️</span> Cloud Native
             </div>
-            <div className="text-xs text-muted-foreground">Lighthouse, size-limit</div>
+            <div className="text-xs text-muted-foreground">Kubesec, Kube-bench, Polaris, Terrascan</div>
           </div>
         </div>
         <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-          <div className="text-sm font-semibold mb-2">Supported Languages & File Types</div>
+          <div className="text-sm font-semibold mb-2">Supported Languages & Platforms</div>
           <div className="flex flex-wrap gap-2 text-xs">
-            <span className="px-2 py-1 bg-background rounded border">JavaScript</span>
-            <span className="px-2 py-1 bg-background rounded border">TypeScript</span>
-            <span className="px-2 py-1 bg-background rounded border">CSS/SCSS/Less</span>
-            <span className="px-2 py-1 bg-background rounded border">HTML</span>
-            <span className="px-2 py-1 bg-background rounded border">JSON</span>
-            <span className="px-2 py-1 bg-background rounded border">Markdown</span>
-            <span className="px-2 py-1 bg-background rounded border">package.json</span>
-            <span className="px-2 py-1 bg-background rounded border">Lock files</span>
+            <span className="px-2 py-1 bg-background rounded border">JavaScript/TypeScript</span>
+            <span className="px-2 py-1 bg-background rounded border">Python</span>
+            <span className="px-2 py-1 bg-background rounded border">Go</span>
+            <span className="px-2 py-1 bg-background rounded border">Ruby</span>
+            <span className="px-2 py-1 bg-background rounded border">PHP</span>
+            <span className="px-2 py-1 bg-background rounded border">Rust</span>
+            <span className="px-2 py-1 bg-background rounded border">C/C++</span>
+            <span className="px-2 py-1 bg-background rounded border">Kotlin</span>
+            <span className="px-2 py-1 bg-background rounded border">Swift</span>
+            <span className="px-2 py-1 bg-background rounded border">Kubernetes</span>
+            <span className="px-2 py-1 bg-background rounded border">Terraform</span>
+            <span className="px-2 py-1 bg-background rounded border">Docker</span>
           </div>
         </div>
       </div>
