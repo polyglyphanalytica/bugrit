@@ -9,9 +9,64 @@ runConfig:
   memoryMiB: 1024
   cpu: 1
 
-# Environment variables for Puppeteer
+# Environment variables
 env:
+  # Puppeteer configuration
   - variable: PUPPETEER_SKIP_DOWNLOAD
     value: "true"
   - variable: PUPPETEER_EXECUTABLE_PATH
     value: "/usr/bin/chromium"
+
+  # ============================================================
+  # Firebase Client SDK (NEXT_PUBLIC_* = available in browser)
+  # Get these from: Firebase Console > Project Settings > General
+  # ============================================================
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    secret: FIREBASE_API_KEY
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: YOUR_PROJECT_ID.firebaseapp.com  # Replace with your project
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: YOUR_PROJECT_ID  # Replace with your project
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: YOUR_PROJECT_ID.appspot.com  # Replace with your project
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    secret: FIREBASE_MESSAGING_SENDER_ID
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    secret: FIREBASE_APP_ID
+
+  # ============================================================
+  # Firebase Admin SDK (server-side only)
+  # ============================================================
+  - variable: FIREBASE_PROJECT_ID
+    value: YOUR_PROJECT_ID  # Replace with your project
+  - variable: FIREBASE_SERVICE_ACCOUNT_KEY
+    secret: FIREBASE_SERVICE_ACCOUNT_KEY
+
+  # ============================================================
+  # Application Configuration
+  # ============================================================
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://YOUR_DOMAIN.web.app  # Replace with your domain
+  - variable: ADMIN_ENCRYPTION_KEY
+    secret: ADMIN_ENCRYPTION_KEY
+  - variable: SUPERADMIN_EMAIL
+    value: admin@yourdomain.com  # Replace with your admin email
+
+  # ============================================================
+  # Stripe Billing (if using payments)
+  # ============================================================
+  - variable: STRIPE_SECRET_KEY
+    secret: STRIPE_SECRET_KEY
+  - variable: STRIPE_WEBHOOK_SECRET
+    secret: STRIPE_WEBHOOK_SECRET
+  - variable: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+    secret: STRIPE_PUBLISHABLE_KEY
+
+  # ============================================================
+  # Google Cloud (for Docker-based scanning tools)
+  # ============================================================
+  - variable: GOOGLE_CLOUD_PROJECT
+    value: YOUR_PROJECT_ID  # Replace with your project
+  - variable: SCAN_OUTPUT_BUCKET
+    value: YOUR_PROJECT_ID-bugrit-scans  # Replace with your bucket
+
