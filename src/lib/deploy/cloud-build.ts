@@ -346,6 +346,193 @@ export const DOCKER_TOOLS = {
       },
     ],
   },
+  // ============================================================
+  // Wave 3: Language-Specific Tools
+  // ============================================================
+  'phpstan': {
+    image: 'php:8.3-cli',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'php:8.3-cli',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && composer require --dev phpstan/phpstan -q 2>/dev/null || true && vendor/bin/phpstan analyse --error-format=json --no-progress > /workspace/phpstan-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/phpstan-report.json', `gs://${outputBucket}/${jobId}/phpstan-report.json`],
+      },
+    ],
+  },
+  'psalm': {
+    image: 'php:8.3-cli',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'php:8.3-cli',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && composer require --dev vimeo/psalm -q 2>/dev/null || true && vendor/bin/psalm --init && vendor/bin/psalm --output-format=json > /workspace/psalm-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/psalm-report.json', `gs://${outputBucket}/${jobId}/psalm-report.json`],
+      },
+    ],
+  },
+  'brakeman': {
+    image: 'ruby:3.3',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'ruby:3.3',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'gem install brakeman -q && brakeman /workspace/source -f json -o /workspace/brakeman-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/brakeman-report.json', `gs://${outputBucket}/${jobId}/brakeman-report.json`],
+      },
+    ],
+  },
+  'rubocop': {
+    image: 'ruby:3.3',
+    timeout: '600s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'ruby:3.3',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'gem install rubocop rubocop-rails rubocop-performance -q && rubocop /workspace/source --format json --out /workspace/rubocop-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/rubocop-report.json', `gs://${outputBucket}/${jobId}/rubocop-report.json`],
+      },
+    ],
+  },
+  'spotbugs': {
+    image: 'maven:3.9-eclipse-temurin-21',
+    timeout: '900s',
+    memory: '8GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'maven:3.9-eclipse-temurin-21',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && mvn compile spotbugs:spotbugs -DspotbugsXmlOutput=true -DspotbugsXmlOutputDirectory=/workspace || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/spotbugsXml.xml', `gs://${outputBucket}/${jobId}/spotbugs-report.xml`],
+      },
+    ],
+  },
+  'pmd': {
+    image: 'maven:3.9-eclipse-temurin-21',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'maven:3.9-eclipse-temurin-21',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && mvn pmd:pmd -Dformat=json -DoutputDirectory=/workspace || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/pmd.json', `gs://${outputBucket}/${jobId}/pmd-report.json`],
+      },
+    ],
+  },
+  'checkstyle': {
+    image: 'maven:3.9-eclipse-temurin-21',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'maven:3.9-eclipse-temurin-21',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && mvn checkstyle:checkstyle -Dcheckstyle.output.format=xml -Dcheckstyle.output.file=/workspace/checkstyle-report.xml || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/checkstyle-report.xml', `gs://${outputBucket}/${jobId}/checkstyle-report.xml`],
+      },
+    ],
+  },
+  'detekt': {
+    image: 'gradle:8-jdk21',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'gradle:8-jdk21',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && gradle detekt --continue || true && cp build/reports/detekt/detekt.json /workspace/detekt-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/detekt-report.json', `gs://${outputBucket}/${jobId}/detekt-report.json`],
+      },
+    ],
+  },
 } as const;
 
 export type DockerToolId = keyof typeof DOCKER_TOOLS;
@@ -592,6 +779,15 @@ export class CloudBuildRunner {
       'gitleaks': 'gitleaks-report.json',
       'bandit': 'bandit-report.json',
       'gosec': 'gosec-report.json',
+      // Wave 3: Language-specific tools
+      'phpstan': 'phpstan-report.json',
+      'psalm': 'psalm-report.json',
+      'brakeman': 'brakeman-report.json',
+      'rubocop': 'rubocop-report.json',
+      'spotbugs': 'spotbugs-report.xml',
+      'pmd': 'pmd-report.json',
+      'checkstyle': 'checkstyle-report.xml',
+      'detekt': 'detekt-report.json',
     };
 
     const outputFile = outputFiles[toolId];
