@@ -1,0 +1,143 @@
+name: Tool Health Check
+
+on:
+  schedule:
+    # Run every Monday at 6am UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      notify_slack:
+        description: 'Send Slack notification on issues'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  health-check:
+    name: Check Tool Health
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run health check
+        id: health
+        run: |
+          npx ts-node scripts/check-tool-health.ts --json > health-report.json 2>&1 || true
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          cat health-report.json >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Parse results
+        id: parse
+        run: |
+          TOTAL=$(jq -r '.summary.total // 0' health-report.json)
+          HEALTHY=$(jq -r '.summary.healthy // 0' health-report.json)
+          STALE=$(jq -r '.summary.stale // 0' health-report.json)
+          DEPRECATED=$(jq -r '.summary.deprecated // 0' health-report.json)
+          ABANDONED=$(jq -r '.summary.abandoned // 0' health-report.json)
+          ERRORS=$(jq -r '.summary.errors // 0' health-report.json)
+
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "healthy=$HEALTHY" >> $GITHUB_OUTPUT
+          echo "stale=$STALE" >> $GITHUB_OUTPUT
+          echo "deprecated=$DEPRECATED" >> $GITHUB_OUTPUT
+          echo "abandoned=$ABANDONED" >> $GITHUB_OUTPUT
+          echo "errors=$ERRORS" >> $GITHUB_OUTPUT
+
+          # Determine status
+          if [ "$DEPRECATED" -gt 0 ] || [ "$ABANDONED" -gt 0 ]; then
+            echo "status=critical" >> $GITHUB_OUTPUT
+          elif [ "$STALE" -gt 0 ] || [ "$ERRORS" -gt 0 ]; then
+            echo "status=warning" >> $GITHUB_OUTPUT
+          else
+            echo "status=healthy" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload health report
+        uses: actions/upload-artifact@v4
+        with:
+          name: tool-health-report
+          path: health-report.json
+          retention-days: 90
+
+      - name: Create issue for critical problems
+        if: steps.parse.outputs.status == 'critical'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deprecated = ${{ steps.parse.outputs.deprecated }};
+            const abandoned = ${{ steps.parse.outputs.abandoned }};
+
+            // Check for existing open issue
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'tool-health'
+            });
+
+            if (issues.data.length > 0) {
+              console.log('Issue already exists, skipping creation');
+              return;
+            }
+
+            const body = `## Tool Health Alert
+
+            The weekly tool health check found critical issues:
+
+            - **Deprecated tools:** ${deprecated}
+            - **Abandoned tools:** ${abandoned}
+
+            ### Action Required
+
+            1. Review the [health report artifact](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+            2. Find replacements for deprecated/abandoned tools
+            3. Update the tool registry and integrations
+            4. Close this issue when resolved
+
+            See \`src/lib/tools/MAINTENANCE.md\` for deprecation response procedures.
+            `;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Tool Health: Deprecated/Abandoned Tools Found',
+              body: body,
+              labels: ['tool-health', 'critical', 'maintenance']
+            });
+
+      - name: Summary
+        run: |
+          echo "## Tool Health Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ✅ Healthy | ${{ steps.parse.outputs.healthy }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚠️ Stale | ${{ steps.parse.outputs.stale }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Deprecated | ${{ steps.parse.outputs.deprecated }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❌ Abandoned | ${{ steps.parse.outputs.abandoned }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ❓ Errors | ${{ steps.parse.outputs.errors }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total tools:** ${{ steps.parse.outputs.total }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Overall status:** ${{ steps.parse.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail on critical issues
+        if: steps.parse.outputs.status == 'critical'
+        run: |
+          echo "::error::Critical tool health issues found!"
+          exit 1
