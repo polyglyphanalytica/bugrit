@@ -5,6 +5,7 @@ import {
   PRESETS,
   SENSITIVITY_DESCRIPTIONS,
   AI_AGENT_DESCRIPTIONS,
+  CATEGORY_INFO,
   WizardInput,
   AppType,
   AppSensitivity,
@@ -21,6 +22,7 @@ export async function GET() {
     steps: WIZARD_STEPS,
     sensitivityDescriptions: SENSITIVITY_DESCRIPTIONS,
     aiAgentDescriptions: AI_AGENT_DESCRIPTIONS,
+    categoryInfo: CATEGORY_INFO,
     presets: Object.keys(PRESETS),
   });
 }
@@ -87,6 +89,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         preset,
+        selectionState: recommendations.selectionState,
         recommendations,
       });
     }
@@ -117,6 +120,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       input,
+      // UI-ready selection state with all tools
+      // - selectedTools: pre-selected recommendations (bubble to top)
+      // - availableByCategory: remaining tools grouped by category
+      // - credits: selected total and per-tool breakdown
+      selectionState: recommendations.selectionState,
+      // Full recommendations (includes selectionState as well)
       recommendations,
     });
   } catch (error) {

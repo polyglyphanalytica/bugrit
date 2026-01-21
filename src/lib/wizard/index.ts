@@ -11,6 +11,13 @@ export {
   TOOL_DATABASE,
   SENSITIVITY_PROFILES,
   AI_AGENT_PROFILES,
+  CATEGORY_INFO,
+  // Selection state helpers
+  toggleToolSelection,
+  selectTools,
+  deselectAllTools,
+  resetToRecommended,
+  getAllToolsFlat,
 } from './recommendation-engine';
 
 export type {
@@ -24,6 +31,11 @@ export type {
   ScanPackage,
   WizardStep,
   DetectedStack,
+  // UI-friendly selection types
+  ToolCategory,
+  SelectableTool,
+  ToolCategoryGroup,
+  SelectionState,
 } from './recommendation-engine';
 
 // ============================================================
@@ -40,6 +52,8 @@ import {
   AICodingAgent,
   DeveloperConcern,
   DetectedStack,
+  SelectionState,
+  toggleToolSelection as _toggleToolSelection,
 } from './recommendation-engine';
 
 /**

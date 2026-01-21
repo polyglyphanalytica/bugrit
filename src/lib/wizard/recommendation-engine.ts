@@ -76,6 +76,51 @@ export interface ScanRecommendation {
   tags: string[];
 }
 
+// ============================================================
+// UI-Friendly Tool Selection Types
+// ============================================================
+
+export type ToolCategory =
+  | 'security'
+  | 'code-quality'
+  | 'accessibility'
+  | 'performance'
+  | 'dependencies';
+
+export interface SelectableTool {
+  id: string;
+  name: string;
+  category: ToolCategory;
+  description: string;
+  credits: number;
+  timeEstimate: string;
+  tags: string[];
+  languages?: string[];
+  frameworks?: string[];
+  appTypes?: AppType[];
+  // Selection state
+  selected: boolean;
+  preSelected: boolean;  // Was this auto-selected by wizard?
+  selectionReason?: string;  // Why it was recommended
+}
+
+export interface ToolCategoryGroup {
+  category: ToolCategory;
+  displayName: string;
+  icon: string;
+  tools: SelectableTool[];
+}
+
+export interface SelectionState {
+  selectedTools: SelectableTool[];
+  availableByCategory: ToolCategoryGroup[];
+  credits: {
+    selected: number;
+    perTool: Record<string, number>;
+  };
+  estimatedTime: string;
+}
+
 export interface WizardOutput {
   summary: {
     totalScans: number;
@@ -86,6 +131,8 @@ export interface WizardOutput {
   recommendations: ScanRecommendation[];
   packages: ScanPackage[];
   insights: string[];
+  // New: UI-ready selection state
+  selectionState: SelectionState;
 }
 
 export interface ScanPackage {
@@ -104,7 +151,8 @@ export interface ScanPackage {
 interface ToolInfo {
   id: string;
   name: string;
-  category: string;
+  description: string;
+  category: ToolCategory;
   credits: number;
   timeEstimate: string;
   languages?: string[];
@@ -113,58 +161,67 @@ interface ToolInfo {
   tags: string[];
 }
 
+// Category display info
+export const CATEGORY_INFO: Record<ToolCategory, { displayName: string; icon: string; description: string }> = {
+  security: { displayName: 'Security', icon: '🛡️', description: 'Find vulnerabilities and security issues' },
+  'code-quality': { displayName: 'Code Quality', icon: '✨', description: 'Improve code maintainability and standards' },
+  accessibility: { displayName: 'Accessibility', icon: '♿', description: 'Ensure your app works for everyone' },
+  performance: { displayName: 'Performance', icon: '⚡', description: 'Optimize speed and user experience' },
+  dependencies: { displayName: 'Dependencies', icon: '📦', description: 'Manage and audit third-party packages' },
+};
+
 const TOOL_DATABASE: ToolInfo[] = [
   // Security - General
-  { id: 'semgrep', name: 'Semgrep', category: 'security', credits: 2, timeEstimate: '2-5 min', tags: ['sast', 'multi-language'] },
-  { id: 'gitleaks', name: 'Gitleaks', category: 'security', credits: 1, timeEstimate: '1-2 min', tags: ['secrets', 'credentials'] },
-  { id: 'trivy', name: 'Trivy', category: 'security', credits: 2, timeEstimate: '2-4 min', tags: ['vulnerabilities', 'dependencies'] },
-  { id: 'grype', name: 'Grype', category: 'security', credits: 2, timeEstimate: '2-4 min', tags: ['sbom', 'vulnerabilities'] },
-  { id: 'npm-audit', name: 'npm Audit', category: 'security', credits: 1, timeEstimate: '30 sec', languages: ['javascript', 'typescript'], tags: ['dependencies', 'npm'] },
-  { id: 'secretlint', name: 'Secretlint', category: 'security', credits: 1, timeEstimate: '1 min', tags: ['secrets', 'credentials'] },
+  { id: 'semgrep', name: 'Semgrep', description: 'Find bugs and security issues with custom rules across 30+ languages', category: 'security', credits: 2, timeEstimate: '2-5 min', tags: ['sast', 'multi-language'] },
+  { id: 'gitleaks', name: 'Gitleaks', description: 'Detect hardcoded secrets like API keys and passwords', category: 'security', credits: 1, timeEstimate: '1-2 min', tags: ['secrets', 'credentials'] },
+  { id: 'trivy', name: 'Trivy', description: 'Scan for vulnerabilities in dependencies and containers', category: 'security', credits: 2, timeEstimate: '2-4 min', tags: ['vulnerabilities', 'dependencies'] },
+  { id: 'grype', name: 'Grype', description: 'Vulnerability scanner for container images and filesystems', category: 'security', credits: 2, timeEstimate: '2-4 min', tags: ['sbom', 'vulnerabilities'] },
+  { id: 'npm-audit', name: 'npm Audit', description: 'Check npm packages for known vulnerabilities', category: 'security', credits: 1, timeEstimate: '30 sec', languages: ['javascript', 'typescript'], tags: ['dependencies', 'npm'] },
+  { id: 'secretlint', name: 'Secretlint', description: 'Lint for credentials and secrets in your codebase', category: 'security', credits: 1, timeEstimate: '1 min', tags: ['secrets', 'credentials'] },
 
   // Security - Web
-  { id: 'owasp-zap', name: 'OWASP ZAP', category: 'security', credits: 5, timeEstimate: '5-15 min', appTypes: ['web', 'pwa', 'api'], tags: ['dast', 'web-security'] },
-  { id: 'nuclei', name: 'Nuclei', category: 'security', credits: 3, timeEstimate: '3-10 min', appTypes: ['web', 'pwa', 'api'], tags: ['vulnerability-scanner', 'cve'] },
+  { id: 'owasp-zap', name: 'OWASP ZAP', description: 'Dynamic security testing for web applications', category: 'security', credits: 5, timeEstimate: '5-15 min', appTypes: ['web', 'pwa', 'api'], tags: ['dast', 'web-security'] },
+  { id: 'nuclei', name: 'Nuclei', description: 'Fast vulnerability scanner with 8000+ community templates', category: 'security', credits: 3, timeEstimate: '3-10 min', appTypes: ['web', 'pwa', 'api'], tags: ['vulnerability-scanner', 'cve'] },
 
   // Security - IaC
-  { id: 'checkov', name: 'Checkov', category: 'security', credits: 2, timeEstimate: '2-4 min', tags: ['iac', 'terraform', 'kubernetes'] },
-  { id: 'tfsec', name: 'tfsec', category: 'security', credits: 2, timeEstimate: '1-3 min', tags: ['terraform', 'iac'] },
-  { id: 'dockle', name: 'Dockle', category: 'security', credits: 1, timeEstimate: '1-2 min', tags: ['docker', 'container'] },
+  { id: 'checkov', name: 'Checkov', description: 'Security scanner for Terraform, CloudFormation, and Kubernetes', category: 'security', credits: 2, timeEstimate: '2-4 min', tags: ['iac', 'terraform', 'kubernetes'] },
+  { id: 'tfsec', name: 'tfsec', description: 'Static analysis for Terraform security issues', category: 'security', credits: 2, timeEstimate: '1-3 min', tags: ['terraform', 'iac'] },
+  { id: 'dockle', name: 'Dockle', description: 'Container image linter for security best practices', category: 'security', credits: 1, timeEstimate: '1-2 min', tags: ['docker', 'container'] },
 
   // Security - Language Specific
-  { id: 'bandit', name: 'Bandit', category: 'security', credits: 1, timeEstimate: '1-2 min', languages: ['python'], tags: ['python', 'sast'] },
-  { id: 'gosec', name: 'gosec', category: 'security', credits: 1, timeEstimate: '1-2 min', languages: ['go'], tags: ['go', 'sast'] },
-  { id: 'brakeman', name: 'Brakeman', category: 'security', credits: 2, timeEstimate: '2-4 min', languages: ['ruby'], frameworks: ['rails'], tags: ['ruby', 'rails', 'sast'] },
+  { id: 'bandit', name: 'Bandit', description: 'Security linter for Python code', category: 'security', credits: 1, timeEstimate: '1-2 min', languages: ['python'], tags: ['python', 'sast'] },
+  { id: 'gosec', name: 'gosec', description: 'Security checker for Go source code', category: 'security', credits: 1, timeEstimate: '1-2 min', languages: ['go'], tags: ['go', 'sast'] },
+  { id: 'brakeman', name: 'Brakeman', description: 'Security scanner for Ruby on Rails applications', category: 'security', credits: 2, timeEstimate: '2-4 min', languages: ['ruby'], frameworks: ['rails'], tags: ['ruby', 'rails', 'sast'] },
 
   // Code Quality
-  { id: 'eslint', name: 'ESLint', category: 'code-quality', credits: 1, timeEstimate: '30 sec', languages: ['javascript', 'typescript'], tags: ['linting', 'best-practices'] },
-  { id: 'biome', name: 'Biome', category: 'code-quality', credits: 1, timeEstimate: '30 sec', languages: ['javascript', 'typescript'], tags: ['linting', 'formatting'] },
-  { id: 'stylelint', name: 'Stylelint', category: 'code-quality', credits: 1, timeEstimate: '30 sec', tags: ['css', 'styling'] },
-  { id: 'codeclimate', name: 'Code Climate', category: 'code-quality', credits: 3, timeEstimate: '3-5 min', tags: ['maintainability', 'complexity'] },
-  { id: 'shellcheck', name: 'ShellCheck', category: 'code-quality', credits: 1, timeEstimate: '30 sec', tags: ['shell', 'bash'] },
+  { id: 'eslint', name: 'ESLint', description: 'Linting and best practices for JavaScript/TypeScript', category: 'code-quality', credits: 1, timeEstimate: '30 sec', languages: ['javascript', 'typescript'], tags: ['linting', 'best-practices'] },
+  { id: 'biome', name: 'Biome', description: 'Fast linter and formatter for web projects', category: 'code-quality', credits: 1, timeEstimate: '30 sec', languages: ['javascript', 'typescript'], tags: ['linting', 'formatting'] },
+  { id: 'stylelint', name: 'Stylelint', description: 'Linter for CSS, SCSS, and styled-components', category: 'code-quality', credits: 1, timeEstimate: '30 sec', tags: ['css', 'styling'] },
+  { id: 'codeclimate', name: 'Code Climate', description: 'Automated code review for maintainability', category: 'code-quality', credits: 3, timeEstimate: '3-5 min', tags: ['maintainability', 'complexity'] },
+  { id: 'shellcheck', name: 'ShellCheck', description: 'Static analysis for shell scripts', category: 'code-quality', credits: 1, timeEstimate: '30 sec', tags: ['shell', 'bash'] },
 
   // Code Quality - Language Specific
-  { id: 'phpstan', name: 'PHPStan', category: 'code-quality', credits: 2, timeEstimate: '2-4 min', languages: ['php'], tags: ['php', 'static-analysis'] },
-  { id: 'psalm', name: 'Psalm', category: 'code-quality', credits: 2, timeEstimate: '2-4 min', languages: ['php'], tags: ['php', 'type-safety'] },
-  { id: 'rubocop', name: 'RuboCop', category: 'code-quality', credits: 1, timeEstimate: '1-2 min', languages: ['ruby'], tags: ['ruby', 'style'] },
-  { id: 'spotbugs', name: 'SpotBugs', category: 'code-quality', credits: 3, timeEstimate: '3-5 min', languages: ['java'], tags: ['java', 'bugs'] },
-  { id: 'pmd', name: 'PMD', category: 'code-quality', credits: 2, timeEstimate: '2-3 min', languages: ['java'], tags: ['java', 'best-practices'] },
-  { id: 'detekt', name: 'Detekt', category: 'code-quality', credits: 2, timeEstimate: '2-3 min', languages: ['kotlin'], tags: ['kotlin', 'style'] },
+  { id: 'phpstan', name: 'PHPStan', description: 'Static analysis for PHP - finds bugs without running code', category: 'code-quality', credits: 2, timeEstimate: '2-4 min', languages: ['php'], tags: ['php', 'static-analysis'] },
+  { id: 'psalm', name: 'Psalm', description: 'Type-safe PHP analysis with great IDE support', category: 'code-quality', credits: 2, timeEstimate: '2-4 min', languages: ['php'], tags: ['php', 'type-safety'] },
+  { id: 'rubocop', name: 'RuboCop', description: 'Ruby style guide enforcer and linter', category: 'code-quality', credits: 1, timeEstimate: '1-2 min', languages: ['ruby'], tags: ['ruby', 'style'] },
+  { id: 'spotbugs', name: 'SpotBugs', description: 'Find bugs in Java programs using static analysis', category: 'code-quality', credits: 3, timeEstimate: '3-5 min', languages: ['java'], tags: ['java', 'bugs'] },
+  { id: 'pmd', name: 'PMD', description: 'Source code analyzer for Java - finds common issues', category: 'code-quality', credits: 2, timeEstimate: '2-3 min', languages: ['java'], tags: ['java', 'best-practices'] },
+  { id: 'detekt', name: 'Detekt', description: 'Static code analysis for Kotlin', category: 'code-quality', credits: 2, timeEstimate: '2-3 min', languages: ['kotlin'], tags: ['kotlin', 'style'] },
 
   // Accessibility
-  { id: 'axe-core', name: 'axe-core', category: 'accessibility', credits: 4, timeEstimate: '2-4 min', appTypes: ['web', 'pwa'], tags: ['wcag', 'a11y'] },
-  { id: 'pa11y', name: 'Pa11y', category: 'accessibility', credits: 4, timeEstimate: '2-4 min', appTypes: ['web', 'pwa'], tags: ['wcag', 'a11y'] },
-  { id: 'lighthouse-a11y', name: 'Lighthouse A11y', category: 'accessibility', credits: 4, timeEstimate: '2-3 min', appTypes: ['web', 'pwa'], tags: ['wcag', 'a11y'] },
+  { id: 'axe-core', name: 'axe-core', description: 'WCAG accessibility testing engine', category: 'accessibility', credits: 4, timeEstimate: '2-4 min', appTypes: ['web', 'pwa'], tags: ['wcag', 'a11y'] },
+  { id: 'pa11y', name: 'Pa11y', description: 'Automated accessibility testing with detailed reports', category: 'accessibility', credits: 4, timeEstimate: '2-4 min', appTypes: ['web', 'pwa'], tags: ['wcag', 'a11y'] },
+  { id: 'lighthouse-a11y', name: 'Lighthouse A11y', description: 'Accessibility audit from Google Lighthouse', category: 'accessibility', credits: 4, timeEstimate: '2-3 min', appTypes: ['web', 'pwa'], tags: ['wcag', 'a11y'] },
 
   // Performance
-  { id: 'lighthouse', name: 'Lighthouse', category: 'performance', credits: 5, timeEstimate: '2-3 min', appTypes: ['web', 'pwa'], tags: ['core-web-vitals', 'seo'] },
-  { id: 'sitespeed', name: 'Sitespeed.io', category: 'performance', credits: 5, timeEstimate: '5-10 min', appTypes: ['web', 'pwa'], tags: ['performance', 'metrics'] },
+  { id: 'lighthouse', name: 'Lighthouse', description: 'Performance, SEO, and best practices audit', category: 'performance', credits: 5, timeEstimate: '2-3 min', appTypes: ['web', 'pwa'], tags: ['core-web-vitals', 'seo'] },
+  { id: 'sitespeed', name: 'Sitespeed.io', description: 'Complete web performance testing toolkit', category: 'performance', credits: 5, timeEstimate: '5-10 min', appTypes: ['web', 'pwa'], tags: ['performance', 'metrics'] },
 
   // Dependencies
-  { id: 'dependency-check', name: 'OWASP Dep Check', category: 'dependencies', credits: 3, timeEstimate: '5-10 min', tags: ['cve', 'vulnerabilities'] },
-  { id: 'syft', name: 'Syft SBOM', category: 'dependencies', credits: 2, timeEstimate: '2-3 min', tags: ['sbom', 'inventory'] },
-  { id: 'license-checker', name: 'License Checker', category: 'dependencies', credits: 1, timeEstimate: '30 sec', tags: ['compliance', 'licenses'] },
-  { id: 'depcheck', name: 'Depcheck', category: 'dependencies', credits: 1, timeEstimate: '30 sec', languages: ['javascript', 'typescript'], tags: ['unused', 'missing'] },
+  { id: 'dependency-check', name: 'OWASP Dep Check', description: 'Identify known vulnerabilities in project dependencies', category: 'dependencies', credits: 3, timeEstimate: '5-10 min', tags: ['cve', 'vulnerabilities'] },
+  { id: 'syft', name: 'Syft SBOM', description: 'Generate software bill of materials for your project', category: 'dependencies', credits: 2, timeEstimate: '2-3 min', tags: ['sbom', 'inventory'] },
+  { id: 'license-checker', name: 'License Checker', description: 'Verify dependency licenses for compliance', category: 'dependencies', credits: 1, timeEstimate: '30 sec', tags: ['compliance', 'licenses'] },
+  { id: 'depcheck', name: 'Depcheck', description: 'Find unused or missing dependencies in your project', category: 'dependencies', credits: 1, timeEstimate: '30 sec', languages: ['javascript', 'typescript'], tags: ['unused', 'missing'] },
 ];
 
 // ============================================================
@@ -608,6 +665,9 @@ export class ScanRecommendationEngine {
       insights.push(`💡 Tip: Start with the ${essentialScans} essential scans, then add recommended ones based on findings`);
     }
 
+    // Build UI-ready selection state
+    const selectionState = this.buildSelectionState(recommendations, addedTools);
+
     return {
       summary: {
         totalScans: recommendations.length,
@@ -618,7 +678,129 @@ export class ScanRecommendationEngine {
       recommendations,
       packages,
       insights,
+      selectionState,
     };
+  }
+
+  /**
+   * Build UI-ready selection state with all tools
+   * - Selected tools (recommendations) bubble to the top
+   * - Remaining tools grouped by category
+   */
+  private static buildSelectionState(
+    recommendations: ScanRecommendation[],
+    selectedToolIds: Set<string>
+  ): SelectionState {
+    // Build selected tools array from recommendations
+    const selectedTools: SelectableTool[] = recommendations.map(rec => {
+      const tool = TOOL_DATABASE.find(t => t.id === rec.toolId)!;
+      return {
+        id: tool.id,
+        name: tool.name,
+        category: tool.category,
+        description: tool.description,
+        credits: tool.credits,
+        timeEstimate: tool.timeEstimate,
+        tags: tool.tags,
+        languages: tool.languages,
+        frameworks: tool.frameworks,
+        appTypes: tool.appTypes,
+        selected: true,
+        preSelected: true,
+        selectionReason: rec.reason,
+      };
+    });
+
+    // Build category groups for unselected tools
+    const availableByCategory: ToolCategoryGroup[] = [];
+    const categories = Object.keys(CATEGORY_INFO) as ToolCategory[];
+
+    for (const category of categories) {
+      const categoryInfo = CATEGORY_INFO[category];
+      const unselectedTools = TOOL_DATABASE
+        .filter(t => t.category === category && !selectedToolIds.has(t.id))
+        .map(tool => ({
+          id: tool.id,
+          name: tool.name,
+          category: tool.category,
+          description: tool.description,
+          credits: tool.credits,
+          timeEstimate: tool.timeEstimate,
+          tags: tool.tags,
+          languages: tool.languages,
+          frameworks: tool.frameworks,
+          appTypes: tool.appTypes,
+          selected: false,
+          preSelected: false,
+        }));
+
+      // Only add category if it has unselected tools
+      if (unselectedTools.length > 0) {
+        availableByCategory.push({
+          category,
+          displayName: categoryInfo.displayName,
+          icon: categoryInfo.icon,
+          tools: unselectedTools,
+        });
+      }
+    }
+
+    // Calculate credits
+    const selectedCredits = selectedTools.reduce((sum, t) => sum + t.credits, 0);
+    const perToolCredits: Record<string, number> = {};
+    for (const tool of TOOL_DATABASE) {
+      perToolCredits[tool.id] = tool.credits;
+    }
+
+    // Calculate estimated time for selected tools
+    const estimatedTime = this.estimateTimeForTools(selectedTools.map(t => t.id));
+
+    return {
+      selectedTools,
+      availableByCategory,
+      credits: {
+        selected: selectedCredits,
+        perTool: perToolCredits,
+      },
+      estimatedTime,
+    };
+  }
+
+  /**
+   * Estimate time for a set of tools
+   */
+  private static estimateTimeForTools(toolIds: string[]): string {
+    let minMinutes = 0;
+    let maxMinutes = 0;
+
+    for (const toolId of toolIds) {
+      const tool = TOOL_DATABASE.find(t => t.id === toolId);
+      if (!tool) continue;
+
+      const match = tool.timeEstimate.match(/(\d+)(?:-(\d+))?\s*(min|sec)/);
+      if (match) {
+        const min = parseInt(match[1], 10);
+        const max = parseInt(match[2] || match[1], 10);
+        const unit = match[3];
+
+        if (unit === 'sec') {
+          minMinutes += min / 60;
+          maxMinutes += max / 60;
+        } else {
+          minMinutes += min;
+          maxMinutes += max;
+        }
+      }
+    }
+
+    minMinutes = Math.ceil(minMinutes);
+    maxMinutes = Math.ceil(maxMinutes);
+
+    if (maxMinutes < 60) {
+      return `${minMinutes}-${maxMinutes} min`;
+    } else {
+      return `${Math.ceil(minMinutes / 60)}-${Math.ceil(maxMinutes / 60)} hours`;
+    }
   }
 
   private static getToolsForConcern(concern: DeveloperConcern): string[] {
@@ -818,6 +1000,285 @@ export const WIZARD_STEPS: WizardStep[] = [
     required: false,
   },
 ];
+
+// ============================================================
+// Selection State Helpers
+// ============================================================
+
+/**
+ * Toggle a tool's selection state and return the updated selection state
+ * - When selecting: tool moves from category to selectedTools
+ * - When deselecting: tool moves from selectedTools back to its category
+ */
+export function toggleToolSelection(
+  currentState: SelectionState,
+  toolId: string
+): SelectionState {
+  const tool = TOOL_DATABASE.find(t => t.id === toolId);
+  if (!tool) return currentState;
+
+  // Check if tool is currently selected
+  const selectedIndex = currentState.selectedTools.findIndex(t => t.id === toolId);
+  const isCurrentlySelected = selectedIndex >= 0;
+
+  if (isCurrentlySelected) {
+    // Deselecting - move to category
+    const removedTool = currentState.selectedTools[selectedIndex];
+    const newSelectedTools = [
+      ...currentState.selectedTools.slice(0, selectedIndex),
+      ...currentState.selectedTools.slice(selectedIndex + 1),
+    ];
+
+    // Add to appropriate category
+    const newAvailableByCategory = currentState.availableByCategory.map(group => {
+      if (group.category === tool.category) {
+        return {
+          ...group,
+          tools: [
+            ...group.tools,
+            { ...removedTool, selected: false, preSelected: false, selectionReason: undefined },
+          ].sort((a, b) => a.name.localeCompare(b.name)),
+        };
+      }
+      return group;
+    });
+
+    // If category didn't exist, create it
+    const categoryExists = newAvailableByCategory.some(g => g.category === tool.category);
+    if (!categoryExists) {
+      const categoryInfo = CATEGORY_INFO[tool.category];
+      newAvailableByCategory.push({
+        category: tool.category,
+        displayName: categoryInfo.displayName,
+        icon: categoryInfo.icon,
+        tools: [{ ...removedTool, selected: false, preSelected: false, selectionReason: undefined }],
+      });
+    }
+
+    return recalculateState(newSelectedTools, newAvailableByCategory);
+  } else {
+    // Selecting - move from category to selected
+    let foundTool: SelectableTool | null = null;
+    const newAvailableByCategory = currentState.availableByCategory.map(group => {
+      if (group.category === tool.category) {
+        const toolIndex = group.tools.findIndex(t => t.id === toolId);
+        if (toolIndex >= 0) {
+          foundTool = group.tools[toolIndex];
+          return {
+            ...group,
+            tools: [
+              ...group.tools.slice(0, toolIndex),
+              ...group.tools.slice(toolIndex + 1),
+            ],
+          };
+        }
+      }
+      return group;
+    }).filter(group => group.tools.length > 0); // Remove empty categories
+
+    if (!foundTool) return currentState;
+
+    // TypeScript doesn't narrow foundTool after the map closure, so we use a local const
+    const selectedTool: SelectableTool = foundTool;
+    const newSelectedTools = [
+      ...currentState.selectedTools,
+      { ...selectedTool, selected: true, preSelected: false, selectionReason: 'User selected' },
+    ];
+
+    return recalculateState(newSelectedTools, newAvailableByCategory);
+  }
+}
+
+/**
+ * Select multiple tools at once
+ */
+export function selectTools(
+  currentState: SelectionState,
+  toolIds: string[]
+): SelectionState {
+  let state = currentState;
+  for (const toolId of toolIds) {
+    // Only select if not already selected
+    if (!state.selectedTools.some(t => t.id === toolId)) {
+      state = toggleToolSelection(state, toolId);
+    }
+  }
+  return state;
+}
+
+/**
+ * Deselect all tools and return to initial state
+ */
+export function deselectAllTools(currentState: SelectionState): SelectionState {
+  // Move all selected tools back to their categories
+  const allTools = [
+    ...currentState.selectedTools.map(t => ({ ...t, selected: false, preSelected: false, selectionReason: undefined })),
+    ...currentState.availableByCategory.flatMap(g => g.tools),
+  ];
+
+  // Group by category
+  const byCategory = new Map<ToolCategory, SelectableTool[]>();
+  for (const tool of allTools) {
+    const existing = byCategory.get(tool.category) || [];
+    existing.push(tool);
+    byCategory.set(tool.category, existing);
+  }
+
+  // Build category groups
+  const categories = Object.keys(CATEGORY_INFO) as ToolCategory[];
+  const availableByCategory: ToolCategoryGroup[] = [];
+
+  for (const category of categories) {
+    const tools = byCategory.get(category);
+    if (tools && tools.length > 0) {
+      const categoryInfo = CATEGORY_INFO[category];
+      availableByCategory.push({
+        category,
+        displayName: categoryInfo.displayName,
+        icon: categoryInfo.icon,
+        tools: tools.sort((a, b) => a.name.localeCompare(b.name)),
+      });
+    }
+  }
+
+  return {
+    selectedTools: [],
+    availableByCategory,
+    credits: {
+      selected: 0,
+      perTool: currentState.credits.perTool,
+    },
+    estimatedTime: '0 min',
+  };
+}
+
+/**
+ * Reset to recommended selections (preSelected tools only)
+ */
+export function resetToRecommended(currentState: SelectionState): SelectionState {
+  // Get all tools (both selected and available)
+  const allTools = [
+    ...currentState.selectedTools,
+    ...currentState.availableByCategory.flatMap(g => g.tools),
+  ];
+
+  // Separate pre-selected and non-pre-selected
+  const selectedTools = allTools
+    .filter(t => t.preSelected)
+    .map(t => ({ ...t, selected: true }));
+
+  const unselected = allTools.filter(t => !t.preSelected);
+
+  // Group unselected by category
+  const byCategory = new Map<ToolCategory, SelectableTool[]>();
+  for (const tool of unselected) {
+    const existing = byCategory.get(tool.category) || [];
+    existing.push({ ...tool, selected: false });
+    byCategory.set(tool.category, existing);
+  }
+
+  // Build category groups
+  const categories = Object.keys(CATEGORY_INFO) as ToolCategory[];
+  const availableByCategory: ToolCategoryGroup[] = [];
+
+  for (const category of categories) {
+    const tools = byCategory.get(category);
+    if (tools && tools.length > 0) {
+      const categoryInfo = CATEGORY_INFO[category];
+      availableByCategory.push({
+        category,
+        displayName: categoryInfo.displayName,
+        icon: categoryInfo.icon,
+        tools: tools.sort((a, b) => a.name.localeCompare(b.name)),
+      });
+    }
+  }
+
+  return recalculateState(selectedTools, availableByCategory);
+}
+
+/**
+ * Recalculate credits and time for a selection state
+ */
+function recalculateState(
+  selectedTools: SelectableTool[],
+  availableByCategory: ToolCategoryGroup[]
+): SelectionState {
+  const selectedCredits = selectedTools.reduce((sum, t) => sum + t.credits, 0);
+  const estimatedTime = calculateEstimatedTime(selectedTools);
+
+  // Build perTool credits map
+  const perToolCredits: Record<string, number> = {};
+  for (const tool of TOOL_DATABASE) {
+    perToolCredits[tool.id] = tool.credits;
+  }
+
+  return {
+    selectedTools,
+    availableByCategory,
+    credits: {
+      selected: selectedCredits,
+      perTool: perToolCredits,
+    },
+    estimatedTime,
+  };
+}
+
+/**
+ * Calculate estimated time for selected tools
+ */
+function calculateEstimatedTime(tools: SelectableTool[]): string {
+  let minMinutes = 0;
+  let maxMinutes = 0;
+
+  for (const tool of tools) {
+    const match = tool.timeEstimate.match(/(\d+)(?:-(\d+))?\s*(min|sec)/);
+    if (match) {
+      const min = parseInt(match[1], 10);
+      const max = parseInt(match[2] || match[1], 10);
+      const unit = match[3];
+
+      if (unit === 'sec') {
+        minMinutes += min / 60;
+        maxMinutes += max / 60;
+      } else {
+        minMinutes += min;
+        maxMinutes += max;
+      }
+    }
+  }
+
+  minMinutes = Math.ceil(minMinutes);
+  maxMinutes = Math.ceil(maxMinutes);
+
+  if (minMinutes === 0 && maxMinutes === 0) {
+    return '0 min';
+  } else if (maxMinutes < 60) {
+    return `${minMinutes}-${maxMinutes} min`;
+  } else {
+    return `${Math.ceil(minMinutes / 60)}-${Math.ceil(maxMinutes / 60)} hours`;
+  }
+}
+
+/**
+ * Get the full tool list for display (both selected and available)
+ */
+export function getAllToolsFlat(): SelectableTool[] {
+  return TOOL_DATABASE.map(tool => ({
+    id: tool.id,
+    name: tool.name,
+    category: tool.category,
+    description: tool.description,
+    credits: tool.credits,
+    timeEstimate: tool.timeEstimate,
+    tags: tool.tags,
+    languages: tool.languages,
+    frameworks: tool.frameworks,
+    appTypes: tool.appTypes,
+    selected: false,
+    preSelected: false,
+  }));
+}
 
 // ============================================================
 // Export

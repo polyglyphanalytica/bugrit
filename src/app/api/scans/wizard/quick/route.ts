@@ -85,6 +85,12 @@ export async function GET(request: NextRequest) {
       scans: p.scans.length,
     })),
 
+    // UI-ready selection state with all tools
+    // - selectedTools: pre-selected recommendations (bubble to top)
+    // - availableByCategory: remaining tools grouped by category
+    // - credits: selected total and per-tool breakdown
+    selectionState: recommendations.selectionState,
+
     // Full recommendations if needed
     full: recommendations,
   });
