@@ -216,7 +216,7 @@ export default function PricingPage() {
 
         {/* Credit Costs Reference */}
         <div className="max-w-4xl mx-auto mt-20">
-          <h2 className="text-2xl font-bold text-center mb-8">Credit Costs (52 Tools)</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">Credit Costs (69 Tools)</h2>
 
           <div className="grid md:grid-cols-2 gap-8">
             <GlassCard className="p-6">

@@ -1,7 +1,7 @@
 /**
  * Tool Runner
  *
- * Executes all 25 tools using a mix of npm packages and CLI execution.
+ * Executes all 69 tools using a mix of npm packages and CLI execution.
  * CLI execution is used for tools with native bindings that can't be bundled.
  */
 

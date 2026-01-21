@@ -1,8 +1,13 @@
 /**
  * Comprehensive Tool Registry
  *
- * 46+ security, quality, and compliance tools supporting multiple languages.
- * Tools run via Node.js (native JS) or Google Cloud Build (Docker-based).
+ * 69 security, quality, and compliance tools supporting multiple languages.
+ *
+ * Deployment types:
+ * - Native JS (25 tools): Run via npm packages on Node.js
+ * - Docker (44 tools): Run via Google Cloud Build containers
+ *
+ * Total: 69 tools across 11 categories
  */
 
 export interface ToolDefinition {
@@ -183,6 +188,38 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     category: 'security',
     docker: 'ghcr.io/zaproxy/zaproxy:stable',
     credits: 5,
+  },
+  {
+    id: 'dependency-check',
+    name: 'OWASP Dependency Check',
+    description: 'Detect publicly known vulnerabilities in project dependencies',
+    category: 'security',
+    docker: 'owasp/dependency-check:latest',
+    credits: 2,
+  },
+  {
+    id: 'tfsec',
+    name: 'tfsec',
+    description: 'Security scanner for Terraform code',
+    category: 'security',
+    docker: 'aquasec/tfsec:latest',
+    credits: 2,
+  },
+  {
+    id: 'dockle',
+    name: 'Dockle',
+    description: 'Container image linter for security best practices',
+    category: 'security',
+    docker: 'goodwithtech/dockle:latest',
+    credits: 1,
+  },
+  {
+    id: 'syft',
+    name: 'Syft',
+    description: 'Software Bill of Materials (SBOM) generator',
+    category: 'security',
+    docker: 'anchore/syft:latest',
+    credits: 1,
   },
   {
     id: 'flawfinder',
@@ -370,6 +407,42 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     credits: 2,
   },
   {
+    id: 'psalm',
+    name: 'Psalm',
+    description: 'Type-safe PHP static analysis tool',
+    category: 'quality',
+    docker: 'vimeo/psalm:latest',
+    languages: ['php'],
+    credits: 2,
+  },
+  {
+    id: 'spotbugs',
+    name: 'SpotBugs',
+    description: 'Static analysis for Java bytecode to find bugs',
+    category: 'quality',
+    docker: 'spotbugs/spotbugs:latest',
+    languages: ['java'],
+    credits: 2,
+  },
+  {
+    id: 'pmd',
+    name: 'PMD',
+    description: 'Extensible cross-language static code analyzer',
+    category: 'quality',
+    docker: 'pmd/pmd:latest',
+    languages: ['java', 'javascript', 'apex', 'xml'],
+    credits: 2,
+  },
+  {
+    id: 'checkstyle',
+    name: 'Checkstyle',
+    description: 'Java code style checker for coding standards compliance',
+    category: 'quality',
+    docker: 'checkstyle/checkstyle:latest',
+    languages: ['java'],
+    credits: 1,
+  },
+  {
     id: 'rubocop',
     name: 'RuboCop',
     description: 'Ruby style guide enforcer and linter',
@@ -461,7 +534,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // PERFORMANCE (2 tools)
+  // PERFORMANCE (3 tools)
   // ═══════════════════════════════════════════════════════════════
   {
     id: 'lighthouse',
@@ -472,6 +545,14 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     dependencies: ['puppeteer'],
     filePatterns: [],
     credits: 5,
+  },
+  {
+    id: 'sitespeed',
+    name: 'Sitespeed.io',
+    description: 'Complete web performance testing toolkit',
+    category: 'performance',
+    docker: 'sitespeedio/sitespeed.io:latest',
+    credits: 4,
   },
   {
     id: 'size-limit',
@@ -640,7 +721,7 @@ export function getTotalCredits(toolIds: string[]): number {
   }, 0);
 }
 
-export const TOOL_COUNT = TOOL_REGISTRY.length;  // 52 tools
+export const TOOL_COUNT = TOOL_REGISTRY.length;  // 69 tools (25 npm + 44 docker)
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   linting: 'Linting & Formatting',

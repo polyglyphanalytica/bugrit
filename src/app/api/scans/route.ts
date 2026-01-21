@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
       },
       createdAt: now,
       toolsCompleted: 0,
-      toolsTotal: 25,
+      toolsTotal: 69,
       billing: {
         estimatedCredits: affordCheck.estimate.total,
       },

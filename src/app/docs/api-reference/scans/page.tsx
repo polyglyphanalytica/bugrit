@@ -6,7 +6,7 @@ export default function ScansApiPage() {
       <div>
         <h1 className="text-4xl font-bold mb-4">Scans API</h1>
         <p className="text-lg text-muted-foreground">
-          Trigger scans to run 52 analysis tools on your code and retrieve reports.
+          Trigger scans to run 69 analysis tools on your code and retrieve reports.
         </p>
       </div>
 
@@ -97,7 +97,7 @@ Use secrets.BUGGERED_API_KEY for Authorization: Bearer header.`}</pre>
             <code className="text-sm">/api/v1/scans</code>
           </div>
           <p className="text-muted-foreground">
-            Submit your code for analysis. Bugrit runs 25 tools and generates a unified report.
+            Submit your code for analysis. Bugrit runs 69 tools and generates a unified report.
           </p>
 
           <h4 className="font-semibold">Request Body</h4>
@@ -216,8 +216,8 @@ Use secrets.BUGGERED_API_KEY for Authorization: Bearer header.`}</pre>
   "scan": {
     "id": "scn-xyz789",
     "status": "completed",
-    "toolsTotal": 52,
-    "toolsCompleted": 25,
+    "toolsTotal": 69,
+    "toolsCompleted": 69,
     "reportId": "rpt-abc123",
     "completedAt": "2026-01-19T10:30:47Z",
     "summary": {
@@ -301,7 +301,7 @@ Use secrets.BUGGERED_API_KEY for Authorization: Bearer header.`}</pre>
             </tr>
             <tr className="border-b">
               <td className="py-2 px-2"><code>running</code></td>
-              <td className="py-2 px-2 text-muted-foreground">52 tools currently analyzing your code</td>
+              <td className="py-2 px-2 text-muted-foreground">69 tools currently analyzing your code</td>
             </tr>
             <tr className="border-b">
               <td className="py-2 px-2"><code>completed</code></td>

@@ -1,8 +1,13 @@
 /**
  * Cloud Build Tool Integrations
  *
- * Wraps the 16 Docker-based tools from cloud-build.ts as proper ToolIntegration
+ * Wraps the 44 Docker-based tools from cloud-build.ts as proper ToolIntegration
  * classes so they can be used by the AuditOrchestrator.
+ *
+ * Wave 1 (6 tools): Core security & performance
+ * Wave 2 (10 tools): Advanced security scanning
+ * Wave 3 (8 tools): Language-specific analysis
+ * Wave 4 (20 tools): Dependencies, API, Mobile, Cloud Native, AI/ML
  */
 
 import {
@@ -291,6 +296,12 @@ const TOOL_METADATA: Record<
     category: 'security',
     description: 'ModelScan ML model security scanner',
     website: 'https://github.com/protectai/modelscan',
+    targetType: 'source',
+  },
+  androguard: {
+    category: 'security',
+    description: 'Android APK reverse engineering and malware analysis',
+    website: 'https://github.com/androguard/androguard',
     targetType: 'source',
   },
 };
@@ -896,14 +907,776 @@ export class CloudBuildGosecIntegration extends CloudBuildIntegration {
   }
 }
 
-// Export all Cloud Build integrations
+// ============================================================
+// Wave 3: Language-specific tools
+// ============================================================
+
+export class CloudBuildPHPStanIntegration extends CloudBuildIntegration {
+  name = 'PHPStan (Cloud)';
+  toolId: DockerToolId = 'phpstan';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { files?: Record<string, { messages: Array<{ line: number; message: string; ignorable?: boolean }> }> };
+
+    for (const [file, fileData] of Object.entries(data.files || {})) {
+      for (const msg of fileData.messages || []) {
+        findings.push(this.createFinding({
+          title: 'PHPStan Error',
+          description: msg.message,
+          severity: 'medium',
+          file,
+          line: msg.line,
+          tags: ['php', 'static-analysis', 'type-safety'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildPsalmIntegration extends CloudBuildIntegration {
+  name = 'Psalm (Cloud)';
+  toolId: DockerToolId = 'psalm';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const issue of data as Array<{ type: string; message: string; file_name: string; line_from: number; column_from: number; severity: string }>) {
+      findings.push(this.createFinding({
+        title: issue.type,
+        description: issue.message,
+        severity: this.mapSeverity(issue.severity),
+        file: issue.file_name,
+        line: issue.line_from,
+        column: issue.column_from,
+        ruleId: issue.type,
+        tags: ['php', 'psalm', 'type-safety'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildBrakemanIntegration extends CloudBuildIntegration {
+  name = 'Brakeman (Cloud)';
+  toolId: DockerToolId = 'brakeman';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { warnings?: Array<{ warning_type: string; message: string; file: string; line: number; confidence: string; code?: string; link?: string }> };
+
+    for (const warn of data.warnings || []) {
+      findings.push(this.createFinding({
+        title: warn.warning_type,
+        description: warn.message,
+        severity: this.mapBrakemanConfidence(warn.confidence),
+        file: warn.file,
+        line: warn.line,
+        codeSnippet: warn.code,
+        documentationUrl: warn.link,
+        tags: ['ruby', 'rails', 'security'],
+      }));
+    }
+    return findings;
+  }
+
+  private mapBrakemanConfidence(confidence: string): Severity {
+    if (confidence === 'High') return 'high';
+    if (confidence === 'Medium') return 'medium';
+    return 'low';
+  }
+}
+
+export class CloudBuildRuboCopIntegration extends CloudBuildIntegration {
+  name = 'RuboCop (Cloud)';
+  toolId: DockerToolId = 'rubocop';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { files?: Array<{ path: string; offenses: Array<{ cop_name: string; message: string; severity: string; location: { start_line: number; start_column: number } }> }> };
+
+    for (const file of data.files || []) {
+      for (const offense of file.offenses || []) {
+        findings.push(this.createFinding({
+          title: offense.cop_name,
+          description: offense.message,
+          severity: this.mapSeverity(offense.severity),
+          file: file.path,
+          line: offense.location.start_line,
+          column: offense.location.start_column,
+          ruleId: offense.cop_name,
+          tags: ['ruby', 'style', 'linting'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildSpotBugsIntegration extends CloudBuildIntegration {
+  name = 'SpotBugs (Cloud)';
+  toolId: DockerToolId = 'spotbugs';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { BugInstance?: Array<{ type: string; priority: string; category: string; message?: string; SourceLine?: { sourcepath: string; start: string } }> };
+
+    for (const bug of data.BugInstance || []) {
+      findings.push(this.createFinding({
+        title: bug.type,
+        description: bug.message || `SpotBugs ${bug.category} issue: ${bug.type}`,
+        severity: this.mapSpotBugsPriority(bug.priority),
+        file: bug.SourceLine?.sourcepath,
+        line: bug.SourceLine?.start ? parseInt(bug.SourceLine.start, 10) : undefined,
+        ruleId: bug.type,
+        tags: ['java', 'spotbugs', bug.category.toLowerCase()],
+      }));
+    }
+    return findings;
+  }
+
+  private mapSpotBugsPriority(priority: string): Severity {
+    const p = parseInt(priority, 10);
+    if (p === 1) return 'high';
+    if (p === 2) return 'medium';
+    return 'low';
+  }
+}
+
+export class CloudBuildPMDIntegration extends CloudBuildIntegration {
+  name = 'PMD (Cloud)';
+  toolId: DockerToolId = 'pmd';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { files?: Array<{ filename: string; violations: Array<{ rule: string; ruleset: string; priority: number; beginline: number; description: string; externalInfoUrl?: string }> }> };
+
+    for (const file of data.files || []) {
+      for (const violation of file.violations || []) {
+        findings.push(this.createFinding({
+          title: violation.rule,
+          description: violation.description,
+          severity: this.mapPMDPriority(violation.priority),
+          file: file.filename,
+          line: violation.beginline,
+          ruleId: violation.rule,
+          documentationUrl: violation.externalInfoUrl,
+          tags: ['java', 'pmd', violation.ruleset.toLowerCase()],
+        }));
+      }
+    }
+    return findings;
+  }
+
+  private mapPMDPriority(priority: number): Severity {
+    if (priority === 1) return 'critical';
+    if (priority === 2) return 'high';
+    if (priority === 3) return 'medium';
+    return 'low';
+  }
+}
+
+export class CloudBuildCheckstyleIntegration extends CloudBuildIntegration {
+  name = 'Checkstyle (Cloud)';
+  toolId: DockerToolId = 'checkstyle';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { file?: Array<{ name: string; error?: Array<{ line: string; column?: string; severity: string; message: string; source: string }> }> };
+
+    for (const file of data.file || []) {
+      for (const error of file.error || []) {
+        findings.push(this.createFinding({
+          title: error.source.split('.').pop() || 'Checkstyle Issue',
+          description: error.message,
+          severity: this.mapSeverity(error.severity),
+          file: file.name,
+          line: parseInt(error.line, 10),
+          column: error.column ? parseInt(error.column, 10) : undefined,
+          ruleId: error.source,
+          tags: ['java', 'checkstyle', 'style'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildDetektIntegration extends CloudBuildIntegration {
+  name = 'Detekt (Cloud)';
+  toolId: DockerToolId = 'detekt';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { findings?: Array<{ rule: string; severity: string; message: string; location: { file: string; line: number; column: number } }> };
+
+    for (const finding of data.findings || []) {
+      findings.push(this.createFinding({
+        title: finding.rule,
+        description: finding.message,
+        severity: this.mapSeverity(finding.severity),
+        file: finding.location.file,
+        line: finding.location.line,
+        column: finding.location.column,
+        ruleId: finding.rule,
+        tags: ['kotlin', 'detekt', 'code-quality'],
+      }));
+    }
+    return findings;
+  }
+}
+
+// ============================================================
+// Wave 4: Dependencies, API, Mobile, Cloud Native, AI/ML
+// ============================================================
+
+export class CloudBuildOSVScannerIntegration extends CloudBuildIntegration {
+  name = 'OSV Scanner (Cloud)';
+  toolId: DockerToolId = 'osv-scanner';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { results?: Array<{ source: { path: string }; packages: Array<{ package: { name: string; version: string }; vulnerabilities: Array<{ id: string; summary: string; severity?: Array<{ type: string; score: string }> }> }> }> };
+
+    for (const result of data.results || []) {
+      for (const pkg of result.packages || []) {
+        for (const vuln of pkg.vulnerabilities || []) {
+          findings.push(this.createFinding({
+            title: `${vuln.id} in ${pkg.package.name}@${pkg.package.version}`,
+            description: vuln.summary,
+            severity: this.mapOSVSeverity(vuln.severity),
+            file: result.source.path,
+            ruleId: vuln.id,
+            tags: ['vulnerability', 'dependency', 'osv'],
+          }));
+        }
+      }
+    }
+    return findings;
+  }
+
+  private mapOSVSeverity(severity?: Array<{ type: string; score: string }>): Severity {
+    if (!severity?.length) return 'medium';
+    const cvss = parseFloat(severity[0].score);
+    if (cvss >= 9.0) return 'critical';
+    if (cvss >= 7.0) return 'high';
+    if (cvss >= 4.0) return 'medium';
+    return 'low';
+  }
+}
+
+export class CloudBuildPipAuditIntegration extends CloudBuildIntegration {
+  name = 'pip-audit (Cloud)';
+  toolId: DockerToolId = 'pip-audit';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { dependencies?: Array<{ name: string; version: string; vulns: Array<{ id: string; description: string; fix_versions?: string[] }> }> };
+
+    for (const dep of data.dependencies || []) {
+      for (const vuln of dep.vulns || []) {
+        findings.push(this.createFinding({
+          title: `${vuln.id} in ${dep.name}@${dep.version}`,
+          description: vuln.description,
+          severity: 'high',
+          ruleId: vuln.id,
+          recommendation: vuln.fix_versions?.length ? `Upgrade to ${vuln.fix_versions.join(' or ')}` : 'No fix available',
+          tags: ['python', 'pip', 'vulnerability'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildCargoAuditIntegration extends CloudBuildIntegration {
+  name = 'cargo-audit (Cloud)';
+  toolId: DockerToolId = 'cargo-audit';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { vulnerabilities?: { list: Array<{ advisory: { id: string; title: string; description: string; severity?: string }; package: { name: string; version: string }; versions?: { patched?: string[] } }> } };
+
+    for (const vuln of data.vulnerabilities?.list || []) {
+      findings.push(this.createFinding({
+        title: `${vuln.advisory.id}: ${vuln.advisory.title}`,
+        description: vuln.advisory.description,
+        severity: this.mapSeverity(vuln.advisory.severity || 'medium'),
+        ruleId: vuln.advisory.id,
+        recommendation: vuln.versions?.patched?.length ? `Upgrade to ${vuln.versions.patched.join(' or ')}` : 'No patch available',
+        tags: ['rust', 'cargo', 'vulnerability'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildSpectralIntegration extends CloudBuildIntegration {
+  name = 'Spectral (Cloud)';
+  toolId: DockerToolId = 'spectral';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const issue of data as Array<{ code: string; message: string; path: string[]; severity: number; source: string; range: { start: { line: number; character: number } } }>) {
+      findings.push(this.createFinding({
+        title: issue.code,
+        description: issue.message,
+        severity: this.mapSpectralSeverity(issue.severity),
+        file: issue.source,
+        line: issue.range.start.line,
+        column: issue.range.start.character,
+        ruleId: issue.code,
+        tags: ['openapi', 'api', 'linting', ...issue.path],
+      }));
+    }
+    return findings;
+  }
+
+  private mapSpectralSeverity(severity: number): Severity {
+    if (severity === 0) return 'critical';
+    if (severity === 1) return 'high';
+    if (severity === 2) return 'medium';
+    return 'low';
+  }
+}
+
+export class CloudBuildSchemathesisIntegration extends CloudBuildIntegration {
+  name = 'Schemathesis (Cloud)';
+  toolId: DockerToolId = 'schemathesis';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { failures?: Array<{ endpoint: string; method: string; status_code: number; message: string; example?: unknown }> };
+
+    for (const failure of data.failures || []) {
+      findings.push(this.createFinding({
+        title: `API Fuzz Failure: ${failure.method} ${failure.endpoint}`,
+        description: failure.message,
+        severity: failure.status_code >= 500 ? 'high' : 'medium',
+        url: failure.endpoint,
+        codeSnippet: failure.example ? JSON.stringify(failure.example, null, 2) : undefined,
+        tags: ['api', 'fuzzing', 'schemathesis'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildGraphQLCopIntegration extends CloudBuildIntegration {
+  name = 'GraphQL Cop (Cloud)';
+  toolId: DockerToolId = 'graphql-cop';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { findings?: Array<{ title: string; severity: string; description: string; recommendation?: string }> };
+
+    for (const finding of data.findings || []) {
+      findings.push(this.createFinding({
+        title: finding.title,
+        description: finding.description,
+        severity: this.mapSeverity(finding.severity),
+        recommendation: finding.recommendation,
+        tags: ['graphql', 'api', 'security'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildMobSFIntegration extends CloudBuildIntegration {
+  name = 'MobSF (Cloud)';
+  toolId: DockerToolId = 'mobsf';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { findings?: Record<string, Array<{ title: string; description: string; severity: string }>> };
+
+    for (const [category, issues] of Object.entries(data.findings || {})) {
+      for (const issue of issues) {
+        findings.push(this.createFinding({
+          title: issue.title,
+          description: issue.description,
+          severity: this.mapSeverity(issue.severity),
+          tags: ['mobile', 'android', 'ios', category.toLowerCase()],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildAPKLeaksIntegration extends CloudBuildIntegration {
+  name = 'APKLeaks (Cloud)';
+  toolId: DockerToolId = 'apkleaks';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { results?: Array<{ name: string; matches: string[] }> };
+
+    for (const result of data.results || []) {
+      for (const match of result.matches || []) {
+        findings.push(this.createFinding({
+          title: `Potential secret: ${result.name}`,
+          description: `Found potential ${result.name} in APK`,
+          severity: 'high',
+          codeSnippet: match.substring(0, 200) + (match.length > 200 ? '...' : ''),
+          tags: ['android', 'mobile', 'secrets', result.name.toLowerCase()],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildSwiftLintIntegration extends CloudBuildIntegration {
+  name = 'SwiftLint (Cloud)';
+  toolId: DockerToolId = 'swiftlint';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const issue of data as Array<{ file: string; line: number; character: number; severity: string; type: string; rule_id: string; reason: string }>) {
+      findings.push(this.createFinding({
+        title: issue.rule_id,
+        description: issue.reason,
+        severity: this.mapSeverity(issue.severity),
+        file: issue.file,
+        line: issue.line,
+        column: issue.character,
+        ruleId: issue.rule_id,
+        tags: ['swift', 'ios', 'macos', 'linting'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildKubesecIntegration extends CloudBuildIntegration {
+  name = 'Kubesec (Cloud)';
+  toolId: DockerToolId = 'kubesec';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const result of data as Array<{ object: string; scoring: { critical?: Array<{ id: string; reason: string }>; advise?: Array<{ id: string; reason: string }> } }>) {
+      for (const issue of result.scoring?.critical || []) {
+        findings.push(this.createFinding({
+          title: issue.id,
+          description: issue.reason,
+          severity: 'critical',
+          ruleId: issue.id,
+          tags: ['kubernetes', 'security', 'manifest'],
+        }));
+      }
+      for (const issue of result.scoring?.advise || []) {
+        findings.push(this.createFinding({
+          title: issue.id,
+          description: issue.reason,
+          severity: 'medium',
+          ruleId: issue.id,
+          tags: ['kubernetes', 'best-practice'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildKubeBenchIntegration extends CloudBuildIntegration {
+  name = 'kube-bench (Cloud)';
+  toolId: DockerToolId = 'kube-bench';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { Controls?: Array<{ tests?: Array<{ results?: Array<{ test_number: string; test_desc: string; status: string; remediation?: string }> }> }> };
+
+    for (const control of data.Controls || []) {
+      for (const test of control.tests || []) {
+        for (const result of test.results || []) {
+          if (result.status === 'FAIL') {
+            findings.push(this.createFinding({
+              title: `CIS ${result.test_number}`,
+              description: result.test_desc,
+              severity: 'high',
+              ruleId: result.test_number,
+              recommendation: result.remediation,
+              tags: ['kubernetes', 'cis', 'benchmark', 'security'],
+            }));
+          }
+        }
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildPolarisIntegration extends CloudBuildIntegration {
+  name = 'Polaris (Cloud)';
+  toolId: DockerToolId = 'polaris';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { Results?: Array<{ Name: string; Namespace: string; PodResult?: { Results: Record<string, { Success: boolean; Message: string; Severity: string }> } }> };
+
+    for (const result of data.Results || []) {
+      for (const [check, checkResult] of Object.entries(result.PodResult?.Results || {})) {
+        if (!checkResult.Success) {
+          findings.push(this.createFinding({
+            title: check,
+            description: checkResult.Message,
+            severity: this.mapSeverity(checkResult.Severity),
+            ruleId: check,
+            tags: ['kubernetes', 'polaris', 'best-practice', result.Namespace],
+          }));
+        }
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildTerrascanIntegration extends CloudBuildIntegration {
+  name = 'Terrascan (Cloud)';
+  toolId: DockerToolId = 'terrascan';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { results?: { violations?: Array<{ rule_name: string; description: string; severity: string; resource_name: string; file: string; line: number }> } };
+
+    for (const violation of data.results?.violations || []) {
+      findings.push(this.createFinding({
+        title: violation.rule_name,
+        description: violation.description,
+        severity: this.mapSeverity(violation.severity),
+        file: violation.file,
+        line: violation.line,
+        ruleId: violation.rule_name,
+        tags: ['iac', 'terraform', 'cloud', violation.resource_name],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildKubeHunterIntegration extends CloudBuildIntegration {
+  name = 'kube-hunter (Cloud)';
+  toolId: DockerToolId = 'kube-hunter';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { vulnerabilities?: Array<{ location: string; vid: string; category: string; severity: string; vulnerability: string; description: string; evidence?: string }> };
+
+    for (const vuln of data.vulnerabilities || []) {
+      findings.push(this.createFinding({
+        title: vuln.vulnerability,
+        description: vuln.description,
+        severity: this.mapSeverity(vuln.severity),
+        url: vuln.location,
+        ruleId: vuln.vid,
+        codeSnippet: vuln.evidence,
+        tags: ['kubernetes', 'penetration-test', vuln.category.toLowerCase()],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildCppcheckIntegration extends CloudBuildIntegration {
+  name = 'Cppcheck (Cloud)';
+  toolId: DockerToolId = 'cppcheck';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { errors?: Array<{ id: string; severity: string; msg: string; location?: Array<{ file: string; line: number; column: number }> }> };
+
+    for (const error of data.errors || []) {
+      const loc = error.location?.[0];
+      findings.push(this.createFinding({
+        title: error.id,
+        description: error.msg,
+        severity: this.mapSeverity(error.severity),
+        file: loc?.file,
+        line: loc?.line,
+        column: loc?.column,
+        ruleId: error.id,
+        tags: ['c', 'cpp', 'cppcheck'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildFlawfinderIntegration extends CloudBuildIntegration {
+  name = 'Flawfinder (Cloud)';
+  toolId: DockerToolId = 'flawfinder';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { results?: Array<{ filename: string; line: number; column: number; level: number; name: string; warning: string; suggestion?: string }> };
+
+    for (const result of data.results || []) {
+      findings.push(this.createFinding({
+        title: result.name,
+        description: result.warning,
+        severity: this.mapFlawfinderLevel(result.level),
+        file: result.filename,
+        line: result.line,
+        column: result.column,
+        recommendation: result.suggestion,
+        ruleId: result.name,
+        tags: ['c', 'cpp', 'security', 'flawfinder'],
+      }));
+    }
+    return findings;
+  }
+
+  private mapFlawfinderLevel(level: number): Severity {
+    if (level >= 4) return 'critical';
+    if (level >= 3) return 'high';
+    if (level >= 2) return 'medium';
+    return 'low';
+  }
+}
+
+export class CloudBuildClippyIntegration extends CloudBuildIntegration {
+  name = 'Clippy (Cloud)';
+  toolId: DockerToolId = 'clippy';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const lines = typeof output === 'string' ? output.split('\n').filter(Boolean) : [];
+
+    for (const line of lines) {
+      try {
+        const msg = JSON.parse(line) as { reason: string; message?: { rendered: string; level: string; spans?: Array<{ file_name: string; line_start: number; column_start: number }>; code?: { code: string } } };
+        if (msg.reason === 'compiler-message' && msg.message) {
+          const span = msg.message.spans?.[0];
+          findings.push(this.createFinding({
+            title: msg.message.code?.code || 'Clippy Warning',
+            description: msg.message.rendered,
+            severity: msg.message.level === 'error' ? 'high' : 'medium',
+            file: span?.file_name,
+            line: span?.line_start,
+            column: span?.column_start,
+            ruleId: msg.message.code?.code,
+            tags: ['rust', 'clippy', 'linting'],
+          }));
+        }
+      } catch {
+        // Skip non-JSON lines
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildGarakIntegration extends CloudBuildIntegration {
+  name = 'Garak (Cloud)';
+  toolId: DockerToolId = 'garak';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { results?: Array<{ probe: string; detector: string; passed: boolean; output?: string; trigger?: string }> };
+
+    for (const result of data.results || []) {
+      if (!result.passed) {
+        findings.push(this.createFinding({
+          title: `LLM Vulnerability: ${result.probe}`,
+          description: `Detector ${result.detector} found vulnerability in LLM response`,
+          severity: 'high',
+          codeSnippet: result.output?.substring(0, 500),
+          ruleId: `${result.probe}-${result.detector}`,
+          tags: ['llm', 'ai', 'security', 'prompt-injection'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildModelScanIntegration extends CloudBuildIntegration {
+  name = 'ModelScan (Cloud)';
+  toolId: DockerToolId = 'modelscan';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { issues?: Array<{ severity: string; description: string; source: string; scanner: string }> };
+
+    for (const issue of data.issues || []) {
+      findings.push(this.createFinding({
+        title: `ML Model Issue: ${issue.scanner}`,
+        description: issue.description,
+        severity: this.mapSeverity(issue.severity),
+        file: issue.source,
+        ruleId: issue.scanner,
+        tags: ['ml', 'model', 'security', 'ai'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildAndroguardIntegration extends CloudBuildIntegration {
+  name = 'Androguard (Cloud)';
+  toolId: DockerToolId = 'androguard';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { analysis?: { permissions?: Array<{ name: string; protection_level?: string }>; activities?: Array<{ name: string; exported?: boolean }>; receivers?: Array<{ name: string; exported?: boolean }>; providers?: Array<{ name: string; exported?: boolean }> } };
+
+    // Check for dangerous permissions
+    for (const perm of data.analysis?.permissions || []) {
+      if (perm.protection_level === 'dangerous') {
+        findings.push(this.createFinding({
+          title: `Dangerous Permission: ${perm.name}`,
+          description: `Application requests dangerous permission: ${perm.name}`,
+          severity: 'medium',
+          ruleId: perm.name,
+          tags: ['android', 'permission', 'mobile'],
+        }));
+      }
+    }
+
+    // Check for exported components
+    const checkExported = (items: Array<{ name: string; exported?: boolean }> | undefined, type: string) => {
+      for (const item of items || []) {
+        if (item.exported) {
+          findings.push(this.createFinding({
+            title: `Exported ${type}: ${item.name}`,
+            description: `${type} is exported and accessible to other apps`,
+            severity: 'low',
+            ruleId: `exported-${type.toLowerCase()}`,
+            tags: ['android', 'exported', 'mobile'],
+          }));
+        }
+      }
+    };
+
+    checkExported(data.analysis?.activities, 'Activity');
+    checkExported(data.analysis?.receivers, 'Receiver');
+    checkExported(data.analysis?.providers, 'Provider');
+
+    return findings;
+  }
+}
+
+// Export all Cloud Build integrations (44 Docker-based tools)
 export const CLOUD_BUILD_INTEGRATIONS: ToolIntegration[] = [
+  // Wave 1: Core security & performance
   new CloudBuildOWASPZAPIntegration(),
   new CloudBuildDependencyCheckIntegration(),
   new CloudBuildSitespeedIntegration(),
   new CloudBuildCodeClimateIntegration(),
   new CloudBuildTrivyIntegration(),
   new CloudBuildGrypeIntegration(),
+
+  // Wave 2: Advanced security scanning
   new CloudBuildSemgrepIntegration(),
   new CloudBuildNucleiIntegration(),
   new CloudBuildCheckovIntegration(),
@@ -914,4 +1687,39 @@ export const CLOUD_BUILD_INTEGRATIONS: ToolIntegration[] = [
   new CloudBuildGitleaksIntegration(),
   new CloudBuildBanditIntegration(),
   new CloudBuildGosecIntegration(),
+
+  // Wave 3: Language-specific tools
+  new CloudBuildPHPStanIntegration(),
+  new CloudBuildPsalmIntegration(),
+  new CloudBuildBrakemanIntegration(),
+  new CloudBuildRuboCopIntegration(),
+  new CloudBuildSpotBugsIntegration(),
+  new CloudBuildPMDIntegration(),
+  new CloudBuildCheckstyleIntegration(),
+  new CloudBuildDetektIntegration(),
+
+  // Wave 4: Dependencies, API, Mobile, Cloud Native, AI/ML
+  new CloudBuildOSVScannerIntegration(),
+  new CloudBuildPipAuditIntegration(),
+  new CloudBuildCargoAuditIntegration(),
+  new CloudBuildSpectralIntegration(),
+  new CloudBuildSchemathesisIntegration(),
+  new CloudBuildGraphQLCopIntegration(),
+  new CloudBuildMobSFIntegration(),
+  new CloudBuildAPKLeaksIntegration(),
+  new CloudBuildSwiftLintIntegration(),
+  new CloudBuildKubesecIntegration(),
+  new CloudBuildKubeBenchIntegration(),
+  new CloudBuildPolarisIntegration(),
+  new CloudBuildTerrascanIntegration(),
+  new CloudBuildKubeHunterIntegration(),
+  new CloudBuildCppcheckIntegration(),
+  new CloudBuildFlawfinderIntegration(),
+  new CloudBuildClippyIntegration(),
+  new CloudBuildGarakIntegration(),
+  new CloudBuildModelScanIntegration(),
+  new CloudBuildAndroguardIntegration(),
 ];
+
+// Export count for verification
+export const CLOUD_BUILD_TOOL_COUNT = CLOUD_BUILD_INTEGRATIONS.length;  // 44 tools

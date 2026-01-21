@@ -97,7 +97,7 @@ export default function TermsPage() {
                   Bugrit is a code quality analysis platform that provides automated testing, analysis, and reporting tools for software development. The Service includes:
                 </p>
                 <ul className="list-disc pl-6 space-y-2 text-muted-foreground mb-4">
-                  <li>Code quality analysis using 25 integrated testing tools;</li>
+                  <li>Code quality analysis using 69 integrated testing tools;</li>
                   <li>AI-powered report generation and prioritisation;</li>
                   <li>Multi-platform support (web, iOS, Android, desktop);</li>
                   <li>API access for programmatic integration;</li>

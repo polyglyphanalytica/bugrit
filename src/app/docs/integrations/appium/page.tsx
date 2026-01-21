@@ -5,7 +5,7 @@ export default function AppiumIntegrationPage() {
         <h1 className="text-4xl font-bold mb-4">Appium Mobile Tests</h1>
         <p className="text-lg text-muted-foreground">
           Include your Appium tests with your mobile app submission. Bugrit will run
-          them alongside our 25 analysis tools on iOS and Android.
+          them alongside our 69 analysis tools on iOS and Android.
         </p>
       </div>
 

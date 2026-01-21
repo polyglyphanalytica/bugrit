@@ -35,7 +35,7 @@ export default function SubmittingAppsDocPage() {
       <section className="p-6 bg-primary/5 border border-primary/20 rounded-xl">
         <p className="text-muted-foreground">
           You can submit your application for scanning through the <strong>dashboard UI</strong> or
-          the <strong>REST API</strong>. All methods trigger the same 25-tool analysis and produce
+          the <strong>REST API</strong>. All methods trigger the same 69-tool analysis and produce
           the same unified report.
         </p>
       </section>
@@ -125,7 +125,7 @@ export default function SubmittingAppsDocPage() {
             <div>
               <h4 className="font-semibold">Start Scan</h4>
               <p className="text-sm text-muted-foreground">
-                Click "Start Scan" and watch 25 tools analyze your application in under 60 seconds.
+                Click "Start Scan" and watch 69 tools analyze your application in under 60 seconds.
               </p>
             </div>
           </div>
