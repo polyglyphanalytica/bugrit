@@ -24,9 +24,15 @@ function secureCompare(a: string, b: string): boolean {
   }
 }
 
-// Check if we're in development mode (no auth required)
-const isDevelopment = process.env.NODE_ENV === 'development';
-const REQUIRE_AUTH_IN_DEV = process.env.REQUIRE_API_AUTH === 'true';
+/**
+ * Check if auth should be skipped
+ * Reads environment variables at runtime to support testing
+ */
+function shouldSkipAuth(): boolean {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const requireAuth = process.env.REQUIRE_API_AUTH === 'true';
+  return isDevelopment && !requireAuth;
+}
 
 export interface AuthResult {
   success: boolean;
@@ -40,7 +46,7 @@ export interface AuthResult {
  */
 export function validateApiKey(request: NextRequest): AuthResult {
   // Skip auth in development unless explicitly required
-  if (isDevelopment && !REQUIRE_AUTH_IN_DEV) {
+  if (shouldSkipAuth()) {
     return { success: true };
   }
 
@@ -110,7 +116,7 @@ export function hasPermission(
   permission: ApiKeyPermission
 ): boolean {
   // In development without auth, allow all
-  if (isDevelopment && !REQUIRE_AUTH_IN_DEV) {
+  if (shouldSkipAuth()) {
     return true;
   }
 
@@ -173,7 +179,7 @@ export function validateAdminKey(request: NextRequest): AuthResult {
   const expectedAdminKey = process.env.ADMIN_API_KEY;
 
   // In development without auth, allow admin operations
-  if (isDevelopment && !REQUIRE_AUTH_IN_DEV) {
+  if (shouldSkipAuth()) {
     return { success: true };
   }
 
