@@ -60,16 +60,16 @@ export default function PricingPage() {
               <div className="text-sm text-muted-foreground">per 10K lines</div>
             </GlassCard>
             <GlassCard className="p-4 text-center">
-              <div className="text-2xl font-bold mb-1">+1-3</div>
+              <div className="text-2xl font-bold mb-1">+1-5</div>
               <div className="text-sm text-muted-foreground">for premium tools</div>
             </GlassCard>
             <GlassCard className="p-4 text-center">
-              <div className="text-2xl font-bold mb-1">+1-3</div>
+              <div className="text-2xl font-bold mb-1">per issue</div>
               <div className="text-sm text-muted-foreground">for AI features</div>
             </GlassCard>
           </div>
           <p className="text-center text-muted-foreground mt-4 text-sm">
-            Example: 50K line repo with security + AI = ~9 credits
+            Example: 50K line repo with security + AI summary = ~8 credits. <Link href="/docs/pricing" className="text-primary hover:underline">See full pricing details →</Link>
           </p>
         </div>
 
@@ -243,12 +243,12 @@ export default function PricingPage() {
                   <span>+1 credit</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Accessibility</span>
-                  <span>+2 credits</span>
+                  <span>Accessibility (Puppeteer)</span>
+                  <span>+4 credits</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Performance (Lighthouse)</span>
-                  <span>+3 credits</span>
+                  <span>+5 credits</span>
                 </div>
               </div>
             </GlassCard>
@@ -262,11 +262,11 @@ export default function PricingPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>Issue Explanations</span>
-                  <span>+2 per 50 issues</span>
+                  <span>+0.1 per issue</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Fix Suggestions</span>
-                  <span>+3 per 50 issues</span>
+                  <span>+0.15 per issue</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Priority Scoring</span>
@@ -301,6 +301,10 @@ export default function PricingPage() {
               </div>
             </GlassCard>
           </div>
+
+          <p className="text-center text-muted-foreground mt-6 text-sm">
+            <Link href="/docs/pricing" className="text-primary hover:underline">Read the complete pricing documentation →</Link>
+          </p>
         </div>
 
         {/* Enterprise */}
@@ -330,7 +334,7 @@ export default function PricingPage() {
             <div>
               <h3 className="font-semibold mb-2">Do unused credits roll over?</h3>
               <p className="text-muted-foreground text-sm">
-                Pro and Business plans include credit rollover (up to 100 and 300 respectively).
+                Scale and Business plans include credit rollover (up to 100 and 250 respectively).
                 Rolled-over credits are used after your monthly allocation.
               </p>
             </div>

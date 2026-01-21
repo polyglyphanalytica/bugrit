@@ -9,66 +9,69 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Calculator, Check, ArrowRight } from 'lucide-react';
+import { Calculator, Check, ArrowRight, AlertTriangle, DollarSign, TrendingUp } from 'lucide-react';
 
-// Tier definitions for the calculator
+// ═══════════════════════════════════════════════════════════════════════════════
+// PRICING CONFIGURATION - Updated for sustainable margins (Jan 2026)
+// ═══════════════════════════════════════════════════════════════════════════════
+
 const tiers = {
   free: {
     name: 'Free',
     price: 0,
-    credits: 15,
+    credits: 5,
     creditsRollover: 0,
     overageRate: null,
-    maxRepoSize: 50000,
+    maxRepoSize: 10_000,
     projects: 1,
     teamMembers: 1,
     historyDays: 7,
   },
-  starter: {
-    name: 'Starter',
-    price: 29,
-    credits: 75,
-    creditsRollover: 25,
-    overageRate: 0.20,
-    maxRepoSize: 100000,
-    projects: 5,
-    teamMembers: 2,
-    historyDays: 30,
+  solo: {
+    name: 'Solo',
+    price: 19,
+    credits: 50,
+    creditsRollover: 0,
+    overageRate: 0.40,
+    maxRepoSize: 50_000,
+    projects: 3,
+    teamMembers: 1,
+    historyDays: 14,
   },
-  pro: {
-    name: 'Pro',
-    price: 99,
+  scale: {
+    name: 'Scale',
+    price: 49,
     credits: 200,
-    creditsRollover: 50,
-    overageRate: 0.15,
-    maxRepoSize: 150000,
+    creditsRollover: 100,
+    overageRate: 0.30,
+    maxRepoSize: 150_000,
     projects: 10,
-    teamMembers: 5,
-    historyDays: 90,
+    teamMembers: 3,
+    historyDays: 30,
   },
   business: {
     name: 'Business',
-    price: 249,
+    price: 99,
     credits: 500,
-    creditsRollover: 100,
-    overageRate: 0.10,
-    maxRepoSize: 500000,
+    creditsRollover: 250,
+    overageRate: 0.20,
+    maxRepoSize: 500_000,
     projects: -1, // unlimited
-    teamMembers: -1, // unlimited
-    historyDays: 365,
+    teamMembers: 10,
+    historyDays: 90,
   },
 };
 
-// Credit costs
+// Credit costs - matches src/lib/billing/credits.ts
 const creditCosts = {
   baseScan: 1,
   per10kLines: 1,
   security: 1,
-  accessibility: 2,
-  performance: 3,
+  accessibility: 4,  // Puppeteer-based, higher infrastructure cost
+  performance: 5,    // Lighthouse + Puppeteer, highest infrastructure cost
   aiSummary: 1,
-  aiExplanations: 2, // per 50 issues
-  aiFixSuggestions: 3, // per 50 issues
+  aiExplanationsPerIssue: 0.1,  // Per-issue pricing
+  aiFixSuggestionsPerIssue: 0.15,  // Per-issue pricing
   aiPriorityScoring: 1,
 };
 
@@ -94,9 +97,9 @@ export default function PricingDocs() {
     if (useAccessibility) credits += creditCosts.accessibility;
     if (usePerformance) credits += creditCosts.performance;
     if (useAiSummary) credits += creditCosts.aiSummary;
-    if (useAiExplanations) credits += Math.ceil(avgIssuesPerScan / 50) * creditCosts.aiExplanations;
-    if (useAiFixSuggestions) credits += Math.ceil(avgIssuesPerScan / 50) * creditCosts.aiFixSuggestions;
-    return credits;
+    if (useAiExplanations) credits += Math.ceil(avgIssuesPerScan * creditCosts.aiExplanationsPerIssue);
+    if (useAiFixSuggestions) credits += Math.ceil(avgIssuesPerScan * creditCosts.aiFixSuggestionsPerIssue);
+    return Math.ceil(credits);
   }, [avgLinesOfCode, avgIssuesPerScan, useSecurity, useAccessibility, usePerformance, useAiSummary, useAiExplanations, useAiFixSuggestions]);
 
   // Calculate total monthly credits needed
@@ -134,8 +137,8 @@ export default function PricingDocs() {
 
     const costs = {
       free: calculateTotalCost('free'),
-      starter: calculateTotalCost('starter'),
-      pro: calculateTotalCost('pro'),
+      solo: calculateTotalCost('solo'),
+      scale: calculateTotalCost('scale'),
       business: calculateTotalCost('business'),
     };
 
@@ -158,153 +161,237 @@ export default function PricingDocs() {
       <div>
         <h1 className="text-4xl font-bold mb-4">Pricing & Credit System</h1>
         <p className="text-lg text-muted-foreground">
-          Understand how Bugrit pricing works, how credits are calculated, and find the best plan for your needs.
+          A comprehensive guide to Bugrit pricing: how credits work, what each tier includes, and how to estimate your costs accurately.
         </p>
       </div>
 
-      {/* Why It Matters */}
+      {/* Why Credit-Based Pricing */}
       <section className="p-6 bg-primary/5 border border-primary/20 rounded-xl">
-        <h2 className="text-xl font-bold mb-3">Why Understanding Pricing Matters</h2>
+        <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
+          <DollarSign className="h-5 w-5" />
+          Why Credit-Based Pricing?
+        </h2>
         <p className="text-muted-foreground mb-4">
-          Credit-based pricing gives you control and predictability over your scanning costs:
+          Credit-based pricing aligns what you pay with what you use. Unlike flat-rate plans that charge the same whether you scan once or 100 times, credits give you:
         </p>
-        <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-          <li><strong>Pay for what you use</strong> - No surprise charges, full transparency on costs</li>
-          <li><strong>Optimize your scans</strong> - Toggle expensive features only when you need them</li>
-          <li><strong>Scale smoothly</strong> - Start free, upgrade as you grow, buy top-ups for burst usage</li>
-          <li><strong>Budget accurately</strong> - Use the calculator below to estimate your real monthly costs</li>
-        </ul>
-      </section>
-
-      {/* How Credits Work */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4">How Credits Work</h2>
-        <p className="text-muted-foreground mb-4">
-          Bugrit uses a credit-based system for scans. Every subscription tier includes a monthly credit
-          allocation. Credits are consumed based on what you scan and which features you use.
-        </p>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Monthly Allocation</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground space-y-2">
-              <p>Each tier includes monthly credits that reset on your billing date.</p>
-              <p>Unused credits can roll over (up to your tier&apos;s rollover limit).</p>
-              <p>Paid tiers allow overage usage at per-credit rates.</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Credit Top-ups</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground space-y-2">
-              <p>Purchase credit packages anytime when you need more.</p>
-              <p>Set up auto top-up to never run out mid-project.</p>
-              <p>Purchased credits never expire.</p>
-            </CardContent>
-          </Card>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="p-4 bg-background/50 rounded-lg">
+            <h4 className="font-semibold mb-2">Transparency</h4>
+            <p className="text-sm text-muted-foreground">See the exact cost before every scan. No surprise bills.</p>
+          </div>
+          <div className="p-4 bg-background/50 rounded-lg">
+            <h4 className="font-semibold mb-2">Control</h4>
+            <p className="text-sm text-muted-foreground">Toggle expensive features on/off based on your needs.</p>
+          </div>
+          <div className="p-4 bg-background/50 rounded-lg">
+            <h4 className="font-semibold mb-2">Scalability</h4>
+            <p className="text-sm text-muted-foreground">Start free, upgrade as you grow, buy top-ups for burst usage.</p>
+          </div>
+          <div className="p-4 bg-background/50 rounded-lg">
+            <h4 className="font-semibold mb-2">Fairness</h4>
+            <p className="text-sm text-muted-foreground">Small repos pay less than large monorepos. Makes sense.</p>
+          </div>
         </div>
       </section>
 
-      {/* Credit Calculation */}
+      {/* Credit Calculation Formula */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">Credit Calculation</h2>
+        <h2 className="text-2xl font-bold mb-4">How Credits Are Calculated</h2>
         <p className="text-muted-foreground mb-6">
-          Each scan costs credits based on the following formula:
+          Each scan consumes credits based on a simple formula. The cost depends on your codebase size, the tools you run, and AI features you enable.
         </p>
 
         <GlassCard className="p-6 mb-6">
           <div className="font-mono text-sm space-y-2">
-            <div className="text-primary font-semibold mb-4">Total Credits = Base + Lines + Tools + AI Features</div>
-            <div className="pl-4 space-y-1">
-              <div><span className="text-muted-foreground">Base:</span> 1 credit per scan</div>
-              <div><span className="text-muted-foreground">Lines:</span> 1 credit per 10,000 lines of code</div>
-              <div><span className="text-muted-foreground">Tools:</span> 0-3 credits depending on tool category</div>
-              <div><span className="text-muted-foreground">AI:</span> 1-3 credits depending on feature (some per-issue)</div>
+            <div className="text-primary font-semibold text-lg mb-4">
+              Total Credits = Base + Lines + Tool Categories + AI Features
+            </div>
+            <div className="pl-4 space-y-2 text-muted-foreground">
+              <div><span className="text-foreground font-medium">Base:</span> 1 credit (every scan)</div>
+              <div><span className="text-foreground font-medium">Lines:</span> 1 credit per 10,000 lines of code</div>
+              <div><span className="text-foreground font-medium">Tools:</span> 0-5 credits depending on tool category</div>
+              <div><span className="text-foreground font-medium">AI:</span> 1-2 credits flat + per-issue costs for detailed features</div>
             </div>
           </div>
         </GlassCard>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Base and Lines */}
-          <div>
-            <h3 className="font-semibold mb-3">Base Costs</h3>
-            <table className="w-full text-sm">
-              <tbody>
-                <tr className="border-b border-border/50">
-                  <td className="py-2">Base scan cost</td>
-                  <td className="text-right font-mono">1 credit</td>
-                </tr>
-                <tr className="border-b border-border/50">
-                  <td className="py-2">Per 10,000 lines of code</td>
-                  <td className="text-right font-mono">1 credit</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        {/* Base and Lines */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Base Costs</CardTitle>
+              <CardDescription>Applied to every scan</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <table className="w-full text-sm">
+                <tbody>
+                  <tr className="border-b border-border/50">
+                    <td className="py-3">Base scan cost</td>
+                    <td className="text-right font-mono font-semibold">1 credit</td>
+                  </tr>
+                  <tr className="border-b border-border/50">
+                    <td className="py-3">Per 10,000 lines of code</td>
+                    <td className="text-right font-mono font-semibold">1 credit</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p className="text-xs text-muted-foreground mt-4">
+                Example: A 45,000 line repo = 1 base + 5 lines = 6 credits minimum
+              </p>
+            </CardContent>
+          </Card>
 
-          {/* Tool Categories */}
-          <div>
-            <h3 className="font-semibold mb-3">Tool Categories</h3>
-            <table className="w-full text-sm">
-              <tbody>
-                <tr className="border-b border-border/50">
-                  <td className="py-2">Linting, Dependencies, Quality, Docs, Git</td>
-                  <td className="text-right text-green-400 font-mono">Free</td>
-                </tr>
-                <tr className="border-b border-border/50">
-                  <td className="py-2">Security</td>
-                  <td className="text-right font-mono">1 credit</td>
-                </tr>
-                <tr className="border-b border-border/50">
-                  <td className="py-2">Accessibility</td>
-                  <td className="text-right font-mono">2 credits</td>
-                </tr>
-                <tr className="border-b border-border/50">
-                  <td className="py-2">Performance (Lighthouse)</td>
-                  <td className="text-right font-mono">3 credits</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          {/* Why Lines Matter */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Why Lines of Code?</CardTitle>
+              <CardDescription>Fair pricing for different project sizes</CardDescription>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground space-y-3">
+              <p>
+                Larger codebases take longer to scan and consume more compute resources.
+                Charging per 10K lines ensures:
+              </p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Small side projects pay minimal amounts</li>
+                <li>Large enterprise repos pay proportionally more</li>
+                <li>You&apos;re not subsidizing someone else&apos;s monorepo</li>
+              </ul>
+              <p className="pt-2">
+                <strong>Pro tip:</strong> Use <code>.bugritignore</code> to exclude <code>node_modules</code>,
+                <code>dist</code>, and generated files from line counts.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
 
-          {/* AI Features */}
-          <div className="md:col-span-2">
-            <h3 className="font-semibold mb-3">AI Features</h3>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-2">Feature</th>
-                  <th className="text-right py-2">Credits</th>
-                  <th className="text-right py-2">Charged</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-border/50">
-                  <td className="py-2">Scan Summary</td>
-                  <td className="text-right font-mono">1</td>
-                  <td className="text-right text-muted-foreground">Per scan</td>
-                </tr>
-                <tr className="border-b border-border/50">
-                  <td className="py-2">Issue Explanations</td>
-                  <td className="text-right font-mono">2</td>
-                  <td className="text-right text-muted-foreground">Per 50 issues</td>
-                </tr>
-                <tr className="border-b border-border/50">
-                  <td className="py-2">Fix Suggestions</td>
-                  <td className="text-right font-mono">3</td>
-                  <td className="text-right text-muted-foreground">Per 50 issues</td>
-                </tr>
-                <tr className="border-b border-border/50">
-                  <td className="py-2">Priority Scoring</td>
-                  <td className="text-right font-mono">1</td>
-                  <td className="text-right text-muted-foreground">Per scan</td>
-                </tr>
-              </tbody>
-            </table>
+        {/* Tool Categories */}
+        <h3 className="text-xl font-bold mb-4">Tool Category Costs</h3>
+        <p className="text-muted-foreground mb-4">
+          Different tool categories have different infrastructure costs. Linting runs quickly in memory,
+          but Lighthouse needs a full headless browser.
+        </p>
+
+        <div className="overflow-x-auto mb-8">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left py-3 px-2">Category</th>
+                <th className="text-left py-3 px-2">Tools Included</th>
+                <th className="text-center py-3 px-2">Credits</th>
+                <th className="text-left py-3 px-2">Why This Cost?</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">Linting & Formatting</td>
+                <td className="py-3 px-2 text-muted-foreground">ESLint, Biome, Stylelint, Prettier</td>
+                <td className="text-center py-3 px-2 text-green-400 font-mono">Free</td>
+                <td className="py-3 px-2 text-muted-foreground">Fast, low memory, runs in Node.js</td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">Dependencies</td>
+                <td className="py-3 px-2 text-muted-foreground">npm audit, depcheck, license-checker, madge</td>
+                <td className="text-center py-3 px-2 text-green-400 font-mono">Free</td>
+                <td className="py-3 px-2 text-muted-foreground">Analyzes package.json, minimal compute</td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">Code Quality</td>
+                <td className="py-3 px-2 text-muted-foreground">TypeScript, knip, jscpd, cspell</td>
+                <td className="text-center py-3 px-2 text-green-400 font-mono">Free</td>
+                <td className="py-3 px-2 text-muted-foreground">Static analysis, runs in Node.js</td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">Documentation</td>
+                <td className="py-3 px-2 text-muted-foreground">markdownlint, remark-lint, alex</td>
+                <td className="text-center py-3 px-2 text-green-400 font-mono">Free</td>
+                <td className="py-3 px-2 text-muted-foreground">Text analysis, very fast</td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">Git</td>
+                <td className="py-3 px-2 text-muted-foreground">commitlint</td>
+                <td className="text-center py-3 px-2 text-green-400 font-mono">Free</td>
+                <td className="py-3 px-2 text-muted-foreground">Checks git history only</td>
+              </tr>
+              <tr className="border-b border-border/50 bg-yellow-500/5">
+                <td className="py-3 px-2 font-medium">Security</td>
+                <td className="py-3 px-2 text-muted-foreground">ESLint security, secretlint, lockfile-lint</td>
+                <td className="text-center py-3 px-2 font-mono font-semibold">1 credit</td>
+                <td className="py-3 px-2 text-muted-foreground">Deep analysis, pattern matching</td>
+              </tr>
+              <tr className="border-b border-border/50 bg-orange-500/5">
+                <td className="py-3 px-2 font-medium">Accessibility</td>
+                <td className="py-3 px-2 text-muted-foreground">axe-core, Pa11y</td>
+                <td className="text-center py-3 px-2 font-mono font-semibold">4 credits</td>
+                <td className="py-3 px-2 text-muted-foreground">Requires Puppeteer headless browser</td>
+              </tr>
+              <tr className="border-b border-border/50 bg-red-500/5">
+                <td className="py-3 px-2 font-medium">Performance</td>
+                <td className="py-3 px-2 text-muted-foreground">Lighthouse, size-limit</td>
+                <td className="text-center py-3 px-2 font-mono font-semibold">5 credits</td>
+                <td className="py-3 px-2 text-muted-foreground">Full browser render, network simulation</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* AI Features */}
+        <h3 className="text-xl font-bold mb-4">AI Feature Costs</h3>
+        <p className="text-muted-foreground mb-4">
+          AI features use large language models which have per-token costs. Some features are flat-rate,
+          while others scale with the number of issues found.
+        </p>
+
+        <div className="overflow-x-auto mb-8">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left py-3 px-2">Feature</th>
+                <th className="text-center py-3 px-2">Credits</th>
+                <th className="text-center py-3 px-2">Pricing Model</th>
+                <th className="text-left py-3 px-2">What It Does</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">Scan Summary</td>
+                <td className="text-center py-3 px-2 font-mono">1</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">Per scan</td>
+                <td className="py-3 px-2 text-muted-foreground">Executive summary of all findings</td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">Priority Scoring</td>
+                <td className="text-center py-3 px-2 font-mono">1</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">Per scan</td>
+                <td className="py-3 px-2 text-muted-foreground">AI-ranked issues by severity and impact</td>
+              </tr>
+              <tr className="border-b border-border/50 bg-yellow-500/5">
+                <td className="py-3 px-2 font-medium">Issue Explanations</td>
+                <td className="text-center py-3 px-2 font-mono">0.1</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">Per issue</td>
+                <td className="py-3 px-2 text-muted-foreground">Plain-English explanation of each issue</td>
+              </tr>
+              <tr className="border-b border-border/50 bg-orange-500/5">
+                <td className="py-3 px-2 font-medium">Fix Suggestions</td>
+                <td className="text-center py-3 px-2 font-mono">0.15</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">Per issue</td>
+                <td className="py-3 px-2 text-muted-foreground">AI-generated code fix for each issue</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg mb-8">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-semibold text-yellow-200 mb-1">Per-Issue Pricing Note</h4>
+              <p className="text-sm text-muted-foreground">
+                Issue Explanations and Fix Suggestions are charged per issue found. If your scan finds 100 issues
+                and you enable Fix Suggestions, that&apos;s 100 × 0.15 = 15 credits for that feature alone.
+                Consider running a basic scan first to see how many issues you have before enabling these features.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -312,11 +399,14 @@ export default function PricingDocs() {
       {/* Example Calculations */}
       <section>
         <h2 className="text-2xl font-bold mb-4">Example Calculations</h2>
+        <p className="text-muted-foreground mb-6">
+          Here are real-world examples to help you estimate your costs.
+        </p>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Simple Linting Scan</CardTitle>
+              <CardTitle className="text-lg">Quick Lint Check</CardTitle>
               <CardDescription>20,000 lines, linting only</CardDescription>
             </CardHeader>
             <CardContent>
@@ -333,7 +423,7 @@ export default function PricingDocs() {
                   <span>Linting</span>
                   <span className="text-green-400">0</span>
                 </div>
-                <div className="flex justify-between border-t pt-1 mt-2 font-semibold">
+                <div className="flex justify-between border-t pt-2 mt-2 font-semibold">
                   <span>Total</span>
                   <span className="text-primary">3 credits</span>
                 </div>
@@ -343,8 +433,8 @@ export default function PricingDocs() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Full Security Audit</CardTitle>
-              <CardDescription>50,000 lines, security + AI explanations</CardDescription>
+              <CardTitle className="text-lg">Security Audit + AI</CardTitle>
+              <CardDescription>50,000 lines, security + AI summary</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="font-mono text-sm space-y-1">
@@ -364,13 +454,48 @@ export default function PricingDocs() {
                   <span>AI Summary</span>
                   <span>1</span>
                 </div>
+                <div className="flex justify-between border-t pt-2 mt-2 font-semibold">
+                  <span>Total</span>
+                  <span className="text-primary">8 credits</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Full Audit with AI Fixes</CardTitle>
+              <CardDescription>50,000 lines, all tools, 100 issues</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="font-mono text-sm space-y-1">
                 <div className="flex justify-between">
-                  <span>AI Explanations (~100 issues)</span>
+                  <span>Base + Lines</span>
+                  <span>6</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Security</span>
+                  <span>1</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Accessibility</span>
                   <span>4</span>
                 </div>
-                <div className="flex justify-between border-t pt-1 mt-2 font-semibold">
+                <div className="flex justify-between">
+                  <span>Performance</span>
+                  <span>5</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>AI Summary + Priority</span>
+                  <span>2</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>AI Fixes (100 issues)</span>
+                  <span>15</span>
+                </div>
+                <div className="flex justify-between border-t pt-2 mt-2 font-semibold">
                   <span>Total</span>
-                  <span className="text-primary">12 credits</span>
+                  <span className="text-primary">33 credits</span>
                 </div>
               </div>
             </CardContent>
@@ -381,6 +506,9 @@ export default function PricingDocs() {
       {/* Subscription Tiers */}
       <section>
         <h2 className="text-2xl font-bold mb-4">Subscription Tiers</h2>
+        <p className="text-muted-foreground mb-6">
+          Choose the tier that fits your usage. All paid tiers include overage pricing so you never get blocked.
+        </p>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -388,67 +516,123 @@ export default function PricingDocs() {
               <tr className="border-b border-border">
                 <th className="text-left py-3 px-2"></th>
                 <th className="text-center py-3 px-2">Free</th>
-                <th className="text-center py-3 px-2">Starter</th>
-                <th className="text-center py-3 px-2 bg-primary/5">Pro</th>
+                <th className="text-center py-3 px-2">Solo</th>
+                <th className="text-center py-3 px-2 bg-primary/5">Scale</th>
                 <th className="text-center py-3 px-2">Business</th>
               </tr>
             </thead>
             <tbody>
               <tr className="border-b border-border/50">
-                <td className="py-3 px-2 font-medium">Price</td>
+                <td className="py-3 px-2 font-medium">Monthly Price</td>
                 <td className="text-center py-3 px-2">$0</td>
-                <td className="text-center py-3 px-2">$29/mo</td>
-                <td className="text-center py-3 px-2 bg-primary/5">$99/mo</td>
-                <td className="text-center py-3 px-2">$249/mo</td>
+                <td className="text-center py-3 px-2">$19</td>
+                <td className="text-center py-3 px-2 bg-primary/5 font-semibold">$49</td>
+                <td className="text-center py-3 px-2">$99</td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">Annual Price</td>
+                <td className="text-center py-3 px-2">$0</td>
+                <td className="text-center py-3 px-2">$190 <span className="text-green-400 text-xs">(2 mo free)</span></td>
+                <td className="text-center py-3 px-2 bg-primary/5">$490 <span className="text-green-400 text-xs">(2 mo free)</span></td>
+                <td className="text-center py-3 px-2">$990 <span className="text-green-400 text-xs">(2 mo free)</span></td>
               </tr>
               <tr className="border-b border-border/50">
                 <td className="py-3 px-2 font-medium">Monthly Credits</td>
-                <td className="text-center py-3 px-2">15</td>
-                <td className="text-center py-3 px-2">75</td>
-                <td className="text-center py-3 px-2 bg-primary/5">200</td>
+                <td className="text-center py-3 px-2">5</td>
+                <td className="text-center py-3 px-2">50</td>
+                <td className="text-center py-3 px-2 bg-primary/5 font-semibold">200</td>
                 <td className="text-center py-3 px-2">500</td>
               </tr>
               <tr className="border-b border-border/50">
                 <td className="py-3 px-2 font-medium">Credit Rollover</td>
-                <td className="text-center py-3 px-2">-</td>
-                <td className="text-center py-3 px-2">25</td>
-                <td className="text-center py-3 px-2 bg-primary/5">50</td>
-                <td className="text-center py-3 px-2">100</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2 bg-primary/5">Up to 100</td>
+                <td className="text-center py-3 px-2">Up to 250</td>
               </tr>
               <tr className="border-b border-border/50">
                 <td className="py-3 px-2 font-medium">Overage Rate</td>
                 <td className="text-center py-3 px-2 text-muted-foreground">N/A</td>
+                <td className="text-center py-3 px-2">$0.40/credit</td>
+                <td className="text-center py-3 px-2 bg-primary/5">$0.30/credit</td>
                 <td className="text-center py-3 px-2">$0.20/credit</td>
-                <td className="text-center py-3 px-2 bg-primary/5">$0.15/credit</td>
-                <td className="text-center py-3 px-2">$0.10/credit</td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">Effective $/Credit</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">N/A</td>
+                <td className="text-center py-3 px-2">$0.38</td>
+                <td className="text-center py-3 px-2 bg-primary/5 font-semibold">$0.245</td>
+                <td className="text-center py-3 px-2">$0.198</td>
               </tr>
               <tr className="border-b border-border/50">
                 <td className="py-3 px-2 font-medium">Projects</td>
                 <td className="text-center py-3 px-2">1</td>
-                <td className="text-center py-3 px-2">5</td>
+                <td className="text-center py-3 px-2">3</td>
                 <td className="text-center py-3 px-2 bg-primary/5">10</td>
                 <td className="text-center py-3 px-2">Unlimited</td>
               </tr>
               <tr className="border-b border-border/50">
                 <td className="py-3 px-2 font-medium">Team Members</td>
                 <td className="text-center py-3 px-2">1</td>
-                <td className="text-center py-3 px-2">2</td>
-                <td className="text-center py-3 px-2 bg-primary/5">5</td>
-                <td className="text-center py-3 px-2">Unlimited</td>
+                <td className="text-center py-3 px-2">1</td>
+                <td className="text-center py-3 px-2 bg-primary/5">3</td>
+                <td className="text-center py-3 px-2">10</td>
               </tr>
               <tr className="border-b border-border/50">
                 <td className="py-3 px-2 font-medium">Max Repo Size</td>
+                <td className="text-center py-3 px-2">10K lines</td>
                 <td className="text-center py-3 px-2">50K lines</td>
-                <td className="text-center py-3 px-2">100K lines</td>
                 <td className="text-center py-3 px-2 bg-primary/5">150K lines</td>
                 <td className="text-center py-3 px-2">500K lines</td>
               </tr>
               <tr className="border-b border-border/50">
                 <td className="py-3 px-2 font-medium">History Retention</td>
                 <td className="text-center py-3 px-2">7 days</td>
-                <td className="text-center py-3 px-2">30 days</td>
-                <td className="text-center py-3 px-2 bg-primary/5">90 days</td>
-                <td className="text-center py-3 px-2">365 days</td>
+                <td className="text-center py-3 px-2">14 days</td>
+                <td className="text-center py-3 px-2 bg-primary/5">30 days</td>
+                <td className="text-center py-3 px-2">90 days</td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">AI Summary</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2"><Check className="inline h-4 w-4 text-green-400" /></td>
+                <td className="text-center py-3 px-2 bg-primary/5"><Check className="inline h-4 w-4 text-green-400" /></td>
+                <td className="text-center py-3 px-2"><Check className="inline h-4 w-4 text-green-400" /></td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">AI Issue Explanations</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2 bg-primary/5"><Check className="inline h-4 w-4 text-green-400" /></td>
+                <td className="text-center py-3 px-2"><Check className="inline h-4 w-4 text-green-400" /></td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">AI Fix Suggestions</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2 bg-primary/5 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2"><Check className="inline h-4 w-4 text-green-400" /></td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">GitHub Integration</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2 bg-primary/5"><Check className="inline h-4 w-4 text-green-400" /></td>
+                <td className="text-center py-3 px-2"><Check className="inline h-4 w-4 text-green-400" /></td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">Slack + Webhooks</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2 bg-primary/5 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2"><Check className="inline h-4 w-4 text-green-400" /></td>
+              </tr>
+              <tr className="border-b border-border/50">
+                <td className="py-3 px-2 font-medium">API Access</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2 bg-primary/5 text-muted-foreground">-</td>
+                <td className="text-center py-3 px-2"><Check className="inline h-4 w-4 text-green-400" /></td>
               </tr>
             </tbody>
           </table>
@@ -459,10 +643,10 @@ export default function PricingDocs() {
       <section id="calculator">
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
           <Calculator className="h-6 w-6" />
-          Subscription Calculator
+          Cost Calculator
         </h2>
         <p className="text-muted-foreground mb-6">
-          Answer a few questions about your usage to find the best plan for your needs.
+          Enter your expected usage to find the best plan and estimate your monthly costs.
         </p>
 
         <div className="grid lg:grid-cols-2 gap-8">
@@ -508,7 +692,7 @@ export default function PricingDocs() {
                   onChange={(e) => setAvgIssuesPerScan(parseInt(e.target.value) || 0)}
                   min={0}
                 />
-                <p className="text-xs text-muted-foreground">Used for AI feature cost estimates</p>
+                <p className="text-xs text-muted-foreground">Used for per-issue AI feature costs</p>
               </div>
 
               {/* Projects and team */}
@@ -549,14 +733,14 @@ export default function PricingDocs() {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm">Accessibility</span>
-                      <span className="text-xs text-muted-foreground ml-2">(+2 credits)</span>
+                      <span className="text-xs text-muted-foreground ml-2">(+4 credits)</span>
                     </div>
                     <Switch checked={useAccessibility} onCheckedChange={setUseAccessibility} />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm">Performance (Lighthouse)</span>
-                      <span className="text-xs text-muted-foreground ml-2">(+3 credits)</span>
+                      <span className="text-xs text-muted-foreground ml-2">(+5 credits)</span>
                     </div>
                     <Switch checked={usePerformance} onCheckedChange={setUsePerformance} />
                   </div>
@@ -577,14 +761,14 @@ export default function PricingDocs() {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm">Issue Explanations</span>
-                      <span className="text-xs text-muted-foreground ml-2">(+2 per 50 issues)</span>
+                      <span className="text-xs text-muted-foreground ml-2">(+0.1 per issue)</span>
                     </div>
                     <Switch checked={useAiExplanations} onCheckedChange={setUseAiExplanations} />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm">Fix Suggestions</span>
-                      <span className="text-xs text-muted-foreground ml-2">(+3 per 50 issues)</span>
+                      <span className="text-xs text-muted-foreground ml-2">(+0.15 per issue)</span>
                     </div>
                     <Switch checked={useAiFixSuggestions} onCheckedChange={setUseAiFixSuggestions} />
                   </div>
@@ -619,13 +803,13 @@ export default function PricingDocs() {
                   {useAccessibility && (
                     <div className="flex justify-between">
                       <span>Accessibility</span>
-                      <span>2</span>
+                      <span>4</span>
                     </div>
                   )}
                   {usePerformance && (
                     <div className="flex justify-between">
                       <span>Performance</span>
-                      <span>3</span>
+                      <span>5</span>
                     </div>
                   )}
                   {useAiSummary && (
@@ -636,14 +820,14 @@ export default function PricingDocs() {
                   )}
                   {useAiExplanations && (
                     <div className="flex justify-between">
-                      <span>AI Explanations</span>
-                      <span>{Math.ceil(avgIssuesPerScan / 50) * 2}</span>
+                      <span>AI Explanations ({avgIssuesPerScan} issues)</span>
+                      <span>{Math.ceil(avgIssuesPerScan * 0.1)}</span>
                     </div>
                   )}
                   {useAiFixSuggestions && (
                     <div className="flex justify-between">
-                      <span>AI Fix Suggestions</span>
-                      <span>{Math.ceil(avgIssuesPerScan / 50) * 3}</span>
+                      <span>AI Fix Suggestions ({avgIssuesPerScan} issues)</span>
+                      <span>{Math.ceil(avgIssuesPerScan * 0.15)}</span>
                     </div>
                   )}
                   <div className="flex justify-between border-t pt-2 mt-2 font-semibold text-lg">
@@ -664,7 +848,7 @@ export default function PricingDocs() {
                   <div className="text-4xl font-bold text-primary">{monthlyCreditsNeeded}</div>
                   <div className="text-muted-foreground">credits per month</div>
                   <div className="text-sm text-muted-foreground mt-1">
-                    ({scansPerMonth} scans x {creditsPerScan} credits)
+                    ({scansPerMonth} scans × {creditsPerScan} credits)
                   </div>
                 </div>
               </CardContent>
@@ -727,7 +911,7 @@ export default function PricingDocs() {
 
       {/* Credit Packages */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">Credit Packages</h2>
+        <h2 className="text-2xl font-bold mb-4">Credit Top-Up Packages</h2>
         <p className="text-muted-foreground mb-6">
           Need more credits? Purchase packages anytime. Purchased credits never expire.
         </p>
@@ -738,8 +922,8 @@ export default function PricingDocs() {
               <div className="font-semibold">Starter Pack</div>
               <div className="text-3xl font-bold text-primary my-2">25</div>
               <div className="text-sm text-muted-foreground mb-2">credits</div>
-              <div className="text-xl font-semibold">$5</div>
-              <div className="text-xs text-muted-foreground">$0.20/credit</div>
+              <div className="text-xl font-semibold">$10</div>
+              <div className="text-xs text-muted-foreground">$0.40/credit</div>
             </CardContent>
           </Card>
           <Card className="border-primary">
@@ -748,8 +932,8 @@ export default function PricingDocs() {
               <div className="font-semibold">Pro Pack</div>
               <div className="text-3xl font-bold text-primary my-2">100</div>
               <div className="text-sm text-muted-foreground mb-2">credits</div>
-              <div className="text-xl font-semibold">$16</div>
-              <div className="text-xs text-muted-foreground">$0.16/credit</div>
+              <div className="text-xl font-semibold">$30</div>
+              <div className="text-xs text-muted-foreground">$0.30/credit</div>
             </CardContent>
           </Card>
           <Card>
@@ -757,8 +941,8 @@ export default function PricingDocs() {
               <div className="font-semibold">Power Pack</div>
               <div className="text-3xl font-bold text-primary my-2">500</div>
               <div className="text-sm text-muted-foreground mb-2">credits</div>
-              <div className="text-xl font-semibold">$60</div>
-              <div className="text-xs text-muted-foreground">$0.12/credit</div>
+              <div className="text-xl font-semibold">$100</div>
+              <div className="text-xs text-muted-foreground">$0.20/credit</div>
             </CardContent>
           </Card>
           <Card>
@@ -766,111 +950,92 @@ export default function PricingDocs() {
               <div className="font-semibold">Enterprise Pack</div>
               <div className="text-3xl font-bold text-primary my-2">2000</div>
               <div className="text-sm text-muted-foreground mb-2">credits</div>
-              <div className="text-xl font-semibold">$200</div>
-              <div className="text-xs text-muted-foreground">$0.10/credit</div>
+              <div className="text-xl font-semibold">$300</div>
+              <div className="text-xs text-muted-foreground">$0.15/credit</div>
             </CardContent>
           </Card>
         </div>
       </section>
 
-      {/* AI Prompts for Vibe Coding */}
+      {/* FAQ */}
       <section>
-        <h2 className="text-2xl font-bold mb-4">AI Prompts for Vibe Coding</h2>
-        <p className="text-muted-foreground mb-6">
-          Use these prompts to quickly build pricing and subscription features into your app.
-        </p>
+        <h2 className="text-2xl font-bold mb-4">Frequently Asked Questions</h2>
 
         <div className="space-y-6">
-          <div className="p-4 bg-muted/50 rounded-lg">
-            <h4 className="font-semibold mb-2">Pricing Page with Tier Comparison</h4>
-            <p className="text-sm text-muted-foreground mb-3">Create a marketing pricing page</p>
-            <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
-              <pre>{`Create a responsive pricing page with 4 tiers: Free, Starter ($29), Pro ($99), Business ($249).
-Each card should show:
-- Tier name and price (monthly/yearly toggle)
-- Monthly credits included with rollover amount
-- Max repo size and project limits
-- Team member limit
-- List of features with checkmarks
-Highlight the Pro plan as "Most Popular".
-Add a "Get Started" button for Free, "Subscribe" for paid tiers.
-Include a FAQ section answering common pricing questions.`}</pre>
-            </GlassCard>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">What happens if I run out of credits?</CardTitle>
+            </CardHeader>
+            <CardContent className="text-muted-foreground">
+              <p>
+                Paid plans (Solo, Scale, Business) have overage pricing, so you can always keep scanning.
+                You&apos;ll see the overage cost before confirming each scan. Free tier users need to wait
+                for their next monthly allocation or upgrade to a paid plan.
+              </p>
+            </CardContent>
+          </Card>
 
-          <div className="p-4 bg-muted/50 rounded-lg">
-            <h4 className="font-semibold mb-2">Interactive Cost Calculator Widget</h4>
-            <p className="text-sm text-muted-foreground mb-3">Embed a calculator on your landing page</p>
-            <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
-              <pre>{`Create a React cost calculator widget for Bugrit scanning.
-Inputs:
-- Slider: Scans per month (1-100)
-- Slider: Average lines of code (5K-500K)
-- Checkboxes: Security scan, Accessibility, Performance
-- Checkboxes: AI Summary, AI Explanations, AI Fix Suggestions
-Calculate credits per scan using:
-- Base: 1 credit
-- Lines: 1 credit per 10K lines
-- Security: +1, Accessibility: +2, Performance: +3
-- AI Summary: +1, Explanations: +2 per 50 issues, Fixes: +3 per 50 issues
-Show monthly total and recommend the cheapest tier that covers it.
-Display a cost breakdown chart using Recharts.`}</pre>
-            </GlassCard>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Do unused credits roll over?</CardTitle>
+            </CardHeader>
+            <CardContent className="text-muted-foreground">
+              <p>
+                Scale and Business plans include credit rollover. Scale can roll over up to 100 credits,
+                Business up to 250. Free and Solo plans don&apos;t have rollover - use them or lose them!
+              </p>
+            </CardContent>
+          </Card>
 
-          <div className="p-4 bg-muted/50 rounded-lg">
-            <h4 className="font-semibold mb-2">Subscription Management Dashboard</h4>
-            <p className="text-sm text-muted-foreground mb-3">Build a complete subscription settings page</p>
-            <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
-              <pre>{`Create a subscription management dashboard with these sections:
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">How do purchased credit packages work?</CardTitle>
+            </CardHeader>
+            <CardContent className="text-muted-foreground">
+              <p>
+                Purchased credits are added to your account immediately and <strong>never expire</strong>.
+                They&apos;re used after your monthly allocation is exhausted, before any overage charges apply.
+              </p>
+            </CardContent>
+          </Card>
 
-1. Current Plan Card
-- Show tier name, status badge (active/canceled), renewal date
-- Progress bar for credits used vs included
-- Upgrade/Manage Billing buttons
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Can I set up automatic top-ups?</CardTitle>
+            </CardHeader>
+            <CardContent className="text-muted-foreground">
+              <p>
+                Yes! In your account settings, you can enable auto top-up to automatically purchase a credit
+                package when your balance falls below a threshold. Set a monthly limit to control spending.
+              </p>
+            </CardContent>
+          </Card>
 
-2. Usage Overview
-- Credits: used/limit with progress bar, show rollover
-- Projects: used/limit
-- Team Members: used/limit
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">How are lines of code counted?</CardTitle>
+            </CardHeader>
+            <CardContent className="text-muted-foreground">
+              <p>
+                We count logical lines of code (excluding empty lines and comments) in supported file types.
+                Files in <code>node_modules</code>, <code>dist</code>, <code>.git</code>, and common build
+                directories are automatically excluded. You can add custom exclusions in <code>.bugritignore</code>.
+              </p>
+            </CardContent>
+          </Card>
 
-3. Credit Purchase Section
-- Grid of 4 credit packages with prices
-- Click to open purchase modal
-- Link to Stripe checkout on confirm
-
-4. Auto Top-up Settings
-- Toggle to enable/disable
-- Threshold input (when to top up)
-- Package selector dropdown
-- Max per month input
-- Save button
-
-Fetch data from GET /api/settings/subscription.
-Save auto-topup with POST /api/settings/subscription/auto-topup.`}</pre>
-            </GlassCard>
-          </div>
-
-          <div className="p-4 bg-muted/50 rounded-lg">
-            <h4 className="font-semibold mb-2">Usage Tracking Hook</h4>
-            <p className="text-sm text-muted-foreground mb-3">React hook for real-time credit tracking</p>
-            <GlassCard className="p-4 font-mono text-xs bg-slate-950 overflow-x-auto">
-              <pre>{`Create a React custom hook called useBugritCredits that:
-1. Fetches credit balance from GET /api/billing/status
-2. Returns { credits, tier, loading, error, refetch }
-3. Polls every 30 seconds when the tab is active
-4. Pauses polling when tab is hidden (use visibilitychange)
-5. Provides a refetch function to manually update
-6. Caches the last value to prevent flash of loading state
-
-Also create a CreditWarning component that uses this hook and shows:
-- Nothing when credits > 20% remaining
-- Yellow banner when credits < 20%
-- Red banner with "Buy Credits" when credits < 10%
-
-Export both from a useBugritCredits.ts file.`}</pre>
-            </GlassCard>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Why are accessibility and performance tools more expensive?</CardTitle>
+            </CardHeader>
+            <CardContent className="text-muted-foreground">
+              <p>
+                These tools require spinning up headless browsers (Puppeteer/Chromium) which consume
+                significantly more CPU, memory, and time than static analysis tools. The credit cost
+                reflects our actual infrastructure costs to run these tools reliably.
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
