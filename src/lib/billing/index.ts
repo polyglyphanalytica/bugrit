@@ -36,3 +36,22 @@ export {
   type QuoteResponse,
   type BalanceResponse,
 } from './client';
+
+// Auto top-up
+export {
+  checkAndTriggerAutoTopup,
+  deductCreditsWithAutoTopup,
+} from './auto-topup';
+
+// Scan billing integration
+export {
+  getBillingAccount,
+  countLinesOfCode,
+  checkScanAffordability,
+  billForCompletedScan,
+  reserveCreditsForScan,
+  finalizeReservation,
+  releaseReservation,
+  type PreScanCheck,
+  type PostScanBilling,
+} from './scan-billing';

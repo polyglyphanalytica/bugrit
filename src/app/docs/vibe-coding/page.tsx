@@ -17,6 +17,179 @@ export default function VibeCodingPage() {
         </p>
       </div>
 
+      {/* Complete Dashboard Prompt */}
+      <section className="space-y-4">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          <span>🚀</span> Complete Dashboard Implementation
+        </h2>
+        <p className="text-muted-foreground">
+          Want to build a full-featured dashboard that uses all of Bugrit&apos;s capabilities? Copy the comprehensive prompt below. This is a substantial undertaking that covers applications, scans, reports, billing, team management, and more.
+        </p>
+
+        {/* Health Warning */}
+        <div className="p-4 bg-amber-500/10 border-2 border-amber-500/30 rounded-lg">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <p className="font-semibold text-amber-700 dark:text-amber-400">Important: This is a significant undertaking</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                This prompt encompasses all Bugrit API functionality and will generate a substantial amount of code.
+                Even the best AI coding assistants may need <strong>multiple iterations</strong> to get everything working perfectly.
+                Expect to refine, debug, and adjust the generated code. Consider breaking this into smaller chunks if you encounter issues.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <PromptCard
+          title="Build Complete Bugrit Dashboard"
+          description="Full dashboard with all features: applications, scans, reports, billing, team management, and settings"
+          prompt={`I need you to build a complete dashboard for integrating with the Bugrit code scanning and testing platform. Read ALL the API documentation first, then implement a full-featured dashboard.
+
+## Step 1: Read the Documentation
+First, thoroughly read these Bugrit API docs to understand all endpoints:
+- Main docs: https://bugrit.dev/docs
+- Authentication: https://bugrit.dev/docs/authentication
+- Scans API: https://bugrit.dev/docs/api-reference/scans
+- Reports API: https://bugrit.dev/docs/api-reference/reports
+- Projects API: https://bugrit.dev/docs/api-reference/projects
+- Billing API: https://bugrit.dev/docs/api-reference/billing
+- Tests API: https://bugrit.dev/docs/api-reference/tests
+
+## Step 2: Implementation Requirements
+
+Build a dashboard with these pages/features:
+
+### 1. Dashboard Home (/dashboard)
+- Overview stats cards: total applications, total scans, critical/high/medium/low finding counts
+- Recent scans table with status badges (pending/running/completed/failed)
+- Quick action buttons: "New Scan", "New Application"
+- Trend chart showing issues over last 10 scans (use GET /api/v1/scans?limit=10)
+
+### 2. Applications Management (/applications)
+- List all applications with type icons (web/mobile/desktop/hybrid)
+- Create new application form with fields: name, description, type, targetUrl, packageId, bundleId
+- Application detail page showing scan history
+- API key management per application (create/revoke keys)
+- Delete application with confirmation
+
+### 3. Scans (/scans and /scans/[id])
+- List page with filters: applicationId, status, date range
+- Trigger new scan form with sourceType options: url, github, gitlab, upload, docker, npm, mobile
+- Scan detail page showing:
+  - Progress indicator (toolsCompleted / toolsTotal)
+  - Status polling (every 5 seconds until completed)
+  - Summary with critical/high/medium/low counts
+  - Link to full report when completed
+- Cancel scan button for running scans
+
+### 4. Reports (/reports and /reports/[id])
+- List page showing all generated reports
+- Report detail page showing:
+  - Summary statistics with pass rate
+  - Findings list grouped by severity
+  - Each finding shows: title, tool, file, line, description, suggestion
+  - Expandable details for each finding
+  - Export options (JSON, PDF)
+
+### 5. Billing & Subscription (/settings/subscription)
+- Current plan display with status badge
+- Usage meters: credits used/limit, projects used/limit, team members used/limit
+- Credit packages grid for purchasing additional credits
+- Auto top-up configuration with threshold and package selection
+- "Manage Billing" button linking to Stripe portal
+- Upgrade plan button
+
+### 6. Team Management (/settings/team)
+- List team members with roles (owner/admin/member)
+- Invite new members by email
+- Change member roles
+- Remove members
+
+### 7. API Keys (/settings/api-keys)
+- List all API keys with last used date
+- Create new key with name and permissions
+- Revoke key with confirmation
+- Copy key to clipboard (only shown once on creation)
+
+### 8. Settings (/settings)
+- Profile settings
+- Notification preferences
+- Danger zone: delete account
+
+## Step 3: Technical Requirements
+
+### Authentication
+- Store BUGGERED_API_KEY in environment variable
+- All API calls include header: Authorization: Bearer {API_KEY}
+- Handle 401 errors by redirecting to login
+
+### API Integration
+Base URL: https://bugrit.dev/api/v1
+
+Key endpoints to implement:
+- POST /scans - Start a scan
+- GET /scans - List scans (supports ?applicationId, ?status, ?limit)
+- GET /scans/{scanId} - Get scan status/details
+- GET /scans/{scanId}/report - Get scan report
+- DELETE /scans/{scanId} - Cancel scan
+- GET /projects - List applications
+- POST /projects - Create application
+- DELETE /projects/{id} - Delete application
+- GET /reports - List reports
+- GET /reports/{reportId} - Get report details
+
+### UI Components Needed
+- Navigation sidebar with links to all sections
+- Loading states for all async operations
+- Error boundaries and error messages
+- Toast notifications for success/error feedback
+- Responsive design for mobile
+- Dark mode support
+
+### State Management
+- Handle loading states properly
+- Poll for scan status updates
+- Cache application list
+- Handle optimistic updates where appropriate
+
+## Step 4: File Structure
+Create these files:
+\`\`\`
+/app/dashboard/page.tsx
+/app/applications/page.tsx
+/app/applications/[id]/page.tsx
+/app/scans/page.tsx
+/app/scans/[id]/page.tsx
+/app/scans/new/page.tsx
+/app/reports/page.tsx
+/app/reports/[id]/page.tsx
+/app/settings/page.tsx
+/app/settings/subscription/page.tsx
+/app/settings/team/page.tsx
+/app/settings/api-keys/page.tsx
+/lib/bugrit-api.ts (API client with all endpoints)
+/components/dashboard-nav.tsx
+/components/scan-status-badge.tsx
+/components/findings-list.tsx
+/components/credit-usage.tsx
+\`\`\`
+
+## Step 5: Implementation Order
+1. First create the API client (/lib/bugrit-api.ts) with all endpoints
+2. Build the dashboard nav component
+3. Implement Dashboard Home with stats
+4. Implement Applications pages
+5. Implement Scans pages with polling
+6. Implement Reports pages
+7. Implement Settings pages
+
+Match the styling of my existing application. Use my existing UI component library if I have one (e.g., shadcn/ui, Chakra, MUI).
+
+Start by showing me the API client implementation, then proceed page by page.`}
+        />
+      </section>
+
       {/* Getting Started */}
       <section className="space-y-4">
         <h2 className="text-2xl font-bold">Getting Started</h2>

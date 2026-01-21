@@ -1,6 +1,6 @@
 // Types for notification services
 
-export type NotificationChannel = 'email' | 'slack' | 'webhook';
+export type NotificationChannel = 'email' | 'slack' | 'webhook' | 'discord' | 'teams' | 'pagerduty';
 
 export interface NotificationConfig {
   // Email configuration
@@ -29,14 +29,37 @@ export interface NotificationConfig {
     secret?: string;
     headers?: Record<string, string>;
   };
+
+  // Discord configuration
+  discord?: {
+    enabled: boolean;
+    webhookUrl: string;
+    notifyOnFailure: boolean;
+    notifyOnSuccess: boolean;
+  };
+
+  // Microsoft Teams configuration
+  teams?: {
+    enabled: boolean;
+    webhookUrl: string;
+    notifyOnFailure: boolean;
+    notifyOnSuccess: boolean;
+  };
+
+  // PagerDuty configuration (for critical alerts only)
+  pagerduty?: {
+    enabled: boolean;
+    routingKey: string;
+    minSeverity: 'critical' | 'high'; // Only alert on these severities
+  };
 }
 
 export interface NotificationPayload {
-  type: 'test_result' | 'uptime' | 'scheduled' | 'deployment';
+  type: 'test_result' | 'uptime' | 'scheduled' | 'deployment' | 'scan_started' | 'scan_completed' | 'scan_failed';
   applicationId: string;
   applicationName: string;
   timestamp: Date;
-  data: TestResultNotification | UptimeNotification | ScheduledNotification | DeploymentNotification;
+  data: TestResultNotification | UptimeNotification | ScheduledNotification | DeploymentNotification | ScanNotification;
 }
 
 export interface TestResultNotification {
@@ -87,6 +110,35 @@ export interface DeploymentNotification {
   version: string;
   status: 'started' | 'completed' | 'failed';
   testResults?: TestResultNotification;
+}
+
+export interface ScanNotification {
+  scanId: string;
+  status: 'started' | 'completed' | 'failed';
+  target: {
+    type: 'url' | 'repository' | 'api';
+    value: string;
+  };
+  summary?: {
+    totalFindings: number;
+    bySeverity: {
+      critical: number;
+      high: number;
+      medium: number;
+      low: number;
+      info: number;
+    };
+    toolsRun: string[];
+    toolsFailed: string[];
+    duration: number;
+  };
+  topPriorities?: Array<{
+    title: string;
+    severity: string;
+    tool: string;
+  }>;
+  reportUrl?: string;
+  error?: string;
 }
 
 export interface NotificationResult {

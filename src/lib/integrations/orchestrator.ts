@@ -73,6 +73,9 @@ import {
   LitmusChaosIntegration,
 } from './chaos';
 
+// Import Cloud Build integrations (Docker-based tools)
+import { CLOUD_BUILD_INTEGRATIONS } from './cloud-build';
+
 // All available integrations
 const ALL_INTEGRATIONS: ToolIntegration[] = [
   // Code Quality
@@ -133,6 +136,14 @@ const ALL_INTEGRATIONS: ToolIntegration[] = [
 
   // Chaos
   new LitmusChaosIntegration(),
+
+  // Cloud Build integrations (46 Docker-based tools)
+  // Security: OWASP ZAP, Semgrep, Trivy, Grype, Gitleaks, Nuclei, Checkov, Bandit, Gosec, etc.
+  // Mobile: MobSF, APKLeaks, SwiftLint
+  // API: Spectral, Schemathesis, GraphQL Cop
+  // Cloud Native: Kubesec, Kube-bench, Polaris, Terrascan, Kube-hunter
+  // AI/ML: Garak (LLM security), ModelScan
+  ...CLOUD_BUILD_INTEGRATIONS,
 ];
 
 export interface OrchestratorConfig {

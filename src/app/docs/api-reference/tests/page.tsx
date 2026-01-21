@@ -7,7 +7,7 @@ export default function FindingsApiPage() {
         <h1 className="text-4xl font-bold mb-4">Findings API</h1>
         <p className="text-lg text-muted-foreground">
           Retrieve and manage findings from your scans. Findings are the individual issues
-          discovered by our 25 analysis tools.
+          discovered by our 69 analysis tools.
         </p>
       </div>
 

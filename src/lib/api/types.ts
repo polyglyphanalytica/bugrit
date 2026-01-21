@@ -328,37 +328,54 @@ export type WebhookEventType =
 // ============================================================================
 
 export const AVAILABLE_TOOLS = [
-  'eslint',
-  'typecheck',
-  'complexity',
-  'security',
-  'a11y',
-  'perf',
-  'deps',
-  'dupes',
-  'deadcode',
-  'bundle',
-  'coverage',
-  'regex',
-  'memory',
-  'imports',
-  'api',
-  'secrets',
-  'license',
-  'docs',
-  'css',
-  'html',
-  'json',
-  'env',
-  'git',
-  'size',
-  'ai',
-] as const;
+  // Linting (4)
+  'eslint', 'biome', 'stylelint', 'prettier',
+  // Security (19)
+  'semgrep', 'gitleaks', 'trivy', 'grype', 'nuclei', 'checkov', 'secretlint',
+  'npm-audit', 'bandit', 'gosec', 'brakeman', 'owasp-zap', 'dependency-check',
+  'tfsec', 'dockle', 'syft', 'flawfinder', 'garak', 'modelscan',
+  // Dependencies (7)
+  'depcheck', 'license-checker', 'madge', 'dependency-cruiser', 'osv-scanner',
+  'pip-audit', 'cargo-audit',
+  // Accessibility (2)
+  'axe-core', 'pa11y',
+  // Quality (16)
+  'typescript', 'knip', 'jscpd', 'cspell', 'publint', 'codeclimate', 'phpstan',
+  'psalm', 'spotbugs', 'pmd', 'checkstyle', 'rubocop', 'detekt', 'cppcheck',
+  'clippy', 'shellcheck',
+  // Documentation (3)
+  'markdownlint', 'remark-lint', 'alex',
+  // Git (1)
+  'commitlint',
+  // Performance (3)
+  'lighthouse', 'sitespeed', 'size-limit',
+  // Mobile (4)
+  'mobsf', 'apkleaks', 'androguard', 'swiftlint',
+  // API Security (4)
+  'spectral', 'dredd', 'graphql-cop', 'schemathesis',
+  // Cloud Native (5)
+  'kubesec', 'kube-bench', 'polaris', 'terrascan', 'kube-hunter',
+] as const;  // Total: 68 tools
 
 export type ToolName = (typeof AVAILABLE_TOOLS)[number];
+
+export type ToolCategory =
+  | 'linting'
+  | 'security'
+  | 'dependencies'
+  | 'accessibility'
+  | 'quality'
+  | 'documentation'
+  | 'git'
+  | 'performance'
+  | 'mobile'
+  | 'api-security'
+  | 'cloud-native';
 
 export interface ToolConfig {
   name: ToolName;
   enabled: boolean;
+  category?: ToolCategory;
+  credits?: number;
   options?: Record<string, unknown>;
 }

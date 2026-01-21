@@ -195,7 +195,7 @@ export default function DashboardPage() {
                 Code Scanning
               </CardTitle>
               <CardDescription>
-                Analyze your code with 25 built-in security and quality tools
+                Analyze your code with 69 built-in security and quality tools
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -320,7 +320,7 @@ export default function DashboardPage() {
               <h3 className="text-lg font-semibold mb-2">Get Started</h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Register your first application to run tests with Playwright, Appium, or Tauri,
-                and scan with 25 analysis tools. Get one unified, AI-powered report.
+                and scan with 69 analysis tools. Get one unified, AI-powered report.
               </p>
               <Button asChild>
                 <Link href="/applications">Create Application</Link>

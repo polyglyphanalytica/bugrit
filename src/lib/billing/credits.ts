@@ -18,37 +18,34 @@ export const CREDIT_COSTS = {
   // Per 10K lines of code
   PER_10K_LINES: 1,
 
-  // Tool category costs
+  // Tool category costs (updated for profitability)
   TOOLS: {
     linting: 0,        // Free - fast, low resource
     security: 1,       // Moderate resource usage
     dependencies: 0,   // Free - fast analysis
-    accessibility: 2,  // Requires browser automation
+    accessibility: 4,  // Requires Puppeteer browser automation (~$0.05 cost)
     quality: 0,        // Free - fast analysis
     documentation: 0,  // Free - fast analysis
     git: 0,            // Free - fast analysis
-    performance: 3,    // Heavy - Lighthouse needs browser
+    performance: 5,    // Heavy - Lighthouse + Puppeteer (~$0.10 cost)
   } as Record<ToolCategory, number>,
 
-  // AI features
+  // AI features (per-issue pricing for variable cost features)
   AI: {
-    summary: 1,              // Basic scan summary
-    issue_explanations: 2,   // Per-issue AI explanations
-    fix_suggestions: 3,      // AI-generated fix code
-    priority_scoring: 1,     // AI prioritization of issues
+    summary: 1,              // Basic scan summary (flat rate)
+    issue_explanations: 0.1, // Per-issue AI explanations (~$0.02 cost each)
+    fix_suggestions: 0.15,   // Per-issue AI-generated fix code (~$0.03 cost each)
+    priority_scoring: 1,     // AI prioritization (flat rate)
   },
-
-  // Per 50 issues for AI explanations
-  AI_ISSUES_BATCH: 50,
 } as const;
 
-// Subscription tiers
+// Subscription tiers (updated pricing for sustainable margins)
 export const SUBSCRIPTION_TIERS = {
   free: {
     name: 'Free',
     price: 0,
-    credits: 10,
-    overageRate: null, // No overage allowed
+    credits: 5,          // Reduced from 10 to limit trial abuse
+    overageRate: null,   // No overage allowed
     features: {
       maxProjects: 1,
       maxRepoSize: 10_000, // 10K lines
@@ -58,10 +55,10 @@ export const SUBSCRIPTION_TIERS = {
     },
   },
   starter: {
-    name: 'Starter',
-    price: 15,
+    name: 'Solo',
+    price: 19,           // Increased from $15 (+$4)
     credits: 50,
-    overageRate: 0.35,
+    overageRate: 0.40,   // Increased from $0.35
     features: {
       maxProjects: 3,
       maxRepoSize: 50_000, // 50K lines
@@ -71,10 +68,10 @@ export const SUBSCRIPTION_TIERS = {
     },
   },
   pro: {
-    name: 'Pro',
-    price: 39,
+    name: 'Scale',
+    price: 49,           // Increased from $39 (+$10)
     credits: 200,
-    overageRate: 0.25,
+    overageRate: 0.30,   // Increased from $0.25
     rolloverCredits: 100,
     features: {
       maxProjects: 10,
@@ -87,10 +84,10 @@ export const SUBSCRIPTION_TIERS = {
   },
   business: {
     name: 'Business',
-    price: 79,
-    credits: 600,
-    overageRate: 0.15,
-    rolloverCredits: 300,
+    price: 99,           // Increased from $79 (+$20)
+    credits: 500,        // Reduced from 600 (-100)
+    overageRate: 0.20,   // Increased from $0.15
+    rolloverCredits: 250,
     features: {
       maxProjects: -1, // Unlimited
       maxRepoSize: 500_000, // 500K lines
@@ -178,13 +175,12 @@ export function calculateCredits(config: ScanConfig): CreditEstimate {
     breakdown.tools[category] = CREDIT_COSTS.TOOLS[category];
   }
 
-  // AI feature costs
+  // AI feature costs (per-issue pricing for variable cost features)
   for (const feature of config.aiFeatures) {
     if (feature === 'issue_explanations' || feature === 'fix_suggestions') {
-      // These scale with number of issues
+      // These scale with number of issues (per-issue pricing)
       const issueCount = config.estimatedIssues || 50; // Default estimate
-      const batches = Math.ceil(issueCount / CREDIT_COSTS.AI_ISSUES_BATCH);
-      breakdown.ai[feature] = CREDIT_COSTS.AI[feature] * batches;
+      breakdown.ai[feature] = Math.ceil(CREDIT_COSTS.AI[feature] * issueCount);
 
       if (!config.estimatedIssues) {
         warnings.push(`AI ${feature} cost estimated for ~50 issues. Actual cost may vary.`);

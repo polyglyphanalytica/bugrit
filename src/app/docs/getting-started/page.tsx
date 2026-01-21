@@ -28,7 +28,7 @@ export default function GettingStartedPage() {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">→</span>
-            <span><strong>One report, 25 tools:</strong> Instead of setting up ESLint, Prettier, audit-ci, and 22 other tools separately, get everything in one scan</span>
+            <span><strong>One report, 69 tools:</strong> Instead of setting up ESLint, Prettier, audit-ci, and 22 other tools separately, get everything in one scan</span>
           </li>
         </ul>
       </div>
@@ -53,7 +53,7 @@ export default function GettingStartedPage() {
               <span className="font-semibold">Scan Code</span>
             </div>
             <p className="text-sm text-muted-foreground mb-3">
-              Analyze your code with 25 security, quality, and performance tools
+              Analyze your code with 69 security, quality, and performance tools
             </p>
             <a href="#scanning" className="text-sm text-primary hover:underline">Jump to scanning setup</a>
           </div>
@@ -164,7 +164,7 @@ export default function GettingStartedPage() {
             <span>🔍</span> 3b. Scan Code
           </h2>
           <p className="text-muted-foreground mb-4">
-            Submit your code for analysis with 25 tools covering security, quality, dependencies, and more.
+            Submit your code for analysis with 69 tools covering security, quality, dependencies, and more.
           </p>
 
           <h4 className="font-semibold mb-2">Option A: Scan a GitHub Repository</h4>
@@ -256,8 +256,8 @@ export default function GettingStartedPage() {
       "frameworks": ["playwright", "appium"]
     },
     "scanning": {
-      "toolsTotal": 25,
-      "toolsCompleted": 25,
+      "toolsTotal": 69,
+      "toolsCompleted": 69,
       "summary": {
         "critical": 2,
         "high": 5,
@@ -290,7 +290,7 @@ export default function GettingStartedPage() {
           </p>
           <ul className="list-disc list-inside text-muted-foreground space-y-1 mt-2">
             <li>Test results from Playwright, Appium, and Tauri with screenshots/videos</li>
-            <li>Deduplicated findings from all 25 scanning tools</li>
+            <li>Deduplicated findings from all 69 scanning tools</li>
             <li>AI-generated plain English explanations</li>
             <li>Prioritized issues by severity</li>
             <li>Correlation between test failures and code issues</li>

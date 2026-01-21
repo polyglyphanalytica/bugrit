@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedUser, errorResponse } from '@/lib/api-auth';
 import { db } from '@/lib/firebase/admin';
 import { getStripeSecretKey } from '@/lib/admin/service';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
   try {
@@ -44,7 +45,14 @@ export async function POST(req: NextRequest) {
     });
 
     // Create portal session
-    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL;
+
+    if (!origin) {
+      if (process.env.NODE_ENV === 'production') {
+        return errorResponse('NEXT_PUBLIC_APP_URL environment variable is required in production', 500);
+      }
+      return errorResponse('Missing origin header and NEXT_PUBLIC_APP_URL environment variable', 400);
+    }
 
     const session = await stripe.billingPortal.sessions.create({
       customer: stripeCustomerId,
@@ -55,7 +63,11 @@ export async function POST(req: NextRequest) {
       url: session.url,
     });
   } catch (error) {
-    console.error('Billing portal error:', error);
+    logger.error('Billing portal error', {
+      path: '/api/billing/portal',
+      method: 'POST',
+      error,
+    });
     return errorResponse('Failed to open billing portal', 500);
   }
 }

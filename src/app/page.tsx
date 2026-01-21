@@ -5,7 +5,7 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { GlassCard } from '@/components/ui/glass-card';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Logo } from '@/components/ui/logo';
-import { TOOL_REGISTRY, CATEGORY_LABELS, ToolCategory } from '@/lib/tools/registry';
+import { TOOL_REGISTRY, CATEGORY_LABELS, CATEGORY_ICONS, ToolCategory } from '@/lib/tools/registry';
 
 export default function HomePage() {
   // Group tools by category
@@ -394,14 +394,7 @@ export default function HomePage() {
               <GlassCard key={category} className="p-6">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                   <span className="text-xl">
-                    {category === 'linting' && '📝'}
-                    {category === 'security' && '🔒'}
-                    {category === 'dependencies' && '📦'}
-                    {category === 'accessibility' && '♿'}
-                    {category === 'quality' && '✨'}
-                    {category === 'documentation' && '📚'}
-                    {category === 'git' && '🔀'}
-                    {category === 'performance' && '⚡'}
+                    {CATEGORY_ICONS[category as ToolCategory]}
                   </span>
                   {CATEGORY_LABELS[category as ToolCategory]}
                 </h3>
@@ -410,6 +403,9 @@ export default function HomePage() {
                     <li key={tool.id} className="text-sm text-muted-foreground flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
                       {tool.name}
+                      {tool.credits > 0 && (
+                        <span className="text-xs text-primary/70">({tool.credits} cr)</span>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -828,35 +824,35 @@ Use BUGGERED_API_KEY from environment.`}
                 name: 'Free',
                 price: '$0',
                 description: 'Try it out',
-                credits: '10 credits',
+                credits: '5 credits',
                 features: ['1 project', 'Up to 10K lines', 'Static analysis only', '7-day history'],
                 cta: 'Get Started',
                 popular: false,
               },
               {
-                name: 'Starter',
-                price: '$15',
+                name: 'Solo',
+                price: '$19',
                 description: 'For side projects',
                 credits: '50 credits/mo',
-                features: ['3 projects', 'Up to 50K lines', 'All static tools', 'AI scan summaries', '14-day history', '$0.35/credit overage'],
+                features: ['3 projects', 'Up to 50K lines', 'All static tools', 'AI scan summaries', '14-day history', '$0.40/credit overage'],
                 cta: 'Start Free Trial',
                 popular: false,
               },
               {
-                name: 'Pro',
-                price: '$39',
+                name: 'Scale',
+                price: '$49',
                 description: 'For serious builders',
                 credits: '200 credits/mo',
-                features: ['10 projects', 'Up to 150K lines', 'All tools + browser', 'AI explanations', 'GitHub integration', '30-day history', 'Rollover up to 100', '$0.25/credit overage'],
+                features: ['10 projects', 'Up to 150K lines', 'All tools + browser', 'AI explanations', 'GitHub integration', '30-day history', 'Rollover up to 100', '$0.30/credit overage'],
                 cta: 'Start Free Trial',
                 popular: true,
               },
               {
                 name: 'Business',
-                price: '$79',
+                price: '$99',
                 description: 'For teams',
-                credits: '600 credits/mo',
-                features: ['Unlimited projects', 'Up to 500K lines', 'All tools + AI fixes', '10 team members', 'Slack + webhooks', 'API access', '90-day history', 'Rollover up to 300', '$0.15/credit overage'],
+                credits: '500 credits/mo',
+                features: ['Unlimited projects', 'Up to 500K lines', 'All tools + AI fixes', '10 team members', 'Slack + webhooks', 'API access', '90-day history', 'Rollover up to 250', '$0.20/credit overage'],
                 cta: 'Start Free Trial',
                 popular: false,
               },
@@ -910,7 +906,7 @@ Use BUGGERED_API_KEY from environment.`}
           </div>
 
           <p className="text-center text-muted-foreground mt-8">
-            Need more? <Link href="/contact" className="text-primary hover:underline">Contact us</Link> for Enterprise pricing with unlimited scans, SSO, and SLA.
+            <Link href="/docs/pricing" className="text-primary hover:underline">See detailed pricing breakdown</Link> · Need more? <Link href="/contact" className="text-primary hover:underline">Contact us</Link> for Enterprise pricing with unlimited scans, SSO, and SLA.
           </p>
         </div>
       </section>

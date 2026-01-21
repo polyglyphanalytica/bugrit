@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import {
   getOrganization,
   getOrganizationMembers,
@@ -9,6 +8,7 @@ import {
   hasPermission,
   MemberRole,
 } from '@/lib/organizations';
+import { verifySession } from '@/lib/auth/session';
 
 interface RouteParams {
   params: Promise<{ orgId: string }>;
@@ -20,15 +20,14 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
+    const user = await verifySession();
 
-    if (!sessionCookie) {
+    if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const { orgId } = await params;
-    const userId = 'mock-user-id';
+    const userId = user.uid;
 
     // Verify user has permission to view invites
     const members = await getOrganizationMembers(orgId);
@@ -57,15 +56,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
+    const user = await verifySession();
 
-    if (!sessionCookie) {
+    if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const { orgId } = await params;
-    const userId = 'mock-user-id';
+    const userId = user.uid;
     const { email, role = 'member' } = await request.json();
 
     if (!email || typeof email !== 'string') {
@@ -122,15 +120,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session')?.value;
+    const user = await verifySession();
 
-    if (!sessionCookie) {
+    if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
     const { orgId } = await params;
-    const userId = 'mock-user-id';
+    const userId = user.uid;
     const { token } = await request.json();
 
     if (!token) {

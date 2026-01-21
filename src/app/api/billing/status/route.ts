@@ -8,22 +8,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@/lib/billing/credits';
 import { BillingStatus } from '@/lib/billing/types';
+import { authenticateRequest, ApiKeyContext } from '@/lib/api/auth';
+import { ApiException } from '@/lib/api/errors';
+import { logger } from '@/lib/logger';
 
-// Mock function - replace with actual auth
-function getUserFromRequest(req: NextRequest): { userId: string; tier: SubscriptionTier } | null {
-  const apiKey = req.headers.get('x-api-key');
-  const authHeader = req.headers.get('authorization');
-
-  if (!apiKey && !authHeader) {
-    return null;
-  }
-
-  // TODO: Validate API key or JWT and get user
-  // For now, return mock data
-  return {
-    userId: 'user_123',
-    tier: 'pro',
+// Map tier names to SubscriptionTier
+function mapTierToSubscriptionTier(tier: string): SubscriptionTier {
+  const tierMap: Record<string, SubscriptionTier> = {
+    starter: 'starter',
+    pro: 'pro',
+    business: 'business',
+    enterprise: 'enterprise',
   };
+  return tierMap[tier] || 'starter';
+}
+
+// Get user from authenticated request
+async function getUserFromRequest(req: NextRequest): Promise<{ userId: string; tier: SubscriptionTier; context: ApiKeyContext } | null> {
+  try {
+    const context = await authenticateRequest(req);
+    return {
+      userId: context.apiKey.ownerId,
+      tier: mapTierToSubscriptionTier(context.tier),
+      context,
+    };
+  } catch (error) {
+    if (error instanceof ApiException) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 // Mock function - replace with Firestore lookup
@@ -47,7 +61,7 @@ async function getBillingAccount(userId: string) {
 
 export async function GET(req: NextRequest) {
   try {
-    const user = getUserFromRequest(req);
+    const user = await getUserFromRequest(req);
 
     if (!user) {
       return NextResponse.json(
@@ -90,7 +104,11 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(status);
   } catch (error) {
-    console.error('Billing status error:', error);
+    logger.error('Billing status error', {
+      path: '/api/billing/status',
+      method: 'GET',
+      error,
+    });
     return NextResponse.json(
       { error: 'Internal error', message: 'Failed to fetch billing status' },
       { status: 500 }

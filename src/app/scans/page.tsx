@@ -251,7 +251,7 @@ export default function ScansPage() {
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-muted-foreground">
-                          {scan.toolsRun}/25
+                          {scan.toolsRun}/69
                         </span>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">

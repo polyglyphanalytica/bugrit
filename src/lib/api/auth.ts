@@ -156,32 +156,6 @@ export async function validateApiKey(request: NextRequest): Promise<ApiKeyContex
     );
   }
 
-  // Handle test key for demo purposes
-  if (rawKey === 'bg_test_key' || rawKey === 'test') {
-    return {
-      apiKey: {
-        id: 'test_key',
-        key: 'bg_test_key',
-        name: 'Test Key',
-        applicationId: 'test_app',
-        ownerId: 'test_user',
-        permissions: [
-          'projects:read', 'projects:write',
-          'scans:read', 'scans:write',
-          'tests:read', 'tests:write',
-          'reports:read', 'reports:write',
-        ] as ApiKeyPermission[],
-        rateLimit: 1000,
-        usageCount: 0,
-        status: 'active',
-        createdAt: new Date(),
-      },
-      organizationId: 'test_org',
-      tier: 'business',
-      rateLimit: TIER_RATE_LIMITS.business,
-    };
-  }
-
   // Validate key format
   if (!rawKey.startsWith('bg_')) {
     throw new ApiException(

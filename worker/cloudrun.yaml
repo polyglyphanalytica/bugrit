@@ -1,0 +1,73 @@
+# Cloud Run Service Configuration for Bugrit Scan Workers
+# This file defines the hybrid architecture deployment
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: bugrit-scan-worker
+  labels:
+    app: bugrit
+    component: scan-worker
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        # Allow Docker-in-Docker for external tool images
+        run.googleapis.com/execution-environment: gen2
+        # Increase startup time for pulling Docker images
+        run.googleapis.com/startup-cpu-boost: "true"
+        # Auto-scaling configuration
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "10"
+    spec:
+      containerConcurrency: 1  # One scan per container (resource intensive)
+      timeoutSeconds: 900      # 15 minutes max per request
+      containers:
+        - image: gcr.io/PROJECT_ID/bugrit-scan-worker:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: "4"
+              memory: "8Gi"
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PUPPETEER_SKIP_DOWNLOAD
+              value: "true"
+            - name: PUPPETEER_EXECUTABLE_PATH
+              value: "/usr/bin/chromium"
+            # Secrets (configured via Cloud Run console or gcloud)
+            - name: WORKER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: bugrit-worker-secret
+                  key: latest
+            - name: FIREBASE_SERVICE_ACCOUNT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: firebase-service-account
+                  key: latest
+          # Volume mount for Docker socket (Docker-in-Docker)
+          volumeMounts:
+            - name: docker-socket
+              mountPath: /var/run/docker.sock
+      volumes:
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.sock
+
+---
+# IAM policy for internal access only
+# The main app authenticates with WORKER_SECRET
+apiVersion: run.googleapis.com/v1
+kind: ServiceIAMPolicy
+metadata:
+  name: bugrit-scan-worker
+spec:
+  bindings:
+    - role: roles/run.invoker
+      members:
+        - serviceAccount:bugrit-app@PROJECT_ID.iam.gserviceaccount.com

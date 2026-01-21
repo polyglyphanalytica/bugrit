@@ -1,0 +1,171 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":semanticCommits",
+    ":preserveSemverRanges"
+  ],
+  "schedule": ["before 6am on monday"],
+  "timezone": "UTC",
+  "prHourlyLimit": 5,
+  "prConcurrentLimit": 10,
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Linting tools - auto-merge minor/patch",
+      "matchPackagePatterns": [
+        "eslint",
+        "prettier",
+        "stylelint",
+        "biome",
+        "markdownlint",
+        "remark-lint",
+        "commitlint"
+      ],
+      "groupName": "linting tools",
+      "automerge": true,
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "description": "Security scanning tools - manual review required",
+      "matchPackagePatterns": [
+        "secretlint",
+        "@secretlint/*"
+      ],
+      "groupName": "security tools",
+      "automerge": false,
+      "labels": ["dependencies", "security"]
+    },
+    {
+      "description": "Testing frameworks - group together",
+      "matchPackagePatterns": [
+        "jest",
+        "vitest",
+        "@testing-library/*",
+        "playwright",
+        "cypress"
+      ],
+      "groupName": "testing frameworks",
+      "automerge": true,
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "description": "Next.js and React - careful updates",
+      "matchPackagePatterns": [
+        "next",
+        "react",
+        "react-dom"
+      ],
+      "groupName": "next.js and react",
+      "automerge": false,
+      "labels": ["dependencies", "framework"]
+    },
+    {
+      "description": "TypeScript - manual review for major",
+      "matchPackageNames": ["typescript"],
+      "automerge": true,
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "description": "Quality tools - auto-merge",
+      "matchPackagePatterns": [
+        "knip",
+        "jscpd",
+        "cspell",
+        "publint",
+        "alex",
+        "depcheck",
+        "license-checker",
+        "madge",
+        "dependency-cruiser"
+      ],
+      "groupName": "quality tools",
+      "automerge": true,
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "description": "Accessibility tools",
+      "matchPackagePatterns": [
+        "axe-core",
+        "@axe-core/*",
+        "pa11y"
+      ],
+      "groupName": "accessibility tools",
+      "automerge": true,
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "description": "Performance tools",
+      "matchPackagePatterns": [
+        "lighthouse",
+        "size-limit",
+        "@size-limit/*"
+      ],
+      "groupName": "performance tools",
+      "automerge": true,
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "description": "API tools",
+      "matchPackagePatterns": [
+        "@stoplight/spectral*",
+        "dredd"
+      ],
+      "groupName": "api tools",
+      "automerge": true,
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "description": "Firebase - careful updates",
+      "matchPackagePatterns": [
+        "firebase",
+        "firebase-admin",
+        "@firebase/*"
+      ],
+      "groupName": "firebase",
+      "automerge": false,
+      "labels": ["dependencies", "firebase"]
+    },
+    {
+      "description": "Google Cloud - careful updates",
+      "matchPackagePatterns": [
+        "@google-cloud/*",
+        "googleapis"
+      ],
+      "groupName": "google cloud",
+      "automerge": false,
+      "labels": ["dependencies", "gcp"]
+    },
+    {
+      "description": "Stripe - careful updates",
+      "matchPackagePatterns": [
+        "stripe",
+        "@stripe/*"
+      ],
+      "groupName": "stripe",
+      "automerge": false,
+      "labels": ["dependencies", "billing"]
+    },
+    {
+      "description": "Dev dependencies - more aggressive auto-merge",
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true,
+      "matchUpdateTypes": ["minor", "patch"],
+      "excludePackagePatterns": [
+        "typescript",
+        "next",
+        "react"
+      ]
+    },
+    {
+      "description": "Major updates - always manual",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "major"]
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security", "dependencies"]
+  }
+}

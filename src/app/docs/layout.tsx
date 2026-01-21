@@ -141,7 +141,7 @@ export default function DocsLayout({
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <Logo href="/" size="sm" />
             <p className="text-muted-foreground text-sm">
-              A vibe coder&apos;s best friend. 25 tools. 3 test frameworks. Zero judgment.
+              A vibe coder&apos;s best friend. 69 tools. 3 test frameworks. Zero judgment.
             </p>
             <div className="flex items-center gap-6">
               <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
