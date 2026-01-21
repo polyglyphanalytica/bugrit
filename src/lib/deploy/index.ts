@@ -5,3 +5,4 @@
  */
 
 export * from './cloud-run';
+export * from './cloud-build';

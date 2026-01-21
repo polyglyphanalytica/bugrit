@@ -102,12 +102,28 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
   --role="roles/storage.objectAdmin"
 ```
 
+### Cloud Build Access (for Docker-based tools)
+
+The worker uses Cloud Build to run Docker-based security tools (OWASP ZAP, Trivy, etc.):
+
+```bash
+# Cloud Build - submit and monitor builds
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$WORKER_SA" \
+  --role="roles/cloudbuild.builds.editor"
+
+# Storage - upload source and fetch results
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$WORKER_SA" \
+  --role="roles/storage.objectAdmin"
+```
+
 ### No External Network Roles Needed
 
 The worker does NOT need:
 - `roles/compute.admin` - No VMs created
 - `roles/container.admin` - No GKE clusters
-- Docker-in-Docker runs inside the container, no external Docker API calls
+- Docker socket access - Docker tools run via Cloud Build, not Docker-in-Docker
 
 ## 3. App Hosting → Worker Invocation
 

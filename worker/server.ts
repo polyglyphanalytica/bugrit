@@ -15,6 +15,7 @@ import helmet from 'helmet';
 import { v4 as uuidv4 } from 'uuid';
 import { runTools, ToolResult } from '../src/lib/tools/runner';
 import { ToolCategory } from '../src/lib/tools/registry';
+import { CloudBuildRunner, createCloudBuildRunner, DockerToolId, DOCKER_TOOLS } from '../src/lib/deploy/cloud-build';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -288,6 +289,158 @@ app.post('/accessibility', authenticateRequest, async (req: Request, res: Respon
     res.status(500).json({ error: err.message });
   }
 });
+
+// Initialize Cloud Build runner (lazy)
+let cloudBuildRunner: CloudBuildRunner | null = null;
+
+function getCloudBuildRunner(): CloudBuildRunner | null {
+  if (!cloudBuildRunner) {
+    cloudBuildRunner = createCloudBuildRunner();
+  }
+  return cloudBuildRunner;
+}
+
+// Docker-based scan request interface
+interface DockerScanRequest {
+  scanId: string;
+  toolId: DockerToolId;
+  target: string;         // URL for web tools, local path for source tools
+  sourceType?: 'url' | 'source';  // Whether target is URL or needs upload
+  timeout?: string;
+  callbackUrl?: string;
+}
+
+interface DockerScanResponse {
+  scanId: string;
+  toolId: DockerToolId;
+  status: 'completed' | 'failed' | 'timeout';
+  buildId?: string;
+  output?: unknown;
+  duration?: number;
+  error?: string;
+}
+
+// Docker-based tools endpoint (runs via Cloud Build)
+app.post('/docker-scan', authenticateRequest, async (req: Request, res: Response) => {
+  const requestId = req.headers['x-request-id'] as string;
+  const startTime = Date.now();
+
+  try {
+    const request: DockerScanRequest = req.body;
+
+    // Validate request
+    if (!request.scanId || !request.toolId || !request.target) {
+      return res.status(400).json({
+        error: 'Invalid request: missing scanId, toolId, or target',
+      });
+    }
+
+    // Validate tool exists
+    if (!(request.toolId in DOCKER_TOOLS)) {
+      return res.status(400).json({
+        error: `Unknown tool: ${request.toolId}. Available tools: ${Object.keys(DOCKER_TOOLS).join(', ')}`,
+      });
+    }
+
+    console.log(`[${requestId}] Starting Docker scan ${request.scanId}`);
+    console.log(`[${requestId}] Tool: ${request.toolId}`);
+    console.log(`[${requestId}] Target: ${request.target}`);
+
+    // Get Cloud Build runner
+    const runner = getCloudBuildRunner();
+    if (!runner) {
+      return res.status(503).json({
+        error: 'Cloud Build not configured. Set GOOGLE_CLOUD_PROJECT environment variable.',
+      });
+    }
+
+    // For source-based tools, upload source to GCS first
+    let targetPath = request.target;
+    if (request.sourceType === 'source') {
+      console.log(`[${requestId}] Uploading source to Cloud Storage...`);
+      targetPath = await runner.uploadSource(request.target, request.scanId);
+      console.log(`[${requestId}] Source uploaded to: ${targetPath}`);
+    }
+
+    // Run the tool via Cloud Build
+    console.log(`[${requestId}] Submitting Cloud Build job...`);
+    const { result, output } = await runner.runTool({
+      toolId: request.toolId,
+      target: targetPath,
+      scanId: request.scanId,
+      timeout: request.timeout,
+    });
+
+    const response: DockerScanResponse = {
+      scanId: request.scanId,
+      toolId: request.toolId,
+      status: result.success ? 'completed' : (result.status === 'TIMEOUT' ? 'timeout' : 'failed'),
+      buildId: result.jobId,
+      output,
+      duration: Date.now() - startTime,
+      error: result.error,
+    };
+
+    console.log(`[${requestId}] Docker scan completed in ${response.duration}ms`);
+    console.log(`[${requestId}] Status: ${response.status}`);
+
+    // Send callback if provided
+    if (request.callbackUrl) {
+      await sendDockerCallback(request.callbackUrl, response);
+    }
+
+    // Cleanup uploaded source if applicable
+    if (request.sourceType === 'source') {
+      await runner.cleanup(request.scanId);
+    }
+
+    res.json(response);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error(`[${requestId}] Docker scan failed:`, err);
+
+    const response: DockerScanResponse = {
+      scanId: req.body?.scanId || 'unknown',
+      toolId: req.body?.toolId || 'unknown',
+      status: 'failed',
+      duration: Date.now() - startTime,
+      error: err.message,
+    };
+
+    res.status(500).json(response);
+  }
+});
+
+// List available Docker tools
+app.get('/docker-tools', authenticateRequest, (req: Request, res: Response) => {
+  const tools = Object.entries(DOCKER_TOOLS).map(([id, config]) => ({
+    id,
+    image: config.image,
+    timeout: config.timeout,
+    memory: config.memory,
+  }));
+
+  res.json({ tools });
+});
+
+/**
+ * Send Docker scan results to callback URL
+ */
+async function sendDockerCallback(url: string, response: DockerScanResponse): Promise<void> {
+  try {
+    const fetch = (await import('node-fetch')).default;
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.CALLBACK_SECRET || ''}`,
+      },
+      body: JSON.stringify(response),
+    });
+  } catch (error) {
+    console.error('Failed to send Docker scan callback:', error);
+  }
+}
 
 /**
  * Prepare source code for scanning

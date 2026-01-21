@@ -92,7 +92,7 @@ async function main() {
   log('\n🔧 Bugrit Scan Worker Deployment', 'bright');
   log('================================\n', 'bright');
 
-  const totalSteps = 9;
+  const totalSteps = 10;
   let currentStep = 0;
 
   // Step 1: Validate prerequisites
@@ -211,8 +211,44 @@ async function main() {
     }
   }
 
-  // Step 6: Build Docker image
-  logStep(++currentStep, totalSteps, 'Building Docker image...');
+  // Step 6: Create Cloud Storage bucket for scan outputs
+  logStep(++currentStep, totalSteps, 'Creating Cloud Storage bucket for scan outputs...');
+
+  const SCAN_BUCKET = `${PROJECT_ID}-bugrit-scans`;
+
+  try {
+    // Check if bucket exists
+    exec(`gsutil ls gs://${SCAN_BUCKET}`, { silent: true });
+    logSuccess(`Bucket ${SCAN_BUCKET} already exists`);
+  } catch {
+    // Create the bucket
+    try {
+      exec(`gsutil mb -p ${PROJECT_ID} -l ${REGION} gs://${SCAN_BUCKET}`);
+      logSuccess(`Created bucket: ${SCAN_BUCKET}`);
+
+      // Set lifecycle policy to auto-delete old files (30 days)
+      const lifecycleConfig = {
+        rule: [
+          {
+            action: { type: 'Delete' },
+            condition: { age: 30 },
+          },
+        ],
+      };
+
+      const tempLifecycleFile = `/tmp/bugrit-lifecycle-${Date.now()}.json`;
+      fs.writeFileSync(tempLifecycleFile, JSON.stringify(lifecycleConfig));
+      exec(`gsutil lifecycle set ${tempLifecycleFile} gs://${SCAN_BUCKET}`, { silent: true });
+      fs.unlinkSync(tempLifecycleFile);
+
+      logSuccess('Set 30-day lifecycle policy on bucket');
+    } catch (err) {
+      logWarning(`Could not create bucket ${SCAN_BUCKET} (may already exist or lack permissions)`);
+    }
+  }
+
+  // Step 7: Build Docker image
+  logStep(++currentStep, totalSteps, 'Building Docker image (with Cloud Build support)...');
 
   const workerDir = path.join(__dirname, '..', 'worker');
   const dockerfile = path.join(workerDir, 'Dockerfile');
@@ -289,7 +325,7 @@ async function main() {
       --concurrency=1 \
       --max-instances=10 \
       --min-instances=0 \
-      --set-env-vars="NODE_ENV=production,PUPPETEER_SKIP_DOWNLOAD=true,PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium" \
+      --set-env-vars="NODE_ENV=production,PUPPETEER_SKIP_DOWNLOAD=true,PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},SCAN_OUTPUT_BUCKET=${PROJECT_ID}-bugrit-scans" \
       --set-secrets="WORKER_SECRET=bugrit-worker-secret:latest" \
       --no-allow-unauthenticated \
       --service-account=bugrit-worker@${PROJECT_ID}.iam.gserviceaccount.com \
@@ -315,6 +351,25 @@ async function main() {
     logSuccess('Granted secret access to worker SA');
   } catch {
     logWarning('Could not grant secret access (may already be configured)');
+  }
+
+  // Grant the service account permissions for Cloud Build and Storage
+  try {
+    exec(`gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+      --member="serviceAccount:bugrit-worker@${PROJECT_ID}.iam.gserviceaccount.com" \
+      --role="roles/cloudbuild.builds.editor"`, { silent: true });
+    logSuccess('Granted Cloud Build access to worker SA');
+  } catch {
+    logWarning('Could not grant Cloud Build access (may already be configured)');
+  }
+
+  try {
+    exec(`gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+      --member="serviceAccount:bugrit-worker@${PROJECT_ID}.iam.gserviceaccount.com" \
+      --role="roles/storage.objectAdmin"`, { silent: true });
+    logSuccess('Granted Cloud Storage access to worker SA');
+  } catch {
+    logWarning('Could not grant Cloud Storage access (may already be configured)');
   }
 
   try {
