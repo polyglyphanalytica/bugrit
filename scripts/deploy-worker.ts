@@ -92,7 +92,7 @@ async function main() {
   log('\n🔧 Bugrit Scan Worker Deployment', 'bright');
   log('================================\n', 'bright');
 
-  const totalSteps = 8;
+  const totalSteps = 9;
   let currentStep = 0;
 
   // Step 1: Validate prerequisites
@@ -140,7 +140,48 @@ async function main() {
     exec('gcloud auth login');
   }
 
-  // Step 3: Configure Docker for GCR
+  // Step 3: Check IAM permissions
+  logStep(++currentStep, totalSteps, 'Checking IAM permissions...');
+
+  const missingPermissions: string[] = [];
+
+  try {
+    // Test run.admin - try to list services
+    exec(`gcloud run services list --project=${PROJECT_ID} --region=${REGION} --limit=1`, { silent: true });
+    logSuccess('Cloud Run access: OK');
+  } catch {
+    missingPermissions.push('roles/run.admin (or roles/run.developer)');
+  }
+
+  try {
+    // Test storage access for GCR
+    exec(`gcloud container images list --repository=gcr.io/${PROJECT_ID} --limit=1 2>/dev/null || true`, { silent: true });
+    logSuccess('Container Registry access: OK');
+  } catch {
+    missingPermissions.push('roles/storage.admin (for Container Registry)');
+  }
+
+  try {
+    // Test secret manager access
+    exec(`gcloud secrets list --project=${PROJECT_ID} --limit=1`, { silent: true });
+    logSuccess('Secret Manager access: OK');
+  } catch {
+    missingPermissions.push('roles/secretmanager.admin');
+  }
+
+  if (missingPermissions.length > 0) {
+    logWarning('Missing IAM permissions detected:');
+    missingPermissions.forEach(p => log(`  - ${p}`, 'yellow'));
+    log('\nSee docs/CLOUD_RUN_IAM.md for required permissions.\n');
+
+    const continueAnyway = await prompt('Continue anyway? (y/N): ');
+    if (continueAnyway.toLowerCase() !== 'y') {
+      log('Aborting deployment. Please configure IAM permissions first.');
+      process.exit(1);
+    }
+  }
+
+  // Step 4: Configure Docker for GCR
   logStep(++currentStep, totalSteps, 'Configuring Docker for Google Container Registry...');
 
   try {
@@ -151,7 +192,7 @@ async function main() {
     throw error;
   }
 
-  // Step 4: Enable required APIs
+  // Step 5: Enable required APIs
   logStep(++currentStep, totalSteps, 'Enabling required Google Cloud APIs...');
 
   const apis = [
@@ -170,7 +211,7 @@ async function main() {
     }
   }
 
-  // Step 5: Build Docker image
+  // Step 6: Build Docker image
   logStep(++currentStep, totalSteps, 'Building Docker image...');
 
   const workerDir = path.join(__dirname, '..', 'worker');
@@ -192,7 +233,7 @@ async function main() {
     throw error;
   }
 
-  // Step 6: Push to GCR
+  // Step 7: Push to GCR
   logStep(++currentStep, totalSteps, 'Pushing image to Google Container Registry...');
 
   try {
@@ -204,29 +245,36 @@ async function main() {
     throw error;
   }
 
-  // Step 7: Create secrets if they don't exist
+  // Step 8: Create secrets if they don't exist
   logStep(++currentStep, totalSteps, 'Setting up secrets...');
-
-  const workerSecret = process.env.WORKER_SECRET || `bugrit-worker-${Date.now()}`;
 
   try {
     // Check if secret exists
     exec(`gcloud secrets describe bugrit-worker-secret --project=${PROJECT_ID}`, { silent: true });
     logSuccess('Secret bugrit-worker-secret already exists');
   } catch {
-    // Create secret
-    log('Creating worker secret...');
+    // Generate a secure random secret
+    const crypto = require('crypto');
+    const workerSecret = crypto.randomBytes(32).toString('base64url');
+
+    log('Creating worker secret in Secret Manager...');
     try {
-      exec(`echo -n "${workerSecret}" | gcloud secrets create bugrit-worker-secret --data-file=- --project=${PROJECT_ID}`);
+      // Create secret using a temp file (not echoing to console)
+      const tempSecretFile = `/tmp/bugrit-secret-${Date.now()}`;
+      fs.writeFileSync(tempSecretFile, workerSecret, { mode: 0o600 });
+      exec(`gcloud secrets create bugrit-worker-secret --data-file=${tempSecretFile} --project=${PROJECT_ID}`);
+      fs.unlinkSync(tempSecretFile); // Delete temp file immediately
+
       logSuccess('Created secret: bugrit-worker-secret');
-      log(`\n⚠️  Save this worker secret: ${workerSecret}`, 'yellow');
-      log('   Add it to your App Hosting environment as WORKER_SECRET\n', 'yellow');
+      log('\n   Secret stored securely in Google Secret Manager.', 'green');
+      log('   To retrieve it for App Hosting, run:', 'yellow');
+      log(`   gcloud secrets versions access latest --secret=bugrit-worker-secret --project=${PROJECT_ID}\n`, 'cyan');
     } catch {
       logWarning('Could not create secret (may already exist)');
     }
   }
 
-  // Step 8: Deploy to Cloud Run
+  // Step 9: Deploy to Cloud Run
   logStep(++currentStep, totalSteps, 'Deploying to Cloud Run...');
 
   const deployCommand = `
@@ -251,9 +299,22 @@ async function main() {
   // First, create service account if it doesn't exist
   try {
     exec(`gcloud iam service-accounts describe bugrit-worker@${PROJECT_ID}.iam.gserviceaccount.com --project=${PROJECT_ID}`, { silent: true });
+    logSuccess('Service account already exists');
   } catch {
     log('Creating service account...');
     exec(`gcloud iam service-accounts create bugrit-worker --display-name="Bugrit Scan Worker" --project=${PROJECT_ID}`);
+    logSuccess('Created service account: bugrit-worker');
+  }
+
+  // Grant the service account permission to access the secret
+  try {
+    exec(`gcloud secrets add-iam-policy-binding bugrit-worker-secret \
+      --member="serviceAccount:bugrit-worker@${PROJECT_ID}.iam.gserviceaccount.com" \
+      --role="roles/secretmanager.secretAccessor" \
+      --project=${PROJECT_ID}`, { silent: true });
+    logSuccess('Granted secret access to worker SA');
+  } catch {
+    logWarning('Could not grant secret access (may already be configured)');
   }
 
   try {
@@ -281,7 +342,7 @@ async function main() {
   log('Next steps:', 'yellow');
   log('1. Add these environment variables to your App Hosting configuration:');
   log(`   SCAN_WORKER_URL=${serviceUrl}`);
-  log(`   WORKER_SECRET=<the secret shown above>\n`);
+  log(`   WORKER_SECRET=$(gcloud secrets versions access latest --secret=bugrit-worker-secret --project=${PROJECT_ID})\n`);
 
   log('2. Grant the App Hosting service account permission to invoke the worker:');
   log(`   gcloud run services add-iam-policy-binding ${SERVICE_NAME} \\`);
