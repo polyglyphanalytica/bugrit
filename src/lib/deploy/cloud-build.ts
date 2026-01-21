@@ -132,6 +132,220 @@ export const DOCKER_TOOLS = {
       },
     ],
   },
+  // ============================================================
+  // Wave 2: Additional Security & Quality Tools (all open source)
+  // ============================================================
+  'semgrep': {
+    image: 'returntocorp/semgrep:latest',
+    timeout: '900s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'returntocorp/semgrep:latest',
+        entrypoint: 'semgrep',
+        args: [
+          'scan',
+          '--config', 'auto',
+          '--json',
+          '--output', '/workspace/semgrep-report.json',
+          '/workspace/source',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/semgrep-report.json', `gs://${outputBucket}/${jobId}/semgrep-report.json`],
+      },
+    ],
+  },
+  'nuclei': {
+    image: 'projectdiscovery/nuclei:latest',
+    timeout: '900s',
+    memory: '4GB',
+    buildSteps: (targetUrl: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'projectdiscovery/nuclei:latest',
+        args: [
+          '-u', targetUrl,
+          '-jsonl',
+          '-o', '/workspace/nuclei-report.json',
+          '-severity', 'low,medium,high,critical',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/nuclei-report.json', `gs://${outputBucket}/${jobId}/nuclei-report.json`],
+      },
+    ],
+  },
+  'checkov': {
+    image: 'bridgecrew/checkov:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'bridgecrew/checkov:latest',
+        entrypoint: 'checkov',
+        args: [
+          '-d', '/workspace/source',
+          '-o', 'json',
+          '--output-file-path', '/workspace',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/results_json.json', `gs://${outputBucket}/${jobId}/checkov-report.json`],
+      },
+    ],
+  },
+  'syft': {
+    image: 'anchore/syft:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'anchore/syft:latest',
+        args: ['dir:/workspace/source', '-o', 'json', '--file', '/workspace/syft-sbom.json'],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/syft-sbom.json', `gs://${outputBucket}/${jobId}/syft-sbom.json`],
+      },
+    ],
+  },
+  'dockle': {
+    image: 'goodwithtech/dockle:latest',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (imageRef: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'goodwithtech/dockle:latest',
+        args: ['-f', 'json', '-o', '/workspace/dockle-report.json', imageRef],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/dockle-report.json', `gs://${outputBucket}/${jobId}/dockle-report.json`],
+      },
+    ],
+  },
+  'shellcheck': {
+    image: 'koalaman/shellcheck-alpine:latest',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'koalaman/shellcheck-alpine:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'find /workspace/source -name "*.sh" -type f -exec shellcheck -f json {} + > /workspace/shellcheck-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/shellcheck-report.json', `gs://${outputBucket}/${jobId}/shellcheck-report.json`],
+      },
+    ],
+  },
+  'tfsec': {
+    image: 'aquasec/tfsec:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'aquasec/tfsec:latest',
+        args: ['/workspace/source', '--format', 'json', '--out', '/workspace/tfsec-report.json'],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/tfsec-report.json', `gs://${outputBucket}/${jobId}/tfsec-report.json`],
+      },
+    ],
+  },
+  'gitleaks': {
+    image: 'zricethezav/gitleaks:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'zricethezav/gitleaks:latest',
+        args: ['detect', '--source', '/workspace/source', '--report-format', 'json', '--report-path', '/workspace/gitleaks-report.json', '--no-git'],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/gitleaks-report.json', `gs://${outputBucket}/${jobId}/gitleaks-report.json`],
+      },
+    ],
+  },
+  'bandit': {
+    image: 'python:3.12-slim',
+    timeout: '600s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'python:3.12-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'pip install bandit -q && bandit -r /workspace/source -f json -o /workspace/bandit-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/bandit-report.json', `gs://${outputBucket}/${jobId}/bandit-report.json`],
+      },
+    ],
+  },
+  'gosec': {
+    image: 'securego/gosec:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'securego/gosec:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'gosec -fmt=json -out=/workspace/gosec-report.json /workspace/source/... || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/gosec-report.json', `gs://${outputBucket}/${jobId}/gosec-report.json`],
+      },
+    ],
+  },
 } as const;
 
 export type DockerToolId = keyof typeof DOCKER_TOOLS;
@@ -360,12 +574,24 @@ export class CloudBuildRunner {
 
     // Determine the expected output file
     const outputFiles: Record<DockerToolId, string> = {
+      // Wave 1 tools
       'owasp-zap': 'zap-report.json',
       'dependency-check': 'dependency-check-report.json',
       'sitespeed': 'sitespeed/browsertime.summary-total.json',
       'codeclimate': 'codeclimate-report.json',
       'trivy': 'trivy-report.json',
       'grype': 'grype-report.json',
+      // Wave 2 tools
+      'semgrep': 'semgrep-report.json',
+      'nuclei': 'nuclei-report.json',
+      'checkov': 'checkov-report.json',
+      'syft': 'syft-sbom.json',
+      'dockle': 'dockle-report.json',
+      'shellcheck': 'shellcheck-report.json',
+      'tfsec': 'tfsec-report.json',
+      'gitleaks': 'gitleaks-report.json',
+      'bandit': 'bandit-report.json',
+      'gosec': 'gosec-report.json',
     };
 
     const outputFile = outputFiles[toolId];
