@@ -5,6 +5,14 @@ import { validateUpload, scanFileForThreats } from '@/lib/scan/security';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { safeRequire } from '@/lib/utils/safe-require';
 import { logger } from '@/lib/logger';
+import {
+  checkScanAffordability,
+  countLinesOfCode,
+  billForCompletedScan,
+  reserveCreditsForScan,
+  releaseReservation,
+} from '@/lib/billing';
+import { ToolCategory } from '@/lib/tools/registry';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -41,6 +49,14 @@ interface Scan {
     byTool: Record<string, number>;
   };
   error?: string;
+  // Billing information
+  billing?: {
+    estimatedCredits: number;
+    actualCredits?: number;
+    linesOfCode?: number;
+    autoTopupTriggered?: boolean;
+    autoTopupCredits?: number;
+  };
 }
 
 // In-memory store (replace with Firebase in production)
@@ -130,8 +146,38 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Check if user can afford this scan
+    const defaultCategories: ToolCategory[] = ['linting', 'security', 'accessibility'];
+    const affordCheck = await checkScanAffordability(userId, {
+      categories: defaultCategories,
+      aiFeatures: ['summary'],
+      estimatedLines: 50000, // Default estimate, actual will be calculated during scan
+    });
+
+    if (!affordCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: 'Insufficient credits',
+          message: affordCheck.reason,
+          required: affordCheck.estimate.total,
+          available: affordCheck.currentBalance,
+          overage: affordCheck.overage,
+        },
+        { status: 402 }
+      );
+    }
+
     // Create scan record
     const scanId = generateId('scn');
+
+    // Reserve credits for this scan
+    const reservation = await reserveCreditsForScan(userId, scanId, affordCheck.estimate.total);
+    if (!reservation.success) {
+      return NextResponse.json(
+        { error: 'Failed to reserve credits', message: reservation.error },
+        { status: 402 }
+      );
+    }
     const now = new Date().toISOString();
 
     const scan: Scan = {
@@ -152,6 +198,9 @@ export async function POST(request: NextRequest) {
       createdAt: now,
       toolsCompleted: 0,
       toolsTotal: 25,
+      billing: {
+        estimatedCredits: affordCheck.estimate.total,
+      },
     };
 
     scansStore.set(scanId, scan);
@@ -167,6 +216,8 @@ export async function POST(request: NextRequest) {
       npmPackage,
       npmVersion: npmVersion || 'latest',
       mobilePlatform,
+      userId,
+      estimatedCredits: affordCheck.estimate.total,
     });
 
     return NextResponse.json({ scan }, { status: 201 });
@@ -288,6 +339,9 @@ interface ScanOptions {
   npmPackage?: string;
   npmVersion?: string;
   mobilePlatform?: string;
+  // Billing
+  userId: string;
+  estimatedCredits: number;
 }
 
 async function runScanInBackground(scanId: string, options: ScanOptions) {
@@ -295,6 +349,7 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
   if (!scan) return;
 
   let tempDir: string | null = null;
+  let linesOfCode = 0;
 
   try {
     // Update status to running
@@ -349,6 +404,10 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
         throw new Error(`Unsupported source type: ${options.sourceType}`);
     }
 
+    // Count actual lines of code for billing
+    linesOfCode = await countLinesOfCode(targetPath);
+    logger.info('Counted lines of code', { scanId, linesOfCode });
+
     // Run all tools
     logger.info('Running scan tools', { scanId, targetPath, targetUrl });
     const results = await runTools({
@@ -380,15 +439,43 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
     scan.summary = summary;
     scan.status = 'completed';
     scan.completedAt = new Date().toISOString();
+
+    // Bill for the completed scan
+    const defaultCategories: ToolCategory[] = ['linting', 'security', 'accessibility'];
+    const billingResult = await billForCompletedScan(options.userId, scanId, {
+      linesOfCode,
+      categoriesRun: defaultCategories,
+      aiFeatures: ['summary'],
+      issuesFound: summary.totalFindings,
+    });
+
+    // Update scan with billing info
+    scan.billing = {
+      estimatedCredits: options.estimatedCredits,
+      actualCredits: billingResult.creditsCharged,
+      linesOfCode,
+      autoTopupTriggered: billingResult.autoTopupTriggered,
+      autoTopupCredits: billingResult.autoTopupCredits,
+    };
+
     scansStore.set(scanId, scan);
 
-    logger.info('Scan completed', { scanId, totalFindings: summary.totalFindings });
+    logger.info('Scan completed', {
+      scanId,
+      totalFindings: summary.totalFindings,
+      creditsCharged: billingResult.creditsCharged,
+      autoTopupTriggered: billingResult.autoTopupTriggered,
+    });
   } catch (error) {
     logger.error('Scan failed', { scanId, error });
     scan.status = 'failed';
     scan.error = error instanceof Error ? error.message : 'Unknown error';
     scan.completedAt = new Date().toISOString();
     scansStore.set(scanId, scan);
+
+    // Release the reserved credits since scan failed
+    await releaseReservation(scanId);
+    logger.info('Released credit reservation for failed scan', { scanId });
   } finally {
     // Cleanup temp directory
     if (tempDir) {
@@ -541,6 +628,10 @@ export async function DELETE(request: NextRequest) {
     scan.error = 'Cancelled by user';
     scan.completedAt = new Date().toISOString();
     scansStore.set(scanId, scan);
+
+    // Release the reserved credits
+    await releaseReservation(scanId);
+    logger.info('Released credit reservation for cancelled scan', { scanId });
   }
 
   return NextResponse.json({ success: true });

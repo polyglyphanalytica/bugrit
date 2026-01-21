@@ -20,6 +20,11 @@ import {
   ScanStatus,
 } from '@/lib/api/store';
 import { getDb } from '@/lib/firestore';
+import {
+  checkScanAffordability,
+  reserveCreditsForScan,
+} from '@/lib/billing';
+import { ToolCategory } from '@/lib/tools/registry';
 
 export async function GET(request: NextRequest) {
   try {
@@ -136,6 +141,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if user can afford this scan (credit-based billing)
+    const userId = context.apiKey.ownerId;
+    const defaultCategories: ToolCategory[] = ['linting', 'security', 'accessibility'];
+    const affordCheck = await checkScanAffordability(userId, {
+      categories: body.toolCategories || defaultCategories,
+      aiFeatures: body.aiFeatures || ['summary'],
+      estimatedLines: body.estimatedLines || 50000,
+    });
+
+    if (!affordCheck.allowed) {
+      return Errors.validationError(
+        affordCheck.reason || 'Insufficient credits',
+        {
+          required: affordCheck.estimate.total,
+          available: affordCheck.currentBalance,
+          overage: affordCheck.overage,
+        }
+      );
+    }
+
     // Create scan
     const scan = await createScan({
       projectId: body.projectId,
@@ -144,8 +169,23 @@ export async function POST(request: NextRequest) {
       branch: body.branch,
       commitSha: body.commitSha,
       status: 'pending',
-      metadata: body.metadata,
+      metadata: {
+        ...body.metadata,
+        billing: {
+          estimatedCredits: affordCheck.estimate.total,
+          userId,
+        },
+      },
     });
+
+    // Reserve credits for this scan
+    const reservation = await reserveCreditsForScan(userId, scan.id, affordCheck.estimate.total);
+    if (!reservation.success) {
+      return Errors.validationError(
+        reservation.error || 'Failed to reserve credits',
+        { required: affordCheck.estimate.total }
+      );
+    }
 
     // Start the scan
     await startScan(scan.id);
