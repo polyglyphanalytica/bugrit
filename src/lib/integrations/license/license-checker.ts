@@ -1,6 +1,7 @@
 // License Checker Integration - npm License Auditing
 // License: BSD-3-Clause
-// Website: https://github.com/davglass/license-checker
+// Website: https://github.com/nicolo-ribaudo/license-checker-rseidelsohn
+// Note: Using maintained fork of the original license-checker
 
 import { ToolIntegration, ToolConfig, AuditTarget, AuditResult, AuditFinding, Severity } from '../types';
 
@@ -22,12 +23,12 @@ export class LicenseCheckerIntegration implements ToolIntegration {
   name = 'license-checker';
   category = 'security' as const;
   description = 'Checks npm dependencies for license compliance';
-  website = 'https://github.com/davglass/license-checker';
+  website = 'https://github.com/nicolo-ribaudo/license-checker-rseidelsohn';
 
   async isAvailable(): Promise<boolean> {
     try {
       const { execSync } = await import('child_process');
-      execSync('npx license-checker --version', { stdio: 'ignore', timeout: 10000 });
+      execSync('npx license-checker-rseidelsohn --version', { stdio: 'ignore', timeout: 10000 });
       return true;
     } catch {
       return false;
@@ -47,7 +48,7 @@ export class LicenseCheckerIntegration implements ToolIntegration {
       const targetDir = target.directory || '.';
       const production = config?.options?.production !== false ? '--production' : '';
 
-      const result = execSync(`npx license-checker --json ${production}`, { cwd: targetDir, encoding: 'utf-8', maxBuffer: 50 * 1024 * 1024 });
+      const result = execSync(`npx license-checker-rseidelsohn --json ${production}`, { cwd: targetDir, encoding: 'utf-8', maxBuffer: 50 * 1024 * 1024 });
       const licenses: LicenseCheckerOutput = JSON.parse(result);
 
       for (const [pkg, info] of Object.entries(licenses)) {

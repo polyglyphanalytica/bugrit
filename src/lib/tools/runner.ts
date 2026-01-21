@@ -332,7 +332,7 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   // License Checker
   // ─────────────────────────────────────────────────────────────
   'license-checker': async ({ targetPath }) => {
-    const checker = safeRequire<typeof import('license-checker')>('license-checker');
+    const checker = safeRequire<typeof import('license-checker-rseidelsohn')>('license-checker-rseidelsohn');
 
     return new Promise((resolve) => {
       checker.init({ start: targetPath }, (err, packages) => {
