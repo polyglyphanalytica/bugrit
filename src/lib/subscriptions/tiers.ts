@@ -2,10 +2,10 @@
  * Subscription Tiers Configuration
  *
  * Credit-based pricing that scales with usage:
- * - Free: 10 credits - Try it out
- * - Starter: $15/mo, 50 credits - For side projects
- * - Pro: $39/mo, 200 credits - For serious builders
- * - Business: $79/mo, 600 credits - For teams
+ * - Free: 5 credits - Try it out
+ * - Solo: $19/mo, 50 credits - For side projects
+ * - Scale: $49/mo, 200 credits - For serious builders
+ * - Business: $99/mo, 500 credits - For teams
  */
 
 export type TierName = 'free' | 'starter' | 'pro' | 'business';
@@ -57,7 +57,7 @@ export const TIERS: Record<TierName, TierDefinition> = {
     priceMonthly: 0,
     priceYearly: 0,
     limits: {
-      credits: 10,
+      credits: 5,          // Reduced from 10 to limit trial abuse
       creditsRollover: 0,
       overageRate: null,
       maxRepoSize: 10_000,
@@ -86,16 +86,16 @@ export const TIERS: Record<TierName, TierDefinition> = {
 
   starter: {
     name: 'starter',
-    displayName: 'Starter',
+    displayName: 'Solo',
     description: 'For side projects and indie hackers',
-    priceMonthly: 15,
-    priceYearly: 150,
+    priceMonthly: 19,      // Increased from $15 (+$4)
+    priceYearly: 190,      // 10 months (2 free)
     stripePriceIdMonthly: process.env.STRIPE_STARTER_MONTHLY_PRICE_ID,
     stripePriceIdYearly: process.env.STRIPE_STARTER_YEARLY_PRICE_ID,
     limits: {
       credits: 50,
       creditsRollover: 0,
-      overageRate: 0.35,
+      overageRate: 0.40,   // Increased from $0.35
       maxRepoSize: 50_000,
       projects: 3,
       teamMembers: 1,
@@ -122,17 +122,17 @@ export const TIERS: Record<TierName, TierDefinition> = {
 
   pro: {
     name: 'pro',
-    displayName: 'Pro',
+    displayName: 'Scale',
     description: 'For serious builders shipping often',
-    priceMonthly: 39,
-    priceYearly: 390,
+    priceMonthly: 49,      // Increased from $39 (+$10)
+    priceYearly: 490,      // 10 months (2 free)
     stripePriceIdMonthly: process.env.STRIPE_PRO_MONTHLY_PRICE_ID,
     stripePriceIdYearly: process.env.STRIPE_PRO_YEARLY_PRICE_ID,
     highlighted: true,
     limits: {
       credits: 200,
       creditsRollover: 100,
-      overageRate: 0.25,
+      overageRate: 0.30,   // Increased from $0.25
       maxRepoSize: 150_000,
       projects: 10,
       teamMembers: 3,
@@ -161,14 +161,14 @@ export const TIERS: Record<TierName, TierDefinition> = {
     name: 'business',
     displayName: 'Business',
     description: 'For teams that can\'t afford to ship bugs',
-    priceMonthly: 79,
-    priceYearly: 790,
+    priceMonthly: 99,      // Increased from $79 (+$20)
+    priceYearly: 990,      // 10 months (2 free)
     stripePriceIdMonthly: process.env.STRIPE_BUSINESS_MONTHLY_PRICE_ID,
     stripePriceIdYearly: process.env.STRIPE_BUSINESS_YEARLY_PRICE_ID,
     limits: {
-      credits: 600,
-      creditsRollover: 300,
-      overageRate: 0.15,
+      credits: 500,        // Reduced from 600 (-100)
+      creditsRollover: 250,
+      overageRate: 0.20,   // Increased from $0.15
       maxRepoSize: 500_000,
       projects: -1,
       teamMembers: 10,
