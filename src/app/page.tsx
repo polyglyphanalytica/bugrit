@@ -685,7 +685,7 @@ export default function HomePage() {
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="px-4 py-1 rounded-full text-xs font-semibold bg-primary text-white">
+                    <span className="px-4 py-1 rounded-full text-xs font-semibold bg-primary text-white whitespace-nowrap">
                       Most Popular
                     </span>
                   </div>
