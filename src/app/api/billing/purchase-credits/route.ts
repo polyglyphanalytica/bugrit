@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedUser, errorResponse } from '@/lib/api-auth';
 import { getCreditPackage, updateCreditPackage } from '@/lib/admin/service';
 import { getStripeSecretKey } from '@/lib/admin/service';
+import { db } from '@/lib/firebase/admin';
 import { logger } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
@@ -19,6 +20,20 @@ export async function POST(req: NextRequest) {
       return authResult;
     }
     const userId = authResult;
+
+    // Check if user already has a Stripe customer ID
+    let existingCustomerId: string | undefined;
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (userDoc.exists) {
+      existingCustomerId = userDoc.data()?.stripeCustomerId;
+    }
+    // Also check subscriptions collection
+    if (!existingCustomerId) {
+      const subDoc = await db.collection('subscriptions').doc(userId).get();
+      if (subDoc.exists) {
+        existingCustomerId = subDoc.data()?.stripeCustomerId;
+      }
+    }
 
     // Parse request body
     const body = await req.json();
@@ -103,6 +118,8 @@ export async function POST(req: NextRequest) {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
+      // Reuse existing customer for consolidated billing history
+      ...(existingCustomerId && { customer: existingCustomerId }),
       line_items: [
         {
           price: priceId,

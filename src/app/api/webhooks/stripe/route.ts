@@ -178,6 +178,7 @@ async function handleCreditPurchase(session: Stripe.Checkout.Session) {
   const userId = session.metadata?.userId;
   const credits = parseInt(session.metadata?.credits || '0', 10);
   const packageId = session.metadata?.packageId;
+  const stripeCustomerId = session.customer as string;
 
   if (!userId) {
     throw new Error(`No user ID in credit purchase session ${session.id}. Cannot fulfill credits.`);
@@ -187,30 +188,46 @@ async function handleCreditPurchase(session: Stripe.Checkout.Session) {
     throw new Error(`Invalid credits amount in session ${session.id}: ${credits}`);
   }
 
-  // Add credits to billing_accounts collection (where settings page reads from)
+  // Use batch write to update credits AND save customer ID for billing portal access
+  const batch = db.batch();
+
+  // Get current billing data for credit calculation
   const billingRef = db.collection('billing_accounts').doc(userId);
+  const billingDoc = await billingRef.get();
+  const billingData = billingDoc.exists ? billingDoc.data() : {};
+  const currentPurchased = billingData?.credits?.purchased || 0;
+  const currentRemaining = billingData?.credits?.remaining || 0;
 
-  await db.runTransaction(async (transaction) => {
-    const doc = await transaction.get(billingRef);
-    const billingData = doc.exists ? doc.data() : {};
-    const currentPurchased = billingData?.credits?.purchased || 0;
-    const currentRemaining = billingData?.credits?.remaining || 0;
+  // Update billing_accounts collection
+  batch.set(
+    billingRef,
+    {
+      credits: {
+        purchased: currentPurchased + credits,
+        remaining: currentRemaining + credits,
+        lastPurchaseAt: new Date(),
+        lastPurchaseAmount: credits,
+        lastPurchasePackageId: packageId,
+      },
+      stripeCustomerId,
+      updatedAt: new Date(),
+    },
+    { merge: true }
+  );
 
-    transaction.set(
-      billingRef,
+  // Update users collection with stripeCustomerId for billing portal access
+  if (stripeCustomerId) {
+    batch.set(
+      db.collection('users').doc(userId),
       {
-        credits: {
-          purchased: currentPurchased + credits,
-          remaining: currentRemaining + credits,
-          lastPurchaseAt: new Date(),
-          lastPurchaseAmount: credits,
-          lastPurchasePackageId: packageId,
-        },
+        stripeCustomerId,
         updatedAt: new Date(),
       },
       { merge: true }
     );
-  });
+  }
+
+  await batch.commit();
 
   // Record the purchase for audit
   await db.collection('creditPurchases').add({
@@ -219,6 +236,7 @@ async function handleCreditPurchase(session: Stripe.Checkout.Session) {
     credits,
     stripeSessionId: session.id,
     stripePaymentIntentId: session.payment_intent,
+    stripeCustomerId,
     amount: session.amount_total,
     currency: session.currency,
     purchasedAt: new Date(),

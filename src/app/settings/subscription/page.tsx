@@ -301,15 +301,35 @@ export default function SubscriptionSettingsPage() {
             {subscription && (
               <Badge
                 variant={subscription.status === 'active' ? 'default' : 'destructive'}
-                className="capitalize"
               >
-                {subscription.status}
+                {subscription.status === 'active' && 'Active'}
+                {subscription.status === 'past_due' && 'Payment Failed'}
+                {subscription.status === 'canceled' && 'Canceled'}
+                {subscription.status === 'none' && 'No Subscription'}
               </Badge>
             )}
           </CardTitle>
           <CardDescription>Manage your subscription and billing.</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Payment Failed Warning */}
+          {subscription?.status === 'past_due' && (
+            <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="font-medium text-destructive">Your payment failed</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Please update your payment method to continue using premium features.
+              </p>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="mt-3"
+                onClick={handleManageSubscription}
+              >
+                Update Payment Method
+              </Button>
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-2xl font-bold capitalize">
