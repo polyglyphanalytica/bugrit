@@ -82,7 +82,7 @@ async function getOrganizationTier(ownerId: string): Promise<{ orgId: string; ti
         .get();
 
       if (anyOrgSnapshot.empty) {
-        return { orgId: ownerId, tier: 'starter' };
+        return { orgId: ownerId, tier: 'free' };
       }
 
       const orgData = anyOrgSnapshot.docs[0].data();
@@ -99,15 +99,15 @@ async function getOrganizationTier(ownerId: string): Promise<{ orgId: string; ti
     };
   } catch (error) {
     console.error('Error getting organization tier:', error);
-    return { orgId: ownerId, tier: 'starter' };
+    return { orgId: ownerId, tier: 'free' };
   }
 }
 
 async function getOrgTier(db: FirebaseFirestore.Firestore, orgId: string): Promise<TierName> {
   const orgDoc = await db.collection('organizations').doc(orgId).get();
-  if (!orgDoc.exists) return 'starter';
+  if (!orgDoc.exists) return 'free';
   const orgData = orgDoc.data();
-  return (orgData?.subscription?.tier as TierName) || 'starter';
+  return (orgData?.subscription?.tier as TierName) || 'free';
 }
 
 /**

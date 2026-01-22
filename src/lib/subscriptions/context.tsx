@@ -109,7 +109,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setError(err instanceof Error ? err.message : 'Unknown error');
       // Default to free tier on error
       setSubscription({
-        tier: 'starter',
+        tier: 'free',
         status: 'none',
         scansUsedThisMonth: 0,
         projectCount: 0,
@@ -140,7 +140,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  const currentTier = subscription?.tier || 'starter';
+  const currentTier = subscription?.tier || 'free';
   const currentRole = organization?.role || 'member';
 
   // Superadmins bypass ALL limits

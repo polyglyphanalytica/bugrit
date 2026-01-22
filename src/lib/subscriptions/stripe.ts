@@ -194,7 +194,12 @@ export async function changeSubscriptionTier(
  * Parse Stripe subscription to our format
  */
 function parseSubscription(subscription: Stripe.Subscription): SubscriptionData {
-  const tier = (subscription.metadata.tier as TierName) || 'pro';
+  // Default to 'starter' (lowest paid tier) if metadata missing
+  // This is safer than assuming 'pro' which could over-provision access
+  const tier = (subscription.metadata.tier as TierName) || 'starter';
+  if (!subscription.metadata.tier) {
+    console.warn(`Subscription ${subscription.id} missing tier metadata, defaulting to 'starter'`);
+  }
   const priceInterval = subscription.items.data[0]?.price.recurring?.interval;
 
   return {

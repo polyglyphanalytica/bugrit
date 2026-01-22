@@ -12,7 +12,7 @@ export async function GET() {
 
     if (!user) {
       return NextResponse.json(
-        { subscription: { tier: 'starter', status: 'none', scansUsedThisMonth: 0, projectCount: 0 } },
+        { subscription: { tier: 'free', status: 'none', scansUsedThisMonth: 0, projectCount: 0 } },
         { status: 200 }
       );
     }
@@ -28,7 +28,7 @@ export async function GET() {
     if (!subscriptionDoc.exists) {
       return NextResponse.json({
         subscription: {
-          tier: 'starter',
+          tier: 'free',
           status: 'none',
           scansUsedThisMonth: 0,
           projectCount: 0,
@@ -40,7 +40,7 @@ export async function GET() {
 
     return NextResponse.json({
       subscription: {
-        tier: data?.tier || 'starter',
+        tier: data?.tier || 'free',
         status: data?.status || 'none',
         stripeSubscriptionId: data?.stripeSubscriptionId,
         stripeCustomerId: data?.stripeCustomerId,

@@ -27,7 +27,7 @@ export async function createOrganization(
     createdAt: now,
     updatedAt: now,
     subscription: {
-      tier: 'starter',
+      tier: 'free',
       status: 'active',
     },
     usage: {

@@ -19,12 +19,13 @@ import { logger } from '@/lib/logger';
 // Map tier names to SubscriptionTier
 function mapTierToSubscriptionTier(tier: string): SubscriptionTier {
   const tierMap: Record<string, SubscriptionTier> = {
+    free: 'free',
     starter: 'starter',
     pro: 'pro',
     business: 'business',
     enterprise: 'enterprise',
   };
-  return tierMap[tier] || 'starter';
+  return tierMap[tier] || 'free';
 }
 
 // Get user from authenticated request
