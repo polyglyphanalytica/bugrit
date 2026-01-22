@@ -66,6 +66,26 @@ export async function POST(request: NextRequest) {
         await handlePaymentFailed(event.data.object as Stripe.Invoice);
         break;
 
+      case 'invoice.payment_action_required':
+        // 3D Secure or SCA authentication required
+        await handlePaymentActionRequired(event.data.object as Stripe.Invoice);
+        break;
+
+      case 'charge.refunded':
+        // Handle refund notifications
+        await handleChargeRefunded(event.data.object as Stripe.Charge);
+        break;
+
+      case 'charge.dispute.created':
+        // Handle chargeback/dispute notifications
+        await handleDisputeCreated(event.data.object as Stripe.Dispute);
+        break;
+
+      case 'charge.dispute.closed':
+        // Handle dispute resolution
+        await handleDisputeClosed(event.data.object as Stripe.Dispute);
+        break;
+
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
@@ -466,7 +486,11 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   const doc = snapshot.docs[0];
   const userId = doc.id;
+  const subscriptionData = doc.data();
   const now = new Date();
+
+  // Track failure count for escalation
+  const failureCount = (subscriptionData.paymentFailureCount || 0) + 1;
 
   // Use batch to update both collections
   const batch = db.batch();
@@ -475,6 +499,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   batch.update(doc.ref, {
     status: 'past_due',
     lastPaymentFailedAt: now,
+    paymentFailureCount: failureCount,
     updatedAt: now,
   });
 
@@ -485,6 +510,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
       subscription: {
         status: 'past_due',
         lastPaymentFailedAt: now,
+        paymentFailureCount: failureCount,
       },
       updatedAt: now,
     },
@@ -493,7 +519,44 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   await batch.commit();
 
-  console.log(`Payment failed for subscription ${subscriptionId}`);
+  // Create notification for user with escalating urgency
+  let notificationMessage = 'Your payment could not be processed. Please update your payment method to avoid service interruption.';
+  let notificationType = 'payment_failed';
+
+  if (failureCount >= 3) {
+    notificationMessage = 'URGENT: Your payment has failed multiple times. Your subscription will be canceled soon if payment is not updated.';
+    notificationType = 'payment_failed_urgent';
+  } else if (failureCount >= 2) {
+    notificationMessage = 'Your payment failed again. Please update your payment method as soon as possible.';
+    notificationType = 'payment_failed_warning';
+  }
+
+  await db.collection('notifications').add({
+    userId,
+    type: notificationType,
+    title: failureCount >= 3 ? 'Urgent: Payment Failed' : 'Payment Failed',
+    message: notificationMessage,
+    actionUrl: '/settings/subscription',
+    actionLabel: 'Update Payment Method',
+    read: false,
+    createdAt: now,
+    metadata: {
+      failureCount,
+      subscriptionId,
+    },
+  });
+
+  // Log the event for monitoring
+  await db.collection('payment_events').add({
+    userId,
+    type: 'payment_failed',
+    subscriptionId,
+    invoiceId: invoice.id,
+    failureCount,
+    createdAt: now,
+  });
+
+  console.log(`Payment failed for subscription ${subscriptionId} (attempt ${failureCount})`);
 }
 
 /**
@@ -547,4 +610,195 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   await batch.commit();
 
   console.log(`Invoice paid for subscription ${subscriptionId}`);
+}
+
+/**
+ * Handle invoice.payment_action_required event
+ * This fires when 3D Secure or SCA authentication is required
+ */
+async function handlePaymentActionRequired(invoice: Stripe.Invoice) {
+  const subscriptionId = (invoice.parent?.subscription_details?.subscription as string) || null;
+
+  if (!subscriptionId) return;
+
+  // Find user by subscription ID
+  const snapshot = await db
+    .collection('subscriptions')
+    .where('stripeSubscriptionId', '==', subscriptionId)
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) return;
+
+  const doc = snapshot.docs[0];
+  const userId = doc.id;
+  const now = new Date();
+
+  // Update status to reflect authentication needed
+  const batch = db.batch();
+
+  batch.update(doc.ref, {
+    status: 'incomplete',
+    paymentActionRequired: true,
+    paymentActionRequiredAt: now,
+    updatedAt: now,
+  });
+
+  batch.set(
+    db.collection('billing_accounts').doc(userId),
+    {
+      subscription: {
+        status: 'incomplete',
+        paymentActionRequired: true,
+        paymentActionRequiredAt: now,
+      },
+      updatedAt: now,
+    },
+    { merge: true }
+  );
+
+  // Create notification for user
+  await db.collection('notifications').add({
+    userId,
+    type: 'payment_action_required',
+    title: 'Payment Authentication Required',
+    message: 'Your payment requires additional authentication. Please complete the verification to continue your subscription.',
+    actionUrl: '/settings/subscription',
+    read: false,
+    createdAt: now,
+  });
+
+  await batch.commit();
+
+  console.log(`Payment action required for subscription ${subscriptionId} (user: ${userId})`);
+}
+
+/**
+ * Handle charge.refunded event
+ * Tracks refunds for credits or subscription payments
+ */
+async function handleChargeRefunded(charge: Stripe.Charge) {
+  const customerId = charge.customer as string;
+  const refundAmount = charge.amount_refunded;
+  const now = new Date();
+
+  if (!customerId) return;
+
+  // Find user by customer ID
+  const snapshot = await db
+    .collection('users')
+    .where('stripeCustomerId', '==', customerId)
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) {
+    console.warn(`No user found for customer ${customerId} in refund event`);
+    return;
+  }
+
+  const userId = snapshot.docs[0].id;
+
+  // Record the refund
+  await db.collection('refunds').add({
+    userId,
+    stripeChargeId: charge.id,
+    stripeCustomerId: customerId,
+    amountRefunded: refundAmount,
+    currency: charge.currency,
+    reason: charge.refunds?.data?.[0]?.reason || 'unknown',
+    status: charge.refunded ? 'full' : 'partial',
+    createdAt: now,
+  });
+
+  // Create notification for user
+  await db.collection('notifications').add({
+    userId,
+    type: 'refund_processed',
+    title: 'Refund Processed',
+    message: `A refund of $${(refundAmount / 100).toFixed(2)} has been processed to your payment method.`,
+    read: false,
+    createdAt: now,
+  });
+
+  console.log(`Refund processed for user ${userId}: $${(refundAmount / 100).toFixed(2)}`);
+}
+
+/**
+ * Handle charge.dispute.created event
+ * Critical event - chargebacks can be costly and require attention
+ */
+async function handleDisputeCreated(dispute: Stripe.Dispute) {
+  const chargeId = dispute.charge as string;
+  const amount = dispute.amount;
+  const reason = dispute.reason;
+  const now = new Date();
+
+  // Record the dispute
+  const disputeRecord = await db.collection('disputes').add({
+    stripeDisputeId: dispute.id,
+    stripeChargeId: chargeId,
+    amount,
+    currency: dispute.currency,
+    reason,
+    status: dispute.status,
+    evidenceDueBy: dispute.evidence_details?.due_by
+      ? new Date(dispute.evidence_details.due_by * 1000)
+      : null,
+    createdAt: now,
+  });
+
+  // Create alert for admins
+  await db.collection('admin_alerts').add({
+    type: 'dispute_created',
+    severity: 'critical',
+    title: 'New Chargeback/Dispute',
+    message: `A dispute of $${(amount / 100).toFixed(2)} has been filed. Reason: ${reason}`,
+    disputeId: disputeRecord.id,
+    stripeDisputeId: dispute.id,
+    requiresAction: true,
+    createdAt: now,
+  });
+
+  console.error(`CRITICAL: Dispute created - ${dispute.id} for $${(amount / 100).toFixed(2)} (${reason})`);
+}
+
+/**
+ * Handle charge.dispute.closed event
+ * Tracks dispute resolution
+ */
+async function handleDisputeClosed(dispute: Stripe.Dispute) {
+  const now = new Date();
+
+  // Update the dispute record
+  const disputeSnapshot = await db
+    .collection('disputes')
+    .where('stripeDisputeId', '==', dispute.id)
+    .limit(1)
+    .get();
+
+  if (!disputeSnapshot.empty) {
+    await disputeSnapshot.docs[0].ref.update({
+      status: dispute.status,
+      closedAt: now,
+      won: dispute.status === 'won',
+      updatedAt: now,
+    });
+  }
+
+  // Update admin alert
+  const alertSnapshot = await db
+    .collection('admin_alerts')
+    .where('stripeDisputeId', '==', dispute.id)
+    .limit(1)
+    .get();
+
+  if (!alertSnapshot.empty) {
+    await alertSnapshot.docs[0].ref.update({
+      requiresAction: false,
+      resolvedAt: now,
+      resolution: dispute.status,
+    });
+  }
+
+  console.log(`Dispute ${dispute.id} closed with status: ${dispute.status}`);
 }

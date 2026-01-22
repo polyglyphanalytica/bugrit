@@ -12,6 +12,7 @@ import { getDb, generateId, toTimestamp, Timestamp, COLLECTIONS } from '@/lib/fi
 import { AuditResult, AuditTarget, ToolCategory } from '@/lib/integrations/types';
 import { IntelligenceReport } from '@/lib/integrations/ai';
 import { logger } from '@/lib/logger';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export interface SessionConfig {
   userId: string;
@@ -169,11 +170,11 @@ export class SessionReportStore {
       category,
       startedAt: toTimestamp(now),
       lastUpdated: toTimestamp(now),
-      attempts: Timestamp.now(), // Will increment in transaction
+      attempts: FieldValue.increment(1),
     });
 
-    // Update session progress
-    await this.updateSessionProgress(sessionId);
+    // Update session progress atomically (pending -> running)
+    await this.updateProgressAtomic(sessionId, 'pending', 'running');
 
     logger.debug('Tool started', { sessionId, toolName, category });
   }
@@ -201,11 +202,12 @@ export class SessionReportStore {
     const existingData = existingDoc.data();
     const startedAt = existingData?.startedAt?.toDate() || now;
     const duration = now.getTime() - startedAt.getTime();
+    const newStatus = result.success ? 'completed' : 'failed';
 
     const reportData: Record<string, unknown> = {
       toolName,
       category: result.category,
-      status: result.success ? 'completed' : 'failed',
+      status: newStatus,
       result: this.serializeResult(result),
       completedAt: toTimestamp(now),
       duration,
@@ -218,9 +220,11 @@ export class SessionReportStore {
 
     await reportRef.update(reportData);
 
-    // Update session progress and summary
-    await this.updateSessionProgress(sessionId);
-    await this.updateSessionSummary(sessionId);
+    // Update session progress atomically (running -> completed/failed)
+    await this.updateProgressAtomic(sessionId, 'running', newStatus as 'completed' | 'failed');
+
+    // Update summary with incremental data instead of full recalculation
+    await this.updateSummaryIncremental(sessionId, result);
 
     logger.info('Tool report stored', {
       sessionId,
@@ -249,6 +253,10 @@ export class SessionReportStore {
       .collection(TOOL_REPORTS_SUBCOLLECTION)
       .doc(toolName.toLowerCase());
 
+    // Get current status to determine transition
+    const existingDoc = await reportRef.get();
+    const fromStatus = existingDoc.data()?.status as 'pending' | 'running' | null;
+
     await reportRef.update({
       status: 'skipped',
       error: reason,
@@ -256,7 +264,8 @@ export class SessionReportStore {
       lastUpdated: toTimestamp(now),
     });
 
-    await this.updateSessionProgress(sessionId);
+    // Update session progress atomically
+    await this.updateProgressAtomic(sessionId, fromStatus, 'skipped');
 
     logger.info('Tool skipped', { sessionId, toolName, reason });
   }
@@ -279,6 +288,10 @@ export class SessionReportStore {
       .collection(TOOL_REPORTS_SUBCOLLECTION)
       .doc(toolName.toLowerCase());
 
+    // Get current status to determine transition
+    const existingDoc = await reportRef.get();
+    const fromStatus = existingDoc.data()?.status as 'pending' | 'running' | null;
+
     await reportRef.update({
       status: 'failed',
       error,
@@ -286,7 +299,8 @@ export class SessionReportStore {
       lastUpdated: toTimestamp(now),
     });
 
-    await this.updateSessionProgress(sessionId);
+    // Update session progress atomically
+    await this.updateProgressAtomic(sessionId, fromStatus, 'failed');
 
     logger.warn('Tool failed', { sessionId, toolName, error });
   }
@@ -550,7 +564,66 @@ export class SessionReportStore {
   }
 
   /**
-   * Update session progress counts
+   * Update progress atomically using Firestore increment
+   * Instead of querying all reports (N+1), we use atomic increments
+   */
+  private async updateProgressAtomic(
+    sessionId: string,
+    fromStatus: 'pending' | 'running' | null,
+    toStatus: 'running' | 'completed' | 'failed' | 'skipped'
+  ): Promise<void> {
+    const db = getDb();
+    if (!db) return;
+
+    const sessionRef = db.collection(SESSIONS_COLLECTION).doc(sessionId);
+
+    // Use a transaction to update progress and compute derived values
+    await db.runTransaction(async (transaction) => {
+      const sessionDoc = await transaction.get(sessionRef);
+      if (!sessionDoc.exists) return;
+
+      const data = sessionDoc.data()!;
+      const progress = { ...data.progress };
+
+      // Decrement the old status counter if there was one
+      if (fromStatus) {
+        progress[fromStatus] = Math.max(0, (progress[fromStatus] || 0) - 1);
+      }
+
+      // Increment the new status counter
+      progress[toStatus] = (progress[toStatus] || 0) + 1;
+
+      // Recalculate percentage and overall status
+      const finishedCount = progress.completed + progress.failed + progress.skipped;
+      progress.percentage = progress.total > 0
+        ? Math.round((finishedCount / progress.total) * 100)
+        : 0;
+
+      // Determine overall status
+      let status: string = 'running';
+      if (progress.pending === progress.total) {
+        status = 'initializing';
+      } else if (finishedCount === progress.total) {
+        if (progress.failed === progress.total) {
+          status = 'failed';
+        } else if (progress.failed > 0) {
+          status = 'partial';
+        } else {
+          status = 'completed';
+        }
+      }
+
+      transaction.update(sessionRef, {
+        status,
+        progress,
+        lastUpdated: toTimestamp(new Date()),
+      });
+    });
+  }
+
+  /**
+   * Update session progress counts (DEPRECATED - use updateProgressAtomic)
+   * Kept for backward compatibility and full recalculation when needed
    */
   private async updateSessionProgress(sessionId: string): Promise<void> {
     const db = getDb();
@@ -613,7 +686,59 @@ export class SessionReportStore {
   }
 
   /**
-   * Update session summary from tool reports
+   * Update session summary incrementally from a single tool result
+   * Avoids N+1 query by using atomic increments for finding counts
+   */
+  private async updateSummaryIncremental(
+    sessionId: string,
+    result: AuditResult
+  ): Promise<void> {
+    const db = getDb();
+    if (!db) return;
+
+    if (!result.success || !result.findings || result.findings.length === 0) {
+      return;
+    }
+
+    const sessionRef = db.collection(SESSIONS_COLLECTION).doc(sessionId);
+
+    // Use transaction to safely increment counters
+    await db.runTransaction(async (transaction) => {
+      const sessionDoc = await transaction.get(sessionRef);
+      if (!sessionDoc.exists) return;
+
+      const data = sessionDoc.data()!;
+      const summary = data.summary || {
+        totalFindings: 0,
+        bySeverity: { critical: 0, high: 0, medium: 0, low: 0, info: 0 },
+        byCategory: {},
+        toolsRun: [],
+        toolsSkipped: [],
+        toolsFailed: [],
+      };
+
+      // Increment counts from this tool's findings
+      for (const finding of result.findings) {
+        summary.totalFindings++;
+        summary.bySeverity[finding.severity] = (summary.bySeverity[finding.severity] || 0) + 1;
+        summary.byCategory[finding.category] = (summary.byCategory[finding.category] || 0) + 1;
+      }
+
+      // Add tool to toolsRun list
+      if (!summary.toolsRun.includes(result.tool)) {
+        summary.toolsRun.push(result.tool);
+      }
+
+      transaction.update(sessionRef, {
+        summary,
+        lastUpdated: toTimestamp(new Date()),
+      });
+    });
+  }
+
+  /**
+   * Update session summary from tool reports (DEPRECATED - use updateSummaryIncremental)
+   * Kept for full recalculation when needed (e.g., recovery scenarios)
    */
   private async updateSessionSummary(sessionId: string): Promise<void> {
     const db = getDb();

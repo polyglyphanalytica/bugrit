@@ -16,24 +16,62 @@ import { DEFAULT_SUPERADMIN_EMAIL, isProtectedSuperadmin } from './constants';
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 
 // Encryption helpers for sensitive data
-const ENCRYPTION_KEY = process.env.ADMIN_ENCRYPTION_KEY || 'default-key-change-in-production-32';
 const ALGORITHM = 'aes-256-gcm';
 
+function getEncryptionKey(): string {
+  const key = process.env.ADMIN_ENCRYPTION_KEY;
+  if (!key) {
+    throw new Error(
+      'CRITICAL: ADMIN_ENCRYPTION_KEY environment variable is not set. ' +
+      'This is required for encrypting sensitive data like Stripe API keys. ' +
+      'Generate a secure 32-character key and set it in your environment.'
+    );
+  }
+  if (key.length < 32) {
+    throw new Error(
+      'CRITICAL: ADMIN_ENCRYPTION_KEY must be at least 32 characters long for AES-256 encryption.'
+    );
+  }
+  return key;
+}
+
 function encrypt(text: string): string {
+  const encryptionKey = getEncryptionKey();
   const iv = randomBytes(16);
-  const key = scryptSync(ENCRYPTION_KEY, 'salt', 32);
+  const salt = randomBytes(16);
+  const key = scryptSync(encryptionKey, salt, 32);
   const cipher = createCipheriv(ALGORITHM, key, iv);
   const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
   const authTag = cipher.getAuthTag();
-  return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted.toString('hex')}`;
+  return `${salt.toString('hex')}:${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted.toString('hex')}`;
 }
 
 function decrypt(encryptedText: string): string {
-  const [ivHex, authTagHex, encryptedHex] = encryptedText.split(':');
-  const iv = Buffer.from(ivHex, 'hex');
-  const authTag = Buffer.from(authTagHex, 'hex');
-  const encrypted = Buffer.from(encryptedHex, 'hex');
-  const key = scryptSync(ENCRYPTION_KEY, 'salt', 32);
+  const encryptionKey = getEncryptionKey();
+  const parts = encryptedText.split(':');
+
+  // Support both old format (iv:authTag:encrypted) and new format (salt:iv:authTag:encrypted)
+  let salt: Buffer;
+  let iv: Buffer;
+  let authTag: Buffer;
+  let encrypted: Buffer;
+
+  if (parts.length === 3) {
+    // Legacy format without random salt - use static salt for backward compatibility
+    salt = Buffer.from('salt');
+    [iv, authTag, encrypted] = [
+      Buffer.from(parts[0], 'hex'),
+      Buffer.from(parts[1], 'hex'),
+      Buffer.from(parts[2], 'hex'),
+    ];
+  } else if (parts.length === 4) {
+    // New format with random salt
+    [salt, iv, authTag, encrypted] = parts.map(p => Buffer.from(p, 'hex'));
+  } else {
+    throw new Error('Invalid encrypted data format');
+  }
+
+  const key = scryptSync(encryptionKey, salt, 32);
   const decipher = createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(authTag);
   return decipher.update(encrypted) + decipher.final('utf8');

@@ -5,15 +5,64 @@
  * - Creating checkout sessions
  * - Managing subscriptions
  * - Processing webhooks
+ *
+ * Production safety features:
+ * - Idempotency keys for all mutating operations
+ * - Proper error handling
+ * - Logging for debugging
+ * - Consolidated secret management (database-first, env fallback)
  */
 
 import Stripe from 'stripe';
 import { TierName, TIERS } from './tiers';
+import { createHash } from 'crypto';
 
-// Initialize Stripe (server-side only)
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-12-15.clover',
+// Stripe client singleton - uses environment variable for initialization
+// For operations requiring database-stored key, use getStripeClient()
+let stripeClient: Stripe | null = null;
+
+function getDefaultStripeClient(): Stripe {
+  if (!stripeClient) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error(
+        'STRIPE_SECRET_KEY environment variable is not set. ' +
+        'Configure it in your environment or use the admin panel to set up Stripe.'
+      );
+    }
+    stripeClient = new Stripe(secretKey, {
+      apiVersion: '2025-12-15.clover',
+    });
+  }
+  return stripeClient;
+}
+
+// For backward compatibility
+const stripe = new Proxy({} as Stripe, {
+  get(_, prop) {
+    return getDefaultStripeClient()[prop as keyof Stripe];
+  },
 });
+
+/**
+ * Get a Stripe client with a specific secret key
+ * Used when the key is retrieved from database
+ */
+export function createStripeClient(secretKey: string): Stripe {
+  return new Stripe(secretKey, {
+    apiVersion: '2025-12-15.clover',
+  });
+}
+
+/**
+ * Generate an idempotency key for Stripe operations
+ * Uses a combination of operation type, user ID, and relevant params
+ */
+function generateIdempotencyKey(operation: string, ...args: string[]): string {
+  const timestamp = Math.floor(Date.now() / 60000); // 1-minute window for retries
+  const data = [operation, ...args, timestamp.toString()].join(':');
+  return createHash('sha256').update(data).digest('hex').slice(0, 32);
+}
 
 export interface CreateCheckoutParams {
   userId: string;
@@ -57,34 +106,40 @@ export async function createCheckoutSession(
     throw new Error(`No Stripe price ID configured for ${tier} ${interval}`);
   }
 
-  const session = await stripe.checkout.sessions.create({
-    mode: 'subscription',
-    // Card + Link for faster checkout (Stripe's one-click payment)
-    payment_method_types: ['card', 'link'],
-    // Reuse existing customer or create new one with email
-    ...(customerId ? { customer: customerId } : { customer_email: userEmail }),
-    client_reference_id: userId,
-    allow_promotion_codes: true, // Allow customers to apply promo codes at checkout
-    line_items: [
-      {
-        price: priceId,
-        quantity: 1,
-      },
-    ],
-    success_url: successUrl,
-    cancel_url: cancelUrl,
-    metadata: {
-      userId,
-      tier,
-      interval,
-    },
-    subscription_data: {
+  // Generate idempotency key to prevent duplicate checkouts on retries
+  const idempotencyKey = generateIdempotencyKey('checkout', userId, tier, interval);
+
+  const session = await stripe.checkout.sessions.create(
+    {
+      mode: 'subscription',
+      // Card + Link for faster checkout (Stripe's one-click payment)
+      payment_method_types: ['card', 'link'],
+      // Reuse existing customer or create new one with email
+      ...(customerId ? { customer: customerId } : { customer_email: userEmail }),
+      client_reference_id: userId,
+      allow_promotion_codes: true, // Allow customers to apply promo codes at checkout
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
         userId,
         tier,
+        interval,
+      },
+      subscription_data: {
+        metadata: {
+          userId,
+          tier,
+        },
       },
     },
-  });
+    { idempotencyKey }
+  );
 
   return {
     sessionId: session.id,
@@ -134,9 +189,12 @@ export async function getSubscription(
 export async function cancelSubscription(
   subscriptionId: string
 ): Promise<SubscriptionData> {
-  const subscription = await stripe.subscriptions.update(subscriptionId, {
-    cancel_at_period_end: true,
-  });
+  const idempotencyKey = generateIdempotencyKey('cancel', subscriptionId);
+  const subscription = await stripe.subscriptions.update(
+    subscriptionId,
+    { cancel_at_period_end: true },
+    { idempotencyKey }
+  );
 
   return parseSubscription(subscription);
 }
@@ -147,9 +205,12 @@ export async function cancelSubscription(
 export async function resumeSubscription(
   subscriptionId: string
 ): Promise<SubscriptionData> {
-  const subscription = await stripe.subscriptions.update(subscriptionId, {
-    cancel_at_period_end: false,
-  });
+  const idempotencyKey = generateIdempotencyKey('resume', subscriptionId);
+  const subscription = await stripe.subscriptions.update(
+    subscriptionId,
+    { cancel_at_period_end: false },
+    { idempotencyKey }
+  );
 
   return parseSubscription(subscription);
 }
@@ -178,18 +239,23 @@ export async function changeSubscriptionTier(
   }
 
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-  const updatedSubscription = await stripe.subscriptions.update(subscriptionId, {
-    items: [
-      {
-        id: subscription.items.data[0].id,
-        price: priceId,
+  const idempotencyKey = generateIdempotencyKey('change-tier', subscriptionId, newTier, interval);
+  const updatedSubscription = await stripe.subscriptions.update(
+    subscriptionId,
+    {
+      items: [
+        {
+          id: subscription.items.data[0].id,
+          price: priceId,
+        },
+      ],
+      proration_behavior: 'create_prorations',
+      metadata: {
+        tier: newTier,
       },
-    ],
-    proration_behavior: 'create_prorations',
-    metadata: {
-      tier: newTier,
     },
-  });
+    { idempotencyKey }
+  );
 
   return parseSubscription(updatedSubscription);
 }
@@ -265,11 +331,15 @@ export async function getOrCreateCustomer(
     return existing;
   }
 
-  // Create new customer
-  return stripe.customers.create({
-    email,
-    metadata: {
-      userId,
+  // Create new customer with idempotency key to prevent duplicates
+  const idempotencyKey = generateIdempotencyKey('create-customer', userId, email);
+  return stripe.customers.create(
+    {
+      email,
+      metadata: {
+        userId,
+      },
     },
-  });
+    { idempotencyKey }
+  );
 }
