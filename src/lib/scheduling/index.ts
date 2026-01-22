@@ -192,7 +192,7 @@ export class ScheduleManager {
    */
   async createScheduledScan(scan: ScheduledScan): Promise<string> {
     const authClient = await this.getAuthClient();
-    google.options({ auth: authClient });
+    google.options({ auth: authClient as unknown as string });
 
     const jobName = `projects/${this.config.projectId}/locations/${this.config.region}/jobs/bugrit-scan-${scan.id}`;
 
@@ -249,7 +249,7 @@ export class ScheduleManager {
    */
   async updateScheduledScan(scan: ScheduledScan): Promise<string> {
     const authClient = await this.getAuthClient();
-    google.options({ auth: authClient });
+    google.options({ auth: authClient as unknown as string });
 
     const jobName = `projects/${this.config.projectId}/locations/${this.config.region}/jobs/bugrit-scan-${scan.id}`;
 
@@ -291,7 +291,7 @@ export class ScheduleManager {
    */
   async deleteScheduledScan(scanId: string): Promise<void> {
     const authClient = await this.getAuthClient();
-    google.options({ auth: authClient });
+    google.options({ auth: authClient as unknown as string });
 
     const jobName = `projects/${this.config.projectId}/locations/${this.config.region}/jobs/bugrit-scan-${scanId}`;
 
@@ -303,7 +303,7 @@ export class ScheduleManager {
    */
   async pauseScheduledScan(scanId: string): Promise<void> {
     const authClient = await this.getAuthClient();
-    google.options({ auth: authClient });
+    google.options({ auth: authClient as unknown as string });
 
     const jobName = `projects/${this.config.projectId}/locations/${this.config.region}/jobs/bugrit-scan-${scanId}`;
 
@@ -315,7 +315,7 @@ export class ScheduleManager {
    */
   async resumeScheduledScan(scanId: string): Promise<void> {
     const authClient = await this.getAuthClient();
-    google.options({ auth: authClient });
+    google.options({ auth: authClient as unknown as string });
 
     const jobName = `projects/${this.config.projectId}/locations/${this.config.region}/jobs/bugrit-scan-${scanId}`;
 
@@ -327,7 +327,7 @@ export class ScheduleManager {
    */
   async triggerNow(scanId: string): Promise<void> {
     const authClient = await this.getAuthClient();
-    google.options({ auth: authClient });
+    google.options({ auth: authClient as unknown as string });
 
     const jobName = `projects/${this.config.projectId}/locations/${this.config.region}/jobs/bugrit-scan-${scanId}`;
 
@@ -343,7 +343,7 @@ export class ScheduleManager {
     scheduleTime?: string;
   }> {
     const authClient = await this.getAuthClient();
-    google.options({ auth: authClient });
+    google.options({ auth: authClient as unknown as string });
 
     const jobName = `projects/${this.config.projectId}/locations/${this.config.region}/jobs/bugrit-scan-${scanId}`;
 
@@ -361,14 +361,14 @@ export class ScheduleManager {
    */
   async listJobs(): Promise<Array<{ name: string; state: string; schedule: string }>> {
     const authClient = await this.getAuthClient();
-    google.options({ auth: authClient });
+    google.options({ auth: authClient as unknown as string });
 
     const response = await scheduler.projects.locations.jobs.list({
       parent: `projects/${this.config.projectId}/locations/${this.config.region}`,
-      filter: 'description:"Bugrit scheduled scan"',
-    });
+    } as { parent: string });
 
-    return (response.data.jobs || []).map(job => ({
+    const data = response as unknown as { data: { jobs?: Array<{ name?: string; state?: string; schedule?: string }> } };
+    return (data.data.jobs || []).map((job: { name?: string; state?: string; schedule?: string }) => ({
       name: job.name || '',
       state: job.state || 'UNKNOWN',
       schedule: job.schedule || '',

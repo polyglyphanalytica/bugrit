@@ -73,10 +73,10 @@ export class TauriRunner implements TestRunner {
             application: options.appPath,
             webviewOptions: {},
           },
-        },
+        } as unknown as Record<string, unknown>,
         connectionRetryTimeout: 30000,
         connectionRetryCount: 3,
-      }) as WDIOBrowser;
+      }) as unknown as WDIOBrowser;
     } catch (error) {
       await this.cleanup();
       throw new Error(`Failed to initialize Tauri driver: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -88,7 +88,7 @@ export class TauriRunner implements TestRunner {
       try {
         this.tauriDriverProcess = spawn('tauri-driver', ['--port', this.driverPort.toString()], {
           stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        }) as ChildProcess;
 
         this.tauriDriverProcess.on('error', (err) => {
           reject(new Error(`Failed to start tauri-driver: ${err.message}. Ensure tauri-driver is installed.`));
@@ -330,10 +330,10 @@ export class TauriRunner implements TestRunner {
       tauri: {
         // Invoke a Tauri command
         invoke: async <T>(command: string, args?: Record<string, unknown>): Promise<T> => {
-          return driver.execute<T>((cmd: string, a: Record<string, unknown> | undefined) => {
+          return driver.execute<T>(((cmd: string, a: Record<string, unknown> | undefined) => {
             // @ts-expect-error - __TAURI__ is available in Tauri webview
             return window.__TAURI__.invoke(cmd, a);
-          }, command, args);
+          }) as (...args: unknown[]) => T, command, args);
         },
 
         // Window operations
@@ -362,10 +362,10 @@ export class TauriRunner implements TestRunner {
             // @ts-expect-error - __TAURI__ is available in Tauri webview
             return window.__TAURI__.clipboard.readText();
           }),
-          writeText: (text: string) => driver.execute((t: string) => {
+          writeText: (text: string) => driver.execute(((t: string) => {
             // @ts-expect-error - __TAURI__ is available in Tauri webview
             return window.__TAURI__.clipboard.writeText(t);
-          }, text),
+          }) as (...args: unknown[]) => unknown, text),
         },
       },
 

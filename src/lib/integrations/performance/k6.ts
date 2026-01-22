@@ -87,8 +87,9 @@ export class K6Integration implements ToolIntegration {
     }
 
     try {
-      const { execSync, writeFileSync, unlinkSync } = await import('child_process');
+      const { execSync } = await import('child_process');
       const fs = await import('fs');
+      const { writeFileSync, unlinkSync } = fs;
       const path = await import('path');
       const os = await import('os');
 

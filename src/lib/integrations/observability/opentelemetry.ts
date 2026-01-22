@@ -69,7 +69,7 @@ export class OpenTelemetryIntegration implements ToolIntegration {
     const startTime = Date.now();
     const findings: AuditFinding[] = [];
 
-    const endpoint = config?.options?.endpoint || process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
+    const endpoint = (config?.options?.endpoint || process.env.OTEL_EXPORTER_OTLP_ENDPOINT) as string | undefined;
 
     if (!endpoint) {
       return {
@@ -84,9 +84,9 @@ export class OpenTelemetryIntegration implements ToolIntegration {
     }
 
     try {
-      const lookbackMinutes = config?.options?.lookbackMinutes || 60;
-      const latencyThreshold = config?.options?.latencyThresholdMs || 1000;
-      const errorRateThreshold = config?.options?.errorRateThreshold || 0.01;
+      const lookbackMinutes = (config?.options?.lookbackMinutes || 60) as number;
+      const latencyThreshold = (config?.options?.latencyThresholdMs || 1000) as number;
+      const errorRateThreshold = (config?.options?.errorRateThreshold || 0.01) as number;
 
       // Query trace data (implementation depends on backend - Jaeger, Tempo, etc.)
       const serviceHealth = await this.queryServiceHealth(endpoint, lookbackMinutes);

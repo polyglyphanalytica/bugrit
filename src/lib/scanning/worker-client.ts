@@ -325,7 +325,7 @@ export async function runHybridScan(
           issues: [],
           error: 'Worker unavailable - browser-based tools skipped',
           metadata: {},
-        });
+        } as unknown as ToolResult);
       }
     }
   } else if (worker.categories.length > 0) {
@@ -337,7 +337,7 @@ export async function runHybridScan(
         issues: [],
         error: 'Worker not configured - browser-based tools unavailable',
         metadata: {},
-      });
+      } as unknown as ToolResult);
     }
   }
 
@@ -347,14 +347,15 @@ export async function runHybridScan(
   let linesOfCode = 0;
 
   for (const result of results) {
-    if (result.issues) {
-      totalIssues += result.issues.length;
-      criticalIssues += result.issues.filter(
-        i => i.severity === 'critical' || i.severity === 'error'
+    const extResult = result as unknown as { issues?: Array<{ severity: string }>; metadata?: { linesOfCode?: number } };
+    if (extResult.issues) {
+      totalIssues += extResult.issues.length;
+      criticalIssues += extResult.issues.filter(
+        (i: { severity: string }) => i.severity === 'critical' || i.severity === 'error'
       ).length;
     }
-    if (result.metadata?.linesOfCode) {
-      linesOfCode = Math.max(linesOfCode, result.metadata.linesOfCode);
+    if (extResult.metadata?.linesOfCode) {
+      linesOfCode = Math.max(linesOfCode, extResult.metadata.linesOfCode);
     }
   }
 

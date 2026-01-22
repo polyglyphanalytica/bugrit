@@ -118,7 +118,7 @@ export class StrykerIntegration implements ToolIntegration {
       const report: StrykerReport = JSON.parse(fs.readFileSync(reportPath, 'utf-8'));
       const score = this.calculateScore(report);
 
-      findings.push(...this.analyzeMutationScore(score, thresholds));
+      findings.push(...this.analyzeMutationScore(score, thresholds as Record<string, number>));
       findings.push(...this.analyzeSurvivedMutants(report, targetDir));
 
       return this.createResult(findings, Date.now() - startTime, score);

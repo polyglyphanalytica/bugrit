@@ -81,7 +81,7 @@ export class SentryIntegration implements ToolIntegration {
     const startTime = Date.now();
     const findings: AuditFinding[] = [];
 
-    const sentryUrl = config?.options?.sentryUrl || process.env.SENTRY_URL;
+    const sentryUrl = (config?.options?.sentryUrl || process.env.SENTRY_URL) as string | undefined;
     const authToken = config?.options?.authToken || process.env.SENTRY_AUTH_TOKEN;
     const org = config?.options?.organization || process.env.SENTRY_ORG;
     const project = config?.options?.project || process.env.SENTRY_PROJECT;
@@ -99,7 +99,7 @@ export class SentryIntegration implements ToolIntegration {
     }
 
     try {
-      const lookbackDays = config?.options?.lookbackDays || 7;
+      const lookbackDays = (config?.options?.lookbackDays || 7) as number;
       const since = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000).toISOString();
 
       // Fetch unresolved issues

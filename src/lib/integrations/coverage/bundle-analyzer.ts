@@ -75,9 +75,9 @@ export class BundleAnalyzerIntegration implements ToolIntegration {
       const path = await import('path');
 
       const targetDir = target.directory || '.';
-      const maxSize = config?.options?.maxSize || 250000;
-      const maxTotalSize = config?.options?.maxTotalSize || 1000000;
-      const maxModuleSize = config?.options?.maxModuleSize || 50000;
+      const maxSize = (config?.options?.maxSize || 250000) as number;
+      const maxTotalSize = (config?.options?.maxTotalSize || 1000000) as number;
+      const maxModuleSize = (config?.options?.maxModuleSize || 50000) as number;
 
       // Look for webpack stats
       const possiblePaths = [

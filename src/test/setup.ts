@@ -8,7 +8,7 @@
 import { vi } from 'vitest';
 
 // Mock environment variables for tests
-process.env.NODE_ENV = 'test';
+(process.env as { NODE_ENV: string }).NODE_ENV = 'test';
 process.env.ADMIN_ENCRYPTION_KEY = 'test-encryption-key-32-chars!!';
 process.env.SUPERADMIN_EMAIL = 'admin@test.com';
 

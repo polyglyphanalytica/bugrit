@@ -43,7 +43,6 @@ export async function runESLint(
 
     const eslint = new ESLint({
       cwd: targetDir,
-      extensions: options.extensions || ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs'],
       overrideConfigFile: options.configFile,
       fix: options.fix || false,
       errorOnUnmatchedPattern: false,
@@ -52,7 +51,7 @@ export async function runESLint(
     const results: ESLintResult[] = await eslint.lintFiles([targetDir]);
 
     if (options.fix) {
-      await ESLint.outputFixes(results);
+      await ESLint.outputFixes(results as unknown as import('eslint').ESLint.LintResult[]);
     }
 
     for (const result of results) {

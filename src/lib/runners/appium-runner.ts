@@ -58,10 +58,10 @@ export class AppiumRunner implements TestRunner {
         hostname: process.env.APPIUM_HOST || 'localhost',
         port: parseInt(process.env.APPIUM_PORT || '4723', 10),
         path: '/wd/hub',
-        capabilities: capabilities as Record<string, unknown>,
+        capabilities: capabilities as unknown as Record<string, unknown>,
         connectionRetryTimeout: 120000,
         connectionRetryCount: 3,
-      }) as WDIOBrowser;
+      }) as unknown as WDIOBrowser;
     } catch (error) {
       throw new Error(`Failed to connect to Appium server: ${error instanceof Error ? error.message : 'Unknown error'}. Ensure Appium is running.`);
     }
