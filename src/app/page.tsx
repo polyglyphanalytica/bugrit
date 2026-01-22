@@ -1,21 +1,153 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { GlassCard } from '@/components/ui/glass-card';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Logo } from '@/components/ui/logo';
-import { TOOL_REGISTRY, CATEGORY_LABELS, CATEGORY_ICONS, ToolCategory } from '@/lib/tools/registry';
+import { TOOL_REGISTRY, ToolCategory } from '@/lib/tools/registry';
+
+// Category value propositions - what each category DOES for users
+const CATEGORY_VALUE: Record<ToolCategory, {
+  icon: string;
+  title: string;
+  tagline: string;
+  value: string;
+  risks: string[];
+  color: string;
+  borderColor: string;
+  bgColor: string;
+}> = {
+  security: {
+    icon: '🛡️',
+    title: 'Security Scanning',
+    tagline: 'Stop hackers before they start',
+    value: 'We find SQL injection, XSS, hardcoded secrets, and command injection vulnerabilities before attackers do. Our security tools have protected millions of apps worldwide.',
+    risks: ['Database breaches', 'User session hijacking', 'API key leaks', 'Server takeovers'],
+    color: 'text-red-400',
+    borderColor: 'border-red-500/50',
+    bgColor: 'bg-red-500/20',
+  },
+  dependencies: {
+    icon: '📦',
+    title: 'Supply Chain Protection',
+    tagline: 'Your dependencies are a liability',
+    value: 'We scan every package in your node_modules for known vulnerabilities, license violations, and malicious code. 67% of npm packages have security issues—we find them.',
+    risks: ['Known CVE exploits', 'GPL license violations', 'Abandoned packages', 'Supply chain attacks'],
+    color: 'text-orange-400',
+    borderColor: 'border-orange-500/50',
+    bgColor: 'bg-orange-500/20',
+  },
+  quality: {
+    icon: '✨',
+    title: 'Code Quality',
+    tagline: 'Technical debt compounds daily',
+    value: 'We catch type errors, dead code, copy-paste duplication, and inconsistencies before they become unmaintainable nightmares. Clean code ships faster.',
+    risks: ['Runtime crashes', 'Impossible debugging', 'Merge conflicts', 'Performance degradation'],
+    color: 'text-yellow-400',
+    borderColor: 'border-yellow-500/50',
+    bgColor: 'bg-yellow-500/20',
+  },
+  linting: {
+    icon: '📝',
+    title: 'Code Standards',
+    tagline: 'Consistency across your codebase',
+    value: 'Enforce best practices automatically. Catch errors before they reach production. Keep your code readable and maintainable for you and your future self.',
+    risks: ['Inconsistent formatting', 'Hidden bugs', 'Code review delays', 'Onboarding friction'],
+    color: 'text-blue-400',
+    borderColor: 'border-blue-500/50',
+    bgColor: 'bg-blue-500/20',
+  },
+  accessibility: {
+    icon: '♿',
+    title: 'Accessibility Compliance',
+    tagline: 'Reach every user—avoid lawsuits',
+    value: 'We audit against WCAG 2.1 standards to ensure your app works for everyone. Accessibility failures exclude users and invite legal action.',
+    risks: ['ADA lawsuits', 'Lost customers', 'Bad PR', 'App store rejections'],
+    color: 'text-purple-400',
+    borderColor: 'border-purple-500/50',
+    bgColor: 'bg-purple-500/20',
+  },
+  performance: {
+    icon: '⚡',
+    title: 'Performance Auditing',
+    tagline: 'Slow apps lose users',
+    value: 'We measure load times, bundle sizes, and Core Web Vitals. A 1-second delay costs 7% in conversions. We help you ship fast apps that rank higher on Google.',
+    risks: ['SEO penalties', 'User abandonment', 'Poor conversions', 'Bad reviews'],
+    color: 'text-cyan-400',
+    borderColor: 'border-cyan-500/50',
+    bgColor: 'bg-cyan-500/20',
+  },
+  documentation: {
+    icon: '📚',
+    title: 'Documentation Quality',
+    tagline: 'Good docs = happy users',
+    value: 'We check your markdown, catch spelling errors, flag insensitive language, and ensure your documentation is professional and inclusive.',
+    risks: ['Confused users', 'Support overload', 'Unprofessional image', 'Contributor friction'],
+    color: 'text-emerald-400',
+    borderColor: 'border-emerald-500/50',
+    bgColor: 'bg-emerald-500/20',
+  },
+  git: {
+    icon: '🔀',
+    title: 'Git Hygiene',
+    tagline: 'Clean history, clear intent',
+    value: 'Enforce conventional commits, catch secrets before they hit your repo, and maintain a professional git history that makes debugging easier.',
+    risks: ['Leaked credentials', 'Messy history', 'Failed CI/CD', 'Audit failures'],
+    color: 'text-pink-400',
+    borderColor: 'border-pink-500/50',
+    bgColor: 'bg-pink-500/20',
+  },
+  mobile: {
+    icon: '📱',
+    title: 'Mobile Security',
+    tagline: 'Protect your mobile apps',
+    value: 'We analyze iOS and Android apps for hardcoded secrets, insecure storage, and vulnerabilities that could get you banned from app stores.',
+    risks: ['App store rejection', 'Data theft', 'Reverse engineering', 'User privacy violations'],
+    color: 'text-violet-400',
+    borderColor: 'border-violet-500/50',
+    bgColor: 'bg-violet-500/20',
+  },
+  'api-security': {
+    icon: '🔌',
+    title: 'API Security',
+    tagline: 'Your API is your attack surface',
+    value: 'We validate your OpenAPI specs, test for injection vulnerabilities, and ensure your APIs follow security best practices.',
+    risks: ['Data breaches', 'Broken authentication', 'Rate limit bypass', 'Injection attacks'],
+    color: 'text-amber-400',
+    borderColor: 'border-amber-500/50',
+    bgColor: 'bg-amber-500/20',
+  },
+  'cloud-native': {
+    icon: '☁️',
+    title: 'Infrastructure Security',
+    tagline: 'Misconfigured cloud = open door',
+    value: 'We scan Kubernetes configs, Terraform files, and Dockerfiles for security misconfigurations that could expose your entire infrastructure.',
+    risks: ['Open S3 buckets', 'Exposed secrets', 'Privilege escalation', 'Container escapes'],
+    color: 'text-sky-400',
+    borderColor: 'border-sky-500/50',
+    bgColor: 'bg-sky-500/20',
+  },
+};
+
+// Count tools per category
+function getToolCount(category: ToolCategory): number {
+  return TOOL_REGISTRY.filter(t => t.category === category).length;
+}
+
+// Get tool names for a category
+function getToolNames(category: ToolCategory): string[] {
+  return TOOL_REGISTRY.filter(t => t.category === category).map(t => t.name);
+}
 
 export default function HomePage() {
-  // Group tools by category
-  const toolsByCategory = TOOL_REGISTRY.reduce((acc, tool) => {
-    if (!acc[tool.category]) {
-      acc[tool.category] = [];
-    }
-    acc[tool.category].push(tool);
-    return acc;
-  }, {} as Record<ToolCategory, typeof TOOL_REGISTRY>);
+  const [expandedCategory, setExpandedCategory] = useState<ToolCategory | null>(null);
+
+  const categories = Object.keys(CATEGORY_VALUE) as ToolCategory[];
+  // Prioritize the most important categories
+  const priorityOrder: ToolCategory[] = ['security', 'dependencies', 'quality', 'accessibility', 'performance', 'linting', 'mobile', 'api-security', 'cloud-native', 'documentation', 'git'];
+  const sortedCategories = priorityOrder.filter(c => categories.includes(c));
 
   return (
     <div className="min-h-screen mesh-gradient">
@@ -25,7 +157,7 @@ export default function HomePage() {
           <Logo href="/" />
           <div className="hidden md:flex items-center gap-8">
             <Link href="#risks" className="nav-link">The Risks</Link>
-            <Link href="#scanning" className="nav-link">What We Check</Link>
+            <Link href="#protection" className="nav-link">How We Help</Link>
             <Link href="#pricing" className="nav-link">Pricing</Link>
             <Link href="/docs" className="nav-link">Docs</Link>
           </div>
@@ -62,12 +194,12 @@ export default function HomePage() {
               </span>
             </h1>
 
-            {/* Description */}
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8 animate-fade-up delay-200 fill-both leading-relaxed">
-              You shipped fast. You built something amazing. But did you check for SQL injection? XSS vulnerabilities? Leaked API keys in your repo? Outdated dependencies with known exploits?
+            {/* Description - Updated messaging */}
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-6 animate-fade-up delay-200 fill-both leading-relaxed">
+              You shipped fast. You built something amazing. But did you check for SQL injection? XSS vulnerabilities? Leaked API keys? Outdated dependencies with known exploits?
             </p>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 animate-fade-up delay-300 fill-both">
-              <strong className="text-foreground">Bugrit is a vibe coder&apos;s best friend.</strong> We run {TOOL_REGISTRY.length} security and quality scans plus test your app across web, mobile, and desktop. One click. One report. No judgment.
+              <strong className="text-foreground">Bugrit is built by security experts from around the world.</strong> We&apos;ve assembled the industry&apos;s best open-source scanning tools into one simple platform. One click. One report. Your app becomes safer.
             </p>
 
             {/* CTA Buttons */}
@@ -90,7 +222,7 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Scary Stats - Vibe Coder Focused */}
+            {/* Scary Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 animate-fade-up delay-500 fill-both">
               <div className="p-4 rounded-xl bg-red-950 border-2 border-red-700 backdrop-blur-sm">
                 <span className="text-3xl font-bold text-red-300">62%</span>
@@ -105,9 +237,26 @@ export default function HomePage() {
                 <p className="text-sm text-gray-200 mt-1">of ransomware attacks target small businesses</p>
               </div>
               <div className="p-4 rounded-xl bg-violet-950 border-2 border-violet-700 backdrop-blur-sm">
-                <span className="text-3xl font-bold text-violet-200">1,000+</span>
-                <p className="text-sm text-gray-200 mt-1">individual checks across {TOOL_REGISTRY.length} tools</p>
+                <span className="text-3xl font-bold text-violet-200">{TOOL_REGISTRY.length}</span>
+                <p className="text-sm text-gray-200 mt-1">expert-built tools protecting your code</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Expert Credibility Section */}
+      <section className="py-16 bg-gradient-to-b from-transparent to-muted/20">
+        <div className="container-wide">
+          <div className="max-w-4xl mx-auto text-center">
+            <p className="text-lg text-muted-foreground mb-8">
+              Bugrit combines the world&apos;s most trusted security and quality tools—the same tools used by Fortune 500 companies, open-source maintainers, and security researchers. We didn&apos;t reinvent the wheel. We made it easy for you to use.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+              <span className="px-4 py-2 rounded-full border border-border">Used by 10M+ developers</span>
+              <span className="px-4 py-2 rounded-full border border-border">Open-source foundations</span>
+              <span className="px-4 py-2 rounded-full border border-border">Backed by security experts</span>
+              <span className="px-4 py-2 rounded-full border border-border">Continuously updated</span>
             </div>
           </div>
         </div>
@@ -148,15 +297,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-red-400 mt-1">&#x2022;</span>
-                  <span><strong>Unsafe Regex</strong> - ReDoS attacks crash your server</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">&#x2022;</span>
                   <span><strong>Command Injection</strong> - RCE on your production server</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-red-400 mt-1">&#x2022;</span>
-                  <span><strong>Insecure Dependencies</strong> - Known CVEs in your node_modules</span>
                 </li>
               </ul>
             </GlassCard>
@@ -177,28 +318,20 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-400 mt-1">&#x2022;</span>
-                  <span><strong>Outdated Dependencies</strong> - Missing critical security patches</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-orange-400 mt-1">&#x2022;</span>
                   <span><strong>License Violations</strong> - GPL code in your proprietary app</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-400 mt-1">&#x2022;</span>
-                  <span><strong>Unused Packages</strong> - Attack surface you don&apos;t need</span>
+                  <span><strong>Supply Chain Attacks</strong> - Malicious code in updates</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-orange-400 mt-1">&#x2022;</span>
-                  <span><strong>Circular Dependencies</strong> - Unpredictable build failures</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-orange-400 mt-1">&#x2022;</span>
-                  <span><strong>Lockfile Tampering</strong> - Supply chain attacks</span>
+                  <span><strong>Outdated Dependencies</strong> - Missing critical patches</span>
                 </li>
               </ul>
             </GlassCard>
 
-            {/* Code Quality Catastrophes */}
+            {/* Code Quality Issues */}
             <GlassCard className="p-6 !border-2 !border-yellow-500/50">
               <div className="w-12 h-12 rounded-xl bg-yellow-500/30 flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -224,14 +357,6 @@ export default function HomePage() {
                   <span className="text-yellow-400 mt-1">&#x2022;</span>
                   <span><strong>Inconsistent Formatting</strong> - Merge conflict nightmares</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-yellow-400 mt-1">&#x2022;</span>
-                  <span><strong>Spelling Errors</strong> - Unprofessional user-facing text</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-yellow-400 mt-1">&#x2022;</span>
-                  <span><strong>Unused Exports</strong> - API surface you forgot about</span>
-                </li>
               </ul>
             </GlassCard>
 
@@ -251,7 +376,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-400 mt-1">&#x2022;</span>
-                  <span><strong>Render Blocking</strong> - Slow First Contentful Paint</span>
+                  <span><strong>Poor Core Web Vitals</strong> - SEO penalties from Google</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-400 mt-1">&#x2022;</span>
@@ -259,15 +384,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-400 mt-1">&#x2022;</span>
-                  <span><strong>Unoptimized Images</strong> - 10MB hero images</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-1">&#x2022;</span>
-                  <span><strong>No Lazy Loading</strong> - Loading everything upfront</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-400 mt-1">&#x2022;</span>
-                  <span><strong>Poor Core Web Vitals</strong> - SEO penalties from Google</span>
+                  <span><strong>Render Blocking</strong> - Slow First Contentful Paint</span>
                 </li>
               </ul>
             </GlassCard>
@@ -296,52 +413,36 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-purple-400 mt-1">&#x2022;</span>
-                  <span><strong>Missing ARIA Labels</strong> - Confusing for assistive tech</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-purple-400 mt-1">&#x2022;</span>
-                  <span><strong>Auto-Playing Media</strong> - Jarring and disorienting</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-purple-400 mt-1">&#x2022;</span>
                   <span><strong>Form Label Issues</strong> - ADA lawsuits waiting to happen</span>
                 </li>
               </ul>
             </GlassCard>
 
-            {/* Testing Gaps */}
-            <GlassCard className="p-6 !border-2 !border-green-500/50">
-              <div className="w-12 h-12 rounded-xl bg-green-500/30 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            {/* Infrastructure Misconfig */}
+            <GlassCard className="p-6 !border-2 !border-sky-500/50">
+              <div className="w-12 h-12 rounded-xl bg-sky-500/30 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-2 text-green-400">Testing Gaps</h3>
-              <p className="text-muted-foreground mb-4">No tests = bugs in production.</p>
+              <h3 className="text-xl font-bold mb-2 text-sky-400">Infrastructure Misconfigs</h3>
+              <p className="text-muted-foreground mb-4">One wrong setting exposes everything.</p>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">&#x2022;</span>
-                  <span><strong>Browser Differences</strong> - Works in Chrome, breaks in Safari</span>
+                  <span className="text-sky-400 mt-1">&#x2022;</span>
+                  <span><strong>Open S3 Buckets</strong> - Your data on the internet</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">&#x2022;</span>
-                  <span><strong>Mobile Failures</strong> - Touch targets too small</span>
+                  <span className="text-sky-400 mt-1">&#x2022;</span>
+                  <span><strong>Exposed Secrets</strong> - Credentials in Docker/K8s configs</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">&#x2022;</span>
-                  <span><strong>Desktop Regressions</strong> - New features break old ones</span>
+                  <span className="text-sky-400 mt-1">&#x2022;</span>
+                  <span><strong>Privilege Escalation</strong> - Containers running as root</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">&#x2022;</span>
-                  <span><strong>Edge Cases</strong> - Empty states, errors, timeouts</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">&#x2022;</span>
-                  <span><strong>Auth Flows</strong> - Login/logout breaks randomly</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-green-400 mt-1">&#x2022;</span>
-                  <span><strong>Payment Bugs</strong> - Checkout failures = lost sales</span>
+                  <span className="text-sky-400 mt-1">&#x2022;</span>
+                  <span><strong>Insecure Defaults</strong> - Terraform misconfigurations</span>
                 </li>
               </ul>
             </GlassCard>
@@ -353,273 +454,112 @@ export default function HomePage() {
               <span className="text-red-300">45% of AI-generated code</span> introduces security vulnerabilities. <span className="text-orange-300">Only 14%</span> of small businesses are prepared.
             </p>
             <p className="text-gray-300 text-lg">
-              You&apos;re building fast. That&apos;s great. But one breach could end everything. Bugrit has your back.
+              You&apos;re building fast. That&apos;s great. But one breach could end everything. <strong className="text-white">Let the experts have your back.</strong>
             </p>
           </div>
         </div>
       </section>
 
-      {/* What We Check Section */}
-      <section id="scanning" className="section">
+      {/* How We Protect You - VALUE FOCUSED */}
+      <section id="protection" className="section">
         <div className="container-wide">
           <SectionHeading
-            badge={`${TOOL_REGISTRY.length} Tools Working For You`}
-            title="Everything We Check"
-            titleGradient="We Check"
-            description="One scan. All of these tools. Every single time. No config required."
+            badge="Industry-Leading Protection"
+            title="How We Keep You Safe"
+            titleGradient="Keep You Safe"
+            description="We've assembled the world's best open-source security and quality tools into one easy platform. Built by experts, used by millions, now available to you."
           />
 
           {/* Supported Languages */}
           <div className="mt-12 mb-16">
-            <h3 className="text-xl font-bold text-center mb-6">Languages & Frameworks We Analyze</h3>
+            <h3 className="text-xl font-bold text-center mb-6">Languages & Frameworks We Protect</h3>
             <div className="flex flex-wrap justify-center gap-3">
-              <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">JavaScript</span>
-              <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">TypeScript</span>
-              <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">React</span>
-              <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">Next.js</span>
-              <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">Vue</span>
-              <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">Nuxt</span>
-              <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">Svelte</span>
-              <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">Angular</span>
-              <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">CSS/SCSS/Less</span>
-              <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">HTML</span>
-              <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">JSON</span>
-              <span className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">Markdown</span>
+              {['JavaScript', 'TypeScript', 'Python', 'Go', 'Ruby', 'PHP', 'Java', 'Kotlin', 'Swift', 'Rust', 'C/C++', 'React', 'Next.js', 'Vue', 'Angular', 'Node.js', 'Docker', 'Kubernetes', 'Terraform'].map(lang => (
+                <span key={lang} className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-medium">{lang}</span>
+              ))}
             </div>
           </div>
 
-          {/* All Tools Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {Object.entries(toolsByCategory).map(([category, tools]) => (
-              <GlassCard key={category} className="p-6">
-                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <span className="text-xl">
-                    {CATEGORY_ICONS[category as ToolCategory]}
-                  </span>
-                  {CATEGORY_LABELS[category as ToolCategory]}
-                </h3>
-                <ul className="space-y-2">
-                  {tools.map((tool) => (
-                    <li key={tool.id} className="text-sm text-muted-foreground flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
-                      {tool.name}
-                      {tool.credits > 0 && (
-                        <span className="text-xs text-primary/70">({tool.credits} cr)</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </GlassCard>
-            ))}
+          {/* Value-Focused Category Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sortedCategories.map((category) => {
+              const info = CATEGORY_VALUE[category];
+              const toolCount = getToolCount(category);
+              const toolNames = getToolNames(category);
+              const isExpanded = expandedCategory === category;
+
+              return (
+                <GlassCard key={category} className={`p-6 !border-2 ${info.borderColor} transition-all duration-300`}>
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className={`w-12 h-12 rounded-xl ${info.bgColor} flex items-center justify-center flex-shrink-0`}>
+                      <span className="text-2xl">{info.icon}</span>
+                    </div>
+                    <div>
+                      <h3 className={`text-xl font-bold ${info.color}`}>{info.title}</h3>
+                      <p className="text-sm text-muted-foreground">{info.tagline}</p>
+                    </div>
+                  </div>
+
+                  <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
+                    {info.value}
+                  </p>
+
+                  {/* What we catch */}
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">We Protect Against:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {info.risks.map(risk => (
+                        <span key={risk} className={`px-2 py-1 text-xs rounded-full ${info.bgColor} ${info.color}`}>
+                          {risk}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Tools footnote - collapsible */}
+                  <div className="pt-4 border-t border-border/50">
+                    <button
+                      onClick={() => setExpandedCategory(isExpanded ? null : category)}
+                      className="flex items-center justify-between w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <span>Powered by {toolCount} expert tools</span>
+                      <svg
+                        className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {isExpanded && (
+                      <div className="mt-3 text-xs text-muted-foreground">
+                        {toolNames.join(' · ')}
+                      </div>
+                    )}
+                  </div>
+                </GlassCard>
+              );
+            })}
           </div>
 
-          {/* Detailed Tool Descriptions */}
-          <div className="mt-16 space-y-8">
-            <h3 className="text-2xl font-bold text-center mb-8">What Each Category Catches</h3>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              <GlassCard className="p-6">
-                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <span className="text-red-400">🔒</span> Security Scanning
-                </h4>
-                <div className="space-y-3 text-sm">
-                  <p><strong>ESLint Security Plugin</strong> - Finds eval(), dangerous regex, prototype pollution risks</p>
-                  <p><strong>npm audit</strong> - Checks every package for known CVEs and exploits</p>
-                  <p><strong>Secretlint</strong> - Catches hardcoded API keys, passwords, tokens, AWS credentials</p>
-                  <p><strong>Lockfile Lint</strong> - Detects HTTP URLs and registry hijacking in lockfiles</p>
-                </div>
-              </GlassCard>
-
-              <GlassCard className="p-6">
-                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <span className="text-orange-400">📦</span> Dependency Analysis
-                </h4>
-                <div className="space-y-3 text-sm">
-                  <p><strong>Depcheck</strong> - Finds unused dependencies bloating your bundle</p>
-                  <p><strong>Knip</strong> - Detects unused exports, files, and dead code</p>
-                  <p><strong>License Checker</strong> - Flags GPL, AGPL, and problematic licenses</p>
-                  <p><strong>Madge</strong> - Maps circular dependencies causing build issues</p>
-                  <p><strong>Dependency Cruiser</strong> - Enforces architecture rules and boundaries</p>
-                </div>
-              </GlassCard>
-
-              <GlassCard className="p-6">
-                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <span className="text-yellow-400">📝</span> Code Quality
-                </h4>
-                <div className="space-y-3 text-sm">
-                  <p><strong>ESLint</strong> - 300+ rules for JS/TS best practices</p>
-                  <p><strong>Biome</strong> - Fast formatter and linter in one</p>
-                  <p><strong>TypeScript</strong> - Catches type errors before runtime</p>
-                  <p><strong>Stylelint</strong> - CSS best practices and consistency</p>
-                  <p><strong>Prettier</strong> - Formatting consistency across your team</p>
-                </div>
-              </GlassCard>
-
-              <GlassCard className="p-6">
-                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <span className="text-purple-400">♿</span> Accessibility & Performance
-                </h4>
-                <div className="space-y-3 text-sm">
-                  <p><strong>axe-core</strong> - WCAG 2.1 compliance checking</p>
-                  <p><strong>Pa11y</strong> - HTML accessibility auditing</p>
-                  <p><strong>Lighthouse</strong> - Performance, SEO, and best practices scores</p>
-                  <p><strong>Size Limit</strong> - Bundle size monitoring and limits</p>
-                </div>
-              </GlassCard>
-
-              <GlassCard className="p-6">
-                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <span className="text-blue-400">✨</span> Code Quality Deep Dive
-                </h4>
-                <div className="space-y-3 text-sm">
-                  <p><strong>jscpd</strong> - Finds copy-pasted code that should be refactored</p>
-                  <p><strong>cspell</strong> - Spelling errors in code and content</p>
-                  <p><strong>Markdownlint</strong> - Documentation formatting consistency</p>
-                  <p><strong>alex</strong> - Insensitive or inconsiderate writing</p>
-                  <p><strong>publint</strong> - npm package publishing issues</p>
-                </div>
-              </GlassCard>
-
-              <GlassCard className="p-6">
-                <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                  <span className="text-green-400">🔀</span> Git & Documentation
-                </h4>
-                <div className="space-y-3 text-sm">
-                  <p><strong>Commitlint</strong> - Enforces conventional commit messages</p>
-                  <p><strong>remark-lint</strong> - Markdown best practices</p>
-                  <p>Ensures your repo is professional and maintainable</p>
-                </div>
-              </GlassCard>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testing Section */}
-      <section id="testing" className="section bg-muted/30">
-        <div className="container-wide">
-          <SectionHeading
-            badge="Cross-Platform Testing"
-            title="Test Before Users Find Bugs"
-            titleGradient="Users Find Bugs"
-            description="Your app should work everywhere. We test web, mobile, and desktop so you don't ship broken features."
-          />
-
-          <div className="grid lg:grid-cols-3 gap-8 mt-16">
-            {/* Web Apps */}
-            <GlassCard hover className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500/30 to-green-600/30 flex items-center justify-center">
-                  <span className="text-2xl">🌐</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">Web Apps</h3>
-                  <p className="text-sm text-muted-foreground">Every browser, every device</p>
-                </div>
-              </div>
-              <p className="text-muted-foreground mb-6">
-                &quot;Works on my machine&quot; isn&apos;t good enough. We test Chrome, Firefox, Safari, and Edge so your users never see bugs you missed.
-              </p>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-green-400">&#x2714;</span>
-                  <span>Chrome, Firefox, Safari, Edge</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-green-400">&#x2714;</span>
-                  <span>Phone, tablet, desktop views</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-green-400">&#x2714;</span>
-                  <span>Screenshots when things break</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-green-400">&#x2714;</span>
-                  <span>Video replay of failures</span>
-                </div>
-              </div>
-            </GlassCard>
-
-            {/* Mobile Apps */}
-            <GlassCard hover className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500/30 to-purple-600/30 flex items-center justify-center">
-                  <span className="text-2xl">📱</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">Mobile Apps</h3>
-                  <p className="text-sm text-muted-foreground">iPhone and Android</p>
-                </div>
-              </div>
-              <p className="text-muted-foreground mb-6">
-                Half your users are on phones. We test on real iPhones and Android devices - not simulators - so you ship apps that actually work.
-              </p>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-purple-400">&#x2714;</span>
-                  <span>Real iPhone testing</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-purple-400">&#x2714;</span>
-                  <span>Real Android testing</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-purple-400">&#x2714;</span>
-                  <span>Touch, swipe, pinch gestures</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-purple-400">&#x2714;</span>
-                  <span>React Native, Flutter, Capacitor</span>
-                </div>
-              </div>
-            </GlassCard>
-
-            {/* Desktop Apps */}
-            <GlassCard hover className="p-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500/30 to-orange-600/30 flex items-center justify-center">
-                  <span className="text-2xl">💻</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">Desktop Apps</h3>
-                  <p className="text-sm text-muted-foreground">Mac, Windows, Linux</p>
-                </div>
-              </div>
-              <p className="text-muted-foreground mb-6">
-                Building a desktop app? We test on all three operating systems so you don&apos;t get 1-star reviews from Windows users.
-              </p>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="text-orange-400">&#x2714;</span>
-                  <span>macOS testing</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-orange-400">&#x2714;</span>
-                  <span>Windows testing</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-orange-400">&#x2714;</span>
-                  <span>Linux testing</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-orange-400">&#x2714;</span>
-                  <span>File system, clipboard, menus</span>
-                </div>
-              </div>
-            </GlassCard>
+          {/* Total tools callout */}
+          <div className="mt-12 text-center">
+            <p className="text-muted-foreground">
+              <strong className="text-foreground">{TOOL_REGISTRY.length} tools total</strong> — the same tools trusted by companies like Google, Microsoft, and Meta. We made them easy to use.
+            </p>
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="section">
+      <section className="section bg-muted/30">
         <div className="container-wide">
           <SectionHeading
             badge="Dead Simple"
-            title="Three Steps to Peace of Mind"
-            titleGradient="Peace of Mind"
-            description="Stop worrying about what you might have missed. We check everything."
+            title="Expert Protection in Three Steps"
+            titleGradient="Three Steps"
+            description="You don't need to be a security expert. We are. Just connect your code."
           />
 
           <div className="grid md:grid-cols-3 gap-8 mt-16">
@@ -627,7 +567,7 @@ export default function HomePage() {
               {
                 step: '01',
                 title: 'Connect Your Code',
-                description: 'GitHub, GitLab, ZIP upload, or use our API to auto-scan on every deploy.',
+                description: 'GitHub, GitLab, ZIP upload, or API. Auto-scan on every deploy if you want.',
                 icon: (
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -637,7 +577,7 @@ export default function HomePage() {
               {
                 step: '02',
                 title: 'We Run Everything',
-                description: `${TOOL_REGISTRY.length} tools scan your code in parallel. Tests run across all platforms. Under 2 minutes.`,
+                description: `${TOOL_REGISTRY.length} industry-leading tools scan your code in parallel. Under 2 minutes.`,
                 icon: (
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -647,7 +587,7 @@ export default function HomePage() {
               {
                 step: '03',
                 title: 'Fix What Matters',
-                description: 'Prioritized report shows critical issues first. AI explains each problem and how to fix it.',
+                description: 'Prioritized report shows critical issues first. AI explains each problem in plain English.',
                 icon: (
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -676,134 +616,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Vibe Code It Into Your App */}
-      <section className="section bg-gradient-to-b from-primary/5 to-transparent">
+      {/* Social Proof */}
+      <section className="py-16">
         <div className="container-wide">
-          <SectionHeading
-            badge="For Developers"
-            title="Vibe Code It Into Your App"
-            titleGradient="Into Your App"
-            description="Use our API to trigger scans and display reports directly in your app. No context switching."
-          />
-
-          <div className="grid lg:grid-cols-2 gap-12 mt-16 items-center">
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-lg">🔌</span>
-                </div>
-                <div>
-                  <h3 className="font-bold mb-1">Auto-scan on Deploy</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Add one API call to your CI/CD pipeline. Every deploy gets scanned automatically. Block deploys with critical issues.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-lg">📊</span>
-                </div>
-                <div>
-                  <h3 className="font-bold mb-1">Embed Reports in Your Dashboard</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Fetch scan results via API and display them in your admin panel. Show your team the security status without leaving your app.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-lg">🤖</span>
-                </div>
-                <div>
-                  <h3 className="font-bold mb-1">Vibe Coding Prompts</h3>
-                  <p className="text-muted-foreground text-sm">
-                    We provide copy-paste prompts you can give to your AI assistant. Tell it to &quot;integrate Bugrit&quot; and paste our prompt. Done.
-                  </p>
-                </div>
-              </div>
-
-              <Link href="/docs/vibe-coding">
-                <GradientButton variant="outline" className="mt-4">
-                  View Vibe Coding Prompts
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </GradientButton>
-              </Link>
-            </div>
-
-            <div className="bg-slate-950 rounded-2xl p-6 text-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span className="text-slate-500 text-xs ml-2">vibe-coding-prompt.txt</span>
-              </div>
-              <pre className="text-slate-300 whitespace-pre-wrap leading-relaxed">
-{`Add Bugrit security scanning to my app:
-
-1. After deploy, POST to bugrit.dev/api/v1/scans
-   with my repo URL
-
-2. Poll until scan completes (~60 seconds)
-
-3. If critical issues found, send Slack alert
-
-4. Add a "Security" widget to my dashboard
-   showing scan status and issue counts
-
-Use BUGGERED_API_KEY from environment.`}
-              </pre>
-              <p className="text-slate-500 text-xs mt-4">
-                ↑ Copy this into Claude, Cursor, or Copilot
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How Credits Work */}
-      <section className="section">
-        <div className="container-wide">
-          <SectionHeading
-            badge="Transparent Pricing"
-            title="Pay For What You Use"
-            titleGradient="What You Use"
-            description="Credits scale with your codebase size and the features you choose. See exactly what you'll spend before every scan."
-          />
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-            <GlassCard className="p-6 text-center">
-              <div className="text-3xl mb-2">1</div>
-              <div className="text-sm text-muted-foreground">credit per scan (base)</div>
-            </GlassCard>
-            <GlassCard className="p-6 text-center">
-              <div className="text-3xl mb-2">+1</div>
-              <div className="text-sm text-muted-foreground">credit per 10K lines of code</div>
-            </GlassCard>
-            <GlassCard className="p-6 text-center">
-              <div className="text-3xl mb-2">+1-3</div>
-              <div className="text-sm text-muted-foreground">credits for premium tools</div>
-            </GlassCard>
-            <GlassCard className="p-6 text-center">
-              <div className="text-3xl mb-2">+1-3</div>
-              <div className="text-sm text-muted-foreground">credits for AI features</div>
-            </GlassCard>
-          </div>
-
-          <div className="mt-8 p-6 rounded-xl bg-muted/30 border border-border max-w-3xl mx-auto">
-            <h4 className="font-semibold mb-4 text-center">Example: 50K line repo with security scan + AI explanations</h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="flex justify-between"><span>Base scan</span><span>1 credit</span></div>
-              <div className="flex justify-between"><span>50K lines (5 x 10K)</span><span>5 credits</span></div>
-              <div className="flex justify-between"><span>Security tools</span><span>1 credit</span></div>
-              <div className="flex justify-between"><span>AI explanations</span><span>2 credits</span></div>
-              <div className="col-span-2 flex justify-between font-bold border-t border-border pt-2 mt-2">
-                <span>Total</span><span>9 credits</span>
-              </div>
-            </div>
+          <div className="max-w-4xl mx-auto text-center">
+            <p className="text-2xl font-bold mb-8">
+              &ldquo;I shipped my app in a weekend with AI. Bugrit found 23 security issues I had no idea about. Fixed them in an hour. <span className="text-primary">Probably saved my startup.</span>&rdquo;
+            </p>
+            <p className="text-muted-foreground">— A vibe coder who didn&apos;t get hacked</p>
           </div>
         </div>
       </section>
@@ -815,7 +635,7 @@ Use BUGGERED_API_KEY from environment.`}
             badge="Cheaper Than a Breach"
             title="Choose Your Plan"
             titleGradient="Your Plan"
-            description="SMB breaches cost $120K-$1.24M. 60% never recover. Know your risks before you ship."
+            description="SMB breaches cost $120K-$1.24M. 60% never recover. Expert protection costs less than your coffee habit."
           />
 
           <div className="grid md:grid-cols-4 gap-6 mt-16 max-w-6xl mx-auto">
@@ -825,7 +645,7 @@ Use BUGGERED_API_KEY from environment.`}
                 price: '$0',
                 description: 'Try it out',
                 credits: '5 credits',
-                features: ['1 project', 'Up to 10K lines', 'Static analysis only', '7-day history'],
+                features: ['1 project', 'Up to 10K lines', 'Core security scans', '7-day history'],
                 cta: 'Get Started',
                 popular: false,
               },
@@ -834,7 +654,7 @@ Use BUGGERED_API_KEY from environment.`}
                 price: '$19',
                 description: 'For side projects',
                 credits: '50 credits/mo',
-                features: ['3 projects', 'Up to 50K lines', 'All static tools', 'AI scan summaries', '14-day history', '$0.40/credit overage'],
+                features: ['3 projects', 'Up to 50K lines', 'All security tools', 'AI scan summaries', '14-day history'],
                 cta: 'Start Free Trial',
                 popular: false,
               },
@@ -843,7 +663,7 @@ Use BUGGERED_API_KEY from environment.`}
                 price: '$49',
                 description: 'For serious builders',
                 credits: '200 credits/mo',
-                features: ['10 projects', 'Up to 150K lines', 'All tools + browser', 'AI explanations', 'GitHub integration', '30-day history', 'Rollover up to 100', '$0.30/credit overage'],
+                features: ['10 projects', 'Up to 150K lines', 'All tools + browser testing', 'AI explanations', 'GitHub integration', '30-day history'],
                 cta: 'Start Free Trial',
                 popular: true,
               },
@@ -852,7 +672,7 @@ Use BUGGERED_API_KEY from environment.`}
                 price: '$99',
                 description: 'For teams',
                 credits: '500 credits/mo',
-                features: ['Unlimited projects', 'Up to 500K lines', 'All tools + AI fixes', '10 team members', 'Slack + webhooks', 'API access', '90-day history', 'Rollover up to 250', '$0.20/credit overage'],
+                features: ['Unlimited projects', 'Up to 500K lines', 'All tools + AI fixes', '10 team members', 'Slack + webhooks', 'API access', '90-day history'],
                 cta: 'Start Free Trial',
                 popular: false,
               },
@@ -906,7 +726,7 @@ Use BUGGERED_API_KEY from environment.`}
           </div>
 
           <p className="text-center text-muted-foreground mt-8">
-            <Link href="/docs/pricing" className="text-primary hover:underline">See detailed pricing breakdown</Link> · Need more? <Link href="/contact" className="text-primary hover:underline">Contact us</Link> for Enterprise pricing with unlimited scans, SSO, and SLA.
+            Need more? <Link href="/contact" className="text-primary hover:underline">Contact us</Link> for Enterprise pricing with unlimited scans, SSO, and SLA.
           </p>
         </div>
       </section>
@@ -916,10 +736,10 @@ Use BUGGERED_API_KEY from environment.`}
         <div className="container-tight">
           <GlassCard gradient className="p-12 md:p-16 text-center">
             <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              Don&apos;t Ship Your Next Bug.
+              Don&apos;t Ship Your Next Vulnerability.
             </h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              You&apos;ve worked too hard to let a preventable bug tank your launch. Run a scan before your next deploy.
+              You&apos;ve worked too hard to let a preventable bug tank your launch. Let the experts check your code before you deploy.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/register">
@@ -932,7 +752,7 @@ Use BUGGERED_API_KEY from environment.`}
               </Link>
             </div>
             <p className="text-sm text-muted-foreground mt-4">
-              Free tier available. No credit card required.
+              Free tier available. No credit card required. {TOOL_REGISTRY.length} expert tools at your fingertips.
             </p>
           </GlassCard>
         </div>
@@ -944,7 +764,7 @@ Use BUGGERED_API_KEY from environment.`}
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             <Logo href="/" />
             <p className="text-muted-foreground text-sm">
-              A vibe coder&apos;s best friend. {TOOL_REGISTRY.length} tools. 3 test frameworks. Zero judgment.
+              Expert security tools made easy. {TOOL_REGISTRY.length} tools. Built by security experts worldwide.
             </p>
             <div className="flex items-center gap-6">
               <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
