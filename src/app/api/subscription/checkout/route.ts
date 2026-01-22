@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCheckoutSession } from '@/lib/subscriptions/stripe';
-import { TierName } from '@/lib/subscriptions/tiers';
+import { TierName, TIERS } from '@/lib/subscriptions/tiers';
 import { verifySession } from '@/lib/auth/session';
+
+// Get valid paid tiers from TIERS constant
+const PAID_TIER_NAMES = (Object.keys(TIERS) as TierName[]).filter(
+  (name) => TIERS[name].priceMonthly > 0
+);
 
 /**
  * POST /api/subscription/checkout
@@ -15,10 +20,10 @@ export async function POST(request: NextRequest) {
       interval: 'month' | 'year';
     };
 
-    // Validate tier
-    if (!['pro', 'business'].includes(tier)) {
+    // Validate tier - only allow paid tiers
+    if (!PAID_TIER_NAMES.includes(tier)) {
       return NextResponse.json(
-        { error: 'Invalid tier' },
+        { error: `Invalid tier. Must be one of: ${PAID_TIER_NAMES.join(', ')}` },
         { status: 400 }
       );
     }
