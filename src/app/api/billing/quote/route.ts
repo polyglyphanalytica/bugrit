@@ -38,6 +38,7 @@ import { TOOL_REGISTRY, CATEGORY_LABELS, ToolCategory } from '@/lib/tools/regist
 import { authenticateRequest, ApiKeyContext } from '@/lib/api/auth';
 import { ApiException } from '@/lib/api/errors';
 import { logger } from '@/lib/logger';
+import { getBillingAccount } from '@/lib/billing/scan-billing';
 
 // Map tier names to SubscriptionTier
 function mapTierToSubscriptionTier(tier: string): SubscriptionTier {
@@ -72,14 +73,32 @@ async function getUserFromRequest(req: NextRequest): Promise<{
   }
 }
 
-// Mock - get user's billing info
+// Get user's billing info from Firestore
 async function getUserBilling(userId: string, tier: SubscriptionTier) {
+  const account = await getBillingAccount(userId);
   const tierConfig = SUBSCRIPTION_TIERS[tier];
+
+  if (!account) {
+    // Return defaults for free tier if no account found
+    return {
+      credits: {
+        remaining: tierConfig.credits,
+        included: tierConfig.credits,
+        used: 0,
+      },
+      limits: {
+        maxRepoSize: tierConfig.features.maxRepoSize,
+        availableAIFeatures: [...tierConfig.features.aiFeatures] as AIFeature[],
+      },
+      overageRate: tierConfig.overageRate,
+    };
+  }
+
   return {
     credits: {
-      remaining: 153,
-      included: tierConfig.credits,
-      used: tierConfig.credits === -1 ? 0 : tierConfig.credits - 153,
+      remaining: account.credits.remaining,
+      included: account.credits.included,
+      used: account.credits.used,
     },
     limits: {
       maxRepoSize: tierConfig.features.maxRepoSize,

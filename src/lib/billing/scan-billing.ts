@@ -443,6 +443,50 @@ export async function finalizeReservation(
 }
 
 /**
+ * Check if repository size is within tier limits.
+ * Returns an error message if exceeded, null if OK.
+ */
+export async function checkRepoSizeLimit(
+  userId: string,
+  linesOfCode: number
+): Promise<{ allowed: boolean; maxAllowed: number; reason?: string }> {
+  const account = await getBillingAccount(userId);
+
+  if (!account) {
+    return {
+      allowed: false,
+      maxAllowed: 0,
+      reason: 'Billing account not found',
+    };
+  }
+
+  const tierConfig = SUBSCRIPTION_TIERS[account.tier];
+  const maxRepoSize = tierConfig.features.maxRepoSize;
+
+  // -1 means unlimited
+  if (maxRepoSize === -1) {
+    return { allowed: true, maxAllowed: -1 };
+  }
+
+  if (linesOfCode > maxRepoSize) {
+    const formattedMax = maxRepoSize >= 1000
+      ? `${(maxRepoSize / 1000).toFixed(0)}K`
+      : maxRepoSize.toString();
+    const formattedActual = linesOfCode >= 1000
+      ? `${(linesOfCode / 1000).toFixed(0)}K`
+      : linesOfCode.toString();
+
+    return {
+      allowed: false,
+      maxAllowed: maxRepoSize,
+      reason: `Repository size (${formattedActual} lines) exceeds your ${account.tier} tier limit of ${formattedMax} lines. Upgrade to scan larger repositories.`,
+    };
+  }
+
+  return { allowed: true, maxAllowed: maxRepoSize };
+}
+
+/**
  * Release a credit reservation (scan was cancelled or failed before completion).
  */
 export async function releaseReservation(scanId: string): Promise<void> {

@@ -16,6 +16,8 @@ import { ScanEstimateRequest, ScanEstimateResponse } from '@/lib/billing/types';
 import { authenticateRequest, ApiKeyContext } from '@/lib/api/auth';
 import { ApiException } from '@/lib/api/errors';
 import { logger } from '@/lib/logger';
+import { getBillingAccount } from '@/lib/billing/scan-billing';
+import { getDb, COLLECTIONS } from '@/lib/firestore';
 
 // Map tier names to SubscriptionTier
 function mapTierToSubscriptionTier(tier: string): SubscriptionTier {
@@ -46,16 +48,71 @@ async function getUserFromRequest(req: NextRequest): Promise<{ userId: string; t
   }
 }
 
-// Mock - get user's remaining credits
+// Get user's remaining credits from Firestore
 async function getUserCredits(userId: string): Promise<number> {
-  // TODO: Fetch from Firestore
-  return 153;
+  const account = await getBillingAccount(userId);
+  return account?.credits.remaining ?? 0;
 }
 
-// Mock - estimate repo size from URL or project
+// Estimate repo size from URL or project based on historical scans
 async function estimateRepoSize(repoUrl?: string, projectId?: string): Promise<number | null> {
-  // TODO: If we've scanned this repo before, return known size
-  // TODO: Could also do a quick GitHub API call to estimate
+  const db = getDb();
+  if (!db) return null;
+
+  try {
+    // If we have a projectId, look up recent scans to get actual lines of code
+    if (projectId) {
+      const scansSnapshot = await db
+        .collection(COLLECTIONS.SCANS)
+        .where('projectId', '==', projectId)
+        .where('status', '==', 'completed')
+        .orderBy('createdAt', 'desc')
+        .limit(1)
+        .get();
+
+      if (!scansSnapshot.empty) {
+        const scanData = scansSnapshot.docs[0].data();
+        // Check if we stored linesOfCode in metadata
+        const linesOfCode = scanData?.metadata?.billing?.linesOfCode ||
+                           scanData?.metadata?.linesOfCode;
+        if (typeof linesOfCode === 'number' && linesOfCode > 0) {
+          return linesOfCode;
+        }
+      }
+    }
+
+    // If we have a repoUrl, try to find a project with this URL and its scan history
+    if (repoUrl) {
+      const projectsSnapshot = await db
+        .collection(COLLECTIONS.PROJECTS)
+        .where('repositoryUrl', '==', repoUrl)
+        .limit(1)
+        .get();
+
+      if (!projectsSnapshot.empty) {
+        const projectData = projectsSnapshot.docs[0];
+        const scansSnapshot = await db
+          .collection(COLLECTIONS.SCANS)
+          .where('projectId', '==', projectData.id)
+          .where('status', '==', 'completed')
+          .orderBy('createdAt', 'desc')
+          .limit(1)
+          .get();
+
+        if (!scansSnapshot.empty) {
+          const scanData = scansSnapshot.docs[0].data();
+          const linesOfCode = scanData?.metadata?.billing?.linesOfCode ||
+                             scanData?.metadata?.linesOfCode;
+          if (typeof linesOfCode === 'number' && linesOfCode > 0) {
+            return linesOfCode;
+          }
+        }
+      }
+    }
+  } catch (error) {
+    logger.warn('Failed to estimate repo size', { repoUrl, projectId, error });
+  }
+
   return null;
 }
 

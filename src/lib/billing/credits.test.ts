@@ -45,9 +45,9 @@ describe('calculateCredits', () => {
 
     expect(result.breakdown.tools.linting).toBe(0);
     expect(result.breakdown.tools.security).toBe(1);
-    expect(result.breakdown.tools.accessibility).toBe(2);
-    expect(result.breakdown.tools.performance).toBe(3);
-    expect(result.total).toBe(7); // 1 base + 0 + 1 + 2 + 3 tools
+    expect(result.breakdown.tools.accessibility).toBe(4); // Updated for profitability
+    expect(result.breakdown.tools.performance).toBe(5);   // Updated for profitability
+    expect(result.total).toBe(11); // 1 base + 0 + 1 + 4 + 5 tools
   });
 
   it('should calculate AI feature costs', () => {
@@ -71,8 +71,8 @@ describe('calculateCredits', () => {
 
     const result = calculateCredits(config);
 
-    // Default 50 issues = 1 batch
-    expect(result.breakdown.ai.issue_explanations).toBe(2);
+    // Default 50 issues * 0.1 per issue = 5 credits
+    expect(result.breakdown.ai.issue_explanations).toBe(5);
     expect(result.warnings).toContain(
       'AI issue_explanations cost estimated for ~50 issues. Actual cost may vary.'
     );
@@ -82,27 +82,27 @@ describe('calculateCredits', () => {
     const config: ScanConfig = {
       categories: [],
       aiFeatures: ['issue_explanations'],
-      estimatedIssues: 120, // 3 batches of 50
+      estimatedIssues: 120,
     };
 
     const result = calculateCredits(config);
 
-    // 120 issues = 3 batches * 2 credits = 6
-    expect(result.breakdown.ai.issue_explanations).toBe(6);
+    // 120 issues * 0.1 = 12 credits
+    expect(result.breakdown.ai.issue_explanations).toBe(12);
     expect(result.warnings).toHaveLength(0);
   });
 
-  it('should calculate fix_suggestions with batching', () => {
+  it('should calculate fix_suggestions with per-issue pricing', () => {
     const config: ScanConfig = {
       categories: [],
       aiFeatures: ['fix_suggestions'],
-      estimatedIssues: 100, // 2 batches of 50
+      estimatedIssues: 100,
     };
 
     const result = calculateCredits(config);
 
-    // 2 batches * 3 credits = 6
-    expect(result.breakdown.ai.fix_suggestions).toBe(6);
+    // 100 issues * 0.15 = 15 credits
+    expect(result.breakdown.ai.fix_suggestions).toBe(15);
   });
 
   it('should calculate complete scan correctly', () => {
@@ -117,10 +117,10 @@ describe('calculateCredits', () => {
 
     // Base: 1
     // Lines: 5 (50K lines = 5 batches of 10K)
-    // Tools: 0 + 1 + 2 = 3
-    // AI: 1 (summary) + 4 (2 batches * 2) = 5
-    // Total: 1 + 5 + 3 + 5 = 14
-    expect(result.total).toBe(14);
+    // Tools: 0 (linting) + 1 (security) + 4 (accessibility) = 5
+    // AI: 1 (summary) + 10 (100 issues * 0.1) = 11
+    // Total: 1 + 5 + 5 + 11 = 22
+    expect(result.total).toBe(22);
   });
 });
 
@@ -148,7 +148,7 @@ describe('canAffordScan', () => {
 
     expect(result.allowed).toBe(true);
     expect(result.reason).toContain('overage credits');
-    expect(result.reason).toContain('$0.25/credit');
+    expect(result.reason).toContain('$0.3/credit'); // Updated rate
   });
 
   it('should deny scan when credits insufficient and no overage allowed', () => {
@@ -170,9 +170,10 @@ describe('canAffordScan', () => {
     const proResult = canAffordScan(0, mockEstimate, 'pro');
     const businessResult = canAffordScan(0, mockEstimate, 'business');
 
-    expect(starterResult.reason).toContain('$0.35/credit');
-    expect(proResult.reason).toContain('$0.25/credit');
-    expect(businessResult.reason).toContain('$0.15/credit');
+    // Updated overage rates for profitability
+    expect(starterResult.reason).toContain('$0.4/credit');
+    expect(proResult.reason).toContain('$0.3/credit');
+    expect(businessResult.reason).toContain('$0.2/credit');
   });
 });
 
@@ -211,18 +212,20 @@ describe('getDefaultScanConfig', () => {
 
 describe('SUBSCRIPTION_TIERS', () => {
   it('should have correct credit allocations', () => {
-    expect(SUBSCRIPTION_TIERS.free.credits).toBe(10);
+    // Updated credit allocations for profitability
+    expect(SUBSCRIPTION_TIERS.free.credits).toBe(5);      // Reduced from 10
     expect(SUBSCRIPTION_TIERS.starter.credits).toBe(50);
     expect(SUBSCRIPTION_TIERS.pro.credits).toBe(200);
-    expect(SUBSCRIPTION_TIERS.business.credits).toBe(600);
+    expect(SUBSCRIPTION_TIERS.business.credits).toBe(500); // Reduced from 600
     expect(SUBSCRIPTION_TIERS.enterprise.credits).toBe(-1); // Unlimited
   });
 
   it('should have decreasing overage rates for higher tiers', () => {
+    // Updated overage rates for profitability
     expect(SUBSCRIPTION_TIERS.free.overageRate).toBeNull();
-    expect(SUBSCRIPTION_TIERS.starter.overageRate).toBe(0.35);
-    expect(SUBSCRIPTION_TIERS.pro.overageRate).toBe(0.25);
-    expect(SUBSCRIPTION_TIERS.business.overageRate).toBe(0.15);
+    expect(SUBSCRIPTION_TIERS.starter.overageRate).toBe(0.40); // Increased
+    expect(SUBSCRIPTION_TIERS.pro.overageRate).toBe(0.30);     // Increased
+    expect(SUBSCRIPTION_TIERS.business.overageRate).toBe(0.20); // Increased
   });
 
   it('should have increasing features for higher tiers', () => {
@@ -243,8 +246,9 @@ describe('CREDIT_COSTS', () => {
   });
 
   it('should have resource-intensive categories cost more', () => {
+    // Updated costs for profitability
     expect(CREDIT_COSTS.TOOLS.security).toBe(1);
-    expect(CREDIT_COSTS.TOOLS.accessibility).toBe(2);
-    expect(CREDIT_COSTS.TOOLS.performance).toBe(3);
+    expect(CREDIT_COSTS.TOOLS.accessibility).toBe(4); // Requires Puppeteer
+    expect(CREDIT_COSTS.TOOLS.performance).toBe(5);   // Lighthouse + Puppeteer
   });
 });

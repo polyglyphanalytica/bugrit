@@ -11,6 +11,7 @@ import { BillingStatus } from '@/lib/billing/types';
 import { authenticateRequest, ApiKeyContext } from '@/lib/api/auth';
 import { ApiException } from '@/lib/api/errors';
 import { logger } from '@/lib/logger';
+import { getBillingAccount as getRealBillingAccount } from '@/lib/billing/scan-billing';
 
 // Map tier names to SubscriptionTier
 function mapTierToSubscriptionTier(tier: string): SubscriptionTier {
@@ -41,21 +42,40 @@ async function getUserFromRequest(req: NextRequest): Promise<{ userId: string; t
   }
 }
 
-// Mock function - replace with Firestore lookup
+// Fetch billing account from Firestore
 async function getBillingAccount(userId: string) {
-  // TODO: Fetch from Firestore
+  const account = await getRealBillingAccount(userId);
+
+  if (!account) {
+    // Return default free tier if no account found
+    return {
+      tier: 'free' as SubscriptionTier,
+      credits: {
+        included: SUBSCRIPTION_TIERS.free.credits,
+        used: 0,
+        remaining: SUBSCRIPTION_TIERS.free.credits,
+        rollover: 0,
+      },
+      subscription: {
+        status: 'none' as const,
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+      },
+    };
+  }
+
   return {
-    tier: 'pro' as SubscriptionTier,
+    tier: account.tier,
     credits: {
-      included: 200,
-      used: 47,
-      remaining: 153,
-      rollover: 0,
+      included: account.credits.included,
+      used: account.credits.used,
+      remaining: account.credits.remaining,
+      rollover: account.credits.rollover,
     },
     subscription: {
-      status: 'active' as const,
-      currentPeriodEnd: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days
-      cancelAtPeriodEnd: false,
+      status: account.subscription.status,
+      currentPeriodEnd: account.subscription.currentPeriodEnd || null,
+      cancelAtPeriodEnd: false, // Not tracked in BillingAccount type yet
     },
   };
 }

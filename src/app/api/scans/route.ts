@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger';
 import {
   checkScanAffordability,
   countLinesOfCode,
+  checkRepoSizeLimit,
   billForCompletedScan,
   reserveCreditsForScan,
   releaseReservation,
@@ -407,6 +408,12 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
     // Count actual lines of code for billing
     linesOfCode = await countLinesOfCode(targetPath);
     logger.info('Counted lines of code', { scanId, linesOfCode });
+
+    // Check repository size limit
+    const repoSizeCheck = await checkRepoSizeLimit(options.userId, linesOfCode);
+    if (!repoSizeCheck.allowed) {
+      throw new Error(repoSizeCheck.reason || 'Repository size exceeds tier limit');
+    }
 
     // Run all tools
     logger.info('Running scan tools', { scanId, targetPath, targetUrl });

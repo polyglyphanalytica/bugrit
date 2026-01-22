@@ -138,8 +138,8 @@ export interface BillingStatus {
   };
 
   subscription: {
-    status: 'active' | 'past_due' | 'canceled' | 'trialing';
-    renewsAt: Date;
+    status: 'active' | 'past_due' | 'canceled' | 'trialing' | 'incomplete' | 'none';
+    renewsAt: Date | null;
     cancelAtPeriodEnd: boolean;
   };
 
