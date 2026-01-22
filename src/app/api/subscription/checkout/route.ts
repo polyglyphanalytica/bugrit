@@ -60,12 +60,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for existing Stripe customer ID (from previous credit purchases or canceled subscription)
+    let existingCustomerId: string | undefined = subData?.stripeCustomerId;
+    if (!existingCustomerId) {
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        existingCustomerId = userDoc.data()?.stripeCustomerId;
+      }
+    }
+
     // Create checkout session
     const { url } = await createCheckoutSession({
       userId: user.uid,
       userEmail: user.email || '',
       tier,
       interval,
+      customerId: existingCustomerId,
       successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?subscription=success`,
       cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?subscription=canceled`,
     });

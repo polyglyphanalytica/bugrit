@@ -20,6 +20,7 @@ export interface CreateCheckoutParams {
   userEmail: string;
   tier: TierName;
   interval: 'month' | 'year';
+  customerId?: string; // Reuse existing Stripe customer
   successUrl: string;
   cancelUrl: string;
 }
@@ -40,7 +41,7 @@ export interface SubscriptionData {
 export async function createCheckoutSession(
   params: CreateCheckoutParams
 ): Promise<{ sessionId: string; url: string }> {
-  const { userId, userEmail, tier, interval, successUrl, cancelUrl } = params;
+  const { userId, userEmail, tier, interval, customerId, successUrl, cancelUrl } = params;
 
   if (tier === 'free') {
     throw new Error('Cannot create checkout for free tier');
@@ -59,7 +60,8 @@ export async function createCheckoutSession(
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     payment_method_types: ['card'],
-    customer_email: userEmail,
+    // Reuse existing customer or create new one with email
+    ...(customerId ? { customer: customerId } : { customer_email: userEmail }),
     client_reference_id: userId,
     line_items: [
       {
