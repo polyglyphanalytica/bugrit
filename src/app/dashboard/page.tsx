@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
+import { useToast } from '@/hooks/use-toast';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { DashboardFooter } from '@/components/dashboard-footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,6 +45,33 @@ interface Scan {
   };
   createdAt: string;
   completedAt?: string;
+}
+
+// Separate component to handle URL params (needs Suspense boundary)
+function SubscriptionParamsHandler() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const subscription = searchParams.get('subscription');
+    if (subscription === 'success') {
+      toast({
+        title: 'Subscription activated!',
+        description: 'Welcome to your new plan. Your credits have been added.',
+      });
+      router.replace('/dashboard', { scroll: false });
+    } else if (subscription === 'canceled') {
+      toast({
+        title: 'Checkout canceled',
+        description: 'No charges were made. You can try again anytime.',
+        variant: 'default',
+      });
+      router.replace('/dashboard', { scroll: false });
+    }
+  }, [searchParams, toast, router]);
+
+  return null;
 }
 
 export default function DashboardPage() {
@@ -155,6 +183,9 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <Suspense fallback={null}>
+        <SubscriptionParamsHandler />
+      </Suspense>
       <DashboardNav />
       <main className="flex-1 mx-auto w-full px-4 md:px-6 lg:px-8 py-6 max-w-7xl">
         <div className="flex items-center justify-between mb-6">

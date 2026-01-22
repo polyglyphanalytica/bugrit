@@ -20,10 +20,23 @@ export async function POST(req: NextRequest) {
     }
     const userId = authResult;
 
-    // Get user's Stripe customer ID
-    const userDoc = await db.collection('users').doc(userId).get();
-    const userData = userDoc.exists ? userDoc.data() : {};
-    const stripeCustomerId = userData?.stripeCustomerId;
+    // Get user's Stripe customer ID - check both subscriptions and users collections
+    // (webhook stores in subscriptions, some flows may store in users)
+    let stripeCustomerId: string | undefined;
+
+    // First check subscriptions collection (where webhook stores it)
+    const subscriptionDoc = await db.collection('subscriptions').doc(userId).get();
+    if (subscriptionDoc.exists) {
+      stripeCustomerId = subscriptionDoc.data()?.stripeCustomerId;
+    }
+
+    // Fallback to users collection
+    if (!stripeCustomerId) {
+      const userDoc = await db.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        stripeCustomerId = userDoc.data()?.stripeCustomerId;
+      }
+    }
 
     if (!stripeCustomerId) {
       return errorResponse(

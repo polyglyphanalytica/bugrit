@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,6 +65,38 @@ interface AutoTopupConfig {
   triggerThreshold: number;
   packageId: string;
   maxPerMonth: number;
+}
+
+// Separate component to handle URL params (needs Suspense boundary)
+function PurchaseParamsHandler({ onRefresh }: { onRefresh: () => void }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const purchase = searchParams.get('purchase');
+    const credits = searchParams.get('credits');
+
+    if (purchase === 'success') {
+      toast({
+        title: 'Credits purchased!',
+        description: credits
+          ? `${credits} credits have been added to your account.`
+          : 'Your credits have been added to your account.',
+      });
+      router.replace('/settings/subscription', { scroll: false });
+      onRefresh();
+    } else if (purchase === 'canceled') {
+      toast({
+        title: 'Purchase canceled',
+        description: 'No charges were made. You can try again anytime.',
+        variant: 'default',
+      });
+      router.replace('/settings/subscription', { scroll: false });
+    }
+  }, [searchParams, toast, router, onRefresh]);
+
+  return null;
 }
 
 export default function SubscriptionSettingsPage() {
@@ -257,6 +290,9 @@ export default function SubscriptionSettingsPage() {
 
   return (
     <div className="space-y-6">
+      <Suspense fallback={null}>
+        <PurchaseParamsHandler onRefresh={fetchSubscriptionData} />
+      </Suspense>
       {/* Current Plan */}
       <Card>
         <CardHeader>

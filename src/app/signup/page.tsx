@@ -1,6 +1,17 @@
+import { Suspense } from "react";
 import SignupForm from "@/components/auth/signup-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+
+function SignupFormFallback() {
+  return (
+    <div className="space-y-6">
+      <div className="h-10 bg-muted animate-pulse rounded" />
+      <div className="h-10 bg-muted animate-pulse rounded" />
+      <div className="h-10 bg-muted animate-pulse rounded" />
+    </div>
+  );
+}
 
 export default function SignupPage() {
   return (
@@ -13,7 +24,9 @@ export default function SignupPage() {
           <CardDescription>Join Bugrit to start creating</CardDescription>
         </CardHeader>
         <CardContent>
-          <SignupForm />
+          <Suspense fallback={<SignupFormFallback />}>
+            <SignupForm />
+          </Suspense>
            <p className="mt-4 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link href="/login" className="font-semibold text-primary-foreground underline-offset-4 hover:underline">

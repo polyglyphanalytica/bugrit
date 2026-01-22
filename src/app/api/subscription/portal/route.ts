@@ -20,17 +20,30 @@ export async function POST() {
 
     const userId = user.uid;
 
-    // Get Stripe customer ID from Firestore
+    // Get Stripe customer ID - check both subscriptions and users collections
+    let stripeCustomerId: string | undefined;
+
+    // First check subscriptions collection (where webhook stores it)
     const subscriptionDoc = await db
       .collection('subscriptions')
       .doc(userId)
       .get();
 
-    const stripeCustomerId = subscriptionDoc.data()?.stripeCustomerId;
+    if (subscriptionDoc.exists) {
+      stripeCustomerId = subscriptionDoc.data()?.stripeCustomerId;
+    }
+
+    // Fallback to users collection
+    if (!stripeCustomerId) {
+      const userDoc = await db.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        stripeCustomerId = userDoc.data()?.stripeCustomerId;
+      }
+    }
 
     if (!stripeCustomerId) {
       return NextResponse.json(
-        { error: 'No subscription found' },
+        { error: 'No subscription found. Subscribe to a plan first.' },
         { status: 404 }
       );
     }
@@ -38,7 +51,7 @@ export async function POST() {
     // Create billing portal session
     const { url } = await createBillingPortalSession(
       stripeCustomerId,
-      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings`
+      `${process.env.NEXT_PUBLIC_APP_URL}/settings/subscription`
     );
 
     return NextResponse.json({ url });
