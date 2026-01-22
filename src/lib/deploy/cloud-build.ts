@@ -1035,7 +1035,8 @@ export class CloudBuildRunner {
 
     try {
       const authClient = await getAuthClient();
-      google.options({ auth: authClient });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      google.options({ auth: authClient as any });
 
       // Build the Cloud Build configuration
       const buildConfig = {
@@ -1089,7 +1090,8 @@ export class CloudBuildRunner {
 
     try {
       const authClient = await getAuthClient();
-      google.options({ auth: authClient });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      google.options({ auth: authClient as any });
 
       while (Date.now() - startTime < timeoutMs) {
         const response = await cloudbuild.projects.builds.get({

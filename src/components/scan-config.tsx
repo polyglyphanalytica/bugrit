@@ -32,6 +32,9 @@ const CATEGORY_ICONS: Record<ToolCategory, string> = {
   documentation: '📚',
   git: '🔀',
   performance: '⚡',
+  mobile: '📱',
+  'api-security': '🔐',
+  'cloud-native': '☁️',
 };
 
 const AI_FEATURE_LABELS: Record<AIFeature, { name: string; description: string }> = {
@@ -63,7 +66,7 @@ export function ScanConfigPanel({
   isLoading = false,
 }: ScanConfigProps) {
   const tierConfig = SUBSCRIPTION_TIERS[tier];
-  const availableAIFeatures = tierConfig.features.aiFeatures as AIFeature[];
+  const availableAIFeatures = [...tierConfig.features.aiFeatures] as AIFeature[];
 
   // State for selected options
   const [selectedCategories, setSelectedCategories] = useState<ToolCategory[]>([

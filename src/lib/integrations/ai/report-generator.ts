@@ -699,7 +699,7 @@ export class ReportGenerator {
 
   private estimateTotalFixTime(): string {
     let minutes = 0;
-    const effortMinutes = { trivial: 5, easy: 15, moderate: 45, hard: 120 };
+    const effortMinutes = { trivial: 5, easy: 15, moderate: 45, hard: 120, complex: 240 };
 
     for (const finding of this.findings) {
       minutes += effortMinutes[finding.effort || 'moderate'];

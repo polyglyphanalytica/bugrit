@@ -108,7 +108,7 @@ export default function PricingDocs() {
   // Find recommended tier
   const recommendedTier = useMemo(() => {
     // Check resource requirements first
-    const meetsResourceReqs = (tier: typeof tiers.free) => {
+    const meetsResourceReqs = (tier: { projects: number; teamMembers: number }) => {
       if (tier.projects !== -1 && projectCount > tier.projects) return false;
       if (tier.teamMembers !== -1 && teamSize > tier.teamMembers) return false;
       return true;

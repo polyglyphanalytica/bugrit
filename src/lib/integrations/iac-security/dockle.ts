@@ -82,7 +82,7 @@ export class DockleIntegration implements ToolIntegration {
       aiPrompt: { short: `Fix Dockle ${detail.code}`, detailed: `Fix container issue:\n\nCode: ${detail.code}\nTitle: ${detail.title}\nAlerts: ${detail.alerts.join(', ')}`, steps: ['Review Dockerfile', 'Apply best practice fix', 'Rebuild and rescan'] },
       ruleId: detail.code,
       tags: ['dockle', 'container', 'docker', 'best-practices', detail.code],
-      effort: 'low',
+      effort: 'easy',
     };
   }
 

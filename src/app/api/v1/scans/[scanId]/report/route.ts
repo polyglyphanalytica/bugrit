@@ -45,11 +45,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check if report exists
-    let report = getReportByScan(scanId);
+    let report = await getReportByScan(scanId);
 
     // Generate if not exists
     if (!report) {
-      report = generateReport(scanId);
+      report = await generateReport(scanId);
     }
 
     if (!report) {

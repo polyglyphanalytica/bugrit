@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripeSecretKey } from '@/lib/admin/service';
 import { logger } from '@/lib/logger';
+import type Stripe from 'stripe';
 
 export async function GET() {
   try {
@@ -18,29 +19,33 @@ export async function GET() {
 
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2024-12-18.acacia',
+      apiVersion: '2025-12-15.clover',
     });
 
     // List all promotion codes
     const promotionCodes = await stripe.promotionCodes.list({
       limit: 100,
-      expand: ['data.coupon'],
+      expand: ['data.promotion.coupon'],
     });
 
-    const promoCodes = promotionCodes.data.map((promo) => ({
-      id: promo.id,
-      code: promo.code,
-      active: promo.active,
-      couponId: promo.coupon.id,
-      percentOff: promo.coupon.percent_off,
-      amountOff: promo.coupon.amount_off ? promo.coupon.amount_off / 100 : 0, // Convert from cents
-      duration: promo.coupon.duration,
-      durationInMonths: promo.coupon.duration_in_months,
-      maxRedemptions: promo.max_redemptions,
-      timesRedeemed: promo.times_redeemed,
-      expiresAt: promo.expires_at ? new Date(promo.expires_at * 1000).toISOString() : null,
-      createdAt: new Date(promo.created * 1000).toISOString(),
-    }));
+    const promoCodes = promotionCodes.data.map((promo) => {
+      // In Stripe v20, coupon is inside promotion object and expanded
+      const coupon = promo.promotion?.coupon as Stripe.Coupon | null;
+      return {
+        id: promo.id,
+        code: promo.code,
+        active: promo.active,
+        couponId: coupon?.id || '',
+        percentOff: coupon?.percent_off || null,
+        amountOff: coupon?.amount_off ? coupon.amount_off / 100 : 0, // Convert from cents
+        duration: coupon?.duration || 'once',
+        durationInMonths: coupon?.duration_in_months || null,
+        maxRedemptions: promo.max_redemptions,
+        timesRedeemed: promo.times_redeemed,
+        expiresAt: promo.expires_at ? new Date(promo.expires_at * 1000).toISOString() : null,
+        createdAt: new Date(promo.created * 1000).toISOString(),
+      };
+    });
 
     return NextResponse.json({ promoCodes });
   } catch (error) {
@@ -69,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2024-12-18.acacia',
+      apiVersion: '2025-12-15.clover',
     });
 
     // First, create the coupon
@@ -91,9 +96,12 @@ export async function POST(req: NextRequest) {
 
     const coupon = await stripe.coupons.create(couponParams);
 
-    // Then, create the promotion code
+    // Then, create the promotion code (Stripe v20 API structure)
     const promoParams: Stripe.PromotionCodeCreateParams = {
-      coupon: coupon.id,
+      promotion: {
+        type: 'coupon',
+        coupon: coupon.id,
+      },
       code: code.toUpperCase(),
     };
 

@@ -25,6 +25,33 @@ function convertUser(firebaseUser: FirebaseUser | null): User | null {
     uid: firebaseUser.uid,
     email: firebaseUser.email,
     displayName: firebaseUser.displayName,
+    photoURL: firebaseUser.photoURL,
+    emailVerified: firebaseUser.emailVerified,
+    isAnonymous: firebaseUser.isAnonymous,
+    phoneNumber: firebaseUser.phoneNumber,
+    providerId: firebaseUser.providerId,
+    refreshToken: firebaseUser.refreshToken,
+    tenantId: firebaseUser.tenantId,
+    metadata: {
+      creationTime: firebaseUser.metadata?.creationTime,
+      lastSignInTime: firebaseUser.metadata?.lastSignInTime,
+    },
+    providerData: firebaseUser.providerData.map(p => ({
+      providerId: p.providerId,
+      uid: p.uid,
+      displayName: p.displayName,
+      email: p.email,
+      phoneNumber: p.phoneNumber,
+      photoURL: p.photoURL,
+    })),
+    getIdToken: (forceRefresh?: boolean) => firebaseUser.getIdToken(forceRefresh),
+    getIdTokenResult: async (forceRefresh?: boolean) => {
+      const result = await firebaseUser.getIdTokenResult(forceRefresh);
+      return { token: result.token, claims: result.claims as Record<string, unknown> };
+    },
+    reload: () => firebaseUser.reload(),
+    delete: () => firebaseUser.delete(),
+    toJSON: () => firebaseUser.toJSON(),
   };
 }
 

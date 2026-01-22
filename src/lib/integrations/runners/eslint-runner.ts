@@ -130,7 +130,7 @@ Please fix this issue while maintaining the code's functionality.`,
     },
     ruleId,
     tags: ['eslint', 'code-quality', ruleId],
-    effort: message.fix ? 'trivial' : 'low',
+    effort: message.fix ? 'trivial' : 'easy',
     autoFixable: !!message.fix,
   };
 }

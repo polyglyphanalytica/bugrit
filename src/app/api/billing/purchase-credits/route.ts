@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     // Dynamically import Stripe to avoid issues during build
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2024-12-18.acacia',
+      apiVersion: '2025-12-15.clover',
     });
 
     // Get or create Stripe price ID for this package
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
 
       // Save the priceId back to the credit package in Firestore
       try {
-        await updateCreditPackage(creditPackage.id, { stripePriceId: priceId });
+        await updateCreditPackage(creditPackage.id, { stripePriceId: priceId }, 'system');
       } catch (saveError) {
         logger.warn('Failed to save stripePriceId to credit package', {
           packageId: creditPackage.id,

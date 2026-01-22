@@ -15,6 +15,7 @@ import {
   getIssuesByScan,
   Severity,
 } from '@/lib/api';
+import type { ScanIssue } from '@/lib/db/v1-api';
 
 interface RouteParams {
   params: Promise<{ scanId: string }>;
@@ -45,22 +46,22 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const page = parseInt(url.searchParams.get('page') || '1');
     const perPage = Math.min(parseInt(url.searchParams.get('per_page') || '50'), 100);
 
-    let issues = getIssuesByScan(scanId);
+    let issues = await getIssuesByScan(scanId);
 
     // Filter by severity
     if (severityParam) {
       const severities = severityParam.split(',') as Severity[];
-      issues = issues.filter((i) => severities.includes(i.severity));
+      issues = issues.filter((i: ScanIssue) => severities.includes(i.severity));
     }
 
     // Filter by tool
     if (tool) {
-      issues = issues.filter((i) => i.tool === tool);
+      issues = issues.filter((i: ScanIssue) => i.tool === tool);
     }
 
     // Filter by file
     if (file) {
-      issues = issues.filter((i) => i.file?.includes(file));
+      issues = issues.filter((i: ScanIssue) => i.file?.includes(file));
     }
 
     // Sort by severity (critical first) then by file
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       low: 3,
       info: 4,
     };
-    issues.sort((a, b) => {
+    issues.sort((a: ScanIssue, b: ScanIssue) => {
       const severityDiff = severityOrder[a.severity] - severityOrder[b.severity];
       if (severityDiff !== 0) return severityDiff;
       return (a.file || '').localeCompare(b.file || '');

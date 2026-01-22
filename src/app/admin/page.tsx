@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { GlassCard } from '@/components/ui/glass-card';
 import { GradientButton } from '@/components/ui/gradient-button';
@@ -8,7 +8,7 @@ import { Logo } from '@/components/ui/logo';
 
 type TabType = 'stripe' | 'pricing' | 'credit-packages' | 'promo-codes' | 'features' | 'admins' | 'audit';
 
-const tabs: { id: TabType; label: string; icon: JSX.Element }[] = [
+const tabs: { id: TabType; label: string; icon: React.ReactElement }[] = [
   {
     id: 'stripe',
     label: 'Stripe',

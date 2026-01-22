@@ -278,8 +278,14 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   };
 
   const status = statusMap[subscription.status] || 'active';
-  const periodStart = new Date(subscription.current_period_start * 1000);
-  const periodEnd = new Date(subscription.current_period_end * 1000);
+  // In Stripe v20, period info is on the subscription items, not the subscription itself
+  const firstItem = subscription.items?.data?.[0];
+  const periodStart = firstItem?.current_period_start
+    ? new Date(firstItem.current_period_start * 1000)
+    : new Date();
+  const periodEnd = firstItem?.current_period_end
+    ? new Date(firstItem.current_period_end * 1000)
+    : new Date();
 
   // Use batch write to update all collections
   const batch = db.batch();
@@ -393,7 +399,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  // In Stripe v20, subscription is accessed via parent.subscription_details
+  const subscriptionId = (invoice.parent?.subscription_details?.subscription as string) || null;
 
   if (!subscriptionId) return;
 
@@ -443,7 +450,8 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  // In Stripe v20, subscription is accessed via parent.subscription_details
+  const subscriptionId = (invoice.parent?.subscription_details?.subscription as string) || null;
 
   if (!subscriptionId) return;
 
@@ -493,7 +501,8 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
  * This is more reliable than payment_succeeded as it confirms the invoice is fully paid.
  */
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  // In Stripe v20, subscription is accessed via parent.subscription_details
+  const subscriptionId = (invoice.parent?.subscription_details?.subscription as string) || null;
 
   if (!subscriptionId) return;
 

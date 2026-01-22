@@ -350,7 +350,7 @@ Please investigate and fix this performance issue to ensure the application can 
   private extractMetrics(output: K6Output): PerformanceMetrics {
     const metrics = output.metrics;
     return {
-      responseTime: metrics['http_req_duration']?.values.avg,
+      avgResponseTime: metrics['http_req_duration']?.values.avg,
       throughput: metrics['http_reqs']?.values.rate,
       errorRate: metrics['http_req_failed']?.values.rate,
       p95ResponseTime: metrics['http_req_duration']?.values['p(95)'],

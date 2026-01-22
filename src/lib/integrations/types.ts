@@ -6,10 +6,21 @@ export type ToolCategory =
   | 'accessibility'
   | 'performance'
   | 'api-testing'
+  | 'api-schema'
+  | 'api-security'
   | 'visual'
   | 'coverage'
   | 'observability'
-  | 'chaos';
+  | 'chaos'
+  | 'complexity'
+  | 'database'
+  | 'documentation'
+  | 'iac-security'
+  | 'license'
+  | 'secret-scanning'
+  | 'mobile'
+  | 'dependencies'
+  | 'cloud-native';
 
 export type Severity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 
@@ -35,6 +46,8 @@ export interface AuditFinding {
   file?: string;
   line?: number;
   column?: number;
+  endLine?: number;
+  endColumn?: number;
   url?: string;
   selector?: string;
 
@@ -58,6 +71,7 @@ export interface AuditFinding {
   ruleId?: string;
   tags: string[];
   effort: 'trivial' | 'easy' | 'moderate' | 'hard' | 'complex';
+  autoFixable?: boolean;
 }
 
 export interface AuditResult {
@@ -104,9 +118,19 @@ export interface AuditTarget {
   // For API testing
   apiSpec?: string;
   baseUrl?: string;
+  apiCollection?: string;
+  apiEnvironment?: string;
+
+  // For GraphQL testing
+  graphqlSchema?: string;
+  graphqlSchemaOld?: string;
+  graphqlOperations?: string;
 
   // For container scanning
   image?: string;
+
+  // For load/performance testing
+  loadTestScript?: string;
 
   // Common
   branch?: string;

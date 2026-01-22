@@ -279,7 +279,7 @@ export class JMeterIntegration implements ToolIntegration {
     const sorted = [...times].sort((a, b) => a - b);
 
     return {
-      responseTime: times.reduce((a, b) => a + b, 0) / times.length,
+      avgResponseTime: times.reduce((a, b) => a + b, 0) / times.length,
       p95ResponseTime: sorted[Math.floor(sorted.length * 0.95)],
       p99ResponseTime: sorted[Math.floor(sorted.length * 0.99)],
       errorRate: samples.filter(s => !s.s).length / samples.length,

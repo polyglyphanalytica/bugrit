@@ -2,7 +2,80 @@
  * API Module Exports
  */
 
-export * from './types';
 export * from './errors';
 export * from './auth';
-export * from './store';
+// Export from types first, then selectively from store to avoid duplicates
+export {
+  type Pagination,
+  type ApiResponse,
+  type ApiError,
+  type ProjectSettings,
+  type CreateProjectRequest,
+  type UpdateProjectRequest,
+  type ScanSummary,
+  type CreateScanRequest,
+  type TestCase,
+  type TestError,
+  type TestStep,
+  type CreateTestCaseRequest,
+  type SubmitTestResultsRequest,
+  type TestResultsResponse,
+  type Issue,
+  type AiAnalysis,
+  type PriorityFix,
+  type ReportTrends,
+  type TrendPoint,
+  type WebhookEvent,
+  type WebhookEventType,
+  AVAILABLE_TOOLS,
+  type ToolName,
+  type ToolCategory,
+  type ToolConfig,
+} from './types';
+// Re-export common types from store (which re-exports from db/v1-api)
+export {
+  type Platform,
+  type ScanStatus,
+  type TestStatus,
+  type Severity,
+  type Project,
+  type Scan,
+  type ScanTestCase,
+  type ScanIssue,
+  type Report,
+  // Functions
+  createProject,
+  getProject,
+  getProjectsByOrganization,
+  updateProject,
+  deleteProject,
+  createScan,
+  getScan,
+  getScansByProject,
+  getScansByOrganization,
+  updateScan,
+  createTestCase,
+  getTestCase,
+  getTestCasesByScan,
+  updateTestCase,
+  deleteTestCase,
+  createIssue,
+  getIssuesByScan,
+  createReport,
+  getReport,
+  getReportByScan,
+  getReportsByOrganization,
+  projectStore,
+  scanStore,
+  reportStore,
+  // Additional helpers
+  generateReport,
+  getReportsByProject,
+  startScan,
+  completeScan,
+  failScan,
+  cancelScan,
+  getScanDetails,
+  batchCreateTestCases,
+  submitTestResults,
+} from './store';

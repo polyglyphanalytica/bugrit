@@ -313,7 +313,7 @@ Please investigate and fix this performance issue.
     const responseTime = agg.summaries['http.response_time'];
 
     return {
-      responseTime: responseTime?.mean,
+      avgResponseTime: responseTime?.mean,
       throughput: agg.rates['http.request_rate'],
       errorRate: (agg.counters['errors'] || 0) / (agg.counters['http.requests'] || 1),
       p95ResponseTime: responseTime?.p95,

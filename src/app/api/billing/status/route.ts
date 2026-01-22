@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
       limits: {
         maxProjects: tierConfig.features.maxProjects,
         maxRepoSize: tierConfig.features.maxRepoSize,
-        aiFeatures: tierConfig.features.aiFeatures,
+        aiFeatures: [...tierConfig.features.aiFeatures],
       },
 
       canScan: account.credits.remaining > 0 || tierConfig.overageRate !== null,

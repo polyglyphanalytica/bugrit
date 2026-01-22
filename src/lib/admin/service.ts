@@ -288,7 +288,7 @@ export async function createPricingTier(
     .doc(tierName)
     .set(data);
 
-  await logAuditEvent(createdBy, 'pricing.create', 'pricing_tier', tierName, config);
+  await logAuditEvent(createdBy, 'pricing.create', 'pricing_tier', tierName, config as unknown as Record<string, unknown>);
 }
 
 export async function deletePricingTier(tierName: string, deletedBy: string): Promise<void> {

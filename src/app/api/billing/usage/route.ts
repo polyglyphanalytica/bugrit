@@ -65,7 +65,10 @@ async function getUsageSummary(userId: string, periodStart: Date, periodEnd: Dat
       documentation: { scans: 12, credits: 0, issues: 12 },
       git: { scans: 12, credits: 0, issues: 3 },
       performance: { scans: 5, credits: 15, issues: 0 },
-    } as Record<ToolCategory, { scans: number; credits: number; issues: number }>,
+      mobile: { scans: 0, credits: 0, issues: 0 },
+      'api-security': { scans: 0, credits: 0, issues: 0 },
+      'cloud-native': { scans: 0, credits: 0, issues: 0 },
+    },
 
     byAIFeature: {
       summary: { uses: 12, credits: 12 },
@@ -103,8 +106,8 @@ async function getTransactions(
         breakdown: {
           base: 1,
           lines: 2,
-          tools: { security: 1, accessibility: 2 } as Record<ToolCategory, number>,
-          ai: { summary: 1 },
+          tools: { security: 1, accessibility: 2 } as unknown as Record<ToolCategory, number>,
+          ai: { summary: 1 } as unknown as Record<string, number>,
         },
       },
     },
@@ -120,8 +123,8 @@ async function getTransactions(
         breakdown: {
           base: 1,
           lines: 1,
-          tools: { security: 1 } as Record<ToolCategory, number>,
-          ai: {},
+          tools: { security: 1 } as unknown as Record<ToolCategory, number>,
+          ai: {} as unknown as Record<string, number>,
         },
       },
     },

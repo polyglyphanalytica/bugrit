@@ -120,7 +120,7 @@ Affected dependencies: ${vuln.effects.join(', ') || 'direct dependency'}`,
     },
     ruleId: `npm-vuln-${pkgName}`,
     tags: ['npm', 'security', 'dependency', vuln.severity, ...(viaInfo?.cwe || [])],
-    effort: vuln.fixAvailable ? 'low' : 'moderate',
+    effort: vuln.fixAvailable ? 'easy' : 'moderate',
     autoFixable: !!vuln.fixAvailable,
   };
 }

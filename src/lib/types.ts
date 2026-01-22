@@ -33,6 +33,7 @@ export interface TestRun {
   completedAt?: Date;
   error?: string;
   logs: string[];
+  screenshots?: string[];
   // Platform information
   platform?: 'web' | NativePlatform;
   browser?: BrowserType;
@@ -367,9 +368,35 @@ export interface DashboardStats {
   passRate: number;
 }
 
-// User type for auth
+// User type for auth - compatible with Firebase User
+// We import the actual Firebase User type where needed for full compatibility
 export interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
+  photoURL: string | null;
+  emailVerified: boolean;
+  isAnonymous: boolean;
+  phoneNumber: string | null;
+  providerId: string;
+  refreshToken: string;
+  tenantId: string | null;
+  metadata: {
+    creationTime?: string;
+    lastSignInTime?: string;
+  };
+  providerData: Array<{
+    providerId: string;
+    uid: string;
+    displayName: string | null;
+    email: string | null;
+    phoneNumber: string | null;
+    photoURL: string | null;
+  }>;
+  // Methods
+  getIdToken: (forceRefresh?: boolean) => Promise<string>;
+  getIdTokenResult: (forceRefresh?: boolean) => Promise<{ token: string; claims: Record<string, unknown> }>;
+  reload: () => Promise<void>;
+  delete: () => Promise<void>;
+  toJSON: () => object;
 }

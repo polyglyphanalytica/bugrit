@@ -6,6 +6,7 @@
  */
 
 import { db } from '@/lib/firebase/admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { calculateCredits, canAffordScan, SUBSCRIPTION_TIERS, SubscriptionTier, ScanConfig, CreditEstimate } from './credits';
 import { deductCreditsWithAutoTopup } from './auto-topup';
 import { logger } from '@/lib/logger';
@@ -182,7 +183,7 @@ export async function checkScanAffordability(
     return {
       allowed: false,
       estimate: {
-        breakdown: { base: 0, lines: 0, tools: {} as Record<ToolCategory, number>, ai: {} },
+        breakdown: { base: 0, lines: 0, tools: {} as Record<ToolCategory, number>, ai: { summary: 0, issue_explanations: 0, priority_scoring: 0, fix_suggestions: 0 } },
         total: 0,
         warnings: [],
       },
@@ -197,7 +198,7 @@ export async function checkScanAffordability(
     return {
       allowed: false,
       estimate: {
-        breakdown: { base: 0, lines: 0, tools: {} as Record<ToolCategory, number>, ai: {} },
+        breakdown: { base: 0, lines: 0, tools: {} as Record<ToolCategory, number>, ai: { summary: 0, issue_explanations: 0, priority_scoring: 0, fix_suggestions: 0 } },
         total: 0,
         warnings: [],
       },
@@ -412,14 +413,14 @@ export async function finalizeReservation(
     // Update billing account
     if (difference !== 0) {
       await db.collection('billing_accounts').doc(userId).update({
-        'credits.remaining': db.FieldValue.increment(difference),
-        'credits.reserved': db.FieldValue.increment(-reservedAmount),
-        'credits.used': db.FieldValue.increment(actualCost),
+        'credits.remaining': FieldValue.increment(difference),
+        'credits.reserved': FieldValue.increment(-reservedAmount),
+        'credits.used': FieldValue.increment(actualCost),
       });
     } else {
       await db.collection('billing_accounts').doc(userId).update({
-        'credits.reserved': db.FieldValue.increment(-reservedAmount),
-        'credits.used': db.FieldValue.increment(actualCost),
+        'credits.reserved': FieldValue.increment(-reservedAmount),
+        'credits.used': FieldValue.increment(actualCost),
       });
     }
 
@@ -458,8 +459,8 @@ export async function releaseReservation(scanId: string): Promise<void> {
 
     // Return credits to user
     await db.collection('billing_accounts').doc(userId).update({
-      'credits.remaining': db.FieldValue.increment(reservedAmount),
-      'credits.reserved': db.FieldValue.increment(-reservedAmount),
+      'credits.remaining': FieldValue.increment(reservedAmount),
+      'credits.reserved': FieldValue.increment(-reservedAmount),
     });
 
     // Mark reservation as released

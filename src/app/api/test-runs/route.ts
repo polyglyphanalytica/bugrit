@@ -77,28 +77,41 @@ interface TestExecutionOptions {
   code: string;
 }
 
+// Runner interface for test execution
+interface TestRunner {
+  initialize: (config: unknown) => Promise<void>;
+  runScript: (code: string, context: unknown) => Promise<{
+    success: boolean;
+    duration: number;
+    error?: string;
+    logs?: string[];
+    screenshots?: string[];
+  }>;
+  cleanup: () => Promise<void>;
+}
+
 // Execute test using dynamically imported test runners
 async function executeTestInBackground(testRunId: string, options: TestExecutionOptions) {
   const startTime = Date.now();
 
   try {
     // Dynamically import runners to avoid bundling issues
-    let runner: { initialize: (config: Record<string, unknown>) => Promise<void>; runScript: (code: string, context: Record<string, unknown>) => Promise<{ success: boolean; duration: number; error?: string; logs?: string[]; screenshots?: string[] }>; cleanup: () => Promise<void> };
+    let runner: TestRunner;
 
     switch (options.runnerType) {
       case 'playwright': {
         const { PlaywrightRunner } = await import('@/lib/runners/playwright-runner');
-        runner = new PlaywrightRunner();
+        runner = new PlaywrightRunner() as TestRunner;
         break;
       }
       case 'appium': {
         const { AppiumRunner } = await import('@/lib/runners/appium-runner');
-        runner = new AppiumRunner();
+        runner = new AppiumRunner() as TestRunner;
         break;
       }
       case 'tauri-driver': {
         const { TauriRunner } = await import('@/lib/runners/tauri-runner');
-        runner = new TauriRunner();
+        runner = new TauriRunner() as TestRunner;
         break;
       }
       default:

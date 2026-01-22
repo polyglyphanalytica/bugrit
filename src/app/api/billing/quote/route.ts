@@ -83,7 +83,7 @@ async function getUserBilling(userId: string, tier: SubscriptionTier) {
     },
     limits: {
       maxRepoSize: tierConfig.features.maxRepoSize,
-      availableAIFeatures: tierConfig.features.aiFeatures as AIFeature[],
+      availableAIFeatures: [...tierConfig.features.aiFeatures] as AIFeature[],
     },
     overageRate: tierConfig.overageRate,
   };
@@ -320,6 +320,9 @@ function getCategoryDescription(category: ToolCategory): string {
     documentation: 'Markdown linting, docs quality',
     git: 'Commit message conventions',
     performance: 'Lighthouse audits, bundle size',
+    mobile: 'Mobile app security and quality checks',
+    'api-security': 'API endpoint security testing',
+    'cloud-native': 'Cloud configuration and container security',
   };
   return descriptions[category];
 }

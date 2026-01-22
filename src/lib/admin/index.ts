@@ -11,8 +11,44 @@
  * Superadmins bypass all subscription limits.
  */
 
+// Export all types first
 export * from './types';
 export * from './constants';
-export * from './service';
+// Export service functions
+export {
+  isPlatformAdmin,
+  isPlatformAdminByEmail,
+  getPlatformAdminByEmail,
+  getPlatformAdmin,
+  getAllPlatformAdmins,
+  addPlatformAdmin,
+  removePlatformAdmin,
+  updateAdminLastLogin,
+  getStripeConfig,
+  getStripeSecretKey,
+  getStripeWebhookSecret,
+  updateStripeConfig,
+  getAllPricingConfigs,
+  getPricingConfig,
+  updatePricingConfig,
+  createPricingTier,
+  deletePricingTier,
+  getAllFeatureFlags,
+  getFeatureFlag,
+  updateFeatureFlag,
+  createFeatureFlag,
+  deleteFeatureFlag,
+  logAuditEvent,
+  getAuditLogs,
+  initializeDefaultSuperadmin,
+  isSuperadmin,
+  getAllCreditPackages,
+  getCreditPackage,
+  createCreditPackage,
+  updateCreditPackage,
+  deleteCreditPackage,
+  initializeDefaultCreditPackages,
+  initializeDefaultPricing,
+} from './service';
 export * from './stripe-sync';
 export * from './middleware';

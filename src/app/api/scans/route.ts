@@ -494,7 +494,7 @@ async function extractUploadedZip(file: File, targetDir: string) {
   await fs.writeFile(zipPath, buffer);
 
   try {
-    const AdmZip = safeRequire<typeof import('adm-zip')>('adm-zip').default;
+    const AdmZip = safeRequire<typeof import('adm-zip')>('adm-zip');
     const zip = new AdmZip(zipPath);
     zip.extractAllTo(targetDir, true);
     await fs.unlink(zipPath);
@@ -511,7 +511,7 @@ async function extractUploadedFile(file: File, targetDir: string) {
   // If it's a ZIP-based format (APK is a ZIP), try to extract
   if (file.name.endsWith('.apk')) {
     try {
-      const AdmZip = safeRequire<typeof import('adm-zip')>('adm-zip').default;
+      const AdmZip = safeRequire<typeof import('adm-zip')>('adm-zip');
       const zip = new AdmZip(filePath);
       const extractDir = path.join(targetDir, 'extracted');
       await fs.mkdir(extractDir, { recursive: true });

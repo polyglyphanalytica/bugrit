@@ -213,7 +213,7 @@ export function getDefaultScanConfig(tier: SubscriptionTier): ScanConfig {
 
   return {
     categories,
-    aiFeatures: tierConfig.features.aiFeatures as AIFeature[],
+    aiFeatures: [...tierConfig.features.aiFeatures] as AIFeature[],
   };
 }
 

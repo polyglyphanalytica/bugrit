@@ -11,6 +11,8 @@ interface LighthouseAudit {
   score: number | null;
   scoreDisplayMode: string;
   displayValue?: string;
+  numericValue?: number;
+  numericUnit?: string;
   details?: {
     type: string;
     items?: Array<{

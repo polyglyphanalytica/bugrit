@@ -1,19 +1,28 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // We need to test the secureCompare function which is not exported
 // So we'll test it through the validateAdminKey function
 // First, let's create a module that exposes secureCompare for testing
+
+// Helper to set NODE_ENV (readonly property requires workaround)
+const setNodeEnv = (value: string) => {
+  vi.stubEnv('NODE_ENV', value);
+};
 
 describe('secureCompare (via validateAdminKey)', () => {
   beforeEach(() => {
     vi.resetModules();
   });
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it('should reject when admin key is not configured', async () => {
     // Set up environment without admin key
     const originalEnv = process.env.ADMIN_API_KEY;
     delete process.env.ADMIN_API_KEY;
-    process.env.NODE_ENV = 'production';
+    setNodeEnv('production');
     process.env.REQUIRE_API_AUTH = 'true';
 
     // Dynamically import to get fresh module
@@ -40,7 +49,7 @@ describe('secureCompare (via validateAdminKey)', () => {
 
   it('should reject when no admin key provided in request', async () => {
     process.env.ADMIN_API_KEY = 'test-admin-key';
-    process.env.NODE_ENV = 'production';
+    setNodeEnv('production');
     process.env.REQUIRE_API_AUTH = 'true';
 
     const { validateAdminKey } = await import('./api-auth');
@@ -60,7 +69,7 @@ describe('secureCompare (via validateAdminKey)', () => {
 
   it('should reject invalid admin key', async () => {
     process.env.ADMIN_API_KEY = 'correct-admin-key';
-    process.env.NODE_ENV = 'production';
+    setNodeEnv('production');
     process.env.REQUIRE_API_AUTH = 'true';
 
     const { validateAdminKey } = await import('./api-auth');
@@ -83,7 +92,7 @@ describe('secureCompare (via validateAdminKey)', () => {
 
   it('should accept correct admin key', async () => {
     process.env.ADMIN_API_KEY = 'correct-admin-key';
-    process.env.NODE_ENV = 'production';
+    setNodeEnv('production');
     process.env.REQUIRE_API_AUTH = 'true';
 
     const { validateAdminKey } = await import('./api-auth');
@@ -103,7 +112,7 @@ describe('secureCompare (via validateAdminKey)', () => {
   });
 
   it('should skip auth in development mode when not required', async () => {
-    process.env.NODE_ENV = 'development';
+    setNodeEnv('development');
     process.env.REQUIRE_API_AUTH = 'false';
 
     const { validateAdminKey } = await import('./api-auth');
@@ -126,7 +135,7 @@ describe('validateApiKey', () => {
   });
 
   it('should reject requests without API key in production', async () => {
-    process.env.NODE_ENV = 'production';
+    setNodeEnv('production');
     process.env.REQUIRE_API_AUTH = 'true';
 
     const { validateApiKey } = await import('./api-auth');
@@ -144,7 +153,7 @@ describe('validateApiKey', () => {
   });
 
   it('should reject API keys with invalid format', async () => {
-    process.env.NODE_ENV = 'production';
+    setNodeEnv('production');
     process.env.REQUIRE_API_AUTH = 'true';
 
     const { validateApiKey } = await import('./api-auth');
@@ -165,7 +174,7 @@ describe('validateApiKey', () => {
   });
 
   it('should skip auth in development when not required', async () => {
-    process.env.NODE_ENV = 'development';
+    setNodeEnv('development');
     process.env.REQUIRE_API_AUTH = 'false';
 
     const { validateApiKey } = await import('./api-auth');
@@ -184,7 +193,7 @@ describe('validateApiKey', () => {
 
 describe('hasPermission', () => {
   it('should return true in development mode without auth required', async () => {
-    process.env.NODE_ENV = 'development';
+    setNodeEnv('development');
     process.env.REQUIRE_API_AUTH = 'false';
 
     const { hasPermission } = await import('./api-auth');
@@ -195,7 +204,7 @@ describe('hasPermission', () => {
   });
 
   it('should return false when apiKey is undefined in production', async () => {
-    process.env.NODE_ENV = 'production';
+    setNodeEnv('production');
     process.env.REQUIRE_API_AUTH = 'true';
 
     const { hasPermission } = await import('./api-auth');
@@ -206,7 +215,7 @@ describe('hasPermission', () => {
   });
 
   it('should return true when apiKey has the required permission', async () => {
-    process.env.NODE_ENV = 'production';
+    setNodeEnv('production');
     process.env.REQUIRE_API_AUTH = 'true';
 
     const { hasPermission } = await import('./api-auth');
@@ -232,7 +241,7 @@ describe('hasPermission', () => {
 
 describe('getAuthenticatedUserId', () => {
   it('should return user ID from API key', async () => {
-    process.env.NODE_ENV = 'development';
+    setNodeEnv('development');
     process.env.REQUIRE_API_AUTH = 'false';
 
     const { getAuthenticatedUserId } = await import('./api-auth');
@@ -255,7 +264,7 @@ describe('getAuthenticatedUserId', () => {
   });
 
   it('should return user ID from session cookie', async () => {
-    process.env.NODE_ENV = 'production';
+    setNodeEnv('production');
 
     const { getAuthenticatedUserId } = await import('./api-auth');
 

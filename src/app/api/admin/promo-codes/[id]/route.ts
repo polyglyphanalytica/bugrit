@@ -22,7 +22,7 @@ export async function DELETE(
 
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2024-12-18.acacia',
+      apiVersion: '2025-12-15.clover',
     });
 
     // Deactivate the promotion code

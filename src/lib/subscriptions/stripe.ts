@@ -12,7 +12,7 @@ import { TierName, TIERS } from './tiers';
 
 // Initialize Stripe (server-side only)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2025-12-15.clover',
 });
 
 export interface CreateCheckoutParams {
@@ -211,8 +211,13 @@ function parseSubscription(subscription: Stripe.Subscription): SubscriptionData 
     status: subscription.status,
     tier,
     interval: priceInterval === 'year' ? 'year' : 'month',
-    currentPeriodStart: new Date(subscription.current_period_start * 1000),
-    currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+    // In Stripe v20, period info is on subscription items
+    currentPeriodStart: subscription.items?.data?.[0]?.current_period_start
+      ? new Date(subscription.items.data[0].current_period_start * 1000)
+      : new Date(),
+    currentPeriodEnd: subscription.items?.data?.[0]?.current_period_end
+      ? new Date(subscription.items.data[0].current_period_end * 1000)
+      : new Date(),
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
   };
 }
