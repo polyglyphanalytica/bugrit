@@ -46,6 +46,7 @@ const navItems = [
     items: [
       { href: '/docs/api-reference/projects', label: 'Projects' },
       { href: '/docs/api-reference/scans', label: 'Scans' },
+      { href: '/docs/api-reference/sessions', label: 'Sessions (Real-Time)' },
       { href: '/docs/api-reference/tests', label: 'Tests' },
       { href: '/docs/api-reference/reports', label: 'Reports' },
       { href: '/docs/api-reference/billing', label: 'Billing' },

@@ -37,6 +37,28 @@ export default function ScansApiPage() {
         </div>
       </div>
 
+      {/* NEW: Real-Time Polling */}
+      <div className="p-6 bg-gradient-to-br from-green-500/20 to-green-500/5 border-2 border-green-500/40 rounded-xl">
+        <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
+          <span>⚡</span> NEW: Real-Time Session Polling
+        </h2>
+        <p className="text-muted-foreground mb-4">
+          Watch your scan results <strong>stream in live</strong> as each tool completes. No more waiting for all 71 tools to finish before seeing results!
+        </p>
+        <div className="grid md:grid-cols-2 gap-4 mb-4">
+          <div className="p-3 bg-background/80 rounded-lg">
+            <strong className="text-green-600 dark:text-green-400">Before:</strong> Wait 2-5 minutes for all tools, then see results
+          </div>
+          <div className="p-3 bg-background/80 rounded-lg">
+            <strong className="text-green-600 dark:text-green-400">Now:</strong> See each tool&apos;s results immediately as it finishes
+          </div>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Use <code className="bg-muted px-1 rounded">/api/sessions</code> for the new streaming experience.
+          <a href="/docs/api-reference/sessions" className="text-primary underline ml-1">View Sessions API →</a>
+        </p>
+      </div>
+
       {/* Why This Matters */}
       <div className="p-6 bg-primary/10 border-2 border-primary/30 rounded-xl">
         <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
