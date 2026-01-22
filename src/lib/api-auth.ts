@@ -249,26 +249,25 @@ export function successResponse<T>(
 /**
  * Get authenticated user ID from request
  * Returns the user ID from API key or session, or null if not authenticated
+ *
+ * SECURITY: Authentication methods in order of preference:
+ * 1. API key (x-api-key header) - For programmatic access
+ * 2. Firebase session cookie - For browser-based access (verified server-side)
+ *
+ * NOTE: x-user-id header was REMOVED due to security vulnerability.
+ * It allowed any client to impersonate any user by setting the header.
  */
 export function getAuthenticatedUserId(request: NextRequest): string | null {
-  // Try API key first
+  // Try API key first (for programmatic access)
   const apiKeyResult = validateApiKey(request);
   if (apiKeyResult.success && apiKeyResult.apiKey) {
     return apiKeyResult.apiKey.ownerId;
   }
 
-  // Try session cookie
-  const sessionCookie = request.cookies.get('session');
-  if (sessionCookie?.value) {
-    // Session value should contain the user ID
-    return sessionCookie.value;
-  }
-
-  // Try x-user-id header (for internal service calls only)
-  const userIdHeader = request.headers.get('x-user-id');
-  if (userIdHeader && userIdHeader !== 'demo-user') {
-    return userIdHeader;
-  }
+  // Session cookie authentication is handled by verifySession() in auth/session.ts
+  // which uses Firebase Admin SDK to verify the cookie server-side.
+  // This function returns null for session-based auth - callers should use
+  // verifySession() directly for browser-based requests.
 
   return null;
 }

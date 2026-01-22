@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { Application, ApiKey, ApiKeyPermission } from '@/lib/types';
+import { apiClient } from '@/lib/api-client';
 
 const ALL_PERMISSIONS: { value: ApiKeyPermission; label: string }[] = [
   { value: 'scripts:submit', label: 'Submit Scripts' },
@@ -86,12 +87,9 @@ export default function ApplicationDetailPage({
 
   const fetchApplication = async () => {
     try {
-      const res = await fetch(`/api/applications/${resolvedParams.id}`, {
-        headers: { 'x-user-id': user!.uid },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setApplication(data.application);
+      const res = await apiClient.get<{ application: Application }>(user!, `/api/applications/${resolvedParams.id}`);
+      if (res.ok && res.data) {
+        setApplication(res.data.application);
       } else if (res.status === 404) {
         router.push('/applications');
       }
@@ -104,12 +102,9 @@ export default function ApplicationDetailPage({
 
   const fetchApiKeys = async () => {
     try {
-      const res = await fetch(`/api/applications/${resolvedParams.id}/keys`, {
-        headers: { 'x-user-id': user!.uid },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setApiKeys(data.keys || []);
+      const res = await apiClient.get<{ keys: ApiKey[] }>(user!, `/api/applications/${resolvedParams.id}/keys`);
+      if (res.ok && res.data) {
+        setApiKeys(res.data.keys || []);
       }
     } catch (error) {
       console.error('Failed to fetch API keys:', error);
@@ -128,26 +123,17 @@ export default function ApplicationDetailPage({
 
     setCreatingKey(true);
     try {
-      const res = await fetch(`/api/applications/${resolvedParams.id}/keys`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user!.uid,
-        },
-        body: JSON.stringify(newKey),
-      });
+      const res = await apiClient.post<{ key: { fullKey: string } }>(user!, `/api/applications/${resolvedParams.id}/keys`, newKey);
 
-      if (res.ok) {
-        const data = await res.json();
-        setNewKeyResult(data.key.fullKey);
+      if (res.ok && res.data) {
+        setNewKeyResult(res.data.key.fullKey);
         fetchApiKeys();
         toast({
           title: 'API Key Created',
           description: 'Make sure to copy the key now. It won\'t be shown again.',
         });
       } else {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to create API key');
+        throw new Error(res.error || 'Failed to create API key');
       }
     } catch (error) {
       toast({
@@ -166,19 +152,16 @@ export default function ApplicationDetailPage({
     }
 
     try {
-      const res = await fetch(
-        `/api/applications/${resolvedParams.id}/keys?keyId=${keyId}&action=revoke`,
-        {
-          method: 'DELETE',
-          headers: { 'x-user-id': user!.uid },
-        }
+      const res = await apiClient.delete(
+        user!,
+        `/api/applications/${resolvedParams.id}/keys?keyId=${keyId}&action=revoke`
       );
 
       if (res.ok) {
         toast({ title: 'API Key Revoked', description: `${keyName} has been revoked.` });
         fetchApiKeys();
       } else {
-        throw new Error('Failed to revoke API key');
+        throw new Error(res.error || 'Failed to revoke API key');
       }
     } catch (error) {
       toast({
@@ -195,19 +178,16 @@ export default function ApplicationDetailPage({
     }
 
     try {
-      const res = await fetch(
-        `/api/applications/${resolvedParams.id}/keys?keyId=${keyId}&action=delete`,
-        {
-          method: 'DELETE',
-          headers: { 'x-user-id': user!.uid },
-        }
+      const res = await apiClient.delete(
+        user!,
+        `/api/applications/${resolvedParams.id}/keys?keyId=${keyId}&action=delete`
       );
 
       if (res.ok) {
         toast({ title: 'API Key Deleted', description: `${keyName} has been deleted.` });
         fetchApiKeys();
       } else {
-        throw new Error('Failed to delete API key');
+        throw new Error(res.error || 'Failed to delete API key');
       }
     } catch (error) {
       toast({

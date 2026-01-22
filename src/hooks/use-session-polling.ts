@@ -103,6 +103,12 @@ export interface UseSessionPollingOptions {
   autoStop?: boolean;
   /** Maximum poll attempts before giving up */
   maxAttempts?: number;
+  /**
+   * Function to get authentication token (Firebase ID token).
+   * Required for authenticated session polling.
+   * Example: () => user.getIdToken()
+   */
+  getAuthToken?: () => Promise<string>;
   /** Callback when a new tool report arrives */
   onToolComplete?: (report: ToolReport) => void;
   /** Callback when session completes */
@@ -145,6 +151,7 @@ export function useSessionPolling(
     incremental = false,
     autoStop = true,
     maxAttempts = 100,
+    getAuthToken,
     onToolComplete,
     onComplete,
     onError,
@@ -182,7 +189,19 @@ export function useSessionPolling(
         url += `?since=${encodeURIComponent(lastUpdateRef.current)}`;
       }
 
-      const response = await fetch(url);
+      // Build headers with optional authentication
+      const headers: Record<string, string> = {};
+      if (getAuthToken) {
+        try {
+          const token = await getAuthToken();
+          headers['Authorization'] = `Bearer ${token}`;
+        } catch (authError) {
+          console.error('Failed to get auth token for session polling:', authError);
+          // Continue without auth - the API will return 401 if auth is required
+        }
+      }
+
+      const response = await fetch(url, { headers });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch session: ${response.status}`);

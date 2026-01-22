@@ -77,6 +77,7 @@ export default function ApiKeysPage() {
     permissions: [...API_PERMISSION_GROUPS.execute],
   });
   const [createdKey, setCreatedKey] = useState<string | null>(null);
+  const [keyMasked, setKeyMasked] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -89,6 +90,29 @@ export default function ApiKeysPage() {
       fetchApiKeys();
     }
   }, [user, authLoading, router]);
+
+  // Auto-mask the created key after 60 seconds for security
+  useEffect(() => {
+    if (createdKey && !keyMasked) {
+      const timer = setTimeout(() => {
+        setKeyMasked(true);
+      }, 60000); // 60 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [createdKey, keyMasked]);
+
+  // Clear created key from memory when dialog closes
+  const handleKeyDialogClose = (open: boolean) => {
+    setShowKeyDialog(open);
+    if (!open) {
+      // Clear sensitive data from memory after a brief delay for animation
+      setTimeout(() => {
+        setCreatedKey(null);
+        setKeyMasked(false);
+        setCopied(false);
+      }, 300);
+    }
+  };
 
   const fetchApiKeys = async () => {
     try {
@@ -330,24 +354,37 @@ export default function ApiKeysPage() {
         </div>
 
         {/* New Key Created Dialog */}
-        <Dialog open={showKeyDialog} onOpenChange={setShowKeyDialog}>
+        <Dialog open={showKeyDialog} onOpenChange={handleKeyDialogClose}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>API Key Created</DialogTitle>
               <DialogDescription>
                 Copy your API key now. You will not be able to see it again.
+                {!keyMasked && ' Key will be masked in 60 seconds.'}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="p-4 bg-muted rounded-lg font-mono text-sm break-all">
-                {createdKey}
+                {keyMasked ? (
+                  <span className="text-muted-foreground">
+                    {createdKey?.substring(0, 10)}••••••••••••••••••••
+                  </span>
+                ) : (
+                  createdKey
+                )}
               </div>
-              <Button onClick={copyToClipboard} className="w-full">
-                {copied ? 'Copied!' : 'Copy to Clipboard'}
-              </Button>
+              {keyMasked ? (
+                <p className="text-sm text-muted-foreground text-center">
+                  Key has been masked for security. Please close this dialog.
+                </p>
+              ) : (
+                <Button onClick={copyToClipboard} className="w-full">
+                  {copied ? 'Copied!' : 'Copy to Clipboard'}
+                </Button>
+              )}
             </div>
             <DialogFooter>
-              <Button onClick={() => setShowKeyDialog(false)}>Done</Button>
+              <Button onClick={() => handleKeyDialogClose(false)}>Done</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Application } from '@/lib/types';
+import { apiClient } from '@/lib/api-client';
 
 type SourceType = 'url' | 'github' | 'gitlab' | 'upload' | 'docker' | 'npm' | 'mobile';
 
@@ -77,15 +78,12 @@ export default function NewScanPage() {
 
   const fetchApplication = async () => {
     try {
-      const res = await fetch(`/api/applications/${appId}`, {
-        headers: { 'x-user-id': user!.uid },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setApplication(data.application);
+      const res = await apiClient.get<{ application: Application }>(user!, `/api/applications/${appId}`);
+      if (res.ok && res.data) {
+        setApplication(res.data.application);
         // Pre-fill URL if exists
-        if (data.application?.targetUrl) {
-          setConfig(prev => ({ ...prev, targetUrl: data.application.targetUrl }));
+        if (res.data.application?.targetUrl) {
+          setConfig(prev => ({ ...prev, targetUrl: res.data!.application.targetUrl }));
         }
       } else {
         router.push('/applications');
@@ -182,9 +180,11 @@ export default function NewScanPage() {
           break;
       }
 
+      // Get Firebase ID token for authentication
+      const idToken = await user!.getIdToken();
       const res = await fetch('/api/scans', {
         method: 'POST',
-        headers: { 'x-user-id': user!.uid },
+        headers: { 'Authorization': `Bearer ${idToken}` },
         body: formData,
       });
 
