@@ -8,7 +8,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripeSecretKey } from '@/lib/admin/service';
 import { logger } from '@/lib/logger';
+import { createHash } from 'crypto';
 import type Stripe from 'stripe';
+
+/**
+ * Generate idempotency key for promo code operations
+ */
+function generateIdempotencyKey(operation: string, ...args: string[]): string {
+  const timestamp = Math.floor(Date.now() / 60000); // 1-minute window
+  const data = [operation, ...args, timestamp.toString()].join(':');
+  return createHash('sha256').update(data).digest('hex').slice(0, 32);
+}
 
 export async function GET() {
   try {
@@ -77,10 +87,15 @@ export async function POST(req: NextRequest) {
       apiVersion: '2025-12-15.clover',
     });
 
-    // First, create the coupon
+    // Generate idempotency keys to prevent duplicate creations
+    const normalizedCode = code.toUpperCase();
+    const couponIdempotencyKey = generateIdempotencyKey('coupon', normalizedCode, String(percentOff || amountOff), duration || 'once');
+    const promoIdempotencyKey = generateIdempotencyKey('promo', normalizedCode);
+
+    // First, create the coupon with idempotency key
     const couponParams: Stripe.CouponCreateParams = {
       duration: duration || 'once',
-      name: `${code} Discount`,
+      name: `${normalizedCode} Discount`,
     };
 
     if (percentOff && percentOff > 0) {
@@ -94,7 +109,9 @@ export async function POST(req: NextRequest) {
       couponParams.duration_in_months = durationInMonths;
     }
 
-    const coupon = await stripe.coupons.create(couponParams);
+    const coupon = await stripe.coupons.create(couponParams, {
+      idempotencyKey: couponIdempotencyKey,
+    });
 
     // Then, create the promotion code (Stripe v20 API structure)
     const promoParams: Stripe.PromotionCodeCreateParams = {
@@ -102,7 +119,7 @@ export async function POST(req: NextRequest) {
         type: 'coupon',
         coupon: coupon.id,
       },
-      code: code.toUpperCase(),
+      code: normalizedCode,
     };
 
     if (maxRedemptions && maxRedemptions > 0) {
@@ -113,7 +130,9 @@ export async function POST(req: NextRequest) {
       promoParams.expires_at = Math.floor(new Date(expiresAt).getTime() / 1000);
     }
 
-    const promotionCode = await stripe.promotionCodes.create(promoParams);
+    const promotionCode = await stripe.promotionCodes.create(promoParams, {
+      idempotencyKey: promoIdempotencyKey,
+    });
 
     logger.info('Promo code created', { code: promotionCode.code, couponId: coupon.id });
 
