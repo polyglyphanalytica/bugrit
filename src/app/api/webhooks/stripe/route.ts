@@ -229,7 +229,11 @@ async function handleCreditPurchase(session: Stripe.Checkout.Session) {
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const userId = subscription.metadata.userId;
-  const tier = (subscription.metadata.tier as TierName) || 'free';
+  // Default to 'starter' (lowest paid tier) if metadata missing - safer than 'free' which would downgrade paid users
+  const tier = (subscription.metadata.tier as TierName) || 'starter';
+  if (!subscription.metadata.tier) {
+    console.warn(`Subscription ${subscription.id} missing tier metadata in update, defaulting to 'starter'`);
+  }
 
   if (!userId) {
     // Log but don't throw - subscription may have been created outside our app
