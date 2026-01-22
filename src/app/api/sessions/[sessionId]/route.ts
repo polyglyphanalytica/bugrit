@@ -16,21 +16,18 @@ import { authenticateRequest } from '@/lib/api/auth';
 import { handleError, successResponse, Errors } from '@/lib/api/errors';
 import { logger } from '@/lib/logger';
 
-interface RouteParams {
-  params: {
-    sessionId: string;
-  };
-}
-
 /**
  * GET /api/sessions/[sessionId]
  * Get aggregated report for polling
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ sessionId: string }> }
+) {
   try {
     const context = await authenticateRequest(request, 'scans:read');
     const userId = context.apiKey.ownerId;
-    const { sessionId } = params;
+    const { sessionId } = await params;
 
     const url = new URL(request.url);
     const progressOnly = url.searchParams.get('progress') === 'true';

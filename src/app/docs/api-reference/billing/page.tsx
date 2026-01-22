@@ -1,3 +1,5 @@
+'use client';
+
 import { GlassCard } from '@/components/ui/glass-card';
 import Link from 'next/link';
 
