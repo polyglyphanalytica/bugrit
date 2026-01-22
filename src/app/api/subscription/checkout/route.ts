@@ -3,6 +3,7 @@ import { createCheckoutSession } from '@/lib/subscriptions/stripe';
 import { TierName, TIERS } from '@/lib/subscriptions/tiers';
 import { verifySession } from '@/lib/auth/session';
 import { db } from '@/lib/firebase/admin';
+import { canChangeSubscriptionPlan } from '@/lib/billing/dunning';
 
 // Get valid paid tiers from TIERS constant
 const PAID_TIER_NAMES = (Object.keys(TIERS) as TierName[]).filter(
@@ -43,6 +44,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
+      );
+    }
+
+    // Check if user is in dunning state (payment past due)
+    // Block plan changes until payment is resolved to avoid billing complications
+    const planChangeCheck = await canChangeSubscriptionPlan(user.uid);
+    if (!planChangeCheck.allowed) {
+      return NextResponse.json(
+        { error: planChangeCheck.reason },
+        { status: 400 }
       );
     }
 

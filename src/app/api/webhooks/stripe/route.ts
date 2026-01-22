@@ -3,6 +3,10 @@ import { constructWebhookEvent } from '@/lib/subscriptions/stripe';
 import { db } from '@/lib/firebase/admin';
 import { TierName } from '@/lib/subscriptions/tiers';
 import Stripe from 'stripe';
+import {
+  handlePaymentFailure as createDunningState,
+  resolvePaymentSuccess,
+} from '@/lib/billing/dunning';
 
 /**
  * POST /api/webhooks/stripe
@@ -486,31 +490,35 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   const doc = snapshot.docs[0];
   const userId = doc.id;
-  const subscriptionData = doc.data();
   const now = new Date();
 
-  // Track failure count for escalation
-  const failureCount = (subscriptionData.paymentFailureCount || 0) + 1;
+  // Create or update dunning state with 14-day grace period
+  // The dunning service handles:
+  // - Invoice deduplication (prevents webhook retry inflation)
+  // - Grace period tracking
+  // - Escalating notifications
+  const dunningState = await createDunningState(userId, subscriptionId, invoice.id);
 
-  // Use batch to update both collections
+  // Update subscription status to past_due
   const batch = db.batch();
 
-  // Update subscriptions collection
   batch.update(doc.ref, {
     status: 'past_due',
     lastPaymentFailedAt: now,
-    paymentFailureCount: failureCount,
+    paymentFailureCount: dunningState?.failureCount || 1,
+    // Track grace period expiry for UI display
+    gracePeriodExpiresAt: dunningState?.expiresAt,
     updatedAt: now,
   });
 
-  // Update billing_accounts collection
   batch.set(
     db.collection('billing_accounts').doc(userId),
     {
       subscription: {
         status: 'past_due',
         lastPaymentFailedAt: now,
-        paymentFailureCount: failureCount,
+        paymentFailureCount: dunningState?.failureCount || 1,
+        gracePeriodExpiresAt: dunningState?.expiresAt,
       },
       updatedAt: now,
     },
@@ -519,49 +527,25 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   await batch.commit();
 
-  // Create notification for user with escalating urgency
-  let notificationMessage = 'Your payment could not be processed. Please update your payment method to avoid service interruption.';
-  let notificationType = 'payment_failed';
-
-  if (failureCount >= 3) {
-    notificationMessage = 'URGENT: Your payment has failed multiple times. Your subscription will be canceled soon if payment is not updated.';
-    notificationType = 'payment_failed_urgent';
-  } else if (failureCount >= 2) {
-    notificationMessage = 'Your payment failed again. Please update your payment method as soon as possible.';
-    notificationType = 'payment_failed_warning';
-  }
-
-  await db.collection('notifications').add({
-    userId,
-    type: notificationType,
-    title: failureCount >= 3 ? 'Urgent: Payment Failed' : 'Payment Failed',
-    message: notificationMessage,
-    actionUrl: '/settings/subscription',
-    actionLabel: 'Update Payment Method',
-    read: false,
-    createdAt: now,
-    metadata: {
-      failureCount,
-      subscriptionId,
-    },
-  });
-
   // Log the event for monitoring
   await db.collection('payment_events').add({
     userId,
     type: 'payment_failed',
     subscriptionId,
     invoiceId: invoice.id,
-    failureCount,
+    failureCount: dunningState?.failureCount || 1,
+    gracePeriodExpiresAt: dunningState?.expiresAt,
     createdAt: now,
   });
 
-  console.log(`Payment failed for subscription ${subscriptionId} (attempt ${failureCount})`);
+  console.log(`Payment failed for subscription ${subscriptionId} (attempt ${dunningState?.failureCount || 1})`);
 }
 
 /**
  * Handle invoice.paid event - the canonical payment confirmation event.
  * This is more reliable than payment_succeeded as it confirms the invoice is fully paid.
+ *
+ * Also resolves any active dunning state (grace period) for this user.
  */
 async function handleInvoicePaid(invoice: Stripe.Invoice) {
   // In Stripe v20, subscription is accessed via parent.subscription_details
@@ -582,6 +566,10 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   const userId = doc.id;
   const now = new Date();
 
+  // Resolve any active dunning state (14-day grace period)
+  // This uses a transaction to prevent race conditions with expiry processing
+  const wasInDunning = await resolvePaymentSuccess(userId, invoice.id);
+
   // Use batch to update both collections
   const batch = db.batch();
 
@@ -589,7 +577,9 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   batch.update(doc.ref, {
     status: 'active',
     lastPaymentAt: now,
-    lastPaymentFailedAt: null, // Clear any previous failure
+    lastPaymentFailedAt: null,
+    paymentFailureCount: 0,
+    gracePeriodExpiresAt: null, // Clear grace period
     updatedAt: now,
   });
 
@@ -601,6 +591,8 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
         status: 'active',
         lastPaymentAt: now,
         lastPaymentFailedAt: null,
+        paymentFailureCount: 0,
+        gracePeriodExpiresAt: null,
       },
       updatedAt: now,
     },
@@ -609,7 +601,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 
   await batch.commit();
 
-  console.log(`Invoice paid for subscription ${subscriptionId}`);
+  console.log(`Invoice paid for subscription ${subscriptionId}${wasInDunning ? ' (recovered from dunning)' : ''}`);
 }
 
 /**
