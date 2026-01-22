@@ -11,7 +11,7 @@ async function getStripeClient(): Promise<Stripe | null> {
   if (!secretKey) return null;
 
   return new Stripe(secretKey, {
-    apiVersion: '2023-10-16',
+    apiVersion: '2024-12-18.acacia',
   });
 }
 
