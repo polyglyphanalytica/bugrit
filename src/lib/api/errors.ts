@@ -128,8 +128,8 @@ export const Errors = {
   unauthorized: () =>
     errorResponse(ErrorCodes.UNAUTHORIZED, 'Authentication required', 401),
 
-  forbidden: () =>
-    errorResponse(ErrorCodes.FORBIDDEN, 'Access denied', 403),
+  forbidden: (message?: string) =>
+    errorResponse(ErrorCodes.FORBIDDEN, message || 'Access denied', 403),
 
   invalidApiKey: () =>
     errorResponse(ErrorCodes.INVALID_API_KEY, 'Invalid or missing API key', 401),
@@ -158,6 +158,13 @@ export const Errors = {
     errorResponse(
       ErrorCodes.QUOTA_EXCEEDED,
       `${resource} quota exceeded for your plan`,
+      402
+    ),
+
+  paymentRequired: (message?: string) =>
+    errorResponse(
+      ErrorCodes.QUOTA_EXCEEDED,
+      message || 'Insufficient credits. Please upgrade your plan.',
       402
     ),
 

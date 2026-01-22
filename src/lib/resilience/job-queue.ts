@@ -5,7 +5,7 @@
  * Failed jobs are moved to a dead letter queue for investigation.
  */
 
-import { db } from '@/lib/firebase-admin';
+import { db } from '@/lib/firebase/admin';
 import { logger } from '@/lib/logger';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
@@ -195,7 +195,7 @@ export class JobQueue {
 
       // Attempt to claim with transaction
       try {
-        const claimed = await db.runTransaction(async (txn) => {
+        const claimed = await db.runTransaction(async (txn: FirebaseFirestore.Transaction) => {
           const jobDoc = await txn.get(doc.ref);
           const jobData = jobDoc.data();
 
@@ -229,13 +229,13 @@ export class JobQueue {
             status: 'running' as JobStatus,
             workerId: this.workerId,
             attempts: (jobData.attempts || 0) + 1,
-          };
+          } as Record<string, unknown>;
         });
 
         if (claimed) {
           logger.info('Job claimed', {
             jobId: claimed.id,
-            scanId: claimed.scanId,
+            scanId: claimed.scanId as string,
             workerId: this.workerId,
             attempt: claimed.attempts,
           });
@@ -433,7 +433,7 @@ export class JobQueue {
       .where('scanId', '==', scanId)
       .get();
 
-    return snapshot.docs.map(doc =>
+    return snapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) =>
       this.deserializeJob({ id: doc.id, ...doc.data() })
     );
   }
@@ -480,7 +480,7 @@ export class JobQueue {
 
     const snapshot = await query.limit(limit).get();
 
-    return snapshot.docs.map(doc => ({
+    return snapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => ({
       ...doc.data(),
       id: doc.id,
       movedAt: doc.data().movedAt?.toDate() || new Date(),
@@ -562,7 +562,7 @@ export class JobQueue {
       .get();
 
     const batch = db.batch();
-    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+    snapshot.docs.forEach((doc: FirebaseFirestore.QueryDocumentSnapshot) => batch.delete(doc.ref));
     await batch.commit();
 
     logger.info('Cleaned up old jobs', {

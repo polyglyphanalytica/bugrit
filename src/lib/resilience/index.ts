@@ -64,3 +64,21 @@ export {
 
 // Re-export resilient orchestrator
 export { ResilientOrchestrator, resilientOrchestrator } from './resilient-orchestrator';
+
+// Session-based reports (real-time polling)
+export {
+  SessionReportStore,
+  sessionReportStore,
+  type SessionConfig,
+  type ToolReport,
+  type AggregatedReport,
+  type RefundInfo,
+} from './session-reports';
+
+// Streaming orchestrator (writes reports immediately)
+export {
+  StreamingOrchestrator,
+  streamingOrchestrator,
+  type StreamingOrchestratorConfig,
+  type StreamingAuditHandle,
+} from './streaming-orchestrator';

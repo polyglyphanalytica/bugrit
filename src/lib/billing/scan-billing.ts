@@ -11,6 +11,7 @@ import { calculateCredits, canAffordScan, SUBSCRIPTION_TIERS, SubscriptionTier, 
 import { deductCreditsWithAutoTopup } from './auto-topup';
 import { logger } from '@/lib/logger';
 import { ToolCategory } from '@/lib/tools/registry';
+import { ToolCategory as IntegrationsToolCategory } from '@/lib/integrations/types';
 
 export interface BillingAccount {
   userId: string;
@@ -515,4 +516,185 @@ export async function releaseReservation(scanId: string): Promise<void> {
   } catch (error) {
     logger.error('Reservation release error', { scanId, error });
   }
+}
+
+/**
+ * Calculate and refund credits for failed/timed out tools.
+ * Called when finalizing a scan session with partial failures.
+ */
+export interface ToolRefundInfo {
+  toolName: string;
+  category: IntegrationsToolCategory;
+  status: 'failed' | 'timeout' | 'skipped';
+  reason: string;
+}
+
+export interface RefundResult {
+  success: boolean;
+  refundedCredits: number;
+  toolsRefunded: string[];
+  newBalance: number;
+  error?: string;
+}
+
+export async function refundCreditsForFailedTools(
+  userId: string,
+  sessionId: string,
+  failedTools: ToolRefundInfo[],
+  estimatedLines: number
+): Promise<RefundResult> {
+  if (failedTools.length === 0) {
+    const account = await getBillingAccount(userId);
+    return {
+      success: true,
+      refundedCredits: 0,
+      toolsRefunded: [],
+      newBalance: account?.credits.remaining || 0,
+    };
+  }
+
+  try {
+    // Calculate credit refund per tool category
+    // Each category has a different credit cost
+    const CATEGORY_CREDITS: Partial<Record<IntegrationsToolCategory, number>> = {
+      'code-quality': 1,
+      'security': 2,
+      'accessibility': 1,
+      'performance': 3, // More expensive - load testing
+      'api-testing': 2,
+      'api-schema': 1,
+      'api-security': 2,
+      'visual': 2,
+      'coverage': 1,
+      'observability': 2,
+      'chaos': 5, // Most expensive - disruptive testing
+      'complexity': 1,
+      'database': 2,
+      'documentation': 1,
+      'iac-security': 2,
+      'license': 1,
+      'secret-scanning': 2,
+      'mobile': 3,
+      'dependencies': 1,
+      'cloud-native': 2,
+    };
+
+    // Calculate lines multiplier (matches credits.ts logic)
+    const linesMultiplier = estimatedLines > 100000 ? 2 :
+                           estimatedLines > 50000 ? 1.5 :
+                           estimatedLines > 10000 ? 1.2 : 1;
+
+    let totalRefund = 0;
+    const toolsRefunded: string[] = [];
+
+    for (const tool of failedTools) {
+      const baseCost = CATEGORY_CREDITS[tool.category] || 1;
+      const adjustedCost = Math.ceil(baseCost * linesMultiplier);
+      totalRefund += adjustedCost;
+      toolsRefunded.push(tool.toolName);
+    }
+
+    if (totalRefund === 0) {
+      const account = await getBillingAccount(userId);
+      return {
+        success: true,
+        refundedCredits: 0,
+        toolsRefunded: [],
+        newBalance: account?.credits.remaining || 0,
+      };
+    }
+
+    // Add credits back to user's account
+    await db.collection('billing_accounts').doc(userId).update({
+      'credits.remaining': FieldValue.increment(totalRefund),
+      'credits.used': FieldValue.increment(-totalRefund),
+    });
+
+    // Record the refund
+    await db.collection('credit_refunds').add({
+      userId,
+      sessionId,
+      refundedCredits: totalRefund,
+      toolsRefunded,
+      failedTools: failedTools.map(t => ({
+        name: t.toolName,
+        category: t.category,
+        status: t.status,
+        reason: t.reason,
+      })),
+      timestamp: new Date(),
+    });
+
+    // Get updated balance
+    const account = await getBillingAccount(userId);
+    const newBalance = account?.credits.remaining || 0;
+
+    logger.info('Credits refunded for failed tools', {
+      userId,
+      sessionId,
+      refundedCredits: totalRefund,
+      toolsCount: toolsRefunded.length,
+      newBalance,
+    });
+
+    return {
+      success: true,
+      refundedCredits: totalRefund,
+      toolsRefunded,
+      newBalance,
+    };
+  } catch (error) {
+    logger.error('Credit refund error', { userId, sessionId, error });
+    return {
+      success: false,
+      refundedCredits: 0,
+      toolsRefunded: [],
+      newBalance: 0,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Calculate estimated credits for a set of tool categories.
+ * Used for pre-scan estimation.
+ */
+export function estimateCreditsForTools(
+  categories: IntegrationsToolCategory[],
+  estimatedLines: number
+): number {
+  const CATEGORY_CREDITS: Partial<Record<IntegrationsToolCategory, number>> = {
+    'code-quality': 1,
+    'security': 2,
+    'accessibility': 1,
+    'performance': 3,
+    'api-testing': 2,
+    'api-schema': 1,
+    'api-security': 2,
+    'visual': 2,
+    'coverage': 1,
+    'observability': 2,
+    'chaos': 5,
+    'complexity': 1,
+    'database': 2,
+    'documentation': 1,
+    'iac-security': 2,
+    'license': 1,
+    'secret-scanning': 2,
+    'mobile': 3,
+    'dependencies': 1,
+    'cloud-native': 2,
+  };
+
+  const linesMultiplier = estimatedLines > 100000 ? 2 :
+                         estimatedLines > 50000 ? 1.5 :
+                         estimatedLines > 10000 ? 1.2 : 1;
+
+  let total = 0;
+  for (const category of categories) {
+    const baseCost = CATEGORY_CREDITS[category] || 1;
+    total += Math.ceil(baseCost * linesMultiplier);
+  }
+
+  return total;
 }
