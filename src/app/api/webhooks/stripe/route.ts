@@ -113,6 +113,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 async function handleSubscriptionCheckout(session: Stripe.Checkout.Session) {
   const userId = session.client_reference_id || session.metadata?.userId;
   const tier = session.metadata?.tier as TierName;
+  const stripeCustomerId = session.customer as string;
 
   if (!userId) {
     // Critical error - throw to trigger 500 response and Stripe retry
@@ -123,17 +124,49 @@ async function handleSubscriptionCheckout(session: Stripe.Checkout.Session) {
     throw new Error(`No tier in checkout session ${session.id}. Cannot fulfill subscription.`);
   }
 
-  // Update subscription in Firestore
-  await db.collection('subscriptions').doc(userId).set(
+  // Use batch write to update all collections atomically
+  const batch = db.batch();
+
+  // Update subscriptions collection (primary subscription data)
+  batch.set(
+    db.collection('subscriptions').doc(userId),
     {
       tier,
       status: 'active',
-      stripeCustomerId: session.customer as string,
+      stripeCustomerId,
       stripeSubscriptionId: session.subscription as string,
       updatedAt: new Date(),
     },
     { merge: true }
   );
+
+  // Update users collection (for quick tier lookups and auto-topup)
+  batch.set(
+    db.collection('users').doc(userId),
+    {
+      tier,
+      stripeCustomerId,
+      updatedAt: new Date(),
+    },
+    { merge: true }
+  );
+
+  // Update billing_accounts collection (for settings page)
+  batch.set(
+    db.collection('billing_accounts').doc(userId),
+    {
+      subscription: {
+        tier,
+        status: 'active',
+        stripeCustomerId,
+        stripeSubscriptionId: session.subscription as string,
+      },
+      updatedAt: new Date(),
+    },
+    { merge: true }
+  );
+
+  await batch.commit();
 
   console.log(`Subscription created for user ${userId}: ${tier}`);
 }
@@ -154,20 +187,25 @@ async function handleCreditPurchase(session: Stripe.Checkout.Session) {
     throw new Error(`Invalid credits amount in session ${session.id}: ${credits}`);
   }
 
-  // Add credits to user's account using a transaction
-  const userCreditsRef = db.collection('userCredits').doc(userId);
+  // Add credits to billing_accounts collection (where settings page reads from)
+  const billingRef = db.collection('billing_accounts').doc(userId);
 
   await db.runTransaction(async (transaction) => {
-    const doc = await transaction.get(userCreditsRef);
-    const currentCredits = doc.exists ? (doc.data()?.balance || 0) : 0;
+    const doc = await transaction.get(billingRef);
+    const billingData = doc.exists ? doc.data() : {};
+    const currentPurchased = billingData?.credits?.purchased || 0;
+    const currentRemaining = billingData?.credits?.remaining || 0;
 
     transaction.set(
-      userCreditsRef,
+      billingRef,
       {
-        balance: currentCredits + credits,
-        lastPurchaseAt: new Date(),
-        lastPurchaseAmount: credits,
-        lastPurchasePackageId: packageId,
+        credits: {
+          purchased: currentPurchased + credits,
+          remaining: currentRemaining + credits,
+          lastPurchaseAt: new Date(),
+          lastPurchaseAmount: credits,
+          lastPurchasePackageId: packageId,
+        },
         updatedAt: new Date(),
       },
       { merge: true }
@@ -191,7 +229,7 @@ async function handleCreditPurchase(session: Stripe.Checkout.Session) {
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   const userId = subscription.metadata.userId;
-  const tier = subscription.metadata.tier as TierName;
+  const tier = (subscription.metadata.tier as TierName) || 'free';
 
   if (!userId) {
     // Log but don't throw - subscription may have been created outside our app
@@ -208,18 +246,55 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     unpaid: 'past_due',
   };
 
-  await db.collection('subscriptions').doc(userId).set(
+  const status = statusMap[subscription.status] || 'active';
+  const periodStart = new Date(subscription.current_period_start * 1000);
+  const periodEnd = new Date(subscription.current_period_end * 1000);
+
+  // Use batch write to update all collections
+  const batch = db.batch();
+
+  // Update subscriptions collection
+  batch.set(
+    db.collection('subscriptions').doc(userId),
     {
       tier,
-      status: statusMap[subscription.status] || 'active',
+      status,
       stripeSubscriptionId: subscription.id,
-      currentPeriodStart: new Date(subscription.current_period_start * 1000),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
       updatedAt: new Date(),
     },
     { merge: true }
   );
+
+  // Update users collection
+  batch.set(
+    db.collection('users').doc(userId),
+    {
+      tier,
+      updatedAt: new Date(),
+    },
+    { merge: true }
+  );
+
+  // Update billing_accounts collection
+  batch.set(
+    db.collection('billing_accounts').doc(userId),
+    {
+      subscription: {
+        tier,
+        status,
+        currentPeriodStart: periodStart,
+        currentPeriodEnd: periodEnd,
+        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+      },
+      updatedAt: new Date(),
+    },
+    { merge: true }
+  );
+
+  await batch.commit();
 
   console.log(`Subscription updated for user ${userId}: ${tier} (${subscription.status})`);
 }
@@ -232,16 +307,48 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     return;
   }
 
-  // Downgrade to free tier
-  await db.collection('subscriptions').doc(userId).set(
+  const now = new Date();
+
+  // Use batch write to update all collections
+  const batch = db.batch();
+
+  // Update subscriptions collection
+  batch.set(
+    db.collection('subscriptions').doc(userId),
     {
       tier: 'free',
       status: 'canceled',
-      canceledAt: new Date(),
-      updatedAt: new Date(),
+      canceledAt: now,
+      updatedAt: now,
     },
     { merge: true }
   );
+
+  // Update users collection
+  batch.set(
+    db.collection('users').doc(userId),
+    {
+      tier: 'free',
+      updatedAt: now,
+    },
+    { merge: true }
+  );
+
+  // Update billing_accounts collection
+  batch.set(
+    db.collection('billing_accounts').doc(userId),
+    {
+      subscription: {
+        tier: 'free',
+        status: 'canceled',
+        canceledAt: now,
+      },
+      updatedAt: now,
+    },
+    { merge: true }
+  );
+
+  await batch.commit();
 
   console.log(`Subscription canceled for user ${userId}`);
 }
@@ -261,13 +368,37 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   if (snapshot.empty) return;
 
   const doc = snapshot.docs[0];
+  const userId = doc.id;
+  const now = new Date();
 
-  // Reset monthly scan count on successful payment
-  await doc.ref.update({
+  // Use batch to update both collections
+  const batch = db.batch();
+
+  // Update subscriptions collection
+  batch.update(doc.ref, {
     scansUsedThisMonth: 0,
-    lastPaymentAt: new Date(),
-    updatedAt: new Date(),
+    lastPaymentAt: now,
+    status: 'active',
+    updatedAt: now,
   });
+
+  // Update billing_accounts collection
+  batch.set(
+    db.collection('billing_accounts').doc(userId),
+    {
+      subscription: {
+        status: 'active',
+        lastPaymentAt: now,
+      },
+      credits: {
+        used: 0, // Reset usage on new billing period
+      },
+      updatedAt: now,
+    },
+    { merge: true }
+  );
+
+  await batch.commit();
 
   console.log(`Payment succeeded for subscription ${subscriptionId}`);
 }
@@ -287,12 +418,31 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   if (snapshot.empty) return;
 
   const doc = snapshot.docs[0];
+  const userId = doc.id;
+  const now = new Date();
 
-  // Mark as past due
-  await doc.ref.update({
+  // Use batch to update both collections
+  const batch = db.batch();
+
+  // Update subscriptions collection
+  batch.update(doc.ref, {
     status: 'past_due',
-    updatedAt: new Date(),
+    updatedAt: now,
   });
+
+  // Update billing_accounts collection
+  batch.set(
+    db.collection('billing_accounts').doc(userId),
+    {
+      subscription: {
+        status: 'past_due',
+      },
+      updatedAt: now,
+    },
+    { merge: true }
+  );
+
+  await batch.commit();
 
   console.log(`Payment failed for subscription ${subscriptionId}`);
 }
