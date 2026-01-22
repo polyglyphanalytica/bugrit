@@ -21,7 +21,7 @@ import { Organization, OrganizationMember, MemberRole, hasPermission, Permission
 
 export interface UserSubscription {
   tier: TierName;
-  status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'none';
+  status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | 'none';
   stripeSubscriptionId?: string;
   stripeCustomerId?: string;
   currentPeriodEnd?: Date;

@@ -266,6 +266,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     past_due: 'past_due',
     canceled: 'canceled',
     unpaid: 'past_due',
+    incomplete: 'incomplete', // 3D Secure pending
+    incomplete_expired: 'canceled', // 3D Secure timed out
   };
 
   const status = statusMap[subscription.status] || 'active';
@@ -334,12 +336,16 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   // Use batch write to update all collections
   const batch = db.batch();
 
-  // Update subscriptions collection
+  // Update subscriptions collection - clear all subscription-related fields
   batch.set(
     db.collection('subscriptions').doc(userId),
     {
       tier: 'free',
       status: 'canceled',
+      stripeSubscriptionId: null,
+      currentPeriodStart: null,
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd: null,
       canceledAt: now,
       updatedAt: now,
     },
@@ -356,13 +362,17 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     { merge: true }
   );
 
-  // Update billing_accounts collection
+  // Update billing_accounts collection - clear all subscription-related fields
   batch.set(
     db.collection('billing_accounts').doc(userId),
     {
       subscription: {
         tier: 'free',
         status: 'canceled',
+        stripeSubscriptionId: null,
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: null,
         canceledAt: now,
       },
       updatedAt: now,

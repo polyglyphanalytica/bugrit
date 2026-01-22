@@ -63,6 +63,7 @@ export async function createCheckoutSession(
     // Reuse existing customer or create new one with email
     ...(customerId ? { customer: customerId } : { customer_email: userEmail }),
     client_reference_id: userId,
+    allow_promotion_codes: true, // Allow customers to apply promo codes at checkout
     line_items: [
       {
         price: priceId,

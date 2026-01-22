@@ -30,7 +30,7 @@ import { CreditCard, Zap, TrendingUp, Clock, Package } from 'lucide-react';
 
 interface Subscription {
   tier: string;
-  status: 'active' | 'canceled' | 'past_due' | 'none';
+  status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'none';
   currentPeriodEnd?: string;
   cancelAtPeriodEnd: boolean;
 }
@@ -68,7 +68,7 @@ interface AutoTopupConfig {
 }
 
 // Separate component to handle URL params (needs Suspense boundary)
-function PurchaseParamsHandler({ onRefresh }: { onRefresh: () => void }) {
+function PurchaseParamsHandler({ onRefresh, onOpenBillingPortal }: { onRefresh: () => void; onOpenBillingPortal: () => void }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -76,6 +76,7 @@ function PurchaseParamsHandler({ onRefresh }: { onRefresh: () => void }) {
   useEffect(() => {
     const purchase = searchParams.get('purchase');
     const credits = searchParams.get('credits');
+    const updatePayment = searchParams.get('updatePayment');
 
     if (purchase === 'success') {
       toast({
@@ -94,7 +95,13 @@ function PurchaseParamsHandler({ onRefresh }: { onRefresh: () => void }) {
       });
       router.replace('/settings/subscription', { scroll: false });
     }
-  }, [searchParams, toast, router, onRefresh]);
+
+    // Auto-open billing portal when redirected from dunning email
+    if (updatePayment === 'true') {
+      router.replace('/settings/subscription', { scroll: false });
+      onOpenBillingPortal();
+    }
+  }, [searchParams, toast, router, onRefresh, onOpenBillingPortal]);
 
   return null;
 }
@@ -291,7 +298,7 @@ export default function SubscriptionSettingsPage() {
   return (
     <div className="space-y-6">
       <Suspense fallback={null}>
-        <PurchaseParamsHandler onRefresh={fetchSubscriptionData} />
+        <PurchaseParamsHandler onRefresh={fetchSubscriptionData} onOpenBillingPortal={handleManageSubscription} />
       </Suspense>
       {/* Current Plan */}
       <Card>
@@ -304,6 +311,7 @@ export default function SubscriptionSettingsPage() {
               >
                 {subscription.status === 'active' && 'Active'}
                 {subscription.status === 'past_due' && 'Payment Failed'}
+                {subscription.status === 'incomplete' && 'Payment Pending'}
                 {subscription.status === 'canceled' && 'Canceled'}
                 {subscription.status === 'none' && 'No Subscription'}
               </Badge>
@@ -312,6 +320,25 @@ export default function SubscriptionSettingsPage() {
           <CardDescription>Manage your subscription and billing.</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Payment Incomplete Warning (3D Secure pending) */}
+          {subscription?.status === 'incomplete' && (
+            <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <p className="font-medium text-yellow-600 dark:text-yellow-400">Payment requires authentication</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Your subscription requires additional verification. Please complete the payment to activate your plan.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={handleManageSubscription}
+              >
+                <CreditCard className="h-4 w-4 mr-2" />
+                Complete Payment
+              </Button>
+            </div>
+          )}
+
           {/* Payment Failed Warning */}
           {subscription?.status === 'past_due' && (
             <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
@@ -330,16 +357,32 @@ export default function SubscriptionSettingsPage() {
             </div>
           )}
 
+          {/* Cancellation Scheduled Warning */}
+          {subscription?.cancelAtPeriodEnd && subscription?.status === 'active' && (
+            <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+              <p className="font-medium text-yellow-600 dark:text-yellow-400">Cancellation scheduled</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Your subscription will end on {subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd).toLocaleDateString() : 'the end of your billing period'}. You can reactivate anytime before then.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={handleManageSubscription}
+              >
+                Keep My Subscription
+              </Button>
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-2xl font-bold capitalize">
                 {subscription?.tier || 'Free'} Plan
               </h3>
-              {subscription?.currentPeriodEnd && (
+              {subscription?.currentPeriodEnd && !subscription.cancelAtPeriodEnd && (
                 <p className="text-sm text-muted-foreground">
-                  {subscription.cancelAtPeriodEnd
-                    ? 'Cancels'
-                    : 'Renews'} on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                  Renews on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                 </p>
               )}
             </div>
@@ -349,7 +392,7 @@ export default function SubscriptionSettingsPage() {
                   Upgrade Plan
                 </Button>
               )}
-              {subscription && subscription.status !== 'none' && (
+              {subscription && subscription.status !== 'none' && subscription.status !== 'incomplete' && (
                 <Button variant="outline" onClick={handleManageSubscription}>
                   Manage Billing
                 </Button>
