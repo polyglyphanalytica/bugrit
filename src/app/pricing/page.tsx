@@ -1,29 +1,102 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { GlassCard } from '@/components/ui/glass-card';
 import { getAllTiers, formatPrice, formatCredits, formatRepoSize, TierName } from '@/lib/subscriptions/tiers';
+import { useAuth } from '@/contexts/auth-context';
+import { useToast } from '@/hooks/use-toast';
 
 export const dynamic = 'force-dynamic';
 
+// Handle checkout canceled URL param
+function CheckoutParamsHandler() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const subscription = searchParams.get('subscription');
+    if (subscription === 'canceled') {
+      toast({
+        title: 'Checkout canceled',
+        description: 'No charges were made. You can try again anytime.',
+        variant: 'default',
+      });
+      router.replace('/pricing', { scroll: false });
+    }
+  }, [searchParams, toast, router]);
+
+  return null;
+}
+
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<TierName | null>(null);
   const tiers = getAllTiers();
+  const { user } = useAuth();
+  const { toast } = useToast();
 
   const handleSubscribe = async (tier: TierName) => {
     if (tier === 'free') return;
-    setLoading(true);
-    window.location.href = `/signup?plan=${tier}&interval=${annual ? 'year' : 'month'}`;
+
+    // If user is not logged in, redirect to signup with plan params
+    if (!user) {
+      window.location.href = `/signup?plan=${tier}&interval=${annual ? 'year' : 'month'}`;
+      return;
+    }
+
+    // User is logged in - call checkout API directly
+    setLoading(tier);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch('/api/subscription/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          tier,
+          interval: annual ? 'year' : 'month',
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
+      } else {
+        const error = await res.json();
+        toast({
+          title: 'Unable to start checkout',
+          description: error.error || 'Please try again or contact support.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Something went wrong',
+        description: 'Please try again or contact support.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(null);
+    }
   };
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+      <Suspense fallback={null}>
+        <CheckoutParamsHandler />
+      </Suspense>
       <div className="container mx-auto px-4 py-20">
         {/* Header */}
         <div className="text-center mb-12">
@@ -138,9 +211,9 @@ export default function PricingPage() {
                       variant={tier.highlighted ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => handleSubscribe(tier.name)}
-                      disabled={loading}
+                      disabled={loading !== null}
                     >
-                      {loading ? 'Loading...' : 'Start Free Trial'}
+                      {loading === tier.name ? 'Loading...' : (user ? 'Subscribe' : 'Start Free Trial')}
                     </Button>
                   )}
 

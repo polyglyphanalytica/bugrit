@@ -511,12 +511,15 @@ export default function SubscriptionSettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <Button onClick={handleSaveAutoTopup} disabled={savingAutoTopup || !autoTopup.packageId}>
-                {savingAutoTopup ? 'Saving...' : 'Save Auto Top-up Settings'}
-              </Button>
             </>
           )}
+
+          <Button
+            onClick={handleSaveAutoTopup}
+            disabled={savingAutoTopup || (autoTopup.enabled && !autoTopup.packageId)}
+          >
+            {savingAutoTopup ? 'Saving...' : 'Save Auto Top-up Settings'}
+          </Button>
         </CardContent>
       </Card>
 
