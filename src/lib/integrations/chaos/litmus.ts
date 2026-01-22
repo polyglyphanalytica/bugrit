@@ -83,7 +83,7 @@ export class LitmusChaosIntegration implements ToolIntegration {
 
     try {
       const { execSync } = await import('child_process');
-      const namespace = config?.options?.namespace || 'litmus';
+      const namespace = (config?.options?.namespace || 'litmus') as string;
 
       // Get chaos experiment results
       const chaosResults = this.getChaosResults(namespace);

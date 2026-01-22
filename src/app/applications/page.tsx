@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Application } from '@/lib/types';
+import { apiClient } from '@/lib/api-client';
 
 export default function ApplicationsPage() {
   const router = useRouter();
@@ -63,12 +64,9 @@ export default function ApplicationsPage() {
 
   const fetchApplications = async () => {
     try {
-      const res = await fetch('/api/applications', {
-        headers: { 'x-user-id': user!.uid },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setApplications(data.applications || []);
+      const res = await apiClient.get<{ applications: Application[] }>(user!, '/api/applications');
+      if (res.ok && res.data) {
+        setApplications(res.data.applications || []);
       }
     } catch (error) {
       console.error('Failed to fetch applications:', error);
@@ -89,22 +87,14 @@ export default function ApplicationsPage() {
 
     setCreating(true);
     try {
-      const res = await fetch('/api/applications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user!.uid,
-        },
-        body: JSON.stringify(newApp),
-      });
+      const res = await apiClient.post<{ application: Application }>(user!, '/api/applications', newApp);
 
-      if (res.ok) {
-        const data = await res.json();
+      if (res.ok && res.data) {
         toast({
           title: 'Application Created',
-          description: `${data.application.name} has been created successfully.`,
+          description: `${res.data.application.name} has been created successfully.`,
         });
-        setApplications([data.application, ...applications]);
+        setApplications([res.data.application, ...applications]);
         setCreateDialogOpen(false);
         setNewApp({
           name: '',
@@ -115,8 +105,7 @@ export default function ApplicationsPage() {
           bundleId: '',
         });
       } else {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to create application');
+        throw new Error(res.error || 'Failed to create application');
       }
     } catch (error) {
       toast({
@@ -135,10 +124,7 @@ export default function ApplicationsPage() {
     }
 
     try {
-      const res = await fetch(`/api/applications/${appId}`, {
-        method: 'DELETE',
-        headers: { 'x-user-id': user!.uid },
-      });
+      const res = await apiClient.delete(user!, `/api/applications/${appId}`);
 
       if (res.ok) {
         toast({
@@ -147,7 +133,7 @@ export default function ApplicationsPage() {
         });
         setApplications(applications.filter((app) => app.id !== appId));
       } else {
-        throw new Error('Failed to delete application');
+        throw new Error(res.error || 'Failed to delete application');
       }
     } catch (error) {
       toast({

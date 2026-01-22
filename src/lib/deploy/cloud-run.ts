@@ -43,8 +43,12 @@ async function getAuthClient() {
   const auth = new google.auth.GoogleAuth({
     scopes: ['https://www.googleapis.com/auth/cloud-platform'],
   });
-  return auth.getClient();
+  // Cast to the expected type for googleapis compatibility
+  return auth.getClient() as Promise<ReturnType<typeof auth.getClient> extends Promise<infer T> ? T : never>;
 }
+
+// Type for googleapis auth options
+type AuthClient = Awaited<ReturnType<typeof getAuthClient>>;
 
 /**
  * Build the full resource name for a Cloud Run service
@@ -59,7 +63,8 @@ function getServiceName(projectId: string, region: string, serviceName: string):
 export async function serviceExists(config: CloudRunConfig): Promise<boolean> {
   try {
     const authClient = await getAuthClient();
-    google.options({ auth: authClient });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    google.options({ auth: authClient as any });
 
     await run.projects.locations.services.get({
       name: getServiceName(config.projectId, config.region, config.serviceName),
@@ -80,7 +85,8 @@ export async function serviceExists(config: CloudRunConfig): Promise<boolean> {
 export async function deployService(config: CloudRunConfig): Promise<DeploymentResult> {
   try {
     const authClient = await getAuthClient();
-    google.options({ auth: authClient });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    google.options({ auth: authClient as any });
 
     const exists = await serviceExists(config);
 
@@ -242,7 +248,8 @@ async function waitForOperation(
  */
 async function setPublicAccess(config: CloudRunConfig): Promise<void> {
   const authClient = await getAuthClient();
-  google.options({ auth: authClient });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    google.options({ auth: authClient as any });
 
   await run.projects.locations.services.setIamPolicy({
     resource: getServiceName(config.projectId, config.region, config.serviceName),
@@ -265,7 +272,8 @@ async function setPublicAccess(config: CloudRunConfig): Promise<void> {
 export async function deleteService(config: CloudRunConfig): Promise<DeploymentResult> {
   try {
     const authClient = await getAuthClient();
-    google.options({ auth: authClient });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    google.options({ auth: authClient as any });
 
     await run.projects.locations.services.delete({
       name: getServiceName(config.projectId, config.region, config.serviceName),
@@ -287,7 +295,8 @@ export async function deleteService(config: CloudRunConfig): Promise<DeploymentR
 export async function getServiceUrl(config: CloudRunConfig): Promise<string | null> {
   try {
     const authClient = await getAuthClient();
-    google.options({ auth: authClient });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    google.options({ auth: authClient as any });
 
     const service = await run.projects.locations.services.get({
       name: getServiceName(config.projectId, config.region, config.serviceName),

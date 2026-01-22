@@ -80,6 +80,8 @@ export interface ScanIssue {
   description?: string;
   severity: Severity;
   type: string;
+  tool?: string;
+  file?: string;
   location?: {
     file?: string;
     line?: number;
@@ -109,6 +111,7 @@ export interface Report {
 // Rate limits by tier (requests per minute)
 export const TIER_RATE_LIMITS: Record<TierName, number> = {
   free: 10,
+  starter: 30,
   pro: 60,
   business: 300,
 };
@@ -739,7 +742,7 @@ export async function checkScanLimit(
   tier: TierName,
   scansThisMonth: number
 ): Promise<{ allowed: boolean; current: number; limit: number }> {
-  const limit = TIERS[tier].limits.scansPerMonth;
+  const limit = TIERS[tier].limits.credits;
   const isUnlimited = limit === -1;
 
   return {

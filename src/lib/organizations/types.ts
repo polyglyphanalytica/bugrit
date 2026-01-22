@@ -36,7 +36,7 @@ export interface Organization {
 
   // Subscription info (denormalized for quick access)
   subscription: {
-    tier: 'starter' | 'pro' | 'business';
+    tier: 'free' | 'starter' | 'pro' | 'business';
     status: 'active' | 'trialing' | 'past_due' | 'canceled';
     stripeCustomerId?: string;
     stripeSubscriptionId?: string;

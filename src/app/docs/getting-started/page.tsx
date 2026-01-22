@@ -33,6 +33,27 @@ export default function GettingStartedPage() {
         </ul>
       </div>
 
+      {/* NEW: Real-Time Sessions */}
+      <div className="p-6 bg-gradient-to-br from-green-500/20 to-green-500/5 border-2 border-green-500/40 rounded-xl">
+        <h2 className="text-xl font-bold mb-3 flex items-center gap-2">
+          <span>⚡</span> NEW: Real-Time Results
+        </h2>
+        <p className="text-muted-foreground mb-4">
+          Watch your scan results <strong>stream in live</strong> as each tool completes. No more waiting for all 71 tools to finish!
+        </p>
+        <div className="grid md:grid-cols-2 gap-4 mb-4">
+          <div className="p-3 bg-background/80 rounded-lg text-sm">
+            <strong className="text-green-600 dark:text-green-400">Before:</strong> Wait 2-5 min, then see all results
+          </div>
+          <div className="p-3 bg-background/80 rounded-lg text-sm">
+            <strong className="text-green-600 dark:text-green-400">Now:</strong> See results the instant each tool finishes
+          </div>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Use the new <a href="/docs/api-reference/sessions" className="text-primary underline">Sessions API</a> for streaming results with automatic credit refunds for failed tools.
+        </p>
+      </div>
+
       {/* Two Paths */}
       <div className="p-6 bg-primary/5 border border-primary/20 rounded-xl">
         <h2 className="text-xl font-bold mb-4">Choose Your Path</h2>
@@ -234,6 +255,44 @@ export default function GettingStartedPage() {
 
         <section>
           <h2 className="text-2xl font-bold mb-4">4. Check Status</h2>
+
+          {/* NEW: Real-Time Polling */}
+          <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+            <h4 className="font-semibold mb-2 flex items-center gap-2">
+              <span>⚡</span> Recommended: Real-Time Streaming (Sessions API)
+            </h4>
+            <p className="text-muted-foreground text-sm mb-3">
+              See results the moment each tool finishes. Start a session, then poll for live updates:
+            </p>
+            <div className="bg-muted p-4 rounded-lg overflow-x-auto mb-3">
+              <pre className="text-sm">{`# Start a streaming session
+curl -X POST https://bugrit.dev/api/sessions \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "target": { "url": "https://your-app.com" },
+    "categories": ["security", "code-quality"]
+  }'
+
+# Response includes sessionId and poll URLs
+# { "sessionId": "sess-abc123", "pollUrls": { ... } }
+
+# Poll for live progress (lightweight)
+curl "https://bugrit.dev/api/sessions/sess-abc123?progress=true" \\
+  -H "Authorization: Bearer YOUR_API_KEY"
+
+# Response: { "status": "running", "progress": { "completed": 23, "total": 71, "percentage": 32 } }
+
+# Get only NEW results since last poll (efficient)
+curl "https://bugrit.dev/api/sessions/sess-abc123?since=2026-01-22T10:30:00Z" \\
+  -H "Authorization: Bearer YOUR_API_KEY"`}</pre>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              <a href="/docs/api-reference/sessions" className="text-primary underline">View full Sessions API docs</a> for details on incremental polling and credit refunds.
+            </p>
+          </div>
+
+          <h4 className="font-semibold mb-2">Classic: Wait for Completion (Scans API)</h4>
           <p className="text-muted-foreground mb-4">
             Poll the scan status until tests and tools have completed:
           </p>
@@ -324,6 +383,11 @@ export default function GettingStartedPage() {
             <div className="p-4 border rounded-lg">
               <h4 className="font-semibold mb-2">Scanning & More</h4>
               <ul className="space-y-2 text-sm">
+                <li>
+                  <a href="/docs/api-reference/sessions" className="text-primary hover:underline flex items-center gap-1">
+                    <span className="text-green-500">⚡</span> Sessions API (Real-Time)
+                  </a>
+                </li>
                 <li>
                   <a href="/docs/submitting-apps" className="text-primary hover:underline">
                     All Submission Methods

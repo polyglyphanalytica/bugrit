@@ -124,6 +124,80 @@ export interface RunScanRequest {
   confirmOverage?: boolean;
 }
 
+/**
+ * Dunning state for tracking payment failures and grace periods
+ *
+ * Flow:
+ * 1. Payment fails → dunning state created with 14-day grace period
+ * 2. Reminders sent at day 1 (active), day 7 (warning), day 12 (final)
+ * 3. If payment succeeds → dunning state resolved
+ * 4. If grace period expires → subscription canceled
+ */
+export interface DunningState {
+  userId: string;
+  subscriptionId: string;
+  invoiceId: string;
+
+  // Grace period tracking
+  startedAt: Date;
+  expiresAt: Date; // 14 days from startedAt
+  resolvedAt?: Date;
+  resolution?: 'payment_success' | 'subscription_canceled' | 'manual';
+
+  // Failure tracking
+  failureCount: number;
+  lastFailedAt: Date;
+  processedInvoiceIds: string[]; // Deduplication for webhook retries
+
+  // Reminder tracking
+  remindersSent: number;
+  lastReminderAt?: Date;
+  reminderLevel: 'active' | 'warning' | 'final';
+
+  // Status
+  status: 'active' | 'resolved' | 'expired';
+}
+
+/**
+ * Dunning reminder configuration
+ */
+export interface DunningReminderConfig {
+  level: 'active' | 'warning' | 'final';
+  daysSinceStart: number;
+  title: string;
+  message: string;
+  severity: 'info' | 'warning' | 'critical';
+}
+
+/**
+ * Grace period constants
+ */
+export const GRACE_PERIOD_DAYS = 14;
+
+export const DUNNING_REMINDER_SCHEDULE: DunningReminderConfig[] = [
+  {
+    level: 'active',
+    daysSinceStart: 1,
+    title: 'Payment Failed',
+    message: 'Your payment could not be processed. Please update your payment method to avoid service interruption.',
+    severity: 'info',
+  },
+  {
+    level: 'warning',
+    daysSinceStart: 7,
+    title: 'Payment Past Due',
+    message: 'Your subscription payment is past due. Please update your payment method within the next week to avoid losing access.',
+    severity: 'warning',
+  },
+  {
+    level: 'final',
+    daysSinceStart: 12,
+    title: 'Final Notice: Subscription Expiring',
+    message: 'URGENT: Your subscription will be canceled in 2 days unless payment is updated. You will lose access to your current tier features.',
+    severity: 'critical',
+  },
+];
+
 // Billing status for embedding in apps
 export interface BillingStatus {
   tier: SubscriptionTier;
@@ -138,8 +212,8 @@ export interface BillingStatus {
   };
 
   subscription: {
-    status: 'active' | 'past_due' | 'canceled' | 'trialing';
-    renewsAt: Date;
+    status: 'active' | 'past_due' | 'canceled' | 'trialing' | 'incomplete' | 'none';
+    renewsAt: Date | null;
     cancelAtPeriodEnd: boolean;
   };
 

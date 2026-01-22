@@ -15,16 +15,18 @@ import { ToolCategory } from '@/lib/tools/registry';
 import { authenticateRequest, ApiKeyContext } from '@/lib/api/auth';
 import { ApiException } from '@/lib/api/errors';
 import { logger } from '@/lib/logger';
+import { getDb, COLLECTIONS, toDate } from '@/lib/firestore';
 
 // Map tier names to SubscriptionTier
 function mapTierToSubscriptionTier(tier: string): SubscriptionTier {
   const tierMap: Record<string, SubscriptionTier> = {
+    free: 'free',
     starter: 'starter',
     pro: 'pro',
     business: 'business',
     enterprise: 'enterprise',
   };
-  return tierMap[tier] || 'starter';
+  return tierMap[tier] || 'free';
 }
 
 // Get user from authenticated request
@@ -44,87 +46,181 @@ async function getUserFromRequest(req: NextRequest): Promise<{ userId: string; t
   }
 }
 
-// Mock - get usage summary
+// Get usage summary from Firestore
 async function getUsageSummary(userId: string, periodStart: Date, periodEnd: Date): Promise<UsageSummary> {
-  // TODO: Aggregate from Firestore
-  return {
+  const db = getDb();
+
+  // Initialize empty summary
+  const summary: UsageSummary = {
     periodStart,
     periodEnd,
-    totalScans: 12,
-    totalCreditsUsed: 47,
-    totalLinesScanned: 185_000,
-    totalIssuesFound: 234,
-
+    totalScans: 0,
+    totalCreditsUsed: 0,
+    totalLinesScanned: 0,
+    totalIssuesFound: 0,
     byCategory: {
-      linting: { scans: 12, credits: 0, issues: 89 },
-      security: { scans: 10, credits: 10, issues: 23 },
-      dependencies: { scans: 12, credits: 0, issues: 45 },
-      accessibility: { scans: 8, credits: 16, issues: 34 },
-      quality: { scans: 12, credits: 0, issues: 28 },
-      documentation: { scans: 12, credits: 0, issues: 12 },
-      git: { scans: 12, credits: 0, issues: 3 },
-      performance: { scans: 5, credits: 15, issues: 0 },
-    } as Record<ToolCategory, { scans: number; credits: number; issues: number }>,
-
-    byAIFeature: {
-      summary: { uses: 12, credits: 12 },
-      issue_explanations: { uses: 8, credits: 16 },
-      fix_suggestions: { uses: 0, credits: 0 },
-      priority_scoring: { uses: 10, credits: 10 },
+      linting: { scans: 0, credits: 0, issues: 0 },
+      security: { scans: 0, credits: 0, issues: 0 },
+      dependencies: { scans: 0, credits: 0, issues: 0 },
+      accessibility: { scans: 0, credits: 0, issues: 0 },
+      quality: { scans: 0, credits: 0, issues: 0 },
+      documentation: { scans: 0, credits: 0, issues: 0 },
+      git: { scans: 0, credits: 0, issues: 0 },
+      performance: { scans: 0, credits: 0, issues: 0 },
+      mobile: { scans: 0, credits: 0, issues: 0 },
+      'api-security': { scans: 0, credits: 0, issues: 0 },
+      'cloud-native': { scans: 0, credits: 0, issues: 0 },
     },
-
-    topProjects: [
-      { projectId: 'proj_1', projectName: 'my-saas-app', scans: 8, credits: 32 },
-      { projectId: 'proj_2', projectName: 'marketing-site', scans: 3, credits: 10 },
-      { projectId: 'proj_3', projectName: 'api-server', scans: 1, credits: 5 },
-    ],
+    byAIFeature: {
+      summary: { uses: 0, credits: 0 },
+      issue_explanations: { uses: 0, credits: 0 },
+      fix_suggestions: { uses: 0, credits: 0 },
+      priority_scoring: { uses: 0, credits: 0 },
+    },
+    topProjects: [],
   };
+
+  if (!db) return summary;
+
+  try {
+    // Fetch scan billing records for the period
+    const billingSnapshot = await db
+      .collection('scan_billing')
+      .where('userId', '==', userId)
+      .where('timestamp', '>=', periodStart)
+      .where('timestamp', '<=', periodEnd)
+      .orderBy('timestamp', 'desc')
+      .get();
+
+    const projectCredits: Record<string, { credits: number; scans: number; name: string }> = {};
+
+    for (const doc of billingSnapshot.docs) {
+      const data = doc.data();
+      summary.totalScans++;
+      summary.totalCreditsUsed += data.creditsCharged || 0;
+      summary.totalLinesScanned += data.metrics?.linesOfCode || 0;
+      summary.totalIssuesFound += data.metrics?.issuesFound || 0;
+
+      // Aggregate by category from breakdown
+      const breakdown = data.breakdown;
+      if (breakdown?.tools) {
+        for (const [category, credits] of Object.entries(breakdown.tools)) {
+          if (summary.byCategory[category as ToolCategory]) {
+            summary.byCategory[category as ToolCategory].scans++;
+            summary.byCategory[category as ToolCategory].credits += credits as number;
+          }
+        }
+      }
+
+      // Aggregate by AI feature
+      if (breakdown?.ai) {
+        type AIFeatureKey = 'summary' | 'issue_explanations' | 'fix_suggestions' | 'priority_scoring';
+        const validFeatures: AIFeatureKey[] = ['summary', 'issue_explanations', 'fix_suggestions', 'priority_scoring'];
+
+        for (const [feature, credits] of Object.entries(breakdown.ai)) {
+          if (validFeatures.includes(feature as AIFeatureKey)) {
+            const featureKey = feature as AIFeatureKey;
+            summary.byAIFeature[featureKey].uses++;
+            summary.byAIFeature[featureKey].credits += credits as number;
+          }
+        }
+      }
+
+      // Track project usage
+      const projectId = data.metrics?.projectId || 'unknown';
+      if (!projectCredits[projectId]) {
+        projectCredits[projectId] = { credits: 0, scans: 0, name: projectId };
+      }
+      projectCredits[projectId].credits += data.creditsCharged || 0;
+      projectCredits[projectId].scans++;
+    }
+
+    // Get top projects
+    summary.topProjects = Object.entries(projectCredits)
+      .map(([projectId, data]) => ({
+        projectId,
+        projectName: data.name,
+        scans: data.scans,
+        credits: data.credits,
+      }))
+      .sort((a, b) => b.credits - a.credits)
+      .slice(0, 5);
+  } catch (error) {
+    logger.warn('Failed to aggregate usage summary', { userId, error });
+  }
+
+  return summary;
 }
 
-// Mock - get transactions
+// Get transactions from Firestore
 async function getTransactions(
   userId: string,
   periodStart: Date,
   periodEnd: Date,
   limit: number
 ): Promise<CreditTransaction[]> {
-  // TODO: Fetch from Firestore
-  return [
-    {
-      id: 'txn_1',
-      accountId: userId,
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      type: 'scan',
-      amount: -5,
-      balanceAfter: 153,
-      details: {
-        scanId: 'scan_abc123',
-        breakdown: {
-          base: 1,
-          lines: 2,
-          tools: { security: 1, accessibility: 2 } as Record<ToolCategory, number>,
-          ai: { summary: 1 },
-        },
-      },
-    },
-    {
-      id: 'txn_2',
-      accountId: userId,
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      type: 'scan',
-      amount: -3,
-      balanceAfter: 158,
-      details: {
-        scanId: 'scan_def456',
-        breakdown: {
-          base: 1,
-          lines: 1,
-          tools: { security: 1 } as Record<ToolCategory, number>,
-          ai: {},
-        },
-      },
-    },
-  ];
+  const db = getDb();
+  if (!db) return [];
+
+  try {
+    // Fetch credit transactions
+    const transactionsSnapshot = await db
+      .collection('credit_transactions')
+      .where('userId', '==', userId)
+      .where('timestamp', '>=', periodStart)
+      .where('timestamp', '<=', periodEnd)
+      .orderBy('timestamp', 'desc')
+      .limit(limit)
+      .get();
+
+    const transactions: CreditTransaction[] = [];
+
+    for (const doc of transactionsSnapshot.docs) {
+      const data = doc.data();
+      transactions.push({
+        id: doc.id,
+        accountId: userId,
+        timestamp: toDate(data.timestamp) || new Date(),
+        type: data.type || 'scan',
+        amount: data.amount || 0,
+        balanceAfter: data.balanceAfter || 0,
+        details: data.details,
+      });
+    }
+
+    // If no transactions found in credit_transactions, try scan_billing
+    if (transactions.length === 0) {
+      const billingSnapshot = await db
+        .collection('scan_billing')
+        .where('userId', '==', userId)
+        .where('timestamp', '>=', periodStart)
+        .where('timestamp', '<=', periodEnd)
+        .orderBy('timestamp', 'desc')
+        .limit(limit)
+        .get();
+
+      for (const doc of billingSnapshot.docs) {
+        const data = doc.data();
+        transactions.push({
+          id: doc.id,
+          accountId: userId,
+          timestamp: toDate(data.timestamp) || new Date(),
+          type: 'scan',
+          amount: -(data.creditsCharged || 0),
+          balanceAfter: data.balanceAfter || 0,
+          details: {
+            scanId: data.scanId,
+            breakdown: data.breakdown,
+          },
+        });
+      }
+    }
+
+    return transactions;
+  } catch (error) {
+    logger.warn('Failed to fetch transactions', { userId, error });
+    return [];
+  }
 }
 
 export async function GET(req: NextRequest) {

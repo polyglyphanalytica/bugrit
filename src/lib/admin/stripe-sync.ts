@@ -11,7 +11,7 @@ async function getStripeClient(): Promise<Stripe | null> {
   if (!secretKey) return null;
 
   return new Stripe(secretKey, {
-    apiVersion: '2023-10-16',
+    apiVersion: '2025-12-15.clover',
   });
 }
 
@@ -287,19 +287,26 @@ export async function importFromStripe(adminId: string): Promise<{
             currency: tierConfig.currency || 'usd',
             sortOrder: 99,
             limits: tierConfig.limits || {
-              scansPerMonth: -1,
+              credits: -1,
+              creditsRollover: 0,
+              overageRate: null,
+              maxRepoSize: 100000,
               projects: -1,
               teamMembers: 5,
               historyDays: 30,
+              apiRequestsPerMinute: 60,
               platforms: { web: true, mobile: true, desktop: true },
             },
             features: {
-              aiReports: true,
-              customRules: true,
+              aiSummary: true,
+              aiExplanations: true,
+              aiFixSuggestions: false,
+              aiPrioritization: true,
+              githubIntegration: true,
+              slackIntegration: true,
+              webhooks: true,
               apiAccess: true,
               prioritySupport: false,
-              whiteLabeling: false,
-              ssoIntegration: false,
             },
           };
 

@@ -1,12 +1,19 @@
 import type {NextConfig} from 'next';
 
+// Only ignore build errors in development for faster iteration
+// Production builds MUST have type checking and linting enabled
+const isDevelopment = process.env.NODE_ENV === 'development';
+const isCI = process.env.CI === 'true';
+
 const nextConfig: NextConfig = {
   /* config options here */
   typescript: {
-    ignoreBuildErrors: true,
+    // Type errors are ALWAYS checked in production/CI builds
+    ignoreBuildErrors: isDevelopment && !isCI,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    // Lint errors are ALWAYS checked in production/CI builds
+    ignoreDuringBuilds: isDevelopment && !isCI,
   },
   // Exclude problematic packages from build tracing
   outputFileTracingExcludes: {

@@ -7,8 +7,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedUser, errorResponse } from '@/lib/api-auth';
-import { getCreditPackage } from '@/lib/admin/service';
+import { getCreditPackage, updateCreditPackage } from '@/lib/admin/service';
 import { getStripeSecretKey } from '@/lib/admin/service';
+import { db } from '@/lib/firebase/admin';
 import { logger } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
@@ -19,6 +20,20 @@ export async function POST(req: NextRequest) {
       return authResult;
     }
     const userId = authResult;
+
+    // Check if user already has a Stripe customer ID
+    let existingCustomerId: string | undefined;
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (userDoc.exists) {
+      existingCustomerId = userDoc.data()?.stripeCustomerId;
+    }
+    // Also check subscriptions collection
+    if (!existingCustomerId) {
+      const subDoc = await db.collection('subscriptions').doc(userId).get();
+      if (subDoc.exists) {
+        existingCustomerId = subDoc.data()?.stripeCustomerId;
+      }
+    }
 
     // Parse request body
     const body = await req.json();
@@ -47,7 +62,7 @@ export async function POST(req: NextRequest) {
     // Dynamically import Stripe to avoid issues during build
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2024-12-18.acacia',
+      apiVersion: '2025-12-15.clover',
     });
 
     // Get or create Stripe price ID for this package
@@ -77,7 +92,17 @@ export async function POST(req: NextRequest) {
 
       priceId = price.id;
 
-      // TODO: Save the priceId back to the credit package in Firestore
+      // Save the priceId back to the credit package in Firestore
+      try {
+        await updateCreditPackage(creditPackage.id, { stripePriceId: priceId }, 'system');
+      } catch (saveError) {
+        logger.warn('Failed to save stripePriceId to credit package', {
+          packageId: creditPackage.id,
+          priceId,
+          error: saveError,
+        });
+        // Continue anyway - the price was created in Stripe
+      }
     }
 
     // Create Stripe Checkout session
@@ -92,7 +117,10 @@ export async function POST(req: NextRequest) {
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      payment_method_types: ['card'],
+      // Card + Link for faster checkout (Stripe's one-click payment)
+      payment_method_types: ['card', 'link'],
+      // Reuse existing customer for consolidated billing history
+      ...(existingCustomerId && { customer: existingCustomerId }),
       line_items: [
         {
           price: priceId,

@@ -222,13 +222,13 @@ export function generateReport(scanId: string): db.Report | null {
       passed: scan.summary?.passed || 0,
       failed: scan.summary?.failed || 0,
       skipped: scan.summary?.skipped || 0,
+      errors: scan.summary?.errors || 0,
       duration: scan.summary?.duration || 0,
       passRate: scan.summary?.total
         ? Math.round(((scan.summary?.passed || 0) / scan.summary.total) * 100)
         : 0,
     },
-    insights: [],
-    recommendations: [],
+    issues: [],
   };
 
   reportStore.set(report.id, report);

@@ -3,6 +3,12 @@
  *
  * Integrates with the existing API key system and organization context.
  * Provides rate limiting based on subscription tier.
+ *
+ * SECURITY: Supports two authentication methods:
+ * 1. API Keys (bg_*) - For programmatic access via CLI/SDK
+ * 2. Firebase ID Tokens - For browser-based authenticated requests
+ *
+ * NOTE: x-user-id header authentication was REMOVED due to security vulnerability.
  */
 
 import { NextRequest } from 'next/server';
@@ -12,6 +18,8 @@ import { TIER_RATE_LIMITS } from '../db/v1-api';
 import { TierName } from '../subscriptions/tiers';
 import { ApiException, ErrorCodes } from './errors';
 import { getDb } from '../firestore';
+import { getAuth } from 'firebase-admin/auth';
+import { getApps, initializeApp, cert } from 'firebase-admin/app';
 
 // Extended key data with organization context
 export interface ApiKeyContext {
@@ -48,8 +56,15 @@ const PERMISSION_ALIASES: Record<V1Permission, ApiKeyPermission[]> = {
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 // Development mode configuration
+// IMPORTANT: Auth skip only works when ALL of these conditions are met:
+// 1. NODE_ENV is 'development'
+// 2. SKIP_API_AUTH is 'true'
+// 3. We are NOT running in a production environment (VERCEL_ENV != 'production', etc.)
 const isDevelopment = process.env.NODE_ENV === 'development';
-const SKIP_AUTH_IN_DEV = process.env.SKIP_API_AUTH === 'true';
+const isProductionHost = process.env.VERCEL_ENV === 'production' ||
+  process.env.GOOGLE_CLOUD_PROJECT !== undefined ||
+  process.env.K_SERVICE !== undefined; // Cloud Run
+const SKIP_AUTH_IN_DEV = process.env.SKIP_API_AUTH === 'true' && !isProductionHost;
 
 /**
  * Get organization tier from database
@@ -82,7 +97,7 @@ async function getOrganizationTier(ownerId: string): Promise<{ orgId: string; ti
         .get();
 
       if (anyOrgSnapshot.empty) {
-        return { orgId: ownerId, tier: 'starter' };
+        return { orgId: ownerId, tier: 'free' };
       }
 
       const orgData = anyOrgSnapshot.docs[0].data();
@@ -99,19 +114,82 @@ async function getOrganizationTier(ownerId: string): Promise<{ orgId: string; ti
     };
   } catch (error) {
     console.error('Error getting organization tier:', error);
-    return { orgId: ownerId, tier: 'starter' };
+    return { orgId: ownerId, tier: 'free' };
   }
 }
 
 async function getOrgTier(db: FirebaseFirestore.Firestore, orgId: string): Promise<TierName> {
   const orgDoc = await db.collection('organizations').doc(orgId).get();
-  if (!orgDoc.exists) return 'starter';
+  if (!orgDoc.exists) return 'free';
   const orgData = orgDoc.data();
-  return (orgData?.subscription?.tier as TierName) || 'starter';
+  return (orgData?.subscription?.tier as TierName) || 'free';
 }
 
 /**
- * Validate API key and return context
+ * Ensure Firebase Admin is initialized for token verification
+ */
+function ensureFirebaseAdmin(): boolean {
+  if (getApps().length === 0) {
+    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
+
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      try {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+        initializeApp({
+          credential: cert(serviceAccount),
+          projectId,
+        });
+        return true;
+      } catch (error) {
+        console.error('Failed to initialize Firebase Admin:', error);
+        return false;
+      }
+    } else if (projectId) {
+      initializeApp({ projectId });
+      return true;
+    }
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Verify Firebase ID token and return user info
+ * Used for browser-based authentication
+ */
+async function verifyFirebaseIdToken(idToken: string): Promise<{ uid: string; email?: string } | null> {
+  if (!ensureFirebaseAdmin()) {
+    return null;
+  }
+
+  try {
+    const auth = getAuth();
+    const decodedToken = await auth.verifyIdToken(idToken);
+    return {
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+    };
+  } catch (error) {
+    console.error('Firebase ID token verification failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Check if a token looks like a Firebase ID token (JWT format)
+ */
+function isFirebaseIdToken(token: string): boolean {
+  // Firebase ID tokens are JWTs with 3 dot-separated parts
+  // API keys start with 'bg_'
+  return token.includes('.') && token.split('.').length === 3 && !token.startsWith('bg_');
+}
+
+/**
+ * Validate API key or Firebase ID token and return context
+ *
+ * Supports two authentication methods:
+ * 1. API Key (bg_*) via x-api-key header or Authorization: Bearer bg_*
+ * 2. Firebase ID Token via Authorization: Bearer <jwt>
  */
 export async function validateApiKey(request: NextRequest): Promise<ApiKeyContext> {
   // Skip auth in development if configured
@@ -140,22 +218,56 @@ export async function validateApiKey(request: NextRequest): Promise<ApiKeyContex
     };
   }
 
-  // Get API key from header
+  // Get credentials from headers
   const authHeader = request.headers.get('authorization');
   const xApiKey = request.headers.get('x-api-key');
 
-  const rawKey = xApiKey || (authHeader?.startsWith('Bearer ')
-    ? authHeader.slice(7)
-    : authHeader);
+  // Prefer x-api-key header for API keys
+  if (xApiKey) {
+    return validateApiKeyCredential(xApiKey);
+  }
 
-  if (!rawKey) {
+  // Check Authorization header
+  if (!authHeader) {
     throw new ApiException(
       ErrorCodes.INVALID_API_KEY,
-      'Missing API key. Provide via Authorization header (Bearer <key>) or x-api-key header.',
+      'Missing authentication. Provide API key via x-api-key header or Firebase ID token via Authorization: Bearer <token>.',
       401
     );
   }
 
+  // Extract token from Bearer prefix
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+
+  if (!token) {
+    throw new ApiException(
+      ErrorCodes.INVALID_API_KEY,
+      'Invalid Authorization header format. Use: Authorization: Bearer <token>',
+      401
+    );
+  }
+
+  // Check if it's an API key (starts with bg_)
+  if (token.startsWith('bg_')) {
+    return validateApiKeyCredential(token);
+  }
+
+  // Check if it looks like a Firebase ID token (JWT)
+  if (isFirebaseIdToken(token)) {
+    return validateFirebaseToken(token);
+  }
+
+  throw new ApiException(
+    ErrorCodes.INVALID_API_KEY,
+    'Invalid authentication token. Provide a valid API key (bg_*) or Firebase ID token.',
+    401
+  );
+}
+
+/**
+ * Validate an API key credential
+ */
+async function validateApiKeyCredential(rawKey: string): Promise<ApiKeyContext> {
   // Validate key format
   if (!rawKey.startsWith('bg_')) {
     throw new ApiException(
@@ -177,6 +289,51 @@ export async function validateApiKey(request: NextRequest): Promise<ApiKeyContex
 
   return {
     apiKey,
+    organizationId: orgId,
+    tier,
+    rateLimit: TIER_RATE_LIMITS[tier],
+  };
+}
+
+/**
+ * Validate a Firebase ID token and create an API context
+ * Used for browser-based authentication
+ */
+async function validateFirebaseToken(idToken: string): Promise<ApiKeyContext> {
+  const userInfo = await verifyFirebaseIdToken(idToken);
+
+  if (!userInfo) {
+    throw new ApiException(
+      ErrorCodes.INVALID_API_KEY,
+      'Invalid or expired Firebase ID token. Please sign in again.',
+      401
+    );
+  }
+
+  // Get organization context and tier for the authenticated user
+  const { orgId, tier } = await getOrganizationTier(userInfo.uid);
+
+  // Create a virtual API key context for the authenticated user
+  // This allows existing permission checks to work
+  return {
+    apiKey: {
+      id: `firebase_${userInfo.uid}`,
+      key: 'firebase_auth',
+      name: 'Firebase Authentication',
+      applicationId: 'web_app',
+      ownerId: userInfo.uid,
+      // Browser users get full permissions for their own data
+      permissions: [
+        'projects:read', 'projects:write',
+        'scans:read', 'scans:write',
+        'tests:read', 'tests:write',
+        'reports:read', 'reports:write',
+      ] as ApiKeyPermission[],
+      rateLimit: TIER_RATE_LIMITS[tier],
+      usageCount: 0,
+      status: 'active',
+      createdAt: new Date(),
+    },
     organizationId: orgId,
     tier,
     rateLimit: TIER_RATE_LIMITS[tier],

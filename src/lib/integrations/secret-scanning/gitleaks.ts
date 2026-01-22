@@ -134,7 +134,7 @@ Do NOT include the actual secret value in any response.`,
       },
       ruleId: result.RuleID,
       tags: ['gitleaks', 'secrets', 'credentials', 'security', result.RuleID],
-      effort: 'low',
+      effort: 'easy',
     };
   }
 

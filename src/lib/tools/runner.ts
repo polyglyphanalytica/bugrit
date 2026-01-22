@@ -287,7 +287,7 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   // ─────────────────────────────────────────────────────────────
   depcheck: async ({ targetPath }) => {
     const depcheck = safeRequire<typeof import('depcheck')>('depcheck');
-    const result = await depcheck.default(targetPath, {});
+    const result = await (depcheck as unknown as { default: typeof depcheck }).default(targetPath, {});
 
     const findings: Finding[] = [];
 
@@ -593,7 +593,7 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
           'security/detect-possible-timing-attacks': 'warn',
           'security/detect-unsafe-regex': 'error',
         },
-      },
+      } as unknown as import('eslint').Linter.Config,
     });
 
     try {

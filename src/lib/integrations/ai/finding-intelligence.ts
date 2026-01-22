@@ -375,7 +375,7 @@ export class FindingIntelligence {
 
     if (efforts.length === 0) return 'moderate';
 
-    const effortOrder = { trivial: 1, easy: 2, moderate: 3, hard: 4 };
+    const effortOrder = { trivial: 1, easy: 2, moderate: 3, hard: 4, complex: 5 };
 
     // Take the maximum effort
     const maxEffort = efforts.reduce((max, e) => {
@@ -460,6 +460,7 @@ export class FindingIntelligence {
       easy: 12,
       moderate: 8,
       hard: 3,
+      complex: 1,
     };
     if (finding.effort) {
       factors.push({

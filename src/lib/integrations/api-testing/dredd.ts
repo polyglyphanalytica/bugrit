@@ -134,8 +134,8 @@ export class DreddIntegration implements ToolIntegration {
     for (const test of result.tests) {
       if (test.status === 'fail') {
         const statusMismatch = test.expected?.statusCode !== test.actual?.statusCode;
-        const bodyMismatch = test.message?.includes('body');
-        const headerMismatch = test.message?.includes('header');
+        const bodyMismatch = test.message?.includes('body') ?? false;
+        const headerMismatch = test.message?.includes('header') ?? false;
 
         const severity: Severity = statusMismatch ? 'high' : 'medium';
 

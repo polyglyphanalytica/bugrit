@@ -163,7 +163,7 @@ Please investigate and remediate this vulnerability.`,
       },
       ruleId: result['template-id'],
       tags: ['nuclei', 'vulnerability', result.info.severity, ...result.info.tags, ...(classification?.['cve-id'] || [])],
-      effort: severity === 'critical' || severity === 'high' ? 'high' : 'moderate',
+      effort: severity === 'critical' || severity === 'high' ? 'hard' : 'moderate',
     };
   }
 

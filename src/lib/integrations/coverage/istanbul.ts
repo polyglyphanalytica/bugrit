@@ -98,12 +98,12 @@ export class IstanbulIntegration implements ToolIntegration {
       const coverageData: IstanbulCoverage = JSON.parse(fs.readFileSync(coveragePath, 'utf-8'));
 
       // Analyze overall coverage
-      findings.push(...this.analyzeOverallCoverage(coverageData.total, thresholds));
+      findings.push(...this.analyzeOverallCoverage(coverageData.total, thresholds as Record<string, number>));
 
       // Analyze file-level coverage if detail available
       if (fs.existsSync(coverageDetailPath)) {
         const detailData = JSON.parse(fs.readFileSync(coverageDetailPath, 'utf-8'));
-        findings.push(...this.analyzeFileCoverage(detailData, thresholds, targetDir));
+        findings.push(...this.analyzeFileCoverage(detailData, thresholds as Record<string, number>, targetDir));
       }
 
       return this.createResult(findings, Date.now() - startTime, coverageData.total);

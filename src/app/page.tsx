@@ -206,7 +206,7 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up delay-400 fill-both">
               <Link href="/register">
                 <GradientButton size="xl" glow className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-orange-500">
-                  Find Out What&apos;s Wrong
+                  Audit your app now
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>

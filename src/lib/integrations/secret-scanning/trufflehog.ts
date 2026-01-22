@@ -101,7 +101,7 @@ export class TrufflehogIntegration implements ToolIntegration {
       },
       ruleId: result.DetectorName,
       tags: ['trufflehog', 'secrets', result.DetectorName.toLowerCase(), result.Verified ? 'verified' : 'unverified'],
-      effort: 'low',
+      effort: 'easy',
     };
   }
 

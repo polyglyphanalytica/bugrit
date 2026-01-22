@@ -321,7 +321,7 @@ Investigate and fix the performance bottleneck.
     if (!total) return {};
 
     return {
-      responseTime: total['Average Response Time'] as number,
+      avgResponseTime: total['Average Response Time'] as number,
       p95ResponseTime: total['95%'] as number,
       p99ResponseTime: total['99%'] as number,
       throughput: total['Requests/s'] as number,

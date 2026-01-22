@@ -14,14 +14,16 @@ import {
   TIERS,
   canAccessPlatform,
   canAccessFeature,
-  getScansLimit,
-  isUnlimited,
+  getCreditsLimit,
 } from './tiers';
+
+// Helper to check if a limit value means unlimited (-1 in our system)
+const isUnlimited = (limit: number) => limit === -1;
 import { Organization, OrganizationMember, MemberRole, hasPermission, Permission } from '../organizations/types';
 
 export interface UserSubscription {
   tier: TierName;
-  status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'none';
+  status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete' | 'none';
   stripeSubscriptionId?: string;
   stripeCustomerId?: string;
   currentPeriodEnd?: Date;
@@ -109,7 +111,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setError(err instanceof Error ? err.message : 'Unknown error');
       // Default to free tier on error
       setSubscription({
-        tier: 'starter',
+        tier: 'free',
         status: 'none',
         scansUsedThisMonth: 0,
         projectCount: 0,
@@ -140,7 +142,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     }
   };
 
-  const currentTier = subscription?.tier || 'starter';
+  const currentTier = subscription?.tier || 'free';
   const currentRole = organization?.role || 'member';
 
   // Superadmins bypass ALL limits
@@ -156,7 +158,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const canScan = () => {
     if (isSuperadmin) return true;
-    const limit = getScansLimit(currentTier);
+    // Block scanning if subscription is incomplete (payment pending)
+    if (subscription?.status === 'incomplete') return false;
+    // Block scanning if subscription is past_due and credits are exhausted
+    if (subscription?.status === 'past_due' && (subscription?.scansUsedThisMonth || 0) >= getCreditsLimit('free')) {
+      return false;
+    }
+    const limit = getCreditsLimit(currentTier);
     if (isUnlimited(limit)) return true;
     return (subscription?.scansUsedThisMonth || 0) < limit;
   };
@@ -189,7 +197,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   const scansRemaining = (): number | 'unlimited' => {
     if (isSuperadmin) return 'unlimited';
-    const limit = getScansLimit(currentTier);
+    const limit = getCreditsLimit(currentTier);
     if (isUnlimited(limit)) return 'unlimited';
     return Math.max(0, limit - (subscription?.scansUsedThisMonth || 0));
   };

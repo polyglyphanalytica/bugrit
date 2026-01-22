@@ -53,7 +53,7 @@ export const db = new Proxy(
         }
         return undefined;
       }
-      return (firestore as Record<string, unknown>)[prop as string];
+      return (firestore as unknown as Record<string, unknown>)[prop as string];
     },
   }
 ) as FirebaseFirestore.Firestore;

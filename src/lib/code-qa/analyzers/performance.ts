@@ -8,6 +8,7 @@ interface PerformancePattern {
   name: string;
   pattern: RegExp;
   severity: Finding['severity'];
+  category: string;
   description: string;
   explanation: string;
   impact: string;

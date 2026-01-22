@@ -6,10 +6,12 @@
  */
 
 import { db } from '@/lib/firebase/admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import { calculateCredits, canAffordScan, SUBSCRIPTION_TIERS, SubscriptionTier, ScanConfig, CreditEstimate } from './credits';
 import { deductCreditsWithAutoTopup } from './auto-topup';
 import { logger } from '@/lib/logger';
 import { ToolCategory } from '@/lib/tools/registry';
+import { ToolCategory as IntegrationsToolCategory } from '@/lib/integrations/types';
 
 export interface BillingAccount {
   userId: string;
@@ -20,12 +22,14 @@ export interface BillingAccount {
     used: number;
     purchased: number;
     rollover: number;
+    reserved?: number;
   };
   subscription: {
-    status: 'active' | 'canceled' | 'past_due' | 'none';
+    status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'none';
     stripeCustomerId?: string;
     stripeSubscriptionId?: string;
     currentPeriodEnd?: Date;
+    lastPaymentFailedAt?: Date;
   };
 }
 
@@ -164,6 +168,11 @@ export async function countLinesOfCode(targetPath: string): Promise<number> {
 /**
  * Check if user can afford a scan BEFORE running it.
  * Call this before starting any scan.
+ *
+ * This checks:
+ * 1. Subscription status (incomplete users cannot scan with paid tier features)
+ * 2. Credit balance
+ * 3. Overage eligibility
  */
 export async function checkScanAffordability(
   userId: string,
@@ -175,7 +184,7 @@ export async function checkScanAffordability(
     return {
       allowed: false,
       estimate: {
-        breakdown: { base: 0, lines: 0, tools: {} as Record<ToolCategory, number>, ai: {} },
+        breakdown: { base: 0, lines: 0, tools: {} as Record<ToolCategory, number>, ai: { summary: 0, issue_explanations: 0, priority_scoring: 0, fix_suggestions: 0 } },
         total: 0,
         warnings: [],
       },
@@ -184,9 +193,30 @@ export async function checkScanAffordability(
     };
   }
 
+  // Check subscription status - incomplete means payment is pending (e.g., 3D Secure)
+  // Users with incomplete status should not be able to use paid tier features
+  if (account.subscription.status === 'incomplete') {
+    return {
+      allowed: false,
+      estimate: {
+        breakdown: { base: 0, lines: 0, tools: {} as Record<ToolCategory, number>, ai: { summary: 0, issue_explanations: 0, priority_scoring: 0, fix_suggestions: 0 } },
+        total: 0,
+        warnings: [],
+      },
+      currentBalance: account.credits.remaining,
+      reason: 'Your subscription payment is pending. Please complete the payment to continue.',
+    };
+  }
+
+  // For past_due, we allow scanning but at free tier limits if they've exceeded their credits
+  // This gives users a grace period while they fix their payment
+  const effectiveTier = account.subscription.status === 'past_due' && account.credits.remaining <= 0
+    ? 'free' as SubscriptionTier
+    : account.tier;
+
   const estimate = calculateCredits(config);
-  const affordCheck = canAffordScan(account.credits.remaining, estimate, account.tier);
-  const tierConfig = SUBSCRIPTION_TIERS[account.tier];
+  const affordCheck = canAffordScan(account.credits.remaining, estimate, effectiveTier);
+  const tierConfig = SUBSCRIPTION_TIERS[effectiveTier];
 
   let overage: PreScanCheck['overage'];
   let requiresConfirmation = false;
@@ -384,14 +414,14 @@ export async function finalizeReservation(
     // Update billing account
     if (difference !== 0) {
       await db.collection('billing_accounts').doc(userId).update({
-        'credits.remaining': db.FieldValue.increment(difference),
-        'credits.reserved': db.FieldValue.increment(-reservedAmount),
-        'credits.used': db.FieldValue.increment(actualCost),
+        'credits.remaining': FieldValue.increment(difference),
+        'credits.reserved': FieldValue.increment(-reservedAmount),
+        'credits.used': FieldValue.increment(actualCost),
       });
     } else {
       await db.collection('billing_accounts').doc(userId).update({
-        'credits.reserved': db.FieldValue.increment(-reservedAmount),
-        'credits.used': db.FieldValue.increment(actualCost),
+        'credits.reserved': FieldValue.increment(-reservedAmount),
+        'credits.used': FieldValue.increment(actualCost),
       });
     }
 
@@ -414,6 +444,50 @@ export async function finalizeReservation(
 }
 
 /**
+ * Check if repository size is within tier limits.
+ * Returns an error message if exceeded, null if OK.
+ */
+export async function checkRepoSizeLimit(
+  userId: string,
+  linesOfCode: number
+): Promise<{ allowed: boolean; maxAllowed: number; reason?: string }> {
+  const account = await getBillingAccount(userId);
+
+  if (!account) {
+    return {
+      allowed: false,
+      maxAllowed: 0,
+      reason: 'Billing account not found',
+    };
+  }
+
+  const tierConfig = SUBSCRIPTION_TIERS[account.tier];
+  const maxRepoSize = tierConfig.features.maxRepoSize;
+
+  // -1 means unlimited
+  if (maxRepoSize === -1) {
+    return { allowed: true, maxAllowed: -1 };
+  }
+
+  if (linesOfCode > maxRepoSize) {
+    const formattedMax = maxRepoSize >= 1000
+      ? `${(maxRepoSize / 1000).toFixed(0)}K`
+      : maxRepoSize.toString();
+    const formattedActual = linesOfCode >= 1000
+      ? `${(linesOfCode / 1000).toFixed(0)}K`
+      : linesOfCode.toString();
+
+    return {
+      allowed: false,
+      maxAllowed: maxRepoSize,
+      reason: `Repository size (${formattedActual} lines) exceeds your ${account.tier} tier limit of ${formattedMax} lines. Upgrade to scan larger repositories.`,
+    };
+  }
+
+  return { allowed: true, maxAllowed: maxRepoSize };
+}
+
+/**
  * Release a credit reservation (scan was cancelled or failed before completion).
  */
 export async function releaseReservation(scanId: string): Promise<void> {
@@ -430,8 +504,8 @@ export async function releaseReservation(scanId: string): Promise<void> {
 
     // Return credits to user
     await db.collection('billing_accounts').doc(userId).update({
-      'credits.remaining': db.FieldValue.increment(reservedAmount),
-      'credits.reserved': db.FieldValue.increment(-reservedAmount),
+      'credits.remaining': FieldValue.increment(reservedAmount),
+      'credits.reserved': FieldValue.increment(-reservedAmount),
     });
 
     // Mark reservation as released
@@ -442,4 +516,185 @@ export async function releaseReservation(scanId: string): Promise<void> {
   } catch (error) {
     logger.error('Reservation release error', { scanId, error });
   }
+}
+
+/**
+ * Calculate and refund credits for failed/timed out tools.
+ * Called when finalizing a scan session with partial failures.
+ */
+export interface ToolRefundInfo {
+  toolName: string;
+  category: IntegrationsToolCategory;
+  status: 'failed' | 'timeout' | 'skipped';
+  reason: string;
+}
+
+export interface RefundResult {
+  success: boolean;
+  refundedCredits: number;
+  toolsRefunded: string[];
+  newBalance: number;
+  error?: string;
+}
+
+export async function refundCreditsForFailedTools(
+  userId: string,
+  sessionId: string,
+  failedTools: ToolRefundInfo[],
+  estimatedLines: number
+): Promise<RefundResult> {
+  if (failedTools.length === 0) {
+    const account = await getBillingAccount(userId);
+    return {
+      success: true,
+      refundedCredits: 0,
+      toolsRefunded: [],
+      newBalance: account?.credits.remaining || 0,
+    };
+  }
+
+  try {
+    // Calculate credit refund per tool category
+    // Each category has a different credit cost
+    const CATEGORY_CREDITS: Partial<Record<IntegrationsToolCategory, number>> = {
+      'code-quality': 1,
+      'security': 2,
+      'accessibility': 1,
+      'performance': 3, // More expensive - load testing
+      'api-testing': 2,
+      'api-schema': 1,
+      'api-security': 2,
+      'visual': 2,
+      'coverage': 1,
+      'observability': 2,
+      'chaos': 5, // Most expensive - disruptive testing
+      'complexity': 1,
+      'database': 2,
+      'documentation': 1,
+      'iac-security': 2,
+      'license': 1,
+      'secret-scanning': 2,
+      'mobile': 3,
+      'dependencies': 1,
+      'cloud-native': 2,
+    };
+
+    // Calculate lines multiplier (matches credits.ts logic)
+    const linesMultiplier = estimatedLines > 100000 ? 2 :
+                           estimatedLines > 50000 ? 1.5 :
+                           estimatedLines > 10000 ? 1.2 : 1;
+
+    let totalRefund = 0;
+    const toolsRefunded: string[] = [];
+
+    for (const tool of failedTools) {
+      const baseCost = CATEGORY_CREDITS[tool.category] || 1;
+      const adjustedCost = Math.ceil(baseCost * linesMultiplier);
+      totalRefund += adjustedCost;
+      toolsRefunded.push(tool.toolName);
+    }
+
+    if (totalRefund === 0) {
+      const account = await getBillingAccount(userId);
+      return {
+        success: true,
+        refundedCredits: 0,
+        toolsRefunded: [],
+        newBalance: account?.credits.remaining || 0,
+      };
+    }
+
+    // Add credits back to user's account
+    await db.collection('billing_accounts').doc(userId).update({
+      'credits.remaining': FieldValue.increment(totalRefund),
+      'credits.used': FieldValue.increment(-totalRefund),
+    });
+
+    // Record the refund
+    await db.collection('credit_refunds').add({
+      userId,
+      sessionId,
+      refundedCredits: totalRefund,
+      toolsRefunded,
+      failedTools: failedTools.map(t => ({
+        name: t.toolName,
+        category: t.category,
+        status: t.status,
+        reason: t.reason,
+      })),
+      timestamp: new Date(),
+    });
+
+    // Get updated balance
+    const account = await getBillingAccount(userId);
+    const newBalance = account?.credits.remaining || 0;
+
+    logger.info('Credits refunded for failed tools', {
+      userId,
+      sessionId,
+      refundedCredits: totalRefund,
+      toolsCount: toolsRefunded.length,
+      newBalance,
+    });
+
+    return {
+      success: true,
+      refundedCredits: totalRefund,
+      toolsRefunded,
+      newBalance,
+    };
+  } catch (error) {
+    logger.error('Credit refund error', { userId, sessionId, error });
+    return {
+      success: false,
+      refundedCredits: 0,
+      toolsRefunded: [],
+      newBalance: 0,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Calculate estimated credits for a set of tool categories.
+ * Used for pre-scan estimation.
+ */
+export function estimateCreditsForTools(
+  categories: IntegrationsToolCategory[],
+  estimatedLines: number
+): number {
+  const CATEGORY_CREDITS: Partial<Record<IntegrationsToolCategory, number>> = {
+    'code-quality': 1,
+    'security': 2,
+    'accessibility': 1,
+    'performance': 3,
+    'api-testing': 2,
+    'api-schema': 1,
+    'api-security': 2,
+    'visual': 2,
+    'coverage': 1,
+    'observability': 2,
+    'chaos': 5,
+    'complexity': 1,
+    'database': 2,
+    'documentation': 1,
+    'iac-security': 2,
+    'license': 1,
+    'secret-scanning': 2,
+    'mobile': 3,
+    'dependencies': 1,
+    'cloud-native': 2,
+  };
+
+  const linesMultiplier = estimatedLines > 100000 ? 2 :
+                         estimatedLines > 50000 ? 1.5 :
+                         estimatedLines > 10000 ? 1.2 : 1;
+
+  let total = 0;
+  for (const category of categories) {
+    const baseCost = CATEGORY_CREDITS[category] || 1;
+    total += Math.ceil(baseCost * linesMultiplier);
+  }
+
+  return total;
 }

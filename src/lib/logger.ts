@@ -133,11 +133,13 @@ const defaultConfig: LoggerConfig = {
  */
 function serializeError(error: unknown): Record<string, unknown> {
   if (error instanceof Error) {
+    // Spread first, then explicit properties to avoid duplication warnings
+    const { name: _n, message: _m, stack: _s, ...rest } = error as Error & Record<string, unknown>;
     return {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      ...(error as Error & Record<string, unknown>),
+      ...rest,
     };
   }
   if (typeof error === 'string') {

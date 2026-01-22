@@ -84,9 +84,9 @@ export class JMeterIntegration implements ToolIntegration {
 
       // Generate a simple test plan if only URL provided
       if (!testPlan && target.url) {
-        const threads = config?.options?.threads || 10;
-        const rampUp = config?.options?.rampUp || 10;
-        const loops = config?.options?.loops || 100;
+        const threads = (config?.options?.threads || 10) as number;
+        const rampUp = (config?.options?.rampUp || 10) as number;
+        const loops = (config?.options?.loops || 100) as number;
 
         const jmx = this.generateSimpleTestPlan(target.url, threads, rampUp, loops);
         testPlan = path.join(os.tmpdir(), `jmeter-test-${Date.now()}.jmx`);
@@ -184,7 +184,7 @@ export class JMeterIntegration implements ToolIntegration {
         }
       });
 
-      samples.push(sample as JMeterSample);
+      samples.push(sample as unknown as JMeterSample);
     }
 
     return samples;
@@ -279,7 +279,7 @@ export class JMeterIntegration implements ToolIntegration {
     const sorted = [...times].sort((a, b) => a - b);
 
     return {
-      responseTime: times.reduce((a, b) => a + b, 0) / times.length,
+      avgResponseTime: times.reduce((a, b) => a + b, 0) / times.length,
       p95ResponseTime: sorted[Math.floor(sorted.length * 0.95)],
       p99ResponseTime: sorted[Math.floor(sorted.length * 0.99)],
       errorRate: samples.filter(s => !s.s).length / samples.length,

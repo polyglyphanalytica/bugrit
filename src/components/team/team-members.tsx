@@ -156,7 +156,7 @@ export function TeamMembers() {
           <CardTitle>Team Members</CardTitle>
           <CardDescription>
             {organization.name} has {members.length} member{members.length !== 1 ? 's' : ''}.
-            {remaining > 0 && ` You can add ${remaining} more.`}
+            {(remaining === 'unlimited' || remaining > 0) && ` You can add ${remaining === 'unlimited' ? 'unlimited' : remaining} more.`}
             {remaining === 0 && ' Upgrade to add more team members.'}
           </CardDescription>
         </CardHeader>

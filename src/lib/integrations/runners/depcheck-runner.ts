@@ -32,7 +32,7 @@ export async function runDepcheck(
     };
 
     const results: DepcheckResults = await new Promise((resolve, reject) => {
-      depcheck.default(targetDir, depcheckOptions, (result: DepcheckResults) => {
+      (depcheck as unknown as { default: typeof depcheck }).default(targetDir, depcheckOptions, (result: DepcheckResults) => {
         if (result) resolve(result);
         else reject(new Error('Depcheck failed'));
       });

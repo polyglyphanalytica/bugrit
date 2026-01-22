@@ -132,7 +132,7 @@ export class GrypeIntegration implements ToolIntegration {
       },
       ruleId: match.vulnerability.id,
       tags: ['grype', 'container', 'vulnerability', match.vulnerability.id, match.artifact.type],
-      effort: match.vulnerability.fix?.versions?.length ? 'low' : 'high',
+      effort: match.vulnerability.fix?.versions?.length ? 'easy' : 'hard',
     };
   }
 

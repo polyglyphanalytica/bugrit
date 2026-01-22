@@ -172,7 +172,7 @@ async function executeAutoTopupCharge(
     // Dynamically import Stripe
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2024-12-18.acacia',
+      apiVersion: '2025-12-15.clover',
     });
 
     // Get customer's default payment method
@@ -256,7 +256,7 @@ async function executeAutoTopupCharge(
  * @param userId - The user's ID
  * @param amount - The number of credits to deduct
  * @param reason - Description of why credits are being deducted
- * @param metadata - Additional metadata for the transaction
+ * @param metadata - Additional metadata for the transaction (should include scanId for idempotency)
  * @returns The remaining credits after deduction and any auto top-up
  */
 export async function deductCreditsWithAutoTopup(
@@ -270,8 +270,35 @@ export async function deductCreditsWithAutoTopup(
   autoTopupTriggered: boolean;
   autoTopupResult?: TopupResult;
   error?: string;
+  alreadyProcessed?: boolean;
 }> {
   try {
+    // IDEMPOTENCY CHECK: If scanId is provided, check if this scan was already billed
+    const scanId = metadata?.scanId as string | undefined;
+    if (scanId) {
+      const existingBillingSnapshot = await db
+        .collection('scan_billing')
+        .where('scanId', '==', scanId)
+        .limit(1)
+        .get();
+
+      if (!existingBillingSnapshot.empty) {
+        // This scan was already billed - return the previous result
+        const existingBilling = existingBillingSnapshot.docs[0].data();
+        logger.info('Idempotent deduction: scan already billed', {
+          userId,
+          scanId,
+          previousCreditsCharged: existingBilling.creditsCharged,
+        });
+        return {
+          success: true,
+          remainingCredits: existingBilling.balanceAfter || 0,
+          autoTopupTriggered: existingBilling.autoTopupTriggered || false,
+          alreadyProcessed: true,
+        };
+      }
+    }
+
     // Get current billing account
     const billingDoc = await db.collection('billing_accounts').doc(userId).get();
 
@@ -310,8 +337,8 @@ export async function deductCreditsWithAutoTopup(
       'credits.used': (billingData?.credits?.used || 0) + amount,
     });
 
-    // Record transaction
-    await db.collection('credit_transactions').add({
+    // Record transaction with idempotency key
+    const transactionData = {
       userId,
       type: 'deduction',
       amount: -amount,
@@ -319,7 +346,10 @@ export async function deductCreditsWithAutoTopup(
       reason,
       metadata,
       timestamp: new Date(),
-    });
+      ...(scanId ? { idempotencyKey: `scan_${scanId}` } : {}),
+    };
+
+    await db.collection('credit_transactions').add(transactionData);
 
     // Check and trigger auto top-up if needed
     const autoTopupResult = await checkAndTriggerAutoTopup(userId, newBalance);

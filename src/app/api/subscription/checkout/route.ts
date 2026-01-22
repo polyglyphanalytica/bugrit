@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCheckoutSession } from '@/lib/subscriptions/stripe';
-import { TierName } from '@/lib/subscriptions/tiers';
+import { TierName, TIERS } from '@/lib/subscriptions/tiers';
 import { verifySession } from '@/lib/auth/session';
+import { db } from '@/lib/firebase/admin';
+import { canChangeSubscriptionPlan } from '@/lib/billing/dunning';
+
+// Get valid paid tiers from TIERS constant
+const PAID_TIER_NAMES = (Object.keys(TIERS) as TierName[]).filter(
+  (name) => TIERS[name].priceMonthly > 0
+);
 
 /**
  * POST /api/subscription/checkout
@@ -15,10 +22,10 @@ export async function POST(request: NextRequest) {
       interval: 'month' | 'year';
     };
 
-    // Validate tier
-    if (!['pro', 'business'].includes(tier)) {
+    // Validate tier - only allow paid tiers
+    if (!PAID_TIER_NAMES.includes(tier)) {
       return NextResponse.json(
-        { error: 'Invalid tier' },
+        { error: `Invalid tier. Must be one of: ${PAID_TIER_NAMES.join(', ')}` },
         { status: 400 }
       );
     }
@@ -40,12 +47,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if user is in dunning state (payment past due)
+    // Block plan changes until payment is resolved to avoid billing complications
+    const planChangeCheck = await canChangeSubscriptionPlan(user.uid);
+    if (!planChangeCheck.allowed) {
+      return NextResponse.json(
+        { error: planChangeCheck.reason },
+        { status: 400 }
+      );
+    }
+
+    // Check if user already has an active subscription
+    const existingSubscription = await db
+      .collection('subscriptions')
+      .doc(user.uid)
+      .get();
+
+    const subData = existingSubscription.data();
+    if (subData?.status === 'active' && subData?.stripeSubscriptionId) {
+      return NextResponse.json(
+        { error: 'You already have an active subscription. Please use the billing portal to change plans.' },
+        { status: 400 }
+      );
+    }
+
+    // Check for existing Stripe customer ID (from previous credit purchases or canceled subscription)
+    let existingCustomerId: string | undefined = subData?.stripeCustomerId;
+    if (!existingCustomerId) {
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      if (userDoc.exists) {
+        existingCustomerId = userDoc.data()?.stripeCustomerId;
+      }
+    }
+
     // Create checkout session
     const { url } = await createCheckoutSession({
       userId: user.uid,
       userEmail: user.email || '',
       tier,
       interval,
+      customerId: existingCustomerId,
       successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?subscription=success`,
       cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?subscription=canceled`,
     });

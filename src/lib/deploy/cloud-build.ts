@@ -959,6 +959,29 @@ export const DOCKER_TOOLS = {
       },
     ],
   },
+  'androguard': {
+    image: 'python:3.12-slim',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'python:3.12-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'pip install androguard -q && androlyze.py -i /workspace/source/*.apk -o /workspace/androguard-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/androguard-report.json', `gs://${outputBucket}/${jobId}/androguard-report.json`],
+      },
+    ],
+  },
 } as const;
 
 export type DockerToolId = keyof typeof DOCKER_TOOLS;
@@ -1035,7 +1058,8 @@ export class CloudBuildRunner {
 
     try {
       const authClient = await getAuthClient();
-      google.options({ auth: authClient });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      google.options({ auth: authClient as any });
 
       // Build the Cloud Build configuration
       const buildConfig = {
@@ -1089,7 +1113,8 @@ export class CloudBuildRunner {
 
     try {
       const authClient = await getAuthClient();
-      google.options({ auth: authClient });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      google.options({ auth: authClient as any });
 
       while (Date.now() - startTime < timeoutMs) {
         const response = await cloudbuild.projects.builds.get({
@@ -1234,6 +1259,7 @@ export class CloudBuildRunner {
       'clippy': 'clippy-report.json',
       'garak': 'garak-report.jsonl',
       'modelscan': 'modelscan-report.json',
+      'androguard': 'androguard-report.json',
     };
 
     const outputFile = outputFiles[toolId];

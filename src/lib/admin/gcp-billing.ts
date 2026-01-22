@@ -209,12 +209,15 @@ export async function fetchGCPCostTrend(days: number = 30): Promise<CostTrend | 
 
     const [rows] = await bigquery.query(options);
 
-    const daily: DailyCost[] = rows.map((row: Record<string, unknown>) => ({
-      date: row.date?.value || row.date,
-      cost: Number(row.daily_cost) || 0,
-      credits: Number(row.daily_credits) || 0,
-      netCost: (Number(row.daily_cost) || 0) + (Number(row.daily_credits) || 0),
-    }));
+    const daily: DailyCost[] = rows.map((row: Record<string, unknown>) => {
+      const dateValue = row.date as { value?: string } | string | undefined;
+      return {
+        date: typeof dateValue === 'object' && dateValue?.value ? dateValue.value : String(dateValue || ''),
+        cost: Number(row.daily_cost) || 0,
+        credits: Number(row.daily_credits) || 0,
+        netCost: (Number(row.daily_cost) || 0) + (Number(row.daily_credits) || 0),
+      };
+    });
 
     // Calculate averages and projections
     const recentDays = daily.slice(-7);

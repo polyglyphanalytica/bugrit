@@ -12,6 +12,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+// @ts-ignore - uuid types
 import { v4 as uuidv4 } from 'uuid';
 import { runTools, ToolResult } from '../src/lib/tools/runner';
 import { ToolCategory } from '../src/lib/tools/registry';
@@ -153,7 +154,7 @@ app.post('/scan', authenticateRequest, async (req: Request, res: Response) => {
       excludeTools: scanRequest.config.excludeTools,
       url: scanRequest.source.url,
       timeout: scanRequest.config.timeout || 300000,
-    });
+    } as Parameters<typeof runTools>[0]);
 
     // Calculate metrics
     const metrics = calculateMetrics(results, startTime);
@@ -220,11 +221,12 @@ app.post('/lighthouse', authenticateRequest, async (req: Request, res: Response)
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
     });
 
-    const { lhr } = await lighthouse.default(url, {
-      port: new URL(browser.wsEndpoint()).port,
+    const result = await lighthouse.default(url, {
+      port: parseInt(new URL(browser.wsEndpoint()).port, 10),
       output: 'json',
       logLevel: 'error',
     });
+    const lhr = (result as unknown as { lhr: { categories: Record<string, { score?: number }>; audits: unknown } })?.lhr;
 
     await browser.close();
 
@@ -506,14 +508,15 @@ function calculateMetrics(
   let linesOfCode = 0;
 
   for (const result of results) {
-    if (result.issues) {
-      totalIssues += result.issues.length;
-      criticalIssues += result.issues.filter(
-        i => i.severity === 'critical' || i.severity === 'error'
+    const extResult = result as unknown as { issues?: Array<{ severity: string }>; metadata?: { linesOfCode?: number } };
+    if (extResult.issues) {
+      totalIssues += extResult.issues.length;
+      criticalIssues += extResult.issues.filter(
+        (i: { severity: string }) => i.severity === 'critical' || i.severity === 'error'
       ).length;
     }
-    if (result.metadata?.linesOfCode) {
-      linesOfCode = Math.max(linesOfCode, result.metadata.linesOfCode);
+    if (extResult.metadata?.linesOfCode) {
+      linesOfCode = Math.max(linesOfCode, extResult.metadata.linesOfCode);
     }
   }
 

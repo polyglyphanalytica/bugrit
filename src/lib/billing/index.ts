@@ -48,6 +48,7 @@ export {
   getBillingAccount,
   countLinesOfCode,
   checkScanAffordability,
+  checkRepoSizeLimit,
   billForCompletedScan,
   reserveCreditsForScan,
   finalizeReservation,

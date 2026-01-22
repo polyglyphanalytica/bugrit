@@ -52,7 +52,8 @@ export async function GET(request: NextRequest) {
         }
 
         const isAdmin = await isPlatformAdminByEmail(email);
-        return NextResponse.json({ isAdmin, email });
+        // SECURITY: Don't return email to prevent email enumeration
+        return NextResponse.json({ isAdmin });
       } catch {
         return NextResponse.json({ isAdmin: false });
       }
@@ -71,7 +72,8 @@ export async function GET(request: NextRequest) {
       }
 
       const isAdmin = await isPlatformAdminByEmail(email);
-      return NextResponse.json({ isAdmin, email });
+      // SECURITY: Don't return email to prevent email enumeration
+      return NextResponse.json({ isAdmin });
     } catch (error) {
       console.error('Token verification failed:', error);
       return NextResponse.json({ isAdmin: false, error: 'Invalid token' }, { status: 401 });

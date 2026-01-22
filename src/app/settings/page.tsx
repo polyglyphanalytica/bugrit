@@ -26,7 +26,8 @@ export default function ProfileSettingsPage() {
     setLoading(true);
 
     try {
-      await updateProfile(user, { displayName });
+      // Cast to any since our User type is compatible at runtime but has different TS types
+      await updateProfile(user as any, { displayName });
       toast({
         title: 'Profile updated',
         description: 'Your profile has been updated successfully.',
@@ -65,7 +66,8 @@ export default function ProfileSettingsPage() {
 
     setLoading(true);
     try {
-      await updatePassword(user, newPassword);
+      // Cast to any since our User type is compatible at runtime but has different TS types
+      await updatePassword(user as any, newPassword);
       toast({
         title: 'Password updated',
         description: 'Your password has been updated successfully.',
