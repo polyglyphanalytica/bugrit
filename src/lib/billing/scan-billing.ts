@@ -20,12 +20,14 @@ export interface BillingAccount {
     used: number;
     purchased: number;
     rollover: number;
+    reserved?: number;
   };
   subscription: {
-    status: 'active' | 'canceled' | 'past_due' | 'none';
+    status: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'none';
     stripeCustomerId?: string;
     stripeSubscriptionId?: string;
     currentPeriodEnd?: Date;
+    lastPaymentFailedAt?: Date;
   };
 }
 
@@ -164,6 +166,11 @@ export async function countLinesOfCode(targetPath: string): Promise<number> {
 /**
  * Check if user can afford a scan BEFORE running it.
  * Call this before starting any scan.
+ *
+ * This checks:
+ * 1. Subscription status (incomplete users cannot scan with paid tier features)
+ * 2. Credit balance
+ * 3. Overage eligibility
  */
 export async function checkScanAffordability(
   userId: string,
@@ -184,9 +191,30 @@ export async function checkScanAffordability(
     };
   }
 
+  // Check subscription status - incomplete means payment is pending (e.g., 3D Secure)
+  // Users with incomplete status should not be able to use paid tier features
+  if (account.subscription.status === 'incomplete') {
+    return {
+      allowed: false,
+      estimate: {
+        breakdown: { base: 0, lines: 0, tools: {} as Record<ToolCategory, number>, ai: {} },
+        total: 0,
+        warnings: [],
+      },
+      currentBalance: account.credits.remaining,
+      reason: 'Your subscription payment is pending. Please complete the payment to continue.',
+    };
+  }
+
+  // For past_due, we allow scanning but at free tier limits if they've exceeded their credits
+  // This gives users a grace period while they fix their payment
+  const effectiveTier = account.subscription.status === 'past_due' && account.credits.remaining <= 0
+    ? 'free' as SubscriptionTier
+    : account.tier;
+
   const estimate = calculateCredits(config);
-  const affordCheck = canAffordScan(account.credits.remaining, estimate, account.tier);
-  const tierConfig = SUBSCRIPTION_TIERS[account.tier];
+  const affordCheck = canAffordScan(account.credits.remaining, estimate, effectiveTier);
+  const tierConfig = SUBSCRIPTION_TIERS[effectiveTier];
 
   let overage: PreScanCheck['overage'];
   let requiresConfirmation = false;

@@ -59,7 +59,8 @@ export async function createCheckoutSession(
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
-    payment_method_types: ['card'],
+    // Card + Link for faster checkout (Stripe's one-click payment)
+    payment_method_types: ['card', 'link'],
     // Reuse existing customer or create new one with email
     ...(customerId ? { customer: customerId } : { customer_email: userEmail }),
     client_reference_id: userId,

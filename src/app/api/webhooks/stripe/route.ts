@@ -51,7 +51,14 @@ export async function POST(request: NextRequest) {
         await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
         break;
 
+      case 'invoice.paid':
+        // invoice.paid is the canonical event for successful payment (per Stripe docs)
+        // It fires after payment_succeeded and confirms the invoice is fully paid
+        await handleInvoicePaid(event.data.object as Stripe.Invoice);
+        break;
+
       case 'invoice.payment_succeeded':
+        // Keep for backwards compatibility, but invoice.paid is preferred
         await handlePaymentSucceeded(event.data.object as Stripe.Invoice);
         break;
 
@@ -459,6 +466,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // Update subscriptions collection
   batch.update(doc.ref, {
     status: 'past_due',
+    lastPaymentFailedAt: now,
     updatedAt: now,
   });
 
@@ -468,6 +476,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     {
       subscription: {
         status: 'past_due',
+        lastPaymentFailedAt: now,
       },
       updatedAt: now,
     },
@@ -477,4 +486,56 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   await batch.commit();
 
   console.log(`Payment failed for subscription ${subscriptionId}`);
+}
+
+/**
+ * Handle invoice.paid event - the canonical payment confirmation event.
+ * This is more reliable than payment_succeeded as it confirms the invoice is fully paid.
+ */
+async function handleInvoicePaid(invoice: Stripe.Invoice) {
+  const subscriptionId = invoice.subscription as string;
+
+  if (!subscriptionId) return;
+
+  // Find user by subscription ID
+  const snapshot = await db
+    .collection('subscriptions')
+    .where('stripeSubscriptionId', '==', subscriptionId)
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) return;
+
+  const doc = snapshot.docs[0];
+  const userId = doc.id;
+  const now = new Date();
+
+  // Use batch to update both collections
+  const batch = db.batch();
+
+  // Update subscriptions collection - clear failure tracking, confirm active status
+  batch.update(doc.ref, {
+    status: 'active',
+    lastPaymentAt: now,
+    lastPaymentFailedAt: null, // Clear any previous failure
+    updatedAt: now,
+  });
+
+  // Update billing_accounts collection
+  batch.set(
+    db.collection('billing_accounts').doc(userId),
+    {
+      subscription: {
+        status: 'active',
+        lastPaymentAt: now,
+        lastPaymentFailedAt: null,
+      },
+      updatedAt: now,
+    },
+    { merge: true }
+  );
+
+  await batch.commit();
+
+  console.log(`Invoice paid for subscription ${subscriptionId}`);
 }
