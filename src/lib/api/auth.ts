@@ -48,8 +48,15 @@ const PERMISSION_ALIASES: Record<V1Permission, ApiKeyPermission[]> = {
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 // Development mode configuration
+// IMPORTANT: Auth skip only works when ALL of these conditions are met:
+// 1. NODE_ENV is 'development'
+// 2. SKIP_API_AUTH is 'true'
+// 3. We are NOT running in a production environment (VERCEL_ENV != 'production', etc.)
 const isDevelopment = process.env.NODE_ENV === 'development';
-const SKIP_AUTH_IN_DEV = process.env.SKIP_API_AUTH === 'true';
+const isProductionHost = process.env.VERCEL_ENV === 'production' ||
+  process.env.GOOGLE_CLOUD_PROJECT !== undefined ||
+  process.env.K_SERVICE !== undefined; // Cloud Run
+const SKIP_AUTH_IN_DEV = process.env.SKIP_API_AUTH === 'true' && !isProductionHost;
 
 /**
  * Get organization tier from database
