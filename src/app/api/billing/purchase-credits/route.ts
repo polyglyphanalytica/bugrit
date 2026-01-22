@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedUser, errorResponse } from '@/lib/api-auth';
-import { getCreditPackage } from '@/lib/admin/service';
+import { getCreditPackage, updateCreditPackage } from '@/lib/admin/service';
 import { getStripeSecretKey } from '@/lib/admin/service';
 import { logger } from '@/lib/logger';
 
@@ -77,7 +77,17 @@ export async function POST(req: NextRequest) {
 
       priceId = price.id;
 
-      // TODO: Save the priceId back to the credit package in Firestore
+      // Save the priceId back to the credit package in Firestore
+      try {
+        await updateCreditPackage(creditPackage.id, { stripePriceId: priceId });
+      } catch (saveError) {
+        logger.warn('Failed to save stripePriceId to credit package', {
+          packageId: creditPackage.id,
+          priceId,
+          error: saveError,
+        });
+        // Continue anyway - the price was created in Stripe
+      }
     }
 
     // Create Stripe Checkout session

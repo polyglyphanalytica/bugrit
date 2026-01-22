@@ -42,7 +42,7 @@ export async function createCheckoutSession(
 ): Promise<{ sessionId: string; url: string }> {
   const { userId, userEmail, tier, interval, successUrl, cancelUrl } = params;
 
-  if (tier === 'starter') {
+  if (tier === 'free') {
     throw new Error('Cannot create checkout for free tier');
   }
 
@@ -112,7 +112,14 @@ export async function getSubscription(
   try {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     return parseSubscription(subscription);
-  } catch {
+  } catch (error) {
+    // Check if it's a "not found" error (expected case)
+    const stripeError = error as { code?: string; type?: string };
+    if (stripeError.code === 'resource_missing' || stripeError.type === 'StripeInvalidRequestError') {
+      return null;
+    }
+    // Log unexpected errors
+    console.error('Failed to retrieve subscription from Stripe:', subscriptionId, error);
     return null;
   }
 }
@@ -151,7 +158,7 @@ export async function changeSubscriptionTier(
   newTier: TierName,
   interval: 'month' | 'year'
 ): Promise<SubscriptionData> {
-  if (newTier === 'starter') {
+  if (newTier === 'free') {
     // Downgrade to free = cancel subscription
     return cancelSubscription(subscriptionId);
   }

@@ -232,10 +232,10 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     return;
   }
 
-  // Downgrade to free
+  // Downgrade to free tier
   await db.collection('subscriptions').doc(userId).set(
     {
-      tier: 'starter',
+      tier: 'free',
       status: 'canceled',
       canceledAt: new Date(),
       updatedAt: new Date(),

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createCheckoutSession } from '@/lib/subscriptions/stripe';
 import { TierName, TIERS } from '@/lib/subscriptions/tiers';
 import { verifySession } from '@/lib/auth/session';
+import { db } from '@/lib/firebase/admin';
 
 // Get valid paid tiers from TIERS constant
 const PAID_TIER_NAMES = (Object.keys(TIERS) as TierName[]).filter(
@@ -42,6 +43,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Not authenticated' },
         { status: 401 }
+      );
+    }
+
+    // Check if user already has an active subscription
+    const existingSubscription = await db
+      .collection('subscriptions')
+      .doc(user.uid)
+      .get();
+
+    const subData = existingSubscription.data();
+    if (subData?.status === 'active' && subData?.stripeSubscriptionId) {
+      return NextResponse.json(
+        { error: 'You already have an active subscription. Please use the billing portal to change plans.' },
+        { status: 400 }
       );
     }
 
