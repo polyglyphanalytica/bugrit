@@ -345,10 +345,29 @@ function PricingPanel() {
   const [loading, setLoading] = useState(true);
   const [editingTier, setEditingTier] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [showPromoSection, setShowPromoSection] = useState(false);
+  const [promoCodes, setPromoCodes] = useState<any[]>([]);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [creatingPromo, setCreatingPromo] = useState(false);
+  const [newPromo, setNewPromo] = useState({
+    code: '',
+    percentOff: 0,
+    amountOff: 0,
+    duration: 'once' as 'once' | 'repeating' | 'forever',
+    durationInMonths: 3,
+    maxRedemptions: 0,
+    expiresAt: '',
+  });
 
   useEffect(() => {
     fetchTiers();
   }, []);
+
+  useEffect(() => {
+    if (showPromoSection && promoCodes.length === 0) {
+      fetchPromoCodes();
+    }
+  }, [showPromoSection]);
 
   const fetchTiers = async () => {
     try {
@@ -359,6 +378,68 @@ function PricingPanel() {
       console.error('Failed to fetch tiers:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPromoCodes = async () => {
+    setPromoLoading(true);
+    try {
+      const res = await fetch('/api/admin/promo-codes');
+      const data = await res.json();
+      setPromoCodes(data.promoCodes || []);
+    } catch (error) {
+      console.error('Failed to fetch promo codes:', error);
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const handleCreatePromo = async () => {
+    if (!newPromo.code || (newPromo.percentOff === 0 && newPromo.amountOff === 0)) {
+      alert('Please enter a code and either a percent or amount off');
+      return;
+    }
+    setCreatingPromo(true);
+    try {
+      const res = await fetch('/api/admin/promo-codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newPromo,
+          maxRedemptions: newPromo.maxRedemptions || null,
+          expiresAt: newPromo.expiresAt || null,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        alert(data.error);
+      } else {
+        setNewPromo({
+          code: '',
+          percentOff: 0,
+          amountOff: 0,
+          duration: 'once',
+          durationInMonths: 3,
+          maxRedemptions: 0,
+          expiresAt: '',
+        });
+        fetchPromoCodes();
+      }
+    } catch (error) {
+      console.error('Failed to create promo code:', error);
+      alert('Failed to create promo code');
+    } finally {
+      setCreatingPromo(false);
+    }
+  };
+
+  const handleDeactivatePromo = async (promoCodeId: string) => {
+    if (!confirm('Deactivate this promo code?')) return;
+    try {
+      await fetch(`/api/admin/promo-codes/${promoCodeId}`, { method: 'DELETE' });
+      fetchPromoCodes();
+    } catch (error) {
+      console.error('Failed to deactivate promo code:', error);
     }
   };
 
@@ -416,10 +497,162 @@ function PricingPanel() {
           <h2 className="text-2xl font-bold">Pricing Tiers</h2>
           <p className="text-muted-foreground">Manage subscription plans and limits</p>
         </div>
-        <GradientButton onClick={handleSyncToStripe} disabled={syncing}>
-          {syncing ? 'Syncing...' : 'Sync All to Stripe'}
-        </GradientButton>
+        <div className="flex gap-3">
+          <GradientButton variant="outline" onClick={() => setShowPromoSection(!showPromoSection)}>
+            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+            </svg>
+            {showPromoSection ? 'Hide Promo Codes' : 'Promo Codes'}
+          </GradientButton>
+          <GradientButton onClick={handleSyncToStripe} disabled={syncing}>
+            {syncing ? 'Syncing...' : 'Sync All to Stripe'}
+          </GradientButton>
+        </div>
       </div>
+
+      {/* Promo Codes Section */}
+      {showPromoSection && (
+        <GlassCard className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              Create Promo Code
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Code</label>
+              <input
+                value={newPromo.code}
+                onChange={(e) => setNewPromo({ ...newPromo, code: e.target.value.toUpperCase() })}
+                placeholder="e.g., SAVE20"
+                className="input-modern font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Percent Off</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={newPromo.percentOff || ''}
+                onChange={(e) => setNewPromo({ ...newPromo, percentOff: parseInt(e.target.value) || 0, amountOff: 0 })}
+                placeholder="e.g., 20"
+                className="input-modern"
+                disabled={newPromo.amountOff > 0}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Amount Off ($)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={newPromo.amountOff || ''}
+                onChange={(e) => setNewPromo({ ...newPromo, amountOff: parseFloat(e.target.value) || 0, percentOff: 0 })}
+                placeholder="e.g., 10"
+                className="input-modern"
+                disabled={newPromo.percentOff > 0}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Duration</label>
+              <select
+                value={newPromo.duration}
+                onChange={(e) => setNewPromo({ ...newPromo, duration: e.target.value as any })}
+                className="input-modern"
+              >
+                <option value="once">Once (first payment)</option>
+                <option value="repeating">Repeating</option>
+                <option value="forever">Forever</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            {newPromo.duration === 'repeating' && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Months</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={newPromo.durationInMonths}
+                  onChange={(e) => setNewPromo({ ...newPromo, durationInMonths: parseInt(e.target.value) || 1 })}
+                  className="input-modern"
+                />
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium mb-2">Max Redemptions</label>
+              <input
+                type="number"
+                min="0"
+                value={newPromo.maxRedemptions || ''}
+                onChange={(e) => setNewPromo({ ...newPromo, maxRedemptions: parseInt(e.target.value) || 0 })}
+                placeholder="Unlimited"
+                className="input-modern"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Expires At</label>
+              <input
+                type="date"
+                value={newPromo.expiresAt}
+                onChange={(e) => setNewPromo({ ...newPromo, expiresAt: e.target.value })}
+                className="input-modern"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <GradientButton onClick={handleCreatePromo} disabled={creatingPromo}>
+              {creatingPromo ? 'Creating...' : 'Create Promo Code'}
+            </GradientButton>
+          </div>
+
+          {/* Active Promo Codes List */}
+          {promoLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : promoCodes.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-border">
+              <h4 className="text-sm font-semibold mb-3 text-muted-foreground">Active Promo Codes ({promoCodes.filter(p => p.active).length})</h4>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {promoCodes.filter(p => p.active).map((promo) => (
+                  <div
+                    key={promo.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className="font-mono font-bold">{promo.code}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {promo.percentOff > 0 ? `${promo.percentOff}% off` : `$${promo.amountOff} off`}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {promo.duration === 'once' && 'First payment'}
+                        {promo.duration === 'repeating' && `${promo.durationInMonths}mo`}
+                        {promo.duration === 'forever' && 'Forever'}
+                      </span>
+                      {promo.timesRedeemed > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          {promo.timesRedeemed} used
+                        </span>
+                      )}
+                    </div>
+                    <GradientButton variant="ghost" size="sm" onClick={() => handleDeactivatePromo(promo.id)}>
+                      Deactivate
+                    </GradientButton>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </GlassCard>
+      )}
 
       <div className="grid gap-6">
         {tiers.map((tier) => (
