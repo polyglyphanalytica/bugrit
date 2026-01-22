@@ -252,6 +252,157 @@ if (scans[0]?.status === 'completed') {
         </div>
       </section>
 
+      {/* AI Intelligence Reports */}
+      <section>
+        <h2 className="text-2xl font-bold mb-4">AI Intelligence Reports</h2>
+        <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg mb-4">
+          <p className="text-sm text-muted-foreground">
+            <strong>Paid Feature:</strong> AI Intelligence Reports require a paid subscription (Starter tier or above).
+          </p>
+        </div>
+        <p className="text-muted-foreground mb-4">
+          AI-powered analysis provides executive summaries, finding correlation, prioritized action items, and smart recommendations.
+        </p>
+
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded text-sm font-mono">GET</span>
+              <code className="text-sm">/api/v1/reports/ai?scan_id=:scanId</code>
+            </div>
+            <p className="text-muted-foreground mb-4">
+              Get an AI intelligence report for a completed scan. Returns correlated findings, executive summary, and developer action items.
+            </p>
+
+            <h4 className="font-semibold mb-2">Query Parameters</h4>
+            <table className="w-full text-sm mb-4">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-2">Parameter</th>
+                  <th className="text-left py-2 px-2">Type</th>
+                  <th className="text-left py-2 px-2">Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b">
+                  <td className="py-2 px-2"><code>scan_id</code></td>
+                  <td className="py-2 px-2">string</td>
+                  <td className="py-2 px-2 text-muted-foreground">Required. The scan ID to analyze</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="py-2 px-2"><code>format</code></td>
+                  <td className="py-2 px-2">string</td>
+                  <td className="py-2 px-2 text-muted-foreground">&quot;full&quot; | &quot;summary&quot; | &quot;executive&quot; (default: full)</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4 className="font-semibold mb-2">Example Response</h4>
+            <div className="bg-muted p-4 rounded-lg overflow-x-auto">
+              <pre className="text-sm">{`{
+  "scanId": "scn-xyz789",
+  "generatedAt": "2024-01-15T10:35:00Z",
+  "executiveSummary": {
+    "headline": "3 Critical Security Issues Require Immediate Attention",
+    "riskLevel": "high",
+    "riskScore": 72,
+    "keyMetrics": {
+      "totalIssues": 47,
+      "criticalCount": 3,
+      "securityRisk": "High - SQL injection and XSS vulnerabilities detected",
+      "complianceStatus": "Failing - OWASP Top 10 violations found",
+      "technicalDebt": "Medium - 12 hours estimated to fix critical issues"
+    },
+    "topConcerns": [
+      "SQL injection in user authentication endpoint",
+      "Stored XSS in comments feature",
+      "Exposed API keys in client-side code"
+    ],
+    "positiveNotes": [
+      "No critical dependency vulnerabilities",
+      "Good test coverage (85%)"
+    ],
+    "immediateActions": [
+      "Sanitize user inputs in /api/auth endpoints",
+      "Implement CSP headers to mitigate XSS",
+      "Move secrets to environment variables"
+    ],
+    "estimatedFixTime": "2-3 hours for critical issues"
+  },
+  "developerReport": {
+    "summary": "Security scan found 47 issues across 12 files...",
+    "fileHealth": [
+      {
+        "file": "src/api/users.ts",
+        "score": 45,
+        "issueCount": 8,
+        "topIssues": ["SQL injection", "Missing input validation"],
+        "trend": "declining"
+      }
+    ],
+    "actionItems": [
+      {
+        "id": "act-001",
+        "priority": 1,
+        "title": "Fix SQL injection in user lookup",
+        "description": "User input is directly concatenated into SQL query...",
+        "file": "src/api/users.ts",
+        "line": 45,
+        "effort": "30 minutes",
+        "impact": "Critical - prevents unauthorized database access",
+        "autoFixAvailable": true
+      }
+    ],
+    "codePatterns": [
+      {
+        "pattern": "Unsanitized SQL queries",
+        "occurrences": 3,
+        "severity": "critical",
+        "affectedFiles": ["src/api/users.ts", "src/api/posts.ts"]
+      }
+    ],
+    "learningResources": [
+      {
+        "topic": "SQL Injection Prevention",
+        "url": "https://owasp.org/...",
+        "type": "documentation",
+        "relevance": "Addresses 3 critical findings"
+      }
+    ]
+  },
+  "intelligence": {
+    "totalRawFindings": 67,
+    "totalGroupedFindings": 47,
+    "deduplicationRate": 0.30,
+    "correlationGroups": [...],
+    "prioritizedFindings": [...],
+    "recommendations": [...]
+  },
+  "format": "full"
+}`}</pre>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded text-sm font-mono">POST</span>
+              <code className="text-sm">/api/v1/reports/ai</code>
+            </div>
+            <p className="text-muted-foreground mb-4">
+              Generate and store an AI intelligence report for a scan.
+            </p>
+
+            <h4 className="font-semibold mb-2">Request Body</h4>
+            <div className="bg-muted p-4 rounded-lg overflow-x-auto mb-4">
+              <pre className="text-sm">{`{
+  "scanId": "scn-xyz789",
+  "format": "full"  // Optional: "full" | "summary" | "executive"
+}`}</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Report Data Structure */}
       <section>
         <h2 className="text-2xl font-bold mb-4">Report Data Structure</h2>

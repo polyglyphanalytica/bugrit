@@ -595,11 +595,11 @@ if (userConfirmed && quote.canAfford) {
                 </tr>
                 <tr className="border-b border-border/50">
                   <td className="py-2">Accessibility</td>
-                  <td className="text-right">2</td>
+                  <td className="text-right">4</td>
                 </tr>
                 <tr className="border-b border-border/50">
                   <td className="py-2">Performance (Lighthouse)</td>
-                  <td className="text-right">3</td>
+                  <td className="text-right">5</td>
                 </tr>
               </tbody>
             </table>
@@ -623,13 +623,13 @@ if (userConfirmed && quote.canAfford) {
                 </tr>
                 <tr className="border-b border-border/50">
                   <td className="py-2">Issue Explanations</td>
-                  <td className="text-right">2</td>
-                  <td className="text-right text-muted-foreground">Per 50 issues</td>
+                  <td className="text-right">0.1</td>
+                  <td className="text-right text-muted-foreground">Per issue</td>
                 </tr>
                 <tr className="border-b border-border/50">
                   <td className="py-2">Fix Suggestions</td>
-                  <td className="text-right">3</td>
-                  <td className="text-right text-muted-foreground">Per 50 issues</td>
+                  <td className="text-right">0.15</td>
+                  <td className="text-right text-muted-foreground">Per issue</td>
                 </tr>
                 <tr className="border-b border-border/50">
                   <td className="py-2">Priority Scoring</td>
