@@ -159,6 +159,14 @@ export default {
           from: { opacity: '0', transform: 'translateY(100%)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
+        'scroll-left': {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-50%)' },
+        },
+        'scroll-right': {
+          from: { transform: 'translateX(-50%)' },
+          to: { transform: 'translateX(0)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -176,6 +184,8 @@ export default {
         'spin-slow': 'spin-slow 8s linear infinite',
         'bounce-soft': 'bounce-soft 2s ease-in-out infinite',
         'slide-up': 'slide-up 0.4s ease-out',
+        'scroll-left': 'scroll-left 40s linear infinite',
+        'scroll-right': 'scroll-right 40s linear infinite',
       },
       transitionTimingFunction: {
         'spring': 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',

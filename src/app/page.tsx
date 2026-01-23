@@ -6,6 +6,7 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { GlassCard } from '@/components/ui/glass-card';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { Logo } from '@/components/ui/logo';
+import { PlatformLogos } from '@/components/ui/platform-logos';
 import { TOOL_REGISTRY, ToolCategory } from '@/lib/tools/registry';
 
 // Category value propositions - what each category DOES for users
@@ -878,6 +879,9 @@ export default function HomePage() {
               Free tier available. No credit card required. {TOOL_REGISTRY.length} expert tools at your fingertips.
             </p>
           </GlassCard>
+
+          {/* Platform Logos Panel */}
+          <PlatformLogos />
         </div>
       </section>
 
