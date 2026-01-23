@@ -166,46 +166,46 @@ export default function HomePage() {
             <Link href="/login">
               <GradientButton variant="ghost" size="sm">Sign in</GradientButton>
             </Link>
-            <Link href="/register">
+            <Link href="/signup">
               <GradientButton size="sm" glow>Scan My Code</GradientButton>
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section - Empowering, not frightening */}
+      {/* Hero Section - Speaks directly to vibe coders */}
       <section className="pt-32 pb-20 md:pt-40 md:pb-32">
         <div className="container-wide">
           <div className="max-w-4xl mx-auto text-center">
-            {/* Badge - Positive */}
+            {/* Badge - Vibe coder focused */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/30 mb-8 animate-fade-down">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
-              <span className="text-sm font-medium text-primary">Ship code you can trust</span>
+              <span className="text-sm font-medium text-primary">Built for vibe coders who ship fast</span>
             </div>
 
-            {/* Title - Empowering */}
+            {/* Title - Vibe coder identity + empowering */}
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 animate-fade-up">
-              Ship With
+              Vibe Coders
               <br />
               <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_auto]">
-                Confidence
+                Ship Safer
               </span>
             </h1>
 
-            {/* Description - Value focused */}
+            {/* Description - Validates their workflow */}
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-6 animate-fade-up delay-200 fill-both leading-relaxed">
-              You build fast. <strong className="text-foreground">We check everything.</strong>
+              You build with Cursor, Copilot, and vibes. <strong className="text-foreground">We make sure it&apos;s actually secure.</strong>
             </p>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 animate-fade-up delay-300 fill-both">
-              One click runs <strong className="text-foreground">{TOOL_REGISTRY.length}+ automated checks</strong> for security holes, leaked secrets, buggy dependencies, accessibility issues, and more. No expertise required.
+              One click runs <strong className="text-foreground">{TOOL_REGISTRY.length}+ automated checks</strong> for security holes, leaked secrets, and bugs. Get AI-ready fix prompts you can paste right back into your editor. No security expertise required.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up delay-400 fill-both">
-              <Link href="/register">
+              <Link href="/signup">
                 <GradientButton size="xl" glow className="w-full sm:w-auto">
                   Scan My Code Free
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -808,7 +808,7 @@ export default function HomePage() {
                 <div className="flex-1 px-4 py-3 rounded-lg bg-muted border text-muted-foreground font-mono text-sm">
                   https://github.com/your-username/your-repo
                 </div>
-                <Link href="/register">
+                <Link href="/signup">
                   <GradientButton>Scan Free</GradientButton>
                 </Link>
               </div>
@@ -817,14 +817,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Social Proof */}
+      {/* Social Proof - Vibe coder testimonial */}
       <section className="py-16">
         <div className="container-wide">
           <div className="max-w-4xl mx-auto text-center">
             <p className="text-2xl font-bold mb-8">
-              &ldquo;Built my app with Cursor in a weekend. Bugrit found 23 issues I had no idea about. <span className="text-primary">Copy-pasted the AI prompts and fixed everything in an hour.</span>&rdquo;
+              &ldquo;Built my app with Cursor in a weekend. Bugrit found 23 issues I had no idea about. <span className="text-primary">Copy-pasted the AI prompts back into Cursor and fixed everything in an hour.</span>&rdquo;
             </p>
-            <p className="text-muted-foreground">— Solo developer shipping their first SaaS</p>
+            <p className="text-muted-foreground">— Vibe coder shipping their first SaaS</p>
           </div>
         </div>
       </section>
@@ -912,7 +912,7 @@ export default function HomePage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/register">
+                <Link href="/signup">
                   <GradientButton
                     variant={plan.popular ? 'primary' : 'outline'}
                     className="w-full"
@@ -937,13 +937,13 @@ export default function HomePage() {
         <div className="container-tight">
           <GlassCard gradient className="p-12 md:p-16 text-center">
             <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              Ready to Ship With Confidence?
+              Keep Vibing. Ship Safer.
             </h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Paste your GitHub URL and see what we find. Free scan, no credit card, takes 2 minutes.
+              Paste your GitHub URL and see what we find. Get AI-ready fix prompts you can drop right into Cursor. Free scan, no credit card, takes 2 minutes.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/register">
+              <Link href="/signup">
                 <GradientButton size="xl" glow>
                   Scan My Code Free
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
