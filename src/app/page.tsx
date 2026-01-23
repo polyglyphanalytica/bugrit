@@ -262,6 +262,129 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Too Small To Hack? Section */}
+      <section className="section bg-gradient-to-b from-transparent via-orange-950/20 to-transparent">
+        <div className="container-wide">
+          <SectionHeading
+            badge="The Dangerous Myth"
+            title="Think You're Too Small To Hack?"
+            titleGradient="Too Small To Hack"
+            description="Hackers don't care about your user count. They care about your servers."
+          />
+
+          <div className="grid md:grid-cols-2 gap-8 mt-16">
+            {/* Left side - The Reality */}
+            <div className="space-y-6">
+              <GlassCard className="p-6 !border-2 !border-orange-500/50">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-orange-500/30 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2 text-orange-400">They Want Your Compute</h3>
+                    <p className="text-muted-foreground">
+                      Attackers don&apos;t need your data. They need your servers to launch DDoS attacks, send spam campaigns, mine cryptocurrency, and host malicious content. Your &ldquo;small&rdquo; project is just another node in their botnet.
+                    </p>
+                  </div>
+                </div>
+              </GlassCard>
+
+              <GlassCard className="p-6 !border-2 !border-red-500/50">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-red-500/30 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2 text-red-400">Auto-Scale = Auto-Bankruptcy</h3>
+                    <p className="text-muted-foreground">
+                      Modern cloud deployments auto-scale to meet demand. Great for traffic spikes. Catastrophic when hackers use your infrastructure. They scale up as big as they want—on your credit card. You get the bill.
+                    </p>
+                  </div>
+                </div>
+              </GlassCard>
+
+              <GlassCard className="p-6 !border-2 !border-violet-500/50">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-violet-500/30 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2 text-violet-400">A Blank Check For Criminals</h3>
+                    <p className="text-muted-foreground">
+                      Once inside your estate, attackers have full control. They can pivot to other systems, exfiltrate data, install backdoors, and use your infrastructure for anything they want. You&apos;re left holding the bag—financially and legally.
+                    </p>
+                  </div>
+                </div>
+              </GlassCard>
+            </div>
+
+            {/* Right side - The Consequences */}
+            <div className="space-y-6">
+              <div className="p-8 rounded-2xl bg-gradient-to-br from-red-950 to-orange-950 border-2 border-red-500/50">
+                <h3 className="text-2xl font-bold mb-6 text-white">When They Get In, You Lose:</h3>
+                <ul className="space-y-4">
+                  <li className="flex items-start gap-3">
+                    <span className="w-6 h-6 rounded-full bg-red-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </span>
+                    <div>
+                      <strong className="text-red-300">Your Money</strong>
+                      <p className="text-gray-300 text-sm">Cloud bills in the thousands. Legal fees. Breach response costs. Regulatory fines up to 4% of revenue under GDPR.</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="w-6 h-6 rounded-full bg-orange-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-4 h-4 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </span>
+                    <div>
+                      <strong className="text-orange-300">User Trust</strong>
+                      <p className="text-gray-300 text-sm">Your users trusted you with their data. That trust is gone. Their emails, passwords, personal info—leaked. They won&apos;t come back.</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="w-6 h-6 rounded-full bg-yellow-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-4 h-4 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </span>
+                    <div>
+                      <strong className="text-yellow-300">Your Reputation</strong>
+                      <p className="text-gray-300 text-sm">&ldquo;Company X leaked my data&rdquo; lives forever on the internet. Your brand becomes synonymous with insecurity.</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="w-6 h-6 rounded-full bg-violet-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                      </svg>
+                    </span>
+                    <div>
+                      <strong className="text-violet-300">Your Dream</strong>
+                      <p className="text-gray-300 text-sm">You built something amazing. A single breach can end it. 60% of small businesses close within 6 months of a cyberattack.</p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="p-6 rounded-xl bg-primary/10 border border-primary/30 text-center">
+                <p className="text-lg font-semibold mb-2">Bots scan the entire internet constantly.</p>
+                <p className="text-muted-foreground">They don&apos;t know you&apos;re small. They don&apos;t care. They just need one vulnerability to get in. <strong className="text-foreground">Don&apos;t be the easy target.</strong></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* The Problem Section */}
       <section id="risks" className="section bg-gradient-to-b from-red-950/20 to-transparent">
         <div className="container-wide">
