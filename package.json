@@ -29,7 +29,7 @@
     "@axe-core/cli": "^4.8.0",
     "@axe-core/puppeteer": "^4.8.0",
     "@biomejs/biome": "^1.9.0",
-    "@commitlint/cli": "^19.0.0",
+    "@commitlint/cli": "^20.3.1",
     "@commitlint/config-conventional": "^19.0.0",
     "@eslint/js": "^9.39.2",
     "@genkit-ai/google-genai": "^1.20.0",
