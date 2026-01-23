@@ -55,6 +55,10 @@ export interface Automation {
   enabled: boolean;
   lastTriggeredAt?: string | null;
   triggerCount: number;
+  // Credit budget tracking
+  creditsPerScan?: number;
+  estimatedTriggersPerMonth?: number;
+  estimatedMonthlyCredits?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -108,6 +112,9 @@ export async function GET(request: NextRequest) {
           enabled: true,
           lastTriggeredAt: new Date().toISOString(),
           triggerCount: 42,
+          creditsPerScan: 12,
+          estimatedTriggersPerMonth: 60,
+          estimatedMonthlyCredits: 720,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         },
@@ -228,6 +235,9 @@ export async function POST(request: NextRequest) {
         enabled: body.enabled !== false,
         lastTriggeredAt: null,
         triggerCount: 0,
+        creditsPerScan: body.creditsPerScan || 12,
+        estimatedTriggersPerMonth: body.estimatedTriggersPerMonth || 30,
+        estimatedMonthlyCredits: body.estimatedMonthlyCredits || 360,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -290,6 +300,9 @@ export async function POST(request: NextRequest) {
       enabled: body.enabled !== false,
       lastTriggeredAt: null,
       triggerCount: 0,
+      creditsPerScan: body.creditsPerScan,
+      estimatedTriggersPerMonth: body.estimatedTriggersPerMonth,
+      estimatedMonthlyCredits: body.estimatedMonthlyCredits,
       createdAt: now,
       updatedAt: now,
     };

@@ -58,6 +58,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           enabled: true,
           lastTriggeredAt: new Date().toISOString(),
           triggerCount: 42,
+          creditsPerScan: 12,
+          estimatedTriggersPerMonth: 60,
+          estimatedMonthlyCredits: 720,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -125,6 +128,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         enabled: body.enabled !== undefined ? body.enabled : true,
         lastTriggeredAt: new Date().toISOString(),
         triggerCount: 42,
+        creditsPerScan: body.creditsPerScan || 12,
+        estimatedTriggersPerMonth: body.estimatedTriggersPerMonth || 60,
+        estimatedMonthlyCredits: body.estimatedMonthlyCredits || 720,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };

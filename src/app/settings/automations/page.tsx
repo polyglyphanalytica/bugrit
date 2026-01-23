@@ -76,8 +76,54 @@ interface Automation {
   enabled: boolean;
   lastTriggeredAt?: string | null;
   triggerCount: number;
+  creditsPerScan?: number;
+  estimatedMonthlyCredits?: number;
+  estimatedTriggersPerMonth?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+// Credit costs for different tool configurations
+const TOOL_CREDITS: Record<string, number> = {
+  all: 12,           // Base + security + accessibility + performance
+  security: 2,       // Base + security tools
+  quality: 1,        // Base + free tools
+  dependencies: 1,   // Base + free tools
+};
+
+// Estimated triggers per month by trigger type
+const DEFAULT_TRIGGERS_PER_MONTH: Record<TriggerType, number> = {
+  github_push: 60,     // ~2 pushes per day
+  github_pr: 20,       // ~5 PRs per week
+  gitlab_push: 60,
+  gitlab_mr: 20,
+  schedule: 30,        // Once per day (default cron)
+  webhook: 10,         // Manual/occasional
+};
+
+// Parse cron to estimate monthly triggers
+function estimateTriggersFromCron(cron: string): number {
+  const parts = cron.trim().split(/\s+/);
+  if (parts.length < 5) return 30;
+
+  const [, , dayOfMonth, , dayOfWeek] = parts;
+
+  // Daily: * * * * * or 0 2 * * *
+  if (dayOfMonth === '*' && dayOfWeek === '*') return 30;
+
+  // Weekly: 0 2 * * 0
+  if (dayOfMonth === '*' && dayOfWeek !== '*') {
+    const days = dayOfWeek.split(',').length;
+    return days * 4;
+  }
+
+  // Monthly: 0 2 1 * *
+  if (dayOfMonth !== '*') {
+    const days = dayOfMonth.split(',').length;
+    return days;
+  }
+
+  return 30;
 }
 
 interface Project {
@@ -122,7 +168,17 @@ export default function AutomationsPage() {
     platform: 'web',
     tools: 'all',
     failOn: 'critical',
+    estimatedTriggersPerMonth: 60,
   });
+
+  // Calculate credit estimates based on current form state
+  const creditsPerScan = TOOL_CREDITS[newAutomation.tools] || TOOL_CREDITS.all;
+  const estimatedTriggersPerMonth =
+    newAutomation.triggerType === 'schedule'
+      ? estimateTriggersFromCron(newAutomation.cron)
+      : newAutomation.estimatedTriggersPerMonth ||
+        DEFAULT_TRIGGERS_PER_MONTH[newAutomation.triggerType];
+  const estimatedMonthlyCredits = creditsPerScan * estimatedTriggersPerMonth;
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -231,6 +287,9 @@ export default function AutomationsPage() {
             },
           },
           enabled: true,
+          creditsPerScan,
+          estimatedTriggersPerMonth,
+          estimatedMonthlyCredits,
         }),
       });
 
@@ -251,6 +310,7 @@ export default function AutomationsPage() {
           platform: 'web',
           tools: 'all',
           failOn: 'critical',
+          estimatedTriggersPerMonth: 60,
         });
       } else {
         const error = await res.json();
@@ -414,7 +474,11 @@ export default function AutomationsPage() {
                 <Select
                   value={newAutomation.triggerType}
                   onValueChange={(value: TriggerType) =>
-                    setNewAutomation((prev) => ({ ...prev, triggerType: value }))
+                    setNewAutomation((prev) => ({
+                      ...prev,
+                      triggerType: value,
+                      estimatedTriggersPerMonth: DEFAULT_TRIGGERS_PER_MONTH[value],
+                    }))
                   }
                 >
                   <SelectTrigger>
@@ -584,6 +648,59 @@ export default function AutomationsPage() {
                   </Select>
                 </div>
               </div>
+
+              {/* Credit Estimate Section */}
+              <div className="border-t pt-4 space-y-4">
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <span>💰</span> Credit Budget Estimate
+                </h4>
+
+                {newAutomation.triggerType !== 'schedule' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="triggers">Expected triggers per month</Label>
+                    <Input
+                      id="triggers"
+                      type="number"
+                      min="1"
+                      max="1000"
+                      value={newAutomation.estimatedTriggersPerMonth}
+                      onChange={(e) =>
+                        setNewAutomation((prev) => ({
+                          ...prev,
+                          estimatedTriggersPerMonth: parseInt(e.target.value) || 1,
+                        }))
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      How many times do you expect this automation to trigger each month?
+                    </p>
+                  </div>
+                )}
+
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Credits per scan</p>
+                      <p className="text-lg font-semibold">{creditsPerScan}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Est. triggers/month</p>
+                      <p className="text-lg font-semibold">{estimatedTriggersPerMonth}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-primary/20">
+                    <p className="text-muted-foreground text-sm">Estimated monthly budget</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {estimatedMonthlyCredits} credits
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Actual credit usage depends on repository size and issues found.
+                  See <Link href="/docs/pricing" className="text-primary hover:underline">pricing docs</Link> for details.
+                </p>
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
@@ -658,6 +775,7 @@ export default function AutomationsPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Trigger</TableHead>
+                  <TableHead>Monthly Budget</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Last Triggered</TableHead>
                   <TableHead>Runs</TableHead>
@@ -673,6 +791,21 @@ export default function AutomationsPage() {
                         <span>{TRIGGER_ICONS[automation.trigger.type]}</span>
                         <span>{TRIGGER_LABELS[automation.trigger.type]}</span>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {automation.estimatedMonthlyCredits ? (
+                        <div className="text-sm">
+                          <span className="font-semibold text-primary">
+                            {automation.estimatedMonthlyCredits}
+                          </span>
+                          <span className="text-muted-foreground"> credits</span>
+                          <div className="text-xs text-muted-foreground">
+                            {automation.creditsPerScan}/scan × {automation.estimatedTriggersPerMonth}/mo
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
