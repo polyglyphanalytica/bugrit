@@ -53,7 +53,7 @@ jobs:
 
       - name: Trigger Bugrit Scan
         run: |
-          curl -X POST https://bugrit.dev/api/v1/scans \\
+          curl -X POST https://bugrit.com/api/v1/scans \\
             -H "Authorization: Bearer \${{ secrets.BUGGERED_API_KEY }}" \\
             -H "Content-Type: application/json" \\
             -d '{
@@ -71,7 +71,7 @@ jobs:
         run: |
           while true; do
             STATUS=$(curl -s -H "Authorization: Bearer \${{ secrets.BUGGERED_API_KEY }}" \\
-              "https://bugrit.dev/api/v1/scans/\$SCAN_ID" | jq -r '.scan.status')
+              "https://bugrit.com/api/v1/scans/\$SCAN_ID" | jq -r '.scan.status')
 
             if [ "$STATUS" = "completed" ]; then
               echo "Scan completed successfully"
@@ -88,7 +88,7 @@ jobs:
       - name: Check for Critical Findings
         run: |
           CRITICAL=$(curl -s -H "Authorization: Bearer \${{ secrets.BUGGERED_API_KEY }}" \\
-            "https://bugrit.dev/api/v1/scans/\$SCAN_ID" | jq -r '.scan.summary.critical')
+            "https://bugrit.com/api/v1/scans/\$SCAN_ID" | jq -r '.scan.summary.critical')
 
           if [ "$CRITICAL" -gt 0 ]; then
             echo "::error::Found $CRITICAL critical issues"
@@ -107,7 +107,7 @@ buggered-scan:
     - apk add --no-cache curl jq
   script:
     - |
-      RESPONSE=$(curl -X POST https://bugrit.dev/api/v1/scans \\
+      RESPONSE=$(curl -X POST https://bugrit.com/api/v1/scans \\
         -H "Authorization: Bearer $BUGGERED_API_KEY" \\
         -H "Content-Type: application/json" \\
         -d '{
@@ -122,7 +122,7 @@ buggered-scan:
       # Poll for completion
       while true; do
         STATUS=$(curl -s -H "Authorization: Bearer $BUGGERED_API_KEY" \\
-          "https://bugrit.dev/api/v1/scans/$SCAN_ID" | jq -r '.scan.status')
+          "https://bugrit.com/api/v1/scans/$SCAN_ID" | jq -r '.scan.status')
         [ "$STATUS" = "completed" ] && break
         [ "$STATUS" = "failed" ] && exit 1
         sleep 10
@@ -147,7 +147,7 @@ jobs:
       - run:
           name: Trigger Bugrit Scan
           command: |
-            curl -X POST https://bugrit.dev/api/v1/scans \\
+            curl -X POST https://bugrit.com/api/v1/scans \\
               -H "Authorization: Bearer \${BUGGERED_API_KEY}" \\
               -H "Content-Type: application/json" \\
               -d '{
@@ -183,7 +183,7 @@ pipeline {
                 script {
                     def response = sh(
                         script: """
-                            curl -X POST https://bugrit.dev/api/v1/scans \\
+                            curl -X POST https://bugrit.com/api/v1/scans \\
                               -H "Authorization: Bearer \${BUGGERED_API_KEY}" \\
                               -H "Content-Type: application/json" \\
                               -d '{
@@ -253,7 +253,7 @@ pipeline {
         <div className="bg-muted p-4 rounded-lg overflow-x-auto">
           <pre className="text-sm">{`# Check scan results and fail if critical issues exist
 SUMMARY=$(curl -s -H "Authorization: Bearer $BUGGERED_API_KEY" \\
-  "https://bugrit.dev/api/v1/scans/$SCAN_ID")
+  "https://bugrit.com/api/v1/scans/$SCAN_ID")
 
 CRITICAL=$(echo $SUMMARY | jq -r '.scan.summary.critical')
 HIGH=$(echo $SUMMARY | jq -r '.scan.summary.high')

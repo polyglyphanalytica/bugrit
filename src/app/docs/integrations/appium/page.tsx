@@ -69,7 +69,7 @@ export default function AppiumIntegrationPage() {
           Submit your mobile app for analysis with Appium tests:
         </p>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+          <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -F "applicationId=app-abc123" \\
   -F "sourceType=mobile" \\
@@ -190,8 +190,8 @@ exports.config = {
           "name": "User can login with Face ID",
           "device": "iPhone 14 Pro",
           "error": "Face ID prompt not detected",
-          "screenshot": "https://cdn.bugrit.dev/scn-xyz/faceid-failure.png",
-          "video": "https://cdn.bugrit.dev/scn-xyz/faceid-failure.mp4"
+          "screenshot": "https://cdn.bugrit.com/scn-xyz/faceid-failure.png",
+          "video": "https://cdn.bugrit.com/scn-xyz/faceid-failure.mp4"
         }
       ]
     },

@@ -53,8 +53,8 @@ export default function PrivacyPage() {
                 <div className="bg-muted/30 rounded-xl p-6 mb-4">
                   <p className="font-semibold mb-2">Polyglyph Analytica</p>
                   <p className="text-muted-foreground text-sm">
-                    Email: privacy@bugrit.dev<br />
-                    Data Protection Officer: dpo@bugrit.dev
+                    Email: privacy@bugrit.com<br />
+                    Data Protection Officer: dpo@bugrit.com
                   </p>
                 </div>
               </section>
@@ -270,7 +270,7 @@ export default function PrivacyPage() {
 
                 <h3 className="text-xl font-semibold mb-3 mt-6">10.6 Exercising Your Rights</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  To exercise any of these rights, please contact us at <a href="mailto:privacy@bugrit.dev" className="text-primary hover:underline">privacy@bugrit.dev</a>. We will respond to your request within 30 days. You also have the right to lodge a complaint with a supervisory authority if you believe your rights have been violated.
+                  To exercise any of these rights, please contact us at <a href="mailto:privacy@bugrit.com" className="text-primary hover:underline">privacy@bugrit.com</a>. We will respond to your request within 30 days. You also have the right to lodge a complaint with a supervisory authority if you believe your rights have been violated.
                 </p>
               </section>
 
@@ -286,7 +286,7 @@ export default function PrivacyPage() {
                   <li><strong>Right to Opt-Out:</strong> We do not sell personal information, but you may opt out of any future sales.</li>
                 </ul>
                 <p className="text-muted-foreground leading-relaxed">
-                  To exercise your California privacy rights, contact us at <a href="mailto:privacy@bugrit.dev" className="text-primary hover:underline">privacy@bugrit.dev</a> or call us at our designated toll-free number.
+                  To exercise your California privacy rights, contact us at <a href="mailto:privacy@bugrit.com" className="text-primary hover:underline">privacy@bugrit.com</a> or call us at our designated toll-free number.
                 </p>
               </section>
 
@@ -311,7 +311,7 @@ export default function PrivacyPage() {
               <section className="mb-10">
                 <h2 className="text-2xl font-bold mb-4">13. Children&apos;s Privacy</h2>
                 <p className="text-muted-foreground leading-relaxed">
-                  Our Service is not directed to individuals under the age of 16, and we do not knowingly collect personal information from children. If we become aware that we have inadvertently collected personal information from a child under 16, we will take steps to delete such information promptly. If you believe we may have collected information from a child, please contact us at <a href="mailto:privacy@bugrit.dev" className="text-primary hover:underline">privacy@bugrit.dev</a>.
+                  Our Service is not directed to individuals under the age of 16, and we do not knowingly collect personal information from children. If we become aware that we have inadvertently collected personal information from a child under 16, we will take steps to delete such information promptly. If you believe we may have collected information from a child, please contact us at <a href="mailto:privacy@bugrit.com" className="text-primary hover:underline">privacy@bugrit.com</a>.
                 </p>
               </section>
 
@@ -345,8 +345,8 @@ export default function PrivacyPage() {
                 <div className="bg-muted/30 rounded-xl p-6">
                   <p className="font-semibold mb-2">Polyglyph Analytica</p>
                   <p className="text-muted-foreground text-sm mb-4">
-                    Email: <a href="mailto:privacy@bugrit.dev" className="text-primary hover:underline">privacy@bugrit.dev</a><br />
-                    Data Protection Officer: <a href="mailto:dpo@bugrit.dev" className="text-primary hover:underline">dpo@bugrit.dev</a>
+                    Email: <a href="mailto:privacy@bugrit.com" className="text-primary hover:underline">privacy@bugrit.com</a><br />
+                    Data Protection Officer: <a href="mailto:dpo@bugrit.com" className="text-primary hover:underline">dpo@bugrit.com</a>
                   </p>
                   <p className="text-muted-foreground text-sm">
                     We will endeavour to respond to your enquiry within 30 days.

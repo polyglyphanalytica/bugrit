@@ -424,26 +424,21 @@ export function PlatformLogos() {
 
       {/* Founder's experience section */}
       <div className="mt-12 pt-8 border-t border-border/30">
-        <div className="max-w-3xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center">
           <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-            Bugrit is the vision of a Product and Tech leader who has worked at top global banks
+            Bugrit is the vision of a Product and Tech leader who has worked at top financial institutions
           </p>
-          <div className="flex items-center justify-center gap-8 flex-wrap">
-            {BANK_LOGOS.map((bank) => (
-              <div
-                key={bank.name}
-                className="flex items-center justify-center"
-                title={bank.name}
-              >
-                <div
-                  className="w-8 h-8 flex items-center justify-center opacity-50 hover:opacity-80 transition-opacity duration-300"
-                  style={{ color: bank.color }}
-                >
-                  {bank.svg}
-                </div>
-                <span className="ml-2 text-xs font-medium text-muted-foreground">{bank.name}</span>
-              </div>
-            ))}
+          <div className="flex items-center justify-center gap-6 md:gap-10 flex-wrap">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/jpmorganlogo.png" alt="JP Morgan" className="h-6 md:h-8 object-contain opacity-70 hover:opacity-100 transition-opacity duration-300" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/barclayslogo.png" alt="Barclays" className="h-6 md:h-8 object-contain opacity-70 hover:opacity-100 transition-opacity duration-300" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/citilogo.png" alt="Citi" className="h-6 md:h-8 object-contain opacity-70 hover:opacity-100 transition-opacity duration-300" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/deutschebanklogo.png" alt="Deutsche Bank" className="h-6 md:h-8 object-contain opacity-70 hover:opacity-100 transition-opacity duration-300" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/westernunionlogo.png" alt="Western Union" className="h-6 md:h-8 object-contain opacity-70 hover:opacity-100 transition-opacity duration-300" />
           </div>
         </div>
       </div>

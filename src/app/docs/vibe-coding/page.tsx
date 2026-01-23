@@ -48,13 +48,13 @@ export default function VibeCodingPage() {
 
 ## Step 1: Read the Documentation
 First, thoroughly read these Bugrit API docs to understand all endpoints:
-- Main docs: https://bugrit.dev/docs
-- Authentication: https://bugrit.dev/docs/authentication
-- Scans API: https://bugrit.dev/docs/api-reference/scans
-- Reports API: https://bugrit.dev/docs/api-reference/reports
-- Projects API: https://bugrit.dev/docs/api-reference/projects
-- Billing API: https://bugrit.dev/docs/api-reference/billing
-- Tests API: https://bugrit.dev/docs/api-reference/tests
+- Main docs: https://bugrit.com/docs
+- Authentication: https://bugrit.com/docs/authentication
+- Scans API: https://bugrit.com/docs/api-reference/scans
+- Reports API: https://bugrit.com/docs/api-reference/reports
+- Projects API: https://bugrit.com/docs/api-reference/projects
+- Billing API: https://bugrit.com/docs/api-reference/billing
+- Tests API: https://bugrit.com/docs/api-reference/tests
 
 ## Step 2: Implementation Requirements
 
@@ -125,7 +125,7 @@ Build a dashboard with these pages/features:
 - Handle 401 errors by redirecting to login
 
 ### API Integration
-Base URL: https://bugrit.dev/api/v1
+Base URL: https://bugrit.com/api/v1
 
 Key endpoints to implement:
 - POST /scans - Start a scan
@@ -201,9 +201,9 @@ Start by showing me the API client implementation, then proceed page by page.`}
           title="Learn the Bugrit API"
           description="Have your AI read our API docs and understand how to integrate"
           prompt={`Read the Bugrit API documentation at these URLs to understand how to integrate:
-- Scans API: https://bugrit.dev/docs/api-reference/scans
-- Reports API: https://bugrit.dev/docs/api-reference/reports
-- Authentication: https://bugrit.dev/docs/authentication
+- Scans API: https://bugrit.com/docs/api-reference/scans
+- Reports API: https://bugrit.com/docs/api-reference/reports
+- Authentication: https://bugrit.com/docs/authentication
 
 Summarize:
 1. How to authenticate (API key in Authorization header)
@@ -226,7 +226,7 @@ Then suggest how we could integrate this into our deployment pipeline.`}
           title="Generate Web App Tests"
           description="Create Playwright tests for your web application"
           prompt={`Read the Bugrit Playwright integration docs at:
-https://bugrit.dev/docs/integrations/playwright
+https://bugrit.com/docs/integrations/playwright
 
 Then look at my web application and write Playwright end-to-end tests that cover:
 1. User can load the homepage
@@ -248,7 +248,7 @@ Output the tests in a format compatible with Bugrit's e2eConfig options.`}
           title="Generate Mobile App Tests"
           description="Create tests for your React Native / Flutter app"
           prompt={`Read the Bugrit Appium integration docs at:
-https://bugrit.dev/docs/integrations/appium
+https://bugrit.com/docs/integrations/appium
 
 Then look at my mobile app and write end-to-end tests that cover:
 1. App launches successfully
@@ -270,7 +270,7 @@ Format for Bugrit's mobileConfig options as documented.`}
           title="Generate Desktop App Tests"
           description="Create tests for your Electron/Tauri app"
           prompt={`Read the Bugrit Tauri integration docs at:
-https://bugrit.dev/docs/integrations/tauri
+https://bugrit.com/docs/integrations/tauri
 
 Then look at my desktop application and write tests that verify:
 1. App launches on all platforms (Mac, Windows, Linux)
@@ -294,11 +294,11 @@ Create tests compatible with Bugrit's testConfig.tauri options. Include platform
           title="Add Post-Deploy Scan"
           description="Trigger a Bugrit scan after every deployment"
           prompt={`Read the Bugrit Scans API documentation at:
-https://bugrit.dev/docs/api-reference/scans
+https://bugrit.com/docs/api-reference/scans
 
 Then add a post-deployment step that triggers a Bugrit scan:
 
-1. After successful deploy, POST to https://bugrit.dev/api/v1/scans with:
+1. After successful deploy, POST to https://bugrit.com/api/v1/scans with:
    - applicationId: from env.BUGGERED_APP_ID
    - sourceType: "github" (or "url" for live sites)
    - repoUrl: your repo URL (or targetUrl for live sites)
@@ -315,9 +315,9 @@ Create the integration for my deployment platform (GitHub Actions / Vercel / Net
           title="GitHub Action for Bugrit"
           description="Create a reusable GitHub Action"
           prompt={`Read these Bugrit docs:
-- Scans API: https://bugrit.dev/docs/api-reference/scans
-- CI/CD Integration: https://bugrit.dev/docs/integrations/ci-cd
-- Authentication: https://bugrit.dev/docs/authentication
+- Scans API: https://bugrit.com/docs/api-reference/scans
+- CI/CD Integration: https://bugrit.com/docs/integrations/ci-cd
+- Authentication: https://bugrit.com/docs/authentication
 
 Create a GitHub Action workflow that:
 
@@ -336,7 +336,7 @@ Include error handling and timeout logic.`}
           title="Pre-commit Hook"
           description="Scan code before committing"
           prompt={`Read the Bugrit Scans API at:
-https://bugrit.dev/docs/api-reference/scans
+https://bugrit.com/docs/api-reference/scans
 
 Create a pre-commit hook using husky that:
 
@@ -362,8 +362,8 @@ Use BUGGERED_API_KEY from environment.`}
           title="Fetch and Display Scan Results"
           description="Build a component to show scan results"
           prompt={`Read these Bugrit API docs:
-- Reports API: https://bugrit.dev/docs/api-reference/reports
-- Findings API: https://bugrit.dev/docs/api-reference/tests
+- Reports API: https://bugrit.com/docs/api-reference/reports
+- Findings API: https://bugrit.com/docs/api-reference/tests
 
 Create a React component that:
 
@@ -383,8 +383,8 @@ Make it responsive for mobile.`}
           title="Security Dashboard Widget"
           description="Add a security status widget to your dashboard"
           prompt={`Read these Bugrit API docs:
-- Scans API: https://bugrit.dev/docs/api-reference/scans
-- Reports API: https://bugrit.dev/docs/api-reference/reports
+- Scans API: https://bugrit.com/docs/api-reference/scans
+- Reports API: https://bugrit.com/docs/api-reference/reports
 
 Create a dashboard widget that shows:
 
@@ -402,7 +402,7 @@ Use BUGGERED_API_KEY from environment.`}
           title="Slack/Discord Bot for Reports"
           description="Get scan results posted to your team chat"
           prompt={`Read the Bugrit Scans API at:
-https://bugrit.dev/docs/api-reference/scans
+https://bugrit.com/docs/api-reference/scans
 
 Create a simple bot/webhook integration that:
 
@@ -411,7 +411,7 @@ Create a simple bot/webhook integration that:
 3. Format message with:
    - Pass/fail based on summary.critical === 0
    - Critical, high, medium, low counts from summary object
-   - Link to full report: https://bugrit.dev/scans/{scanId}
+   - Link to full report: https://bugrit.com/scans/{scanId}
 4. Use red color for failures (critical > 0), green for pass
 5. Tag relevant team members if summary.critical > 0
 
@@ -431,7 +431,7 @@ Use BUGGERED_API_KEY from environment.`}
           title="Auto-fix Security Issues"
           description="Let AI fix issues found by Bugrit"
           prompt={`Read the Bugrit Findings API at:
-https://bugrit.dev/docs/api-reference/tests
+https://bugrit.com/docs/api-reference/tests
 
 Look at the Bugrit scan results I'm pasting below and:
 
@@ -453,8 +453,8 @@ Don't introduce new issues while fixing.`}
           title="Custom Scan Configuration"
           description="Create a tailored scanning config"
           prompt={`Read the Bugrit documentation:
-- Scans API: https://bugrit.dev/docs/api-reference/scans
-- Submitting Apps: https://bugrit.dev/docs/submitting-apps
+- Scans API: https://bugrit.com/docs/api-reference/scans
+- Submitting Apps: https://bugrit.com/docs/submitting-apps
 
 Create a Bugrit scan configuration for my project that:
 
@@ -471,8 +471,8 @@ My stack: [React/Vue/Angular], [Node/Python/Go], [PostgreSQL/MongoDB]`}
           title="Weekly Security Report"
           description="Generate executive summaries"
           prompt={`Read these Bugrit API docs:
-- Scans API: https://bugrit.dev/docs/api-reference/scans
-- Reports API: https://bugrit.dev/docs/api-reference/reports
+- Scans API: https://bugrit.com/docs/api-reference/scans
+- Reports API: https://bugrit.com/docs/api-reference/reports
 
 Create a script that runs weekly and:
 
@@ -496,7 +496,7 @@ Use my existing email service for sending.`}
         <h2 className="text-2xl font-bold">API Quick Reference</h2>
         <p className="text-muted-foreground">
           Copy these snippets for common API operations. Full docs at{' '}
-          <a href="/docs/api-reference/scans" className="text-primary hover:underline">bugrit.dev/docs/api-reference</a>
+          <a href="/docs/api-reference/scans" className="text-primary hover:underline">bugrit.com/docs/api-reference</a>
         </p>
 
         <div className="bg-muted rounded-lg p-4 space-y-4">

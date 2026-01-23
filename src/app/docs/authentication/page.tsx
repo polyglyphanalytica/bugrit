@@ -58,7 +58,7 @@ export default function AuthenticationPage() {
           header with a <code className="bg-muted px-1 py-0.5 rounded">Bearer</code> prefix:
         </p>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`curl https://bugrit.dev/api/v1/projects \\
+          <pre className="text-sm">{`curl https://bugrit.com/api/v1/projects \\
   -H "Authorization: Bearer bg_your_api_key_here"`}</pre>
         </div>
         <p className="text-muted-foreground mt-4">
@@ -66,7 +66,7 @@ export default function AuthenticationPage() {
           header:
         </p>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`curl https://bugrit.dev/api/v1/projects \\
+          <pre className="text-sm">{`curl https://bugrit.com/api/v1/projects \\
   -H "x-api-key: bg_your_api_key_here"`}</pre>
         </div>
       </section>

@@ -1,6 +1,6 @@
 'use client';
 
-const PRODUCTION_DOMAINS = ['bugrit.dev', 'bugrit.com'];
+const PRODUCTION_DOMAINS = ['bugrit.com', 'bugrit.com'];
 
 /**
  * Suppresses native console methods on production domains.

@@ -622,7 +622,7 @@ Add loading spinners during API calls.`)}
               <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Write a shell script for CI/CD that checks Bugrit credits before running a scan.
 
 The script should:
-1. Call GET https://bugrit.dev/api/billing/status
+1. Call GET https://bugrit.com/api/billing/status
 2. Pass the BUGRIT_API_KEY environment variable in the x-api-key header
 3. Parse the JSON response to get credits.remaining
 
@@ -641,7 +641,7 @@ Also create a GitHub Actions workflow step I can copy-paste.`}</pre>
               onClick={() => navigator.clipboard.writeText(`Write a shell script for CI/CD that checks Bugrit credits before running a scan.
 
 The script should:
-1. Call GET https://bugrit.dev/api/billing/status
+1. Call GET https://bugrit.com/api/billing/status
 2. Pass the BUGRIT_API_KEY environment variable in the x-api-key header
 3. Parse the JSON response to get credits.remaining
 

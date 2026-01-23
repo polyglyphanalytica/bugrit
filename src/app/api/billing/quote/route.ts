@@ -188,7 +188,7 @@ export async function POST(req: NextRequest) {
         {
           error: 'Unauthorized',
           message: 'Valid API key or authorization header required',
-          docs: 'https://bugrit.dev/docs/authentication',
+          docs: 'https://bugrit.com/docs/authentication',
         },
         { status: 401 }
       );

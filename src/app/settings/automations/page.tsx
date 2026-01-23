@@ -904,7 +904,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Trigger Bugrit Scan
         run: |
-          curl -X POST https://bugrit.dev/api/v1/scans \\
+          curl -X POST https://bugrit.com/api/v1/scans \\
             -H "Authorization: Bearer \${{ secrets.BUGRIT_API_KEY }}" \\
             -H "Content-Type: application/json" \\
             -d '{

@@ -95,7 +95,7 @@ jobs:
       - name: Trigger Bugrit Scan
         id: scan
         run: |
-          RESPONSE=$(curl -s -X POST https://bugrit.dev/api/v1/scans \\
+          RESPONSE=$(curl -s -X POST https://bugrit.com/api/v1/scans \\
             -H "Authorization: Bearer \${{ secrets.BUGRIT_API_KEY }}" \\
             -H "Content-Type: application/json" \\
             -d '{
@@ -118,7 +118,7 @@ jobs:
 
           for i in {1..60}; do
             STATUS=$(curl -s -H "Authorization: Bearer \${{ secrets.BUGRIT_API_KEY }}" \\
-              "https://bugrit.dev/api/v1/scans/$SCAN_ID" | jq -r '.status')
+              "https://bugrit.com/api/v1/scans/$SCAN_ID" | jq -r '.status')
 
             echo "Status: $STATUS"
 
@@ -137,7 +137,7 @@ jobs:
         run: |
           SCAN_ID=\${{ steps.scan.outputs.scan_id }}
           RESULT=$(curl -s -H "Authorization: Bearer \${{ secrets.BUGRIT_API_KEY }}" \\
-            "https://bugrit.dev/api/v1/scans/$SCAN_ID")
+            "https://bugrit.com/api/v1/scans/$SCAN_ID")
 
           CRITICAL=$(echo $RESULT | jq -r '.summary.critical // 0')
           HIGH=$(echo $RESULT | jq -r '.summary.high // 0')
@@ -170,7 +170,7 @@ bugrit-scan:
     - apk add --no-cache curl jq
   script:
     - |
-      RESPONSE=$(curl -s -X POST https://bugrit.dev/api/v1/scans \\
+      RESPONSE=$(curl -s -X POST https://bugrit.com/api/v1/scans \\
         -H "Authorization: Bearer $BUGRIT_API_KEY" \\
         -H "Content-Type: application/json" \\
         -d '{
@@ -187,7 +187,7 @@ bugrit-scan:
       # Wait for completion
       while true; do
         STATUS=$(curl -s -H "Authorization: Bearer $BUGRIT_API_KEY" \\
-          "https://bugrit.dev/api/v1/scans/$SCAN_ID" | jq -r '.status')
+          "https://bugrit.com/api/v1/scans/$SCAN_ID" | jq -r '.status')
 
         [ "$STATUS" = "completed" ] && break
         [ "$STATUS" = "failed" ] && exit 1
@@ -218,7 +218,7 @@ echo "Running Bugrit pre-push scan..."
 git diff --name-only HEAD~1 | zip -@ /tmp/changes.zip 2>/dev/null
 
 # Trigger scan
-RESPONSE=$(curl -s -X POST https://bugrit.dev/api/v1/scans \\
+RESPONSE=$(curl -s -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer $BUGRIT_API_KEY" \\
   -F "projectId=$BUGRIT_PROJECT_ID" \\
   -F "platform=web" \\
@@ -230,7 +230,7 @@ SCAN_ID=$(echo $RESPONSE | jq -r '.id')
 # Wait and check
 for i in {1..30}; do
   STATUS=$(curl -s -H "Authorization: Bearer $BUGRIT_API_KEY" \\
-    "https://bugrit.dev/api/v1/scans/$SCAN_ID" | jq -r '.status')
+    "https://bugrit.com/api/v1/scans/$SCAN_ID" | jq -r '.status')
 
   [ "$STATUS" = "completed" ] && break
   [ "$STATUS" = "failed" ] && echo "Scan failed" && exit 1
@@ -238,7 +238,7 @@ for i in {1..30}; do
 done
 
 CRITICAL=$(curl -s -H "Authorization: Bearer $BUGRIT_API_KEY" \\
-  "https://bugrit.dev/api/v1/scans/$SCAN_ID" | jq -r '.summary.critical // 0')
+  "https://bugrit.com/api/v1/scans/$SCAN_ID" | jq -r '.summary.critical // 0')
 
 if [ "$CRITICAL" -gt 0 ]; then
   echo "BLOCKED: $CRITICAL critical issues found. Fix before pushing."
@@ -265,7 +265,7 @@ rm /tmp/changes.zip`}</pre>
           </p>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto">
             <pre className="text-sm">{`# Your webhook endpoint (we provide this)
-POST https://bugrit.dev/api/webhooks/github/{your-project-id}
+POST https://bugrit.com/api/webhooks/github/{your-project-id}
 
 # GitHub sends push events to this URL
 # We automatically:
@@ -299,7 +299,7 @@ jobs:
     steps:
       - name: Trigger Full Scan
         run: |
-          curl -X POST https://bugrit.dev/api/v1/scans \\
+          curl -X POST https://bugrit.com/api/v1/scans \\
             -H "Authorization: Bearer \${{ secrets.BUGRIT_API_KEY }}" \\
             -H "Content-Type: application/json" \\
             -d '{
@@ -371,7 +371,7 @@ jobs:
           </p>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto">
             <pre className="text-sm">{`# Trigger a scan from anywhere
-curl -X POST https://bugrit.dev/api/v1/scans \\
+curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -382,7 +382,7 @@ curl -X POST https://bugrit.dev/api/v1/scans \\
   }'
 
 # Or upload code directly
-curl -X POST https://bugrit.dev/api/v1/scans \\
+curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -F "projectId=proj-abc123" \\
   -F "platform=web" \\
@@ -401,7 +401,7 @@ curl -X POST https://bugrit.dev/api/v1/scans \\
         </p>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto mb-4">
           <pre className="text-sm">{`# Create an automation
-curl -X POST https://bugrit.dev/api/v1/automations \\
+curl -X POST https://bugrit.com/api/v1/automations \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -426,11 +426,11 @@ curl -X POST https://bugrit.dev/api/v1/automations \\
   }'
 
 # List automations
-curl https://bugrit.dev/api/v1/automations \\
+curl https://bugrit.com/api/v1/automations \\
   -H "Authorization: Bearer YOUR_API_KEY"
 
 # Delete an automation
-curl -X DELETE https://bugrit.dev/api/v1/automations/auto-xyz789 \\
+curl -X DELETE https://bugrit.com/api/v1/automations/auto-xyz789 \\
   -H "Authorization: Bearer YOUR_API_KEY"`}</pre>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -553,8 +553,8 @@ curl -X DELETE https://bugrit.dev/api/v1/automations/auto-xyz789 \\
    - Uses secrets BUGRIT_API_KEY and BUGRIT_PROJECT_ID
 
 2. The workflow should use these API endpoints:
-   - POST https://bugrit.dev/api/v1/scans (start scan)
-   - GET https://bugrit.dev/api/v1/scans/{scanId} (check status)
+   - POST https://bugrit.com/api/v1/scans (start scan)
+   - GET https://bugrit.com/api/v1/scans/{scanId} (check status)
 
 Make sure the workflow handles errors gracefully and provides clear output about scan progress.`}</pre>
         </div>

@@ -55,7 +55,7 @@ export default function ReportsApiPage() {
                 Create a full dashboard showing your security scan results with severity indicators.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Reports API docs at https://bugrit.dev/docs/api-reference/reports
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Reports API docs at https://bugrit.com/docs/api-reference/reports
 
 Build a security dashboard component for my app:
 
@@ -72,7 +72,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Reports API docs at https://bugrit.dev/docs/api-reference/reports
+                onClick={() => copyToClipboard(`Read the Bugrit Reports API docs at https://bugrit.com/docs/api-reference/reports
 
 Build a security dashboard component for my app:
 
@@ -138,8 +138,8 @@ if (scans[0]?.status === 'completed') {
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
                 <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit API docs:
-- Scans: https://bugrit.dev/docs/api-reference/scans
-- Reports: https://bugrit.dev/docs/api-reference/reports
+- Scans: https://bugrit.com/docs/api-reference/scans
+- Reports: https://bugrit.com/docs/api-reference/reports
 
 Create a scan history timeline component:
 
@@ -158,8 +158,8 @@ My stack: [YOUR_STACK]`}</pre>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
                 onClick={() => copyToClipboard(`Read the Bugrit API docs:
-- Scans: https://bugrit.dev/docs/api-reference/scans
-- Reports: https://bugrit.dev/docs/api-reference/reports
+- Scans: https://bugrit.com/docs/api-reference/scans
+- Reports: https://bugrit.com/docs/api-reference/reports
 
 Create a scan history timeline component:
 
@@ -218,7 +218,7 @@ My stack: [YOUR_STACK]`)}
                 Add a compact security status widget to your existing admin panel.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Reports API at https://bugrit.dev/docs/api-reference/reports
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Reports API at https://bugrit.com/docs/api-reference/reports
 
 Add a security status widget to my admin dashboard:
 
@@ -236,7 +236,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Reports API at https://bugrit.dev/docs/api-reference/reports
+                onClick={() => copyToClipboard(`Read the Bugrit Reports API at https://bugrit.com/docs/api-reference/reports
 
 Add a security status widget to my admin dashboard:
 
@@ -282,7 +282,7 @@ My stack: [YOUR_STACK]`)}
                 Generate a non-technical report that managers and executives can understand.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit AI Reports API at https://bugrit.dev/docs/api-reference/reports
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit AI Reports API at https://bugrit.com/docs/api-reference/reports
 
 Build an executive summary page for stakeholders:
 
@@ -303,7 +303,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit AI Reports API at https://bugrit.dev/docs/api-reference/reports
+                onClick={() => copyToClipboard(`Read the Bugrit AI Reports API at https://bugrit.com/docs/api-reference/reports
 
 Build an executive summary page for stakeholders:
 
@@ -388,7 +388,7 @@ My stack: [YOUR_STACK]`)}
                 Get a prioritized to-do list with specific files and line numbers to fix.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit AI Reports API at https://bugrit.dev/docs/api-reference/reports
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit AI Reports API at https://bugrit.com/docs/api-reference/reports
 
 Create a developer task list from AI analysis:
 
@@ -408,7 +408,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit AI Reports API at https://bugrit.dev/docs/api-reference/reports
+                onClick={() => copyToClipboard(`Read the Bugrit AI Reports API at https://bugrit.com/docs/api-reference/reports
 
 Create a developer task list from AI analysis:
 
@@ -486,7 +486,7 @@ My stack: [YOUR_STACK]`)}
                 Trigger AI analysis for any completed scan.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit AI Reports API at https://bugrit.dev/docs/api-reference/reports
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit AI Reports API at https://bugrit.com/docs/api-reference/reports
 
 Add an "Analyze with AI" button to my scan results page:
 
@@ -502,7 +502,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit AI Reports API at https://bugrit.dev/docs/api-reference/reports
+                onClick={() => copyToClipboard(`Read the Bugrit AI Reports API at https://bugrit.com/docs/api-reference/reports
 
 Add an "Analyze with AI" button to my scan results page:
 
@@ -589,7 +589,7 @@ My stack: [YOUR_STACK]`)}
                 Build a reports archive or history page.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Reports API at https://bugrit.dev/docs/api-reference/reports
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Reports API at https://bugrit.com/docs/api-reference/reports
 
 Create a reports list page:
 
@@ -609,7 +609,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Reports API at https://bugrit.dev/docs/api-reference/reports
+                onClick={() => copyToClipboard(`Read the Bugrit Reports API at https://bugrit.com/docs/api-reference/reports
 
 Create a reports list page:
 
@@ -680,7 +680,7 @@ My stack: [YOUR_STACK]`)}
                 Display a full report with all findings.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Reports API at https://bugrit.dev/docs/api-reference/reports
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Reports API at https://bugrit.com/docs/api-reference/reports
 
 Create a detailed report view page:
 
@@ -701,7 +701,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Reports API at https://bugrit.dev/docs/api-reference/reports
+                onClick={() => copyToClipboard(`Read the Bugrit Reports API at https://bugrit.com/docs/api-reference/reports
 
 Create a detailed report view page:
 
@@ -789,7 +789,7 @@ My stack: [YOUR_STACK]`)}
               Quick reference for building your UI.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
-              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Reports API at https://bugrit.dev/docs/api-reference/reports
+              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Reports API at https://bugrit.com/docs/api-reference/reports
 
 Help me understand the report response structure so I can build a good UI:
 
@@ -803,7 +803,7 @@ Explain with examples of how to display each field.`}</pre>
             </div>
             <button
               className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-              onClick={() => copyToClipboard(`Read the Bugrit Reports API at https://bugrit.dev/docs/api-reference/reports
+              onClick={() => copyToClipboard(`Read the Bugrit Reports API at https://bugrit.com/docs/api-reference/reports
 
 Help me understand the report response structure so I can build a good UI:
 

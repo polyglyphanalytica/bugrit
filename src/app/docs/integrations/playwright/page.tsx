@@ -79,7 +79,7 @@ export default defineConfig({
           for the E2E tests to run against:
         </p>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+          <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -164,8 +164,8 @@ export default defineConfig({
           "name": "should complete checkout flow",
           "browser": "firefox",
           "error": "Timeout waiting for payment confirmation",
-          "screenshot": "https://cdn.bugrit.dev/scn-xyz/checkout-failure.png",
-          "video": "https://cdn.bugrit.dev/scn-xyz/checkout-failure.webm"
+          "screenshot": "https://cdn.bugrit.com/scn-xyz/checkout-failure.png",
+          "video": "https://cdn.bugrit.com/scn-xyz/checkout-failure.webm"
         }
       ]
     },
@@ -184,7 +184,7 @@ export default defineConfig({
           in your application settings or pass them with the scan:
         </p>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+          <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{

@@ -112,7 +112,7 @@ const isBrowser = typeof window !== 'undefined';
 /**
  * Production domains where console output should be suppressed
  */
-const PRODUCTION_DOMAINS = ['bugrit.dev', 'bugrit.com'];
+const PRODUCTION_DOMAINS = ['bugrit.com', 'bugrit.com'];
 
 /**
  * Check if running on a production domain (browser only)

@@ -101,7 +101,7 @@ export default function ScansApiPage() {
                 Automatically scan your code whenever you deploy and get alerted if critical issues are found.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API docs at https://bugrit.dev/docs/api-reference/scans
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API docs at https://bugrit.com/docs/api-reference/scans
 
 Add a post-deployment hook that triggers a security scan:
 
@@ -119,7 +119,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Scans API docs at https://bugrit.dev/docs/api-reference/scans
+                onClick={() => copyToClipboard(`Read the Bugrit Scans API docs at https://bugrit.com/docs/api-reference/scans
 
 Add a post-deployment hook that triggers a security scan:
 
@@ -153,7 +153,7 @@ My stack: [YOUR_STACK]`)}
                 <div>
                   <h4 className="font-semibold mb-2">Example Request</h4>
                   <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-                    <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+                    <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -196,8 +196,8 @@ My stack: [YOUR_STACK]`)}
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
                 <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read these Bugrit docs:
-- Scans API: https://bugrit.dev/docs/api-reference/scans
-- CI/CD Integration: https://bugrit.dev/docs/integrations/ci-cd
+- Scans API: https://bugrit.com/docs/api-reference/scans
+- CI/CD Integration: https://bugrit.com/docs/integrations/ci-cd
 
 Create a GitHub Action that runs on every PR:
 
@@ -217,8 +217,8 @@ Use secrets.BUGRIT_API_KEY for auth.`}</pre>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
                 onClick={() => copyToClipboard(`Read these Bugrit docs:
-- Scans API: https://bugrit.dev/docs/api-reference/scans
-- CI/CD Integration: https://bugrit.dev/docs/integrations/ci-cd
+- Scans API: https://bugrit.com/docs/api-reference/scans
+- CI/CD Integration: https://bugrit.com/docs/integrations/ci-cd
 
 Create a GitHub Action that runs on every PR:
 
@@ -250,7 +250,7 @@ Use secrets.BUGRIT_API_KEY for auth.`)}
                 Check your production site for security headers, SSL issues, and more.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API at https://bugrit.dev/docs/api-reference/scans
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API at https://bugrit.com/docs/api-reference/scans
 
 Create a scheduled job that scans my live site daily:
 
@@ -269,7 +269,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Scans API at https://bugrit.dev/docs/api-reference/scans
+                onClick={() => copyToClipboard(`Read the Bugrit Scans API at https://bugrit.com/docs/api-reference/scans
 
 Create a scheduled job that scans my live site daily:
 
@@ -296,7 +296,7 @@ My stack: [YOUR_STACK]`)}
               <div className="p-4 bg-muted/30">
                 <h4 className="font-semibold mb-2">Example: Scan a Live URL</h4>
                 <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-                  <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+                  <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -319,7 +319,7 @@ My stack: [YOUR_STACK]`)}
                 Show real-time scan progress with a nice UI.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API at https://bugrit.dev/docs/api-reference/scans
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API at https://bugrit.com/docs/api-reference/scans
 
 Build a scan progress component:
 
@@ -337,7 +337,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Scans API at https://bugrit.dev/docs/api-reference/scans
+                onClick={() => copyToClipboard(`Read the Bugrit Scans API at https://bugrit.com/docs/api-reference/scans
 
 Build a scan progress component:
 
@@ -371,7 +371,7 @@ My stack: [YOUR_STACK]`)}
               Submit your code or URL for analysis with 69 security and quality tools.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
-              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API at https://bugrit.dev/docs/api-reference/scans
+              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API at https://bugrit.com/docs/api-reference/scans
 
 Add a "Scan Now" button to my app that:
 
@@ -390,7 +390,7 @@ My stack: [YOUR_STACK]`}</pre>
             </div>
             <button
               className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-              onClick={() => copyToClipboard(`Read the Bugrit Scans API at https://bugrit.dev/docs/api-reference/scans
+              onClick={() => copyToClipboard(`Read the Bugrit Scans API at https://bugrit.com/docs/api-reference/scans
 
 Add a "Scan Now" button to my app that:
 
@@ -497,7 +497,7 @@ My stack: [YOUR_STACK]`)}
               Monitor your scan and get results when complete.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
-              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API at https://bugrit.dev/docs/api-reference/scans
+              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API at https://bugrit.com/docs/api-reference/scans
 
 Build a function that waits for scan completion:
 
@@ -512,7 +512,7 @@ My stack: [YOUR_STACK]`}</pre>
             </div>
             <button
               className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-              onClick={() => copyToClipboard(`Read the Bugrit Scans API at https://bugrit.dev/docs/api-reference/scans
+              onClick={() => copyToClipboard(`Read the Bugrit Scans API at https://bugrit.com/docs/api-reference/scans
 
 Build a function that waits for scan completion:
 
@@ -575,7 +575,7 @@ My stack: [YOUR_STACK]`)}
               Get a list of all your scans with filters.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
-              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API at https://bugrit.dev/docs/api-reference/scans
+              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API at https://bugrit.com/docs/api-reference/scans
 
 Create a scan history table component:
 
@@ -596,7 +596,7 @@ My stack: [YOUR_STACK]`}</pre>
             </div>
             <button
               className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-              onClick={() => copyToClipboard(`Read the Bugrit Scans API at https://bugrit.dev/docs/api-reference/scans
+              onClick={() => copyToClipboard(`Read the Bugrit Scans API at https://bugrit.com/docs/api-reference/scans
 
 Create a scan history table component:
 
