@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
@@ -12,23 +13,33 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { Menu, X, LayoutDashboard, AppWindow, Scan, FileText, Settings, Key, LogOut } from 'lucide-react';
 
 interface NavItem {
   href: string;
   label: string;
+  icon: React.ReactNode;
 }
 
 const navItems: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/applications', label: 'Applications' },
-  { href: '/scans', label: 'Scans' },
-  { href: '/docs', label: 'Docs' },
+  { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+  { href: '/applications', label: 'Applications', icon: <AppWindow className="w-5 h-5" /> },
+  { href: '/scans', label: 'Scans', icon: <Scan className="w-5 h-5" /> },
+  { href: '/docs', label: 'Docs', icon: <FileText className="w-5 h-5" /> },
 ];
 
 export function DashboardNav() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -38,8 +49,80 @@ export function DashboardNav() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 flex h-14 items-center justify-between">
-        {/* Left: Logo + Nav */}
-        <div className="flex items-center gap-8">
+        {/* Left: Mobile Menu + Logo + Nav */}
+        <div className="flex items-center gap-4 md:gap-8">
+          {/* Mobile Menu Button */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 p-0">
+              <SheetHeader className="p-4 border-b">
+                <SheetTitle>
+                  <Logo href="/dashboard" size="sm" />
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col p-4 gap-1">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors',
+                      pathname === item.href
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    )}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </Link>
+                ))}
+                <div className="my-2 border-t" />
+                <Link
+                  href="/settings"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors',
+                    pathname.startsWith('/settings')
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
+                >
+                  <Settings className="w-5 h-5" />
+                  Settings
+                </Link>
+                <Link
+                  href="/settings/api-keys"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <Key className="w-5 h-5" />
+                  API Keys
+                </Link>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950 w-full text-left"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Log out
+                </button>
+              </nav>
+              {/* User info at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-muted/50">
+                <p className="text-sm font-medium truncate">{user?.email}</p>
+                <p className="text-xs text-muted-foreground">Signed in</p>
+              </div>
+            </SheetContent>
+          </Sheet>
+
           <Logo href="/dashboard" size="sm" />
           <nav className="hidden md:flex items-center gap-6">
             {navItems.map((item) => (
@@ -59,7 +142,7 @@ export function DashboardNav() {
           </nav>
         </div>
 
-        {/* Right: User Menu */}
+        {/* Right: User Menu (hidden on mobile, shown in sheet) */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2">
