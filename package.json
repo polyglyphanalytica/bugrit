@@ -70,7 +70,7 @@
     "date-fns": "^3.6.0",
     "depcheck": "^1.4.0",
     "dependency-cruiser": "^16.0.0",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.2.3",
     "embla-carousel-react": "^8.6.0",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.4",
