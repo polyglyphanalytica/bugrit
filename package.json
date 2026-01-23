@@ -97,7 +97,7 @@
     "patch-package": "^8.0.0",
     "playwright": "^1.58.0",
     "prettier": "^3.2.0",
-    "publint": "^0.2.0",
+    "publint": "^0.3.17",
     "puppeteer": "^24.36.0",
     "react": "^19.2.1",
     "react-day-picker": "^9.11.3",
