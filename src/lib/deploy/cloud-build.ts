@@ -1367,6 +1367,208 @@ export const DOCKER_TOOLS = {
       },
     ],
   },
+
+  // ============================================================
+  // Wave 7: January 2026 Expansion Part 3 (8 Docker tools)
+  // ============================================================
+
+  // Container Security
+  'clair': {
+    image: 'quay.io/projectquay/clair:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'quay.io/projectquay/clair:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'clairctl report --out json /workspace/source > /workspace/clair-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/clair-report.json', `gs://${outputBucket}/${jobId}/clair-report.json`],
+      },
+    ],
+  },
+  'falco': {
+    image: 'falcosecurity/falco:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'falcosecurity/falco:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'falco -r /workspace/source --format json -o json_output=true > /workspace/falco-report.json 2>&1 || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/falco-report.json', `gs://${outputBucket}/${jobId}/falco-report.json`],
+      },
+    ],
+  },
+
+  // Smart Contract Security
+  'slither': {
+    image: 'trailofbits/slither:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'trailofbits/slither:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && slither . --json /workspace/slither-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/slither-report.json', `gs://${outputBucket}/${jobId}/slither-report.json`],
+      },
+    ],
+  },
+
+  // Java Quality
+  'error-prone': {
+    image: 'maven:3.9-eclipse-temurin-21',
+    timeout: '900s',
+    memory: '8GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'maven:3.9-eclipse-temurin-21',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && mvn compile -Dmaven.compiler.compilerId=javac -Dmaven.compiler.compilerArgs=-XDcompilePolicy=simple -Dmaven.compiler.compilerArgs=-Xplugin:ErrorProne 2>&1 | tee /workspace/error-prone-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/error-prone-report.json', `gs://${outputBucket}/${jobId}/error-prone-report.json`],
+      },
+    ],
+  },
+
+  // Elixir Quality
+  'credo': {
+    image: 'elixir:1.16-slim',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'elixir:1.16-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && mix local.hex --force && mix deps.get && mix credo --format json > /workspace/credo-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/credo-report.json', `gs://${outputBucket}/${jobId}/credo-report.json`],
+      },
+    ],
+  },
+
+  // Cloud Infrastructure
+  'steampipe': {
+    image: 'turbot/steampipe:latest',
+    timeout: '900s',
+    memory: '8GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'turbot/steampipe:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'steampipe check all --output json > /workspace/steampipe-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/steampipe-report.json', `gs://${outputBucket}/${jobId}/steampipe-report.json`],
+      },
+    ],
+  },
+
+  // Multi-language Quality
+  'sonar-scanner': {
+    image: 'sonarsource/sonar-scanner-cli:latest',
+    timeout: '1200s',
+    memory: '8GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'sonarsource/sonar-scanner-cli:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && sonar-scanner -Dsonar.projectKey=scan -Dsonar.sources=. -Dsonar.report.export.path=/workspace/sonar-scanner-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/sonar-scanner-report.json', `gs://${outputBucket}/${jobId}/sonar-scanner-report.json`],
+      },
+    ],
+  },
+
+  // Static Analysis (Meta)
+  'infer': {
+    image: 'facebook/infer:latest',
+    timeout: '1200s',
+    memory: '8GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'facebook/infer:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && infer run --report-json -- make 2>/dev/null || infer run --report-json -- javac $(find . -name "*.java") 2>/dev/null || true && cp infer-out/report.json /workspace/infer-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/infer-report.json', `gs://${outputBucket}/${jobId}/infer-report.json`],
+      },
+    ],
+  },
 } as const;
 
 export type DockerToolId = keyof typeof DOCKER_TOOLS;
@@ -1663,6 +1865,15 @@ export class CloudBuildRunner {
       'dart-analyze': 'dart-analyze-report.json',
       'ktlint': 'ktlint-report.json',
       'prowler': 'prowler-report.json',
+      // Wave 7: January 2026 Expansion Part 3
+      'clair': 'clair-report.json',
+      'falco': 'falco-report.json',
+      'slither': 'slither-report.json',
+      'error-prone': 'error-prone-report.json',
+      'credo': 'credo-report.json',
+      'steampipe': 'steampipe-report.json',
+      'sonar-scanner': 'sonar-scanner-report.json',
+      'infer': 'infer-report.json',
     };
 
     const outputFile = outputFiles[toolId];

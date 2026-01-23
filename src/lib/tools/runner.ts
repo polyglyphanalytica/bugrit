@@ -1154,6 +1154,113 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
 
     return { findings, summary: summarizeFindings(findings) };
   },
+
+  // ─────────────────────────────────────────────────────────────
+  // audit-ci (CI-friendly npm/yarn audit)
+  // ─────────────────────────────────────────────────────────────
+  'audit-ci': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx audit-ci --json 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const advisory of data.advisories || Object.values(data.vulnerabilities || {})) {
+          const adv = advisory as { severity?: string; module_name?: string; title?: string; recommendation?: string; url?: string };
+          findings.push({
+            id: `audit-ci-${adv.module_name || 'unknown'}`,
+            severity: adv.severity === 'critical' || adv.severity === 'high' ? 'error' : 'warning',
+            message: `${adv.module_name}: ${adv.title || 'Security vulnerability'}`,
+            file: 'package.json',
+            suggestion: adv.recommendation || adv.url || 'Update affected package',
+          });
+        }
+      } catch {
+        // JSON parse error or no vulnerabilities
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // webhint (web best practices linter)
+  // ─────────────────────────────────────────────────────────────
+  'webhint': async ({ targetUrl }) => {
+    if (!targetUrl) {
+      return {
+        findings: [{
+          id: 'webhint-no-url',
+          severity: 'info' as const,
+          message: 'webhint requires a target URL for web best practices analysis',
+        }],
+        summary: { total: 1, errors: 0, warnings: 0, info: 1 },
+      };
+    }
+
+    const findings: Finding[] = [];
+    const output = runCli(`npx hint ${targetUrl} --formatters json 2>/dev/null`, process.cwd(), 120000);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const problem of data.problems || []) {
+          findings.push({
+            id: `webhint-${problem.hintId || 'unknown'}`,
+            severity: problem.severity === 2 ? 'error' : problem.severity === 1 ? 'warning' : 'info',
+            message: problem.message,
+            rule: problem.hintId,
+            suggestion: problem.documentation?.url,
+          });
+        }
+      } catch {
+        // JSON parse error
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // accessibility-checker (IBM Equal Access)
+  // ─────────────────────────────────────────────────────────────
+  'accessibility-checker': async ({ targetUrl }) => {
+    if (!targetUrl) {
+      return {
+        findings: [{
+          id: 'a11y-no-url',
+          severity: 'info' as const,
+          message: 'accessibility-checker requires a target URL for accessibility testing',
+        }],
+        summary: { total: 1, errors: 0, warnings: 0, info: 1 },
+      };
+    }
+
+    const findings: Finding[] = [];
+    const output = runCli(`npx achecker ${targetUrl} --outputFormat json 2>/dev/null`, process.cwd(), 60000);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        const results = data.results || data.report?.results || [];
+        for (const result of results) {
+          if (result.level === 'violation' || result.level === 'potentialviolation') {
+            findings.push({
+              id: `a11y-${result.ruleId || 'unknown'}`,
+              severity: result.level === 'violation' ? 'error' : 'warning',
+              message: result.message || result.reasonId,
+              rule: result.ruleId,
+              suggestion: result.help || result.snippet,
+            });
+          }
+        }
+      } catch {
+        // JSON parse error
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════

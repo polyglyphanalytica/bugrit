@@ -330,21 +330,22 @@ export type WebhookEventType =
 export const AVAILABLE_TOOLS = [
   // Linting (5)
   'eslint', 'biome', 'stylelint', 'prettier', 'oxlint',
-  // Security (21)
+  // Security (25)
   'semgrep', 'gitleaks', 'trivy', 'grype', 'nuclei', 'checkov', 'secretlint',
   'npm-audit', 'bandit', 'gosec', 'brakeman', 'owasp-zap', 'dependency-check',
   'tfsec', 'dockle', 'syft', 'flawfinder', 'garak', 'modelscan',
-  'trufflehog', 'bearer',
-  // Dependencies (8)
+  'trufflehog', 'bearer', 'clair', 'falco', 'slither', 'infer',
+  // Dependencies (10)
   'depcheck', 'license-checker', 'madge', 'dependency-cruiser', 'osv-scanner',
-  'pip-audit', 'cargo-audit', 'npm-check-updates',
-  // Accessibility (2)
-  'axe-core', 'pa11y',
-  // Quality (26)
+  'pip-audit', 'cargo-audit', 'npm-check-updates', 'lockfile-lint', 'audit-ci',
+  // Accessibility (3)
+  'axe-core', 'pa11y', 'accessibility-checker',
+  // Quality (30)
   'typescript', 'knip', 'jscpd', 'cspell', 'publint', 'codeclimate', 'phpstan',
   'psalm', 'spotbugs', 'pmd', 'checkstyle', 'rubocop', 'detekt', 'cppcheck',
   'clippy', 'shellcheck', 'ruff', 'mypy', 'hadolint', 'sqlfluff', 'golangci-lint',
   'actionlint', 'html-validate', 'yamllint', 'pylint', 'dart-analyze', 'ktlint',
+  'webhint', 'error-prone', 'credo', 'sonar-scanner',
   // Documentation (5)
   'markdownlint', 'remark-lint', 'alex', 'vale', 'textlint',
   // Git (1)
@@ -355,10 +356,10 @@ export const AVAILABLE_TOOLS = [
   'mobsf', 'apkleaks', 'androguard', 'swiftlint',
   // API Security (4)
   'spectral', 'dredd', 'graphql-cop', 'schemathesis',
-  // Cloud Native (8)
+  // Cloud Native (9)
   'kubesec', 'kube-bench', 'polaris', 'terrascan', 'kube-hunter',
-  'kics', 'cfn-lint', 'prowler',
-] as const;  // Total: 88 tools
+  'kics', 'cfn-lint', 'prowler', 'steampipe',
+] as const;  // Total: 100 tools
 
 export type ToolName = (typeof AVAILABLE_TOOLS)[number];
 

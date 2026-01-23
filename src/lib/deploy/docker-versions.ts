@@ -452,6 +452,72 @@ export const DOCKER_VERSIONS: Record<string, DockerImageVersion> = {
     lastUpdated: '2026-01-23',
     releaseNotes: 'https://github.com/prowler-cloud/prowler/releases',
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 7: January 2026 Expansion Part 3 (8 Docker tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // Container Security
+  'clair': {
+    image: 'quay.io/projectquay/clair',
+    version: '4.7.4',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/quay/clair/releases',
+  },
+  'falco': {
+    image: 'falcosecurity/falco',
+    version: '0.39.2',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/falcosecurity/falco/releases',
+  },
+
+  // Smart Contract Security
+  'slither': {
+    image: 'trailofbits/slither',
+    version: '0.10.4',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/crytic/slither/releases',
+  },
+
+  // Java Quality
+  'error-prone': {
+    image: 'maven',
+    version: '3.9-eclipse-temurin-21',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'Error Prone 2.36.x via Maven plugin',
+  },
+
+  // Elixir Quality
+  'credo': {
+    image: 'elixir',
+    version: '1.16-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'Credo installed via mix',
+  },
+
+  // Cloud Infrastructure
+  'steampipe': {
+    image: 'turbot/steampipe',
+    version: '0.24.2',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/turbot/steampipe/releases',
+  },
+
+  // Multi-language Quality
+  'sonar-scanner': {
+    image: 'sonarsource/sonar-scanner-cli',
+    version: '5.0.1',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/SonarSource/sonar-scanner-cli/releases',
+  },
+
+  // Static Analysis (Meta)
+  'infer': {
+    image: 'facebook/infer',
+    version: '1.2.0',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/facebook/infer/releases',
+  },
 };
 
 /**

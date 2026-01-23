@@ -1,13 +1,13 @@
 /**
  * Comprehensive Tool Registry
  *
- * 88 security, quality, and compliance tools supporting multiple languages.
+ * 100 security, quality, and compliance tools supporting multiple languages.
  *
  * Deployment types:
- * - Native JS (29 tools): Run via npm packages on Node.js
- * - Docker (59 tools): Run via Google Cloud Build containers
+ * - Native JS (33 tools): Run via npm packages on Node.js
+ * - Docker (67 tools): Run via Google Cloud Build containers
  *
- * Total: 88 tools across 11 categories
+ * Total: 100 tools across 11 categories
  */
 
 export interface ToolDefinition {
@@ -895,6 +895,125 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     docker: 'prowler/prowler:latest',
     credits: 3,
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 7: January 2026 Expansion Part 3 (12 tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // --- npm Tools (4) ---
+  {
+    id: 'lockfile-lint',
+    name: 'lockfile-lint',
+    description: 'Lint npm/yarn lockfiles for security policies and trusted sources',
+    category: 'dependencies',
+    npm: 'lockfile-lint',
+    filePatterns: ['**/package-lock.json', '**/yarn.lock'],
+    credits: 0,
+  },
+  {
+    id: 'audit-ci',
+    name: 'audit-ci',
+    description: 'CI-friendly npm/yarn audit with configurable severity thresholds',
+    category: 'dependencies',
+    npm: 'audit-ci',
+    filePatterns: ['**/package.json', '**/package-lock.json'],
+    credits: 0,
+  },
+  {
+    id: 'webhint',
+    name: 'webhint',
+    description: 'Web best practices linter for performance, accessibility, and security',
+    category: 'quality',
+    npm: 'hint',
+    languages: ['html', 'css', 'javascript'],
+    filePatterns: ['**/*.html'],
+    credits: 1,
+  },
+  {
+    id: 'accessibility-checker',
+    name: 'Accessibility Checker',
+    description: 'IBM Equal Access automated accessibility testing',
+    category: 'accessibility',
+    npm: 'accessibility-checker',
+    languages: ['html'],
+    filePatterns: ['**/*.html'],
+    credits: 1,
+  },
+
+  // --- Docker Tools (8) ---
+  {
+    id: 'clair',
+    name: 'Clair',
+    description: 'Static analysis for container vulnerabilities (CoreOS/Quay)',
+    category: 'security',
+    docker: 'quay.io/projectquay/clair:latest',
+    credits: 2,
+  },
+  {
+    id: 'falco',
+    name: 'Falco',
+    description: 'Cloud-native runtime security and threat detection (CNCF)',
+    category: 'security',
+    docker: 'falcosecurity/falco:latest',
+    credits: 3,
+  },
+  {
+    id: 'slither',
+    name: 'Slither',
+    description: 'Solidity smart contract static analyzer (Trail of Bits)',
+    category: 'security',
+    docker: 'trailofbits/slither:latest',
+    languages: ['solidity'],
+    filePatterns: ['**/*.sol'],
+    credits: 2,
+  },
+  {
+    id: 'error-prone',
+    name: 'Error Prone',
+    description: 'Java compile-time bug detection (Google)',
+    category: 'quality',
+    docker: 'maven:3.9-eclipse-temurin-21',
+    languages: ['java'],
+    filePatterns: ['**/*.java'],
+    credits: 2,
+  },
+  {
+    id: 'credo',
+    name: 'Credo',
+    description: 'Static code analysis for Elixir with focus on consistency',
+    category: 'quality',
+    docker: 'elixir:1.16-slim',
+    languages: ['elixir'],
+    filePatterns: ['**/*.ex', '**/*.exs'],
+    credits: 1,
+  },
+  {
+    id: 'steampipe',
+    name: 'Steampipe',
+    description: 'SQL-based cloud infrastructure queries and compliance checks',
+    category: 'cloud-native',
+    docker: 'turbot/steampipe:latest',
+    credits: 2,
+  },
+  {
+    id: 'sonar-scanner',
+    name: 'SonarScanner',
+    description: 'Multi-language code quality and security scanner (SonarQube)',
+    category: 'quality',
+    docker: 'sonarsource/sonar-scanner-cli:latest',
+    languages: ['javascript', 'typescript', 'python', 'java', 'go', 'php', 'ruby'],
+    credits: 2,
+  },
+  {
+    id: 'infer',
+    name: 'Infer',
+    description: 'Static analysis for C, C++, Java, and Objective-C (Meta)',
+    category: 'security',
+    docker: 'facebook/infer:latest',
+    languages: ['c', 'cpp', 'java', 'objective-c'],
+    filePatterns: ['**/*.c', '**/*.cpp', '**/*.java', '**/*.m'],
+    credits: 2,
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -935,7 +1054,7 @@ export function getTotalCredits(toolIds: string[]): number {
   }, 0);
 }
 
-export const TOOL_COUNT = TOOL_REGISTRY.length;  // 88 tools (29 npm + 59 docker)
+export const TOOL_COUNT = TOOL_REGISTRY.length;  // 100 tools (33 npm + 67 docker)
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   linting: 'Linting & Formatting',
