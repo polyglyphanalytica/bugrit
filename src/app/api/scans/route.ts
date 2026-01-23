@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runTools, ToolResult } from '@/lib/tools/runner';
-import { generateId } from '@/lib/firestore';
+import { generateId, getDb, COLLECTIONS } from '@/lib/firestore';
 import { validateUpload, scanFileForThreats } from '@/lib/scan/security';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { safeRequire } from '@/lib/utils/safe-require';
@@ -13,7 +13,7 @@ import {
   reserveCreditsForScan,
   releaseReservation,
 } from '@/lib/billing';
-import { ToolCategory } from '@/lib/tools/registry';
+import { ToolCategory, TOOL_COUNT } from '@/lib/tools/registry';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -60,8 +60,40 @@ interface Scan {
   };
 }
 
-// In-memory store (replace with Firebase in production)
-const scansStore = new Map<string, Scan>();
+// Firestore helper functions for scan persistence
+async function getScan(scanId: string): Promise<Scan | null> {
+  const db = getDb();
+  if (!db) {
+    logger.warn('Firestore not available, scan will not persist');
+    return null;
+  }
+  const doc = await db.collection(COLLECTIONS.SCANS).doc(scanId).get();
+  if (!doc.exists) return null;
+  return doc.data() as Scan;
+}
+
+async function saveScan(scan: Scan): Promise<void> {
+  const db = getDb();
+  if (!db) {
+    logger.warn('Firestore not available, scan will not persist');
+    return;
+  }
+  await db.collection(COLLECTIONS.SCANS).doc(scan.id).set(scan, { merge: true });
+}
+
+async function getScansForUser(userId: string, applicationId?: string | null): Promise<Scan[]> {
+  const db = getDb();
+  if (!db) {
+    logger.warn('Firestore not available');
+    return [];
+  }
+  let query = db.collection(COLLECTIONS.SCANS).where('userId', '==', userId);
+  if (applicationId) {
+    query = query.where('applicationId', '==', applicationId);
+  }
+  const snapshot = await query.orderBy('createdAt', 'desc').limit(100).get();
+  return snapshot.docs.map(doc => doc.data() as Scan);
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -198,13 +230,13 @@ export async function POST(request: NextRequest) {
       },
       createdAt: now,
       toolsCompleted: 0,
-      toolsTotal: 69,
+      toolsTotal: TOOL_COUNT,
       billing: {
         estimatedCredits: affordCheck.estimate.total,
       },
     };
 
-    scansStore.set(scanId, scan);
+    await saveScan(scan);
 
     // Start scan in background
     runScanInBackground(scanId, {
@@ -248,25 +280,15 @@ export async function GET(request: NextRequest) {
 
     // Get single scan by ID
     if (scanId) {
-      const scan = scansStore.get(scanId);
+      const scan = await getScan(scanId);
       if (!scan) {
         return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
       }
       return NextResponse.json({ scan });
     }
 
-    // Get all scans for user
-    let scans = Array.from(scansStore.values()).filter(
-      (scan) => scan.userId === userId
-    );
-
-    if (applicationId) {
-      scans = scans.filter((scan) => scan.applicationId === applicationId);
-    }
-
-    scans.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    // Get all scans for user (already filtered and sorted by Firestore)
+    const scans = await getScansForUser(userId, applicationId);
 
     return NextResponse.json({ scans });
   } catch (error) {
@@ -346,7 +368,7 @@ interface ScanOptions {
 }
 
 async function runScanInBackground(scanId: string, options: ScanOptions) {
-  const scan = scansStore.get(scanId);
+  const scan = await getScan(scanId);
   if (!scan) return;
 
   let tempDir: string | null = null;
@@ -356,7 +378,7 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
     // Update status to running
     scan.status = 'running';
     scan.startedAt = new Date().toISOString();
-    scansStore.set(scanId, scan);
+    await saveScan(scan);
 
     // Create temp directory
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'buggered-scan-'));
@@ -465,7 +487,7 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
       autoTopupCredits: billingResult.autoTopupCredits,
     };
 
-    scansStore.set(scanId, scan);
+    await saveScan(scan);
 
     logger.info('Scan completed', {
       scanId,
@@ -478,7 +500,7 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
     scan.status = 'failed';
     scan.error = error instanceof Error ? error.message : 'Unknown error';
     scan.completedAt = new Date().toISOString();
-    scansStore.set(scanId, scan);
+    await saveScan(scan);
 
     // Release the reserved credits since scan failed
     await releaseReservation(scanId);
@@ -629,12 +651,12 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Missing scanId' }, { status: 400 });
   }
 
-  const scan = scansStore.get(scanId);
+  const scan = await getScan(scanId);
   if (scan && scan.status === 'running') {
     scan.status = 'failed';
     scan.error = 'Cancelled by user';
     scan.completedAt = new Date().toISOString();
-    scansStore.set(scanId, scan);
+    await saveScan(scan);
 
     // Release the reserved credits
     await releaseReservation(scanId);

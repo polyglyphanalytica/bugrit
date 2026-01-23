@@ -13,8 +13,14 @@ import { ToolCategory } from '../tools/registry';
 import { ToolResult } from '../tools/runner';
 
 // Environment configuration
-const WORKER_URL = process.env.SCAN_WORKER_URL || 'https://bugrit-scan-worker-xxxxx.run.app';
+// SCAN_WORKER_URL must be set for browser-based tools to work
+const WORKER_URL = process.env.SCAN_WORKER_URL || '';
 const WORKER_SECRET = process.env.WORKER_SECRET || '';
+
+// Check if the worker is properly configured
+export function isWorkerConfigured(): boolean {
+  return !!(WORKER_URL && WORKER_SECRET);
+}
 const CALLBACK_URL = process.env.NEXT_PUBLIC_APP_URL
   ? `${process.env.NEXT_PUBLIC_APP_URL}/api/internal/scan-callback`
   : undefined;
@@ -96,6 +102,9 @@ export interface AccessibilityResponse {
  * Check if the worker service is available
  */
 export async function isWorkerAvailable(): Promise<boolean> {
+  if (!isWorkerConfigured()) {
+    return false;
+  }
   try {
     const response = await fetch(`${WORKER_URL}/health`, {
       method: 'GET',
@@ -113,6 +122,9 @@ export async function isWorkerAvailable(): Promise<boolean> {
  * Check if the worker is ready (Chromium available)
  */
 export async function isWorkerReady(): Promise<boolean> {
+  if (!isWorkerConfigured()) {
+    return false;
+  }
   try {
     const response = await fetch(`${WORKER_URL}/ready`, {
       method: 'GET',
@@ -377,8 +389,8 @@ export async function runHybridScan(
  */
 export function getWorkerConfig() {
   return {
-    url: WORKER_URL,
-    configured: !!WORKER_SECRET,
+    url: WORKER_URL || '(not configured)',
+    configured: isWorkerConfigured(),
     callbackUrl: CALLBACK_URL,
   };
 }
