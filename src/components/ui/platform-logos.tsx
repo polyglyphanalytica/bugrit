@@ -341,7 +341,7 @@ export function PlatformLogos() {
       <div className="mt-12 pt-8 border-t border-border/30">
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Bugrit is the vision of a Product and Tech leader who has worked at top global banks
+            Bugrit is the vision of a Product and Tech leader who has worked at Citi, JP Morgan, Barclays, Deutsche Bank, and Western Union
           </p>
         </div>
       </div>
