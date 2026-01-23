@@ -98,6 +98,25 @@ export interface AccessibilityResponse {
   inapplicable: number;
 }
 
+export interface Pa11yRequest {
+  scanId: string;
+  url: string;
+  standard?: 'WCAG2A' | 'WCAG2AA' | 'WCAG2AAA';
+}
+
+export interface Pa11yResponse {
+  scanId: string;
+  url: string;
+  pageTitle: string;
+  issues: Array<{
+    code: string;
+    type: 'error' | 'warning' | 'notice';
+    message: string;
+    context: string;
+    selector: string;
+  }>;
+}
+
 /**
  * Check if the worker service is available
  */
@@ -219,6 +238,33 @@ export async function runAccessibilityScan(
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
     throw new Error(error.error || `Accessibility scan failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Run Pa11y accessibility scan on the worker
+ */
+export async function runPa11yScan(
+  request: Pa11yRequest
+): Promise<Pa11yResponse> {
+  if (!WORKER_SECRET) {
+    throw new Error('WORKER_SECRET not configured');
+  }
+
+  const response = await fetch(`${WORKER_URL}/pa11y`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${WORKER_SECRET}`,
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || `Pa11y scan failed: ${response.status}`);
   }
 
   return response.json();

@@ -3,11 +3,21 @@
  *
  * Executes all 88 tools using a mix of npm packages and CLI execution.
  * CLI execution is used for tools with native bindings that can't be bundled.
+ *
+ * Browser-based tools (Lighthouse, axe-core, Pa11y) are delegated to the
+ * Cloud Run worker service when configured, since serverless environments
+ * don't have Chromium installed.
  */
 
 import { TOOL_REGISTRY, ToolDefinition } from './registry';
 import { execSync } from 'child_process';
 import { safeRequire } from '@/lib/utils/safe-require';
+import {
+  isWorkerConfigured,
+  runLighthouseScan,
+  runAccessibilityScan,
+  runPa11yScan,
+} from '@/lib/scanning/worker-client';
 
 export interface ToolResult {
   toolId: string;
@@ -893,7 +903,7 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   },
 
   // ─────────────────────────────────────────────────────────────
-  // axe-core (accessibility - requires URL, via CLI)
+  // axe-core (accessibility - requires URL, uses worker if configured)
   // ─────────────────────────────────────────────────────────────
   'axe-core': async ({ targetUrl }) => {
     if (!targetUrl) {
@@ -908,6 +918,37 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
     }
 
     const findings: Finding[] = [];
+
+    // Use worker service if configured (required for serverless environments)
+    if (isWorkerConfigured()) {
+      try {
+        const scanId = `axe-${Date.now()}`;
+        const result = await runAccessibilityScan({ scanId, url: targetUrl });
+
+        for (const violation of result.violations || []) {
+          findings.push({
+            id: `axe-${violation.id}`,
+            severity: violation.impact === 'critical' || violation.impact === 'serious' ? 'error' : 'warning',
+            message: `${violation.description} (${violation.nodes?.length || 0} instances)`,
+            rule: violation.id,
+            suggestion: violation.help,
+          });
+        }
+
+        return { findings, summary: summarizeFindings(findings) };
+      } catch (error) {
+        return {
+          findings: [{
+            id: 'axe-worker-error',
+            severity: 'warning' as const,
+            message: `Worker scan failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          }],
+          summary: { total: 1, errors: 0, warnings: 1, info: 0 },
+        };
+      }
+    }
+
+    // Fallback to local CLI (only works if Chromium is installed)
     const output = runCli(`npx axe ${targetUrl} --reporter json 2>/dev/null`, process.cwd());
 
     if (output) {
@@ -931,7 +972,7 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   },
 
   // ─────────────────────────────────────────────────────────────
-  // Pa11y (accessibility - requires URL, via CLI)
+  // Pa11y (accessibility - requires URL, uses worker if configured)
   // ─────────────────────────────────────────────────────────────
   'pa11y': async ({ targetUrl }) => {
     if (!targetUrl) {
@@ -946,6 +987,37 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
     }
 
     const findings: Finding[] = [];
+
+    // Use worker service if configured (required for serverless environments)
+    if (isWorkerConfigured()) {
+      try {
+        const scanId = `pa11y-${Date.now()}`;
+        const result = await runPa11yScan({ scanId, url: targetUrl });
+
+        for (const issue of result.issues || []) {
+          findings.push({
+            id: `pa11y-${issue.code}`,
+            severity: issue.type === 'error' ? 'error' : 'warning',
+            message: issue.message,
+            rule: issue.code,
+            suggestion: issue.context,
+          });
+        }
+
+        return { findings, summary: summarizeFindings(findings) };
+      } catch (error) {
+        return {
+          findings: [{
+            id: 'pa11y-worker-error',
+            severity: 'warning' as const,
+            message: `Worker scan failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          }],
+          summary: { total: 1, errors: 0, warnings: 1, info: 0 },
+        };
+      }
+    }
+
+    // Fallback to local CLI (only works if Chromium is installed)
     const output = runCli(`npx pa11y --reporter json ${targetUrl} 2>/dev/null`, process.cwd());
 
     if (output) {
@@ -1076,7 +1148,7 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   },
 
   // ─────────────────────────────────────────────────────────────
-  // Lighthouse (performance - requires URL, via CLI)
+  // Lighthouse (performance - requires URL, uses worker if configured)
   // ─────────────────────────────────────────────────────────────
   'lighthouse': async ({ targetUrl }) => {
     if (!targetUrl) {
@@ -1091,6 +1163,41 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
     }
 
     const findings: Finding[] = [];
+
+    // Use worker service if configured (required for serverless environments)
+    if (isWorkerConfigured()) {
+      try {
+        const scanId = `lighthouse-${Date.now()}`;
+        const result = await runLighthouseScan({ scanId, url: targetUrl });
+
+        // Process audits from worker response
+        for (const [id, audit] of Object.entries(result.audits || {})) {
+          const a = audit as { score?: number; title?: string; displayValue?: string; description?: string };
+          if (a.score !== null && a.score !== undefined && a.score < 0.9) {
+            findings.push({
+              id: `lighthouse-${id}`,
+              severity: a.score < 0.5 ? 'error' : 'warning',
+              message: `${a.title}: ${a.displayValue || 'Needs improvement'}`,
+              rule: id,
+              suggestion: a.description,
+            });
+          }
+        }
+
+        return { findings: findings.slice(0, 50), summary: summarizeFindings(findings) };
+      } catch (error) {
+        return {
+          findings: [{
+            id: 'lighthouse-worker-error',
+            severity: 'warning' as const,
+            message: `Worker scan failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          }],
+          summary: { total: 1, errors: 0, warnings: 1, info: 0 },
+        };
+      }
+    }
+
+    // Fallback to local CLI (only works if Chromium is installed)
     const output = runCli(
       `npx lighthouse ${targetUrl} --output=json --chrome-flags="--headless --no-sandbox" --only-categories=performance,accessibility,best-practices,seo 2>/dev/null`,
       process.cwd(),
