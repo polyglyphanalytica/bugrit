@@ -11,6 +11,7 @@ const navItems = [
     items: [
       { href: '/docs', label: 'Introduction' },
       { href: '/docs/getting-started', label: 'Quick Start' },
+      { href: '/docs/clever-automation', label: 'Clever Automation' },
       { href: '/docs/vibe-coding', label: 'Vibe Coding Prompts' },
       { href: '/docs/submitting-apps', label: 'Submitting Code' },
       { href: '/docs/authentication', label: 'Authentication' },
@@ -47,6 +48,7 @@ const navItems = [
       { href: '/docs/api-reference/projects', label: 'Projects' },
       { href: '/docs/api-reference/scans', label: 'Scans' },
       { href: '/docs/api-reference/sessions', label: 'Sessions (Real-Time)' },
+      { href: '/docs/api-reference/automations', label: 'Automations' },
       { href: '/docs/api-reference/tests', label: 'Tests' },
       { href: '/docs/api-reference/reports', label: 'Reports' },
       { href: '/docs/api-reference/billing', label: 'Billing' },

@@ -38,7 +38,9 @@ export type V1Permission =
   | 'tests:read'
   | 'tests:write'
   | 'reports:read'
-  | 'reports:write';
+  | 'reports:write'
+  | 'automations:read'
+  | 'automations:write';
 
 // Map v1 permissions to legacy permissions where applicable
 const PERMISSION_ALIASES: Record<V1Permission, ApiKeyPermission[]> = {
@@ -50,6 +52,8 @@ const PERMISSION_ALIASES: Record<V1Permission, ApiKeyPermission[]> = {
   'tests:write': ['scripts:submit', 'tests:write'],
   'reports:read': ['results:read', 'reports:read'],
   'reports:write': ['reports:write'],
+  'automations:read': ['projects:read', 'scans:read'],
+  'automations:write': ['projects:write', 'scans:write'],
 };
 
 // Rate limit tracking (in production, use Redis)
