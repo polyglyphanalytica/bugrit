@@ -1,0 +1,257 @@
+# Dependabot configuration for keeping ALL 115 tools up to date
+# This file manages the 37 NPM-based tools + 3 browser testing platforms
+# Docker-based tools (78) are updated via Cloud Build - see infra/update-tools.yaml
+
+version: 2
+updates:
+  # ═══════════════════════════════════════════════════════════════
+  # NPM Dependencies - Main Application
+  # Includes all 37 NPM-based tools + 3 browser testing platforms
+  # ═══════════════════════════════════════════════════════════════
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Los_Angeles"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "polyglyphanalytica"
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      prefix: "deps(npm):"
+
+    # Group related tools together to reduce PR noise
+    groups:
+      # Browser Testing Platforms (Critical - Lighthouse, axe-core, Pa11y)
+      browser-testing-tools:
+        patterns:
+          - "lighthouse"
+          - "@axe-core/*"
+          - "pa11y"
+          - "puppeteer"
+          - "playwright"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Security & Secret Detection Tools
+      security-tools:
+        patterns:
+          - "secretlint"
+          - "@secretlint/*"
+          - "better-npm-audit"
+          - "audit-ci"
+          - "lockfile-lint"
+          - "eslint-plugin-security"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Linting & Formatting Tools
+      linting-tools:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "@biomejs/*"
+          - "stylelint"
+          - "stylelint-*"
+          - "prettier"
+          - "markdownlint"
+          - "markdownlint-*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Code Quality Tools
+      quality-tools:
+        patterns:
+          - "typescript"
+          - "knip"
+          - "jscpd"
+          - "cspell"
+          - "publint"
+          - "madge"
+          - "depcheck"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Dependency Analysis Tools
+      dependency-tools:
+        patterns:
+          - "license-checker-rseidelsohn"
+          - "dependency-cruiser"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Documentation Tools
+      documentation-tools:
+        patterns:
+          - "alex"
+          - "remark-*"
+          - "@commitlint/*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Performance Tools
+      performance-tools:
+        patterns:
+          - "size-limit"
+          - "@size-limit/*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # React & UI Components
+      react-ui:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@radix-ui/*"
+          - "recharts"
+          - "lucide-react"
+          - "embla-carousel-*"
+          - "tailwind-*"
+          - "class-variance-authority"
+          - "clsx"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Next.js & Framework
+      nextjs:
+        patterns:
+          - "next"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Firebase & Cloud
+      firebase-cloud:
+        patterns:
+          - "firebase"
+          - "firebase-admin"
+          - "@google-cloud/*"
+          - "googleapis"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # AI / Genkit
+      genkit-ai:
+        patterns:
+          - "genkit"
+          - "genkit-*"
+          - "@genkit-ai/*"
+        update-types:
+          - "minor"
+          - "patch"
+
+      # Build & Dev Tools
+      build-tools:
+        patterns:
+          - "@types/*"
+          - "postcss"
+          - "tailwindcss"
+          - "vitest"
+          - "@vitest/*"
+          - "sharp"
+        update-types:
+          - "minor"
+          - "patch"
+
+    # Ignore specific packages that need manual review
+    ignore:
+      # Major version bumps require manual testing
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "firebase"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "firebase-admin"
+        update-types: ["version-update:semver-major"]
+
+  # ═══════════════════════════════════════════════════════════════
+  # GitHub Actions Workflows
+  # ═══════════════════════════════════════════════════════════════
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Los_Angeles"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "deps(actions):"
+
+# ═══════════════════════════════════════════════════════════════
+# TOOL COVERAGE SUMMARY
+# ═══════════════════════════════════════════════════════════════
+#
+# This Dependabot config covers 40 tools via npm updates:
+#
+# Browser Testing Platforms (3):
+#   - lighthouse: Performance, SEO, best practices audit
+#   - @axe-core/cli, @axe-core/puppeteer: WCAG accessibility testing
+#   - pa11y: Automated accessibility testing
+#   - puppeteer: Browser automation (required by above)
+#   - playwright: Cross-browser testing
+#
+# Security Tools (6):
+#   - secretlint: Detect hardcoded secrets
+#   - better-npm-audit: npm vulnerability scanning
+#   - audit-ci: CI-friendly npm audit
+#   - lockfile-lint: Lockfile security policies
+#   - eslint-plugin-security: ESLint security rules
+#
+# Linting Tools (5):
+#   - eslint: JavaScript/TypeScript linting
+#   - @biomejs/biome: Fast JS/TS linting
+#   - stylelint: CSS/SCSS linting
+#   - prettier: Code formatting
+#   - markdownlint-cli: Markdown linting
+#
+# Code Quality Tools (7):
+#   - typescript: Type checking
+#   - knip: Unused files/exports detection
+#   - jscpd: Copy-paste detection
+#   - cspell: Spell checking
+#   - publint: Package publishing lint
+#   - madge: Circular dependency detection
+#   - depcheck: Unused dependencies
+#
+# Dependency Tools (2):
+#   - license-checker-rseidelsohn: License auditing
+#   - dependency-cruiser: Dependency validation
+#
+# Documentation Tools (3):
+#   - alex: Insensitive writing checker
+#   - remark-cli: Markdown linting
+#   - @commitlint/cli: Commit message linting
+#
+# Performance Tools (2):
+#   - size-limit: Bundle size monitoring
+#
+# The remaining 78 Docker-based tools are updated via:
+#   - infra/update-tools.yaml (Cloud Build weekly job)
+#
+# Runtime-updating tools (no action needed):
+#   - Trivy, Grype: Download CVE databases at scan time
+#   - Semgrep: Fetches rules from registry at runtime
+#   - Nuclei: Downloads templates at scan time

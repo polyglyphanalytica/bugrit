@@ -74,20 +74,105 @@ gcloud run deploy bugrit-worker \
 
 ## Tool Updates (Ongoing)
 
-### Automatic (No Action)
-- Trivy, Grype: Download fresh CVE databases on each scan
-- Semgrep: Fetches rules from registry at runtime
+Bugrit uses **118 tools total**: 115 scanning tools + 3 browser testing platforms.
 
-### Weekly (Scheduled)
+### Update Strategy by Category
+
+| Category | Count | Update Mechanism | Frequency |
+|----------|-------|------------------|-----------|
+| Docker-based tools | 78 | Cloud Build (`infra/update-tools.yaml`) | Weekly (automated) |
+| NPM-based tools | 37 | Dependabot (`.github/dependabot.yml`) | Weekly (PRs) |
+| Browser testing (Lighthouse, axe, Pa11y) | 3 | Dependabot + Worker rebuild | Weekly |
+| Runtime-updating | 4 | Self-updating at scan time | Automatic |
+
+### Automatic (No Action Required)
+
+These tools download fresh databases/rules at scan time:
+- **Trivy**: Downloads CVE databases before each scan
+- **Grype**: Downloads vulnerability database before each scan
+- **Semgrep**: Fetches rules from registry at runtime
+- **Nuclei**: Downloads community templates at scan time
+
+### Weekly: Docker Images (Cloud Build)
+
+The `infra/update-tools.yaml` pulls 65 Docker images covering all 78 Docker-based tools.
+
 ```bash
-# Set up Cloud Scheduler to run infra/update-tools.yaml
+# One-time setup: Create Cloud Scheduler job
 gcloud scheduler jobs create http update-security-tools \
   --schedule="0 3 * * 0" \
   --uri="https://cloudbuild.googleapis.com/v1/projects/PROJECT/triggers/update-tools:run" \
-  --http-method=POST
+  --http-method=POST \
+  --oidc-service-account-email=YOUR_SERVICE_ACCOUNT@PROJECT.iam.gserviceaccount.com
 ```
 
-### Monthly (Dependabot)
-- [ ] Enable Dependabot for npm package updates
-- [ ] Review and merge security tool updates
-- [ ] Test scans after major version updates
+**Tools covered by Cloud Build updates:**
+
+Security (20): semgrep, gitleaks, trivy, grype, nuclei, checkov, trufflehog, bearer, owasp-zap, dependency-check, osv-scanner, clair, falco, cosign, bandit, gosec, brakeman, slither, infer, garak
+
+Container/IaC (5): tfsec, dockle, hadolint, kics, terrascan
+
+Cloud Native/K8s (6): kubesec, kube-bench, polaris, kube-hunter, prowler, steampipe
+
+Code Quality (20): codeclimate, sonar-scanner, phpstan, psalm, spotbugs, pmd, checkstyle, detekt, ktlint, scalafmt, scalafix, golangci-lint, ruff, cppcheck, shellcheck, actionlint, yamllint, sqlfluff, vale, buf
+
+Mobile (2): mobsf, swiftlint
+
+Performance (1): sitespeed
+
++ 9 base images (python, rust, ruby, node, dart, elixir, haskell) for pip/gem/cargo tools
+
+### Weekly: NPM Packages (Dependabot)
+
+The `.github/dependabot.yml` manages 40 npm packages including:
+
+**Browser Testing Platforms (3):**
+- `lighthouse` - Performance, SEO, best practices
+- `@axe-core/cli`, `@axe-core/puppeteer` - WCAG accessibility
+- `pa11y` - Automated accessibility testing
+
+**Security Tools (6):** secretlint, better-npm-audit, audit-ci, lockfile-lint, eslint-plugin-security
+
+**Linting Tools (5):** eslint, @biomejs/biome, stylelint, prettier, markdownlint
+
+**Code Quality (7):** typescript, knip, jscpd, cspell, publint, madge, depcheck
+
+**Dependency Tools (2):** license-checker, dependency-cruiser
+
+**Documentation (3):** alex, remark-cli, @commitlint/cli
+
+**Performance (2):** size-limit, @size-limit/preset-small-lib
+
+Dependabot + Auto-merge is configured to:
+- Group related tools to reduce PR noise
+- Run weekly on Mondays at 9am PT
+- **Auto-merge** minor and patch updates (no manual action needed)
+- **Auto-test** before merging (typecheck, tests, build)
+- Label major updates for manual review
+
+### Fully Automated Weekly Schedule
+
+| Day | Time | What Happens |
+|-----|------|--------------|
+| Sunday | 3:00 AM | Cloud Build pulls 65 Docker images, rebuilds worker |
+| Monday | 9:00 AM | Dependabot opens PRs for 40 npm packages |
+| Monday | ~9:15 AM | Auto-merge workflow tests and merges minor/patch PRs |
+
+**No manual intervention required** for routine updates. The only items needing review are:
+- Major version bumps (labeled `major-update, needs-review`)
+- Failed build/test runs
+
+### Manual Review Required (Major Updates Only)
+
+Major version bumps for these packages get labeled for manual review:
+- `next` (framework changes)
+- `react`, `react-dom` (UI breaking changes)
+- `typescript` (type checking changes)
+- `firebase`, `firebase-admin` (auth/database changes)
+
+### Monitoring Automated Updates
+
+Check these weekly to ensure automation is working:
+- [ ] GitHub Actions: Verify Dependabot PRs are auto-merging
+- [ ] Cloud Build: Check `update-security-tools` job succeeded
+- [ ] Cloud Run: Verify worker redeployed with latest tools
