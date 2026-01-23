@@ -221,6 +221,191 @@ function detectLanguage(filePath: string): string {
 }
 
 /**
+ * Generate AI agent prompt for reviewing and merging a fix branch
+ *
+ * This prompt guides an AI coding agent (Claude, Cursor, Copilot, etc.)
+ * to verify the fix branch, confirm it resolves the issues, and merge it.
+ */
+export function generateReviewMergePrompt(options: {
+  repoUrl: string;
+  baseBranch: string;
+  fixBranch: string;
+  scanId: string;
+  findings: Array<{
+    id: string;
+    severity: string;
+    title: string;
+    file?: string;
+    line?: number;
+  }>;
+  prUrl?: string;
+}): string {
+  const { repoUrl, baseBranch, fixBranch, scanId, findings, prUrl } = options;
+
+  const criticalCount = findings.filter(f => f.severity === 'critical').length;
+  const highCount = findings.filter(f => f.severity === 'high').length;
+  const mediumCount = findings.filter(f => f.severity === 'medium').length;
+  const lowCount = findings.filter(f => f.severity === 'low').length;
+
+  const findingsList = findings
+    .slice(0, 20) // Limit to first 20 for prompt size
+    .map((f, i) => {
+      let line = `${i + 1}. [${f.severity.toUpperCase()}] ${f.title}`;
+      if (f.file) line += ` in \`${f.file}\``;
+      if (f.line) line += `:${f.line}`;
+      return line;
+    })
+    .join('\n');
+
+  const remainingCount = findings.length - 20;
+
+  return `# Review and Merge Bugrit Fix Branch
+
+Bugrit has automatically generated fixes for security and quality issues found in scan \`${scanId}\`.
+
+## Repository Information
+- **Repository**: ${repoUrl}
+- **Base Branch**: \`${baseBranch}\`
+- **Fix Branch**: \`${fixBranch}\`
+${prUrl ? `- **Pull Request**: ${prUrl}` : ''}
+
+## Issues Fixed (${findings.length} total)
+- Critical: ${criticalCount}
+- High: ${highCount}
+- Medium: ${mediumCount}
+- Low: ${lowCount}
+
+### Finding Details
+${findingsList}
+${remainingCount > 0 ? `\n... and ${remainingCount} more issues` : ''}
+
+## Your Task
+
+Please review the fix branch and merge it if all checks pass.
+
+### Step 1: Fetch and Review the Branch
+
+\`\`\`bash
+git fetch origin ${fixBranch}
+git diff ${baseBranch}...origin/${fixBranch}
+\`\`\`
+
+Review each change and verify:
+- [ ] The fix addresses the specific issue mentioned
+- [ ] No new security vulnerabilities are introduced
+- [ ] Code style matches the existing codebase
+- [ ] No unrelated changes are included
+
+### Step 2: Run Tests Locally
+
+\`\`\`bash
+git checkout ${fixBranch}
+npm install  # or your package manager
+npm test     # run test suite
+npm run build  # ensure it builds
+\`\`\`
+
+Verify:
+- [ ] All existing tests pass
+- [ ] The build completes without errors
+- [ ] No new TypeScript/lint errors introduced
+
+### Step 3: Verify Fixes Are Effective
+
+For each critical/high severity issue, confirm the fix actually resolves it:
+
+${findings
+  .filter(f => f.severity === 'critical' || f.severity === 'high')
+  .slice(0, 10)
+  .map(f => `- [ ] **${f.title}**${f.file ? ` in \`${f.file}\`` : ''}: Verify the vulnerable pattern is removed`)
+  .join('\n')}
+
+### Step 4: Merge the Branch
+
+If all checks pass:
+
+\`\`\`bash
+git checkout ${baseBranch}
+git merge origin/${fixBranch} --no-ff -m "fix: apply Bugrit security fixes from scan ${scanId}
+
+Fixes ${findings.length} issues:
+- ${criticalCount} critical
+- ${highCount} high
+- ${mediumCount} medium
+- ${lowCount} low
+
+Scan: https://bugrit.dev/scans/${scanId}"
+git push origin ${baseBranch}
+\`\`\`
+
+### Step 5: Report Back
+
+After merging (or if issues are found), provide a summary:
+
+1. **Merge Status**: Success / Failed / Needs Manual Review
+2. **Issues Found** (if any): List any problems with the fixes
+3. **Test Results**: Pass / Fail (with details)
+4. **Recommendations**: Any follow-up actions needed
+
+## Important Notes
+
+- **Do NOT merge** if any test fails or if you find issues with the fixes
+- If a fix looks incorrect, document the problem and skip that specific change
+- You can cherry-pick individual commits if some fixes are good and others need work
+- After merging, the next Bugrit scan will verify the issues are resolved
+
+## Need Help?
+
+If you encounter issues:
+- View full scan details: https://bugrit.dev/scans/${scanId}
+- Re-run specific tool: Use Bugrit dashboard to re-scan specific tools
+- Contact support: https://bugrit.dev/support
+`;
+}
+
+/**
+ * Generate a shorter AI agent prompt for quick review
+ */
+export function generateQuickReviewPrompt(options: {
+  repoUrl: string;
+  baseBranch: string;
+  fixBranch: string;
+  findingCount: number;
+  criticalCount: number;
+  highCount: number;
+}): string {
+  const { repoUrl, baseBranch, fixBranch, findingCount, criticalCount, highCount } = options;
+
+  return `# Quick Review: Bugrit Fix Branch
+
+Review and merge the automated fixes from Bugrit.
+
+**Repo**: ${repoUrl}
+**Fix Branch**: \`${fixBranch}\` → \`${baseBranch}\`
+**Fixes**: ${findingCount} issues (${criticalCount} critical, ${highCount} high)
+
+## Commands
+
+\`\`\`bash
+# 1. Review changes
+git fetch origin ${fixBranch}
+git diff ${baseBranch}...origin/${fixBranch}
+
+# 2. Test locally
+git checkout ${fixBranch}
+npm test && npm run build
+
+# 3. Merge if tests pass
+git checkout ${baseBranch}
+git merge origin/${fixBranch} --no-ff -m "fix: apply Bugrit security fixes"
+git push origin ${baseBranch}
+\`\`\`
+
+Verify each fix addresses the actual issue before merging. Do not merge if tests fail.
+`;
+}
+
+/**
  * Generate a combined fix prompt for copying to AI assistants
  */
 export function generateCopyablePrompt(
