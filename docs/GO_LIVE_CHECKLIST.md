@@ -213,7 +213,69 @@ Complete these checks before accepting production traffic.
 
 ---
 
-## 10. Launch Day Checklist
+## 10. Deployment Infrastructure Setup
+
+### GitHub Repository Secrets
+- [ ] Add `GCP_PROJECT_ID` - Your Google Cloud project ID
+- [ ] Add `GCP_SA_KEY` - Service account JSON key (base64 encoded)
+- [ ] Add `FIREBASE_SERVICE_ACCOUNT` - Firebase service account JSON key
+
+### Enable Google Cloud APIs
+- [ ] Enable Cloud Build API: `gcloud services enable cloudbuild.googleapis.com`
+- [ ] Enable Cloud Run API: `gcloud services enable run.googleapis.com`
+- [ ] Enable Artifact Registry API: `gcloud services enable artifactregistry.googleapis.com`
+- [ ] Enable Secret Manager API: `gcloud services enable secretmanager.googleapis.com`
+- [ ] Enable Firebase Hosting API: `gcloud services enable firebasehosting.googleapis.com`
+
+### Create Artifact Registry Repository
+- [ ] Create Docker repository for container images:
+  ```bash
+  gcloud artifacts repositories create bugrit \
+    --repository-format=docker \
+    --location=us-central1 \
+    --description="Bugrit Docker images"
+  ```
+
+### Secret Manager Setup
+- [ ] Create `FIREBASE_API_KEY` secret
+- [ ] Create `FIREBASE_SERVICE_ACCOUNT_KEY` secret
+- [ ] Create `ADMIN_ENCRYPTION_KEY` secret
+- [ ] Create `STRIPE_SECRET_KEY` secret
+- [ ] Create `STRIPE_WEBHOOK_SECRET` secret
+- [ ] Create any additional secrets referenced in apphosting.yaml
+
+### IAM Permissions for Cloud Build Service Account
+- [ ] Grant Cloud Run Admin role
+- [ ] Grant Service Account User role
+- [ ] Grant Secret Manager Secret Accessor role
+- [ ] Grant Artifact Registry Writer role
+- [ ] Grant Storage Admin role (for scan output bucket)
+
+### Firebase Configuration
+- [ ] Verify `.firebaserc` has correct project ID
+- [ ] Deploy Firestore rules: `npm run deploy:firestore`
+- [ ] Test Firebase emulators work: `npm run emulators`
+
+### Cloud Run Service Configuration
+- [ ] Verify service name matches `bugrit` in cloudbuild.yaml
+- [ ] Verify region is set correctly (default: us-central1)
+- [ ] Configure custom domain mapping (if needed)
+- [ ] Set up SSL certificate for custom domain
+
+### Test Deployments
+- [ ] Test local build: `npm run build`
+- [ ] Test Cloud Build deployment: `npm run deploy:cloudrun`
+- [ ] Test Firebase Hosting deployment: `npm run deploy:hosting`
+- [ ] Verify GitHub Actions workflow runs on push to main
+
+### Verify Deployment URLs
+- [ ] Cloud Run service is accessible
+- [ ] Firebase Hosting serves static assets
+- [ ] All rewrites to Cloud Run work correctly
+
+---
+
+## 11. Launch Day Checklist
 
 ### Before Launch
 - [ ] DNS pointing to production
