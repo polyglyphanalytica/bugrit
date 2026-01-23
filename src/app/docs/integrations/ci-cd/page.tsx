@@ -1,13 +1,66 @@
+'use client';
+
+import { VibePromptTabs } from '@/components/docs/vibe-prompt';
+
 export default function CICDIntegrationPage() {
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-4xl font-bold mb-4">CI/CD Integration</h1>
         <p className="text-lg text-muted-foreground">
-          Automatically trigger Bugrit scans from your CI/CD pipeline. Get unified
-          reports on every push, pull request, or release.
+          Automatically scan your code on every push, PR, or release.
         </p>
       </div>
+
+      {/* Vibe Coding Prompts First */}
+      <VibePromptTabs
+        prompts={[
+          {
+            label: 'GitHub Actions',
+            description: 'Scan on every PR',
+            prompt: `Read the Bugrit CI/CD docs at https://bugrit.com/docs/integrations/ci-cd
+
+Create a GitHub Action that scans on every PR:
+
+1. Trigger on: pull_request to main
+2. POST to /api/v1/scans with GitHub repo info
+3. Poll until scan completes
+4. Add PR comment with scan summary
+5. FAIL if critical issues found
+
+Use secrets.BUGRIT_API_KEY and secrets.BUGRIT_APP_ID.`
+          },
+          {
+            label: 'GitLab CI',
+            description: 'Scan in GitLab pipeline',
+            prompt: `Read the Bugrit CI/CD docs at https://bugrit.com/docs/integrations/ci-cd
+
+Create a GitLab CI job that scans my code:
+
+1. Add job to .gitlab-ci.yml
+2. POST to /api/v1/scans with GitLab repo info
+3. Poll until scan completes
+4. Block merge if critical issues found
+
+Use CI variables: BUGRIT_API_KEY, BUGRIT_APP_ID.`
+          },
+          {
+            label: 'Quality Gate',
+            description: 'Block bad deploys',
+            prompt: `Read the Bugrit CI/CD docs at https://bugrit.com/docs/integrations/ci-cd
+
+Add a quality gate to my pipeline:
+
+1. After Bugrit scan completes
+2. Check summary.critical and summary.high
+3. FAIL if critical > 0
+4. FAIL if high > 5
+5. Print summary of findings
+
+My CI: [GitHub Actions / GitLab CI / CircleCI / Jenkins]`
+          },
+        ]}
+      />
 
       {/* Why This Matters */}
       <div className="p-6 bg-primary/10 border-2 border-primary/30 rounded-xl">
@@ -15,33 +68,49 @@ export default function CICDIntegrationPage() {
           <span>💡</span> Why This Matters
         </h2>
         <p className="text-muted-foreground mb-4">
-          Manual security checks get skipped when you&apos;re rushing to ship. CI/CD integration means every single deploy gets scanned automatically—no human discipline required.
+          Manual security checks get skipped when you&apos;re rushing. CI/CD integration means
+          every deploy gets scanned automatically—no human discipline required.
         </p>
         <ul className="space-y-2 text-sm">
           <li className="flex items-start gap-2">
             <span className="text-primary">→</span>
-            <span><strong>Never forget to scan:</strong> Scans run automatically on every push, PR, or release</span>
+            <span><strong>Never forget:</strong> Scans run automatically on every push</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">→</span>
-            <span><strong>Quality gates:</strong> Block deploys when critical vulnerabilities are found—before they reach production</span>
+            <span><strong>Quality gates:</strong> Block deploys when critical issues found</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">→</span>
-            <span><strong>Works everywhere:</strong> GitHub Actions, GitLab CI, CircleCI, Jenkins—we have examples for all of them</span>
+            <span><strong>Works everywhere:</strong> GitHub, GitLab, CircleCI, Jenkins</span>
           </li>
         </ul>
       </div>
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4">GitHub Actions</h2>
-        <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`# .github/workflows/buggered.yml
+      {/* Secrets Setup */}
+      <div className="p-4 bg-muted/50 rounded-xl">
+        <h3 className="font-semibold mb-3">Required Secrets</h3>
+        <ul className="space-y-2 text-sm text-muted-foreground">
+          <li><code className="bg-muted px-1 py-0.5 rounded">BUGRIT_API_KEY</code> - From Settings → API Keys</li>
+          <li><code className="bg-muted px-1 py-0.5 rounded">BUGRIT_APP_ID</code> - From your application dashboard</li>
+        </ul>
+      </div>
+
+      {/* Technical Reference - Collapsed */}
+      <details className="border rounded-xl overflow-hidden">
+        <summary className="p-4 cursor-pointer font-semibold hover:bg-muted/50">
+          Configuration Examples
+        </summary>
+        <div className="p-4 bg-muted/30 space-y-6">
+          <div>
+            <h3 className="font-semibold mb-3">GitHub Actions</h3>
+            <div className="bg-muted p-4 rounded-lg overflow-x-auto">
+              <pre className="text-sm">{`# .github/workflows/bugrit.yml
 name: Bugrit Scan
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -51,77 +120,63 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Trigger Bugrit Scan
+      - name: Trigger Scan
         run: |
           curl -X POST https://bugrit.com/api/v1/scans \\
-            -H "Authorization: Bearer \${{ secrets.BUGGERED_API_KEY }}" \\
+            -H "Authorization: Bearer \${{ secrets.BUGRIT_API_KEY }}" \\
             -H "Content-Type: application/json" \\
             -d '{
-              "applicationId": "\${{ secrets.BUGGERED_APP_ID }}",
+              "applicationId": "\${{ secrets.BUGRIT_APP_ID }}",
               "sourceType": "github",
               "repoUrl": "https://github.com/\${{ github.repository }}",
-              "branch": "\${{ github.ref_name }}",
-              "commitSha": "\${{ github.sha }}"
+              "branch": "\${{ github.ref_name }}"
             }' | tee response.json
 
           SCAN_ID=$(jq -r '.scan.id' response.json)
           echo "SCAN_ID=$SCAN_ID" >> $GITHUB_ENV
 
-      - name: Wait for Scan Completion
+      - name: Wait for Completion
         run: |
           while true; do
-            STATUS=$(curl -s -H "Authorization: Bearer \${{ secrets.BUGGERED_API_KEY }}" \\
+            STATUS=$(curl -s -H "Authorization: Bearer \${{ secrets.BUGRIT_API_KEY }}" \\
               "https://bugrit.com/api/v1/scans/\$SCAN_ID" | jq -r '.scan.status')
-
-            if [ "$STATUS" = "completed" ]; then
-              echo "Scan completed successfully"
-              break
-            elif [ "$STATUS" = "failed" ]; then
-              echo "Scan failed"
-              exit 1
-            fi
-
-            echo "Scan status: $STATUS - waiting..."
+            [ "$STATUS" = "completed" ] && break
+            [ "$STATUS" = "failed" ] && exit 1
             sleep 10
           done
 
-      - name: Check for Critical Findings
+      - name: Check Findings
         run: |
-          CRITICAL=$(curl -s -H "Authorization: Bearer \${{ secrets.BUGGERED_API_KEY }}" \\
+          CRITICAL=$(curl -s -H "Authorization: Bearer \${{ secrets.BUGRIT_API_KEY }}" \\
             "https://bugrit.com/api/v1/scans/\$SCAN_ID" | jq -r '.scan.summary.critical')
+          [ "$CRITICAL" -gt 0 ] && exit 1 || exit 0`}</pre>
+            </div>
+          </div>
 
-          if [ "$CRITICAL" -gt 0 ]; then
-            echo "::error::Found $CRITICAL critical issues"
-            exit 1
-          fi`}</pre>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-2xl font-bold mb-4">GitLab CI</h2>
-        <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`# .gitlab-ci.yml
-buggered-scan:
+          <div>
+            <h3 className="font-semibold mb-3">GitLab CI</h3>
+            <div className="bg-muted p-4 rounded-lg overflow-x-auto">
+              <pre className="text-sm">{`# .gitlab-ci.yml
+bugrit-scan:
   image: alpine:latest
   before_script:
     - apk add --no-cache curl jq
   script:
     - |
       RESPONSE=$(curl -X POST https://bugrit.com/api/v1/scans \\
-        -H "Authorization: Bearer $BUGGERED_API_KEY" \\
+        -H "Authorization: Bearer $BUGRIT_API_KEY" \\
         -H "Content-Type: application/json" \\
         -d '{
-          "applicationId": "'$BUGGERED_APP_ID'",
+          "applicationId": "'$BUGRIT_APP_ID'",
           "sourceType": "gitlab",
           "repoUrl": "'$CI_PROJECT_URL'",
-          "branch": "'$CI_COMMIT_REF_NAME'",
-          "commitSha": "'$CI_COMMIT_SHA'"
+          "branch": "'$CI_COMMIT_REF_NAME'"
         }')
       SCAN_ID=$(echo $RESPONSE | jq -r '.scan.id')
 
       # Poll for completion
       while true; do
-        STATUS=$(curl -s -H "Authorization: Bearer $BUGGERED_API_KEY" \\
+        STATUS=$(curl -s -H "Authorization: Bearer $BUGRIT_API_KEY" \\
           "https://bugrit.com/api/v1/scans/$SCAN_ID" | jq -r '.scan.status')
         [ "$STATUS" = "completed" ] && break
         [ "$STATUS" = "failed" ] && exit 1
@@ -130,16 +185,16 @@ buggered-scan:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == "main"`}</pre>
-        </div>
-      </section>
+            </div>
+          </div>
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4">CircleCI</h2>
-        <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`# .circleci/config.yml
+          <div>
+            <h3 className="font-semibold mb-3">CircleCI</h3>
+            <div className="bg-muted p-4 rounded-lg overflow-x-auto">
+              <pre className="text-sm">{`# .circleci/config.yml
 version: 2.1
 jobs:
-  buggered-scan:
+  bugrit-scan:
     docker:
       - image: cimg/base:stable
     steps:
@@ -148,111 +203,27 @@ jobs:
           name: Trigger Bugrit Scan
           command: |
             curl -X POST https://bugrit.com/api/v1/scans \\
-              -H "Authorization: Bearer \${BUGGERED_API_KEY}" \\
+              -H "Authorization: Bearer \${BUGRIT_API_KEY}" \\
               -H "Content-Type: application/json" \\
               -d '{
-                "applicationId": "'\${BUGGERED_APP_ID}'",
+                "applicationId": "'\${BUGRIT_APP_ID}'",
                 "sourceType": "github",
                 "repoUrl": "https://github.com/'\${CIRCLE_PROJECT_USERNAME}'/'\${CIRCLE_PROJECT_REPONAME}'",
-                "branch": "'\${CIRCLE_BRANCH}'",
-                "commitSha": "'\${CIRCLE_SHA1}'"
+                "branch": "'\${CIRCLE_BRANCH}'"
               }'
 
 workflows:
   scan-on-push:
     jobs:
-      - buggered-scan`}</pre>
-        </div>
-      </section>
+      - bugrit-scan`}</pre>
+            </div>
+          </div>
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Jenkins</h2>
-        <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`// Jenkinsfile
-pipeline {
-    agent any
-
-    environment {
-        BUGGERED_API_KEY = credentials('buggered-api-key')
-        BUGGERED_APP_ID = credentials('buggered-app-id')
-    }
-
-    stages {
-        stage('Bugrit Scan') {
-            steps {
-                script {
-                    def response = sh(
-                        script: """
-                            curl -X POST https://bugrit.com/api/v1/scans \\
-                              -H "Authorization: Bearer \${BUGGERED_API_KEY}" \\
-                              -H "Content-Type: application/json" \\
-                              -d '{
-                                "applicationId": "\${BUGGERED_APP_ID}",
-                                "sourceType": "github",
-                                "repoUrl": "\${env.GIT_URL}",
-                                "branch": "\${env.GIT_BRANCH}",
-                                "commitSha": "\${env.GIT_COMMIT}"
-                              }'
-                        """,
-                        returnStdout: true
-                    )
-                    echo "Scan triggered: \${response}"
-                }
-            }
-        }
-    }
-}`}</pre>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Setting Up Secrets</h2>
-        <p className="text-muted-foreground mb-4">
-          Store your Bugrit credentials securely in your CI provider:
-        </p>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-2 px-2">CI Service</th>
-              <th className="text-left py-2 px-2">Where to Add Secrets</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b">
-              <td className="py-2 px-2">GitHub Actions</td>
-              <td className="py-2 px-2 text-muted-foreground">Settings → Secrets and variables → Actions</td>
-            </tr>
-            <tr className="border-b">
-              <td className="py-2 px-2">GitLab CI</td>
-              <td className="py-2 px-2 text-muted-foreground">Settings → CI/CD → Variables</td>
-            </tr>
-            <tr className="border-b">
-              <td className="py-2 px-2">CircleCI</td>
-              <td className="py-2 px-2 text-muted-foreground">Project Settings → Environment Variables</td>
-            </tr>
-            <tr>
-              <td className="py-2 px-2">Jenkins</td>
-              <td className="py-2 px-2 text-muted-foreground">Manage Jenkins → Manage Credentials</td>
-            </tr>
-          </tbody>
-        </table>
-        <p className="text-muted-foreground mt-4">
-          Required secrets:
-        </p>
-        <ul className="list-disc list-inside text-muted-foreground mt-2">
-          <li><code>BUGGERED_API_KEY</code> - Your API key from Settings → API Keys</li>
-          <li><code>BUGGERED_APP_ID</code> - Your application ID from the dashboard</li>
-        </ul>
-      </section>
-
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Quality Gates</h2>
-        <p className="text-muted-foreground mb-4">
-          Block deployments when critical issues are found:
-        </p>
-        <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`# Check scan results and fail if critical issues exist
-SUMMARY=$(curl -s -H "Authorization: Bearer $BUGGERED_API_KEY" \\
+          <div>
+            <h3 className="font-semibold mb-3">Quality Gate Script</h3>
+            <div className="bg-muted p-4 rounded-lg overflow-x-auto">
+              <pre className="text-sm">{`# Check results and fail if critical issues exist
+SUMMARY=$(curl -s -H "Authorization: Bearer $BUGRIT_API_KEY" \\
   "https://bugrit.com/api/v1/scans/$SCAN_ID")
 
 CRITICAL=$(echo $SUMMARY | jq -r '.scan.summary.critical')
@@ -269,16 +240,42 @@ if [ "$HIGH" -gt 5 ]; then
 fi
 
 echo "Quality gate passed"`}</pre>
-        </div>
-      </section>
+            </div>
+          </div>
 
-      <section>
-        <h2 className="text-2xl font-bold mb-4">Webhook Notifications</h2>
-        <p className="text-muted-foreground mb-4">
-          Instead of polling, configure webhooks to be notified when scans complete.
-          Set this up in your application settings on the Bugrit dashboard.
-        </p>
-      </section>
+          <div>
+            <h3 className="font-semibold mb-3">Where to Add Secrets</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-2">CI Service</th>
+                    <th className="text-left py-2 px-2">Location</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b">
+                    <td className="py-2 px-2">GitHub Actions</td>
+                    <td className="py-2 px-2 text-muted-foreground">Settings → Secrets → Actions</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 px-2">GitLab CI</td>
+                    <td className="py-2 px-2 text-muted-foreground">Settings → CI/CD → Variables</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 px-2">CircleCI</td>
+                    <td className="py-2 px-2 text-muted-foreground">Project Settings → Environment Variables</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 px-2">Jenkins</td>
+                    <td className="py-2 px-2 text-muted-foreground">Manage Jenkins → Credentials</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </details>
     </div>
   );
 }
