@@ -79,7 +79,7 @@ export default function ProjectsApiPage() {
                 Automatically create a Bugrit project if it doesn&apos;t exist when you deploy.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Projects API at https://bugrit.dev/docs/api-reference/projects
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Projects API at https://bugrit.com/docs/api-reference/projects
 
 Add logic to automatically create a Bugrit project if one doesn't exist:
 
@@ -97,7 +97,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Projects API at https://bugrit.dev/docs/api-reference/projects
+                onClick={() => copyToClipboard(`Read the Bugrit Projects API at https://bugrit.com/docs/api-reference/projects
 
 Add logic to automatically create a Bugrit project if one doesn't exist:
 
@@ -124,7 +124,7 @@ My stack: [YOUR_STACK]`)}
                 <div>
                   <h4 className="font-semibold mb-2">Create Project Example</h4>
                   <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-                    <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/projects \\
+                    <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/projects \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -150,8 +150,8 @@ My stack: [YOUR_STACK]`)}
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
                 <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read these Bugrit API docs:
-- Projects: https://bugrit.dev/docs/api-reference/projects
-- Scans: https://bugrit.dev/docs/api-reference/scans
+- Projects: https://bugrit.com/docs/api-reference/projects
+- Scans: https://bugrit.com/docs/api-reference/scans
 
 Create a React component that lists all Bugrit projects:
 
@@ -173,8 +173,8 @@ My stack: [YOUR_STACK]`}</pre>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
                 onClick={() => copyToClipboard(`Read these Bugrit API docs:
-- Projects: https://bugrit.dev/docs/api-reference/projects
-- Scans: https://bugrit.dev/docs/api-reference/scans
+- Projects: https://bugrit.com/docs/api-reference/projects
+- Scans: https://bugrit.com/docs/api-reference/scans
 
 Create a React component that lists all Bugrit projects:
 
@@ -208,7 +208,7 @@ My stack: [YOUR_STACK]`)}
                 Create separate projects for staging and production environments.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Projects API at https://bugrit.dev/docs/api-reference/projects
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Projects API at https://bugrit.com/docs/api-reference/projects
 
 Set up multi-environment Bugrit projects:
 
@@ -228,7 +228,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Projects API at https://bugrit.dev/docs/api-reference/projects
+                onClick={() => copyToClipboard(`Read the Bugrit Projects API at https://bugrit.com/docs/api-reference/projects
 
 Set up multi-environment Bugrit projects:
 
@@ -263,7 +263,7 @@ My stack: [YOUR_STACK]`)}
               Fetch a list of all projects in your organization.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
-              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Projects API at https://bugrit.dev/docs/api-reference/projects
+              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Projects API at https://bugrit.com/docs/api-reference/projects
 
 Create a function to list all projects:
 
@@ -277,7 +277,7 @@ My stack: [YOUR_STACK]`}</pre>
             </div>
             <button
               className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-              onClick={() => copyToClipboard(`Read the Bugrit Projects API at https://bugrit.dev/docs/api-reference/projects
+              onClick={() => copyToClipboard(`Read the Bugrit Projects API at https://bugrit.com/docs/api-reference/projects
 
 Create a function to list all projects:
 
@@ -368,7 +368,7 @@ My stack: [YOUR_STACK]`)}
               Add a new project to your organization.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
-              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Projects API at https://bugrit.dev/docs/api-reference/projects
+              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Projects API at https://bugrit.com/docs/api-reference/projects
 
 Add a "Create Project" form to my app:
 
@@ -388,7 +388,7 @@ My stack: [YOUR_STACK]`}</pre>
             </div>
             <button
               className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-              onClick={() => copyToClipboard(`Read the Bugrit Projects API at https://bugrit.dev/docs/api-reference/projects
+              onClick={() => copyToClipboard(`Read the Bugrit Projects API at https://bugrit.com/docs/api-reference/projects
 
 Add a "Create Project" form to my app:
 

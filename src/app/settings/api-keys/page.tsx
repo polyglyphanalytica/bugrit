@@ -492,7 +492,7 @@ export default function ApiKeysPage() {
               Use your API key to authenticate requests:
             </p>
             <div className="bg-muted p-4 rounded-lg font-mono text-sm overflow-x-auto">
-              <pre>{`curl -X POST https://bugrit.dev/api/v1/scans \\
+              <pre>{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{

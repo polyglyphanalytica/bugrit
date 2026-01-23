@@ -140,7 +140,7 @@ export class BugritClient {
 
   constructor(config: BugritClientConfig) {
     this.apiKey = config.apiKey;
-    this.baseUrl = config.baseUrl || 'https://bugrit.dev/api';
+    this.baseUrl = config.baseUrl || 'https://bugrit.com/api';
   }
 
   private async request<T>(

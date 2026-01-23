@@ -218,7 +218,7 @@ Content-Type: application/zip
             Or using curl:
           </p>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto mt-2">
-            <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+            <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -F "applicationId=app-abc123" \\
   -F "sourceType=upload" \\
@@ -266,7 +266,7 @@ Content-Type: application/json
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-2">Scan a Mobile Binary</h3>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-            <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+            <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -F "applicationId=app-abc123" \\
   -F "sourceType=mobile" \\
@@ -274,7 +274,7 @@ Content-Type: application/json
   -F "file=@./app-release.apk"
 
 # For iOS:
-curl -X POST https://bugrit.dev/api/v1/scans \\
+curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -F "applicationId=app-abc123" \\
   -F "sourceType=mobile" \\
@@ -329,7 +329,7 @@ jobs:
 
       - name: Submit to Bugrit
         run: |
-          SCAN_ID=$(curl -s -X POST https://bugrit.dev/api/v1/scans \\
+          SCAN_ID=$(curl -s -X POST https://bugrit.com/api/v1/scans \\
             -H "Authorization: Bearer \${{ secrets.BUGGERED_API_KEY }}" \\
             -F "applicationId=\${{ vars.BUGGERED_APP_ID }}" \\
             -F "sourceType=upload" \\
@@ -343,7 +343,7 @@ jobs:
           while true; do
             STATUS=$(curl -s \\
               -H "Authorization: Bearer \${{ secrets.BUGGERED_API_KEY }}" \\
-              "https://bugrit.dev/api/v1/scans/$SCAN_ID" | jq -r '.scan.status')
+              "https://bugrit.com/api/v1/scans/$SCAN_ID" | jq -r '.scan.status')
 
             if [ "$STATUS" = "completed" ]; then
               echo "Scan complete!"
@@ -360,7 +360,7 @@ jobs:
         run: |
           curl -s \\
             -H "Authorization: Bearer \${{ secrets.BUGGERED_API_KEY }}" \\
-            "https://bugrit.dev/api/v1/scans/$SCAN_ID/report"`}</pre>
+            "https://bugrit.com/api/v1/scans/$SCAN_ID/report"`}</pre>
         </div>
       </section>
 

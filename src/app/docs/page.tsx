@@ -253,7 +253,7 @@ export default function DocsPage() {
       <div>
         <h2 className="text-2xl font-bold mb-4">Base URL</h2>
         <code className="block bg-muted p-4 rounded-lg text-sm">
-          https://bugrit.dev/api/v1
+          https://bugrit.com/api/v1
         </code>
       </div>
     </div>

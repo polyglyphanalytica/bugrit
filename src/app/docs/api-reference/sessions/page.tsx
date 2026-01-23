@@ -83,7 +83,7 @@ export default function SessionsApiPage() {
                 Watch results stream in real-time with a beautiful progress UI.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Build a live scan progress dashboard:
 
@@ -102,7 +102,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+                onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Build a live scan progress dashboard:
 
@@ -172,7 +172,7 @@ poll();`}</pre>
                 Only fetch results that came in since your last poll - minimal bandwidth.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Build an efficient real-time results feed:
 
@@ -189,7 +189,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+                onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Build an efficient real-time results feed:
 
@@ -253,7 +253,7 @@ const pollForNewReports = async (sessionId) => {
                 Show scan progress in your CI/CD logs as each tool completes.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Create a CI/CD script with live console output:
 
@@ -274,7 +274,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+                onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Create a CI/CD script with live console output:
 
@@ -308,7 +308,7 @@ My stack: [YOUR_STACK]`)}
                 A custom React hook that manages the whole polling lifecycle.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Create a useSessionPolling React hook:
 
@@ -330,7 +330,7 @@ My stack: React with TypeScript`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+                onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Create a useSessionPolling React hook:
 
@@ -430,7 +430,7 @@ export function useSessionPolling(options = {}) {
               Begin a new scan session. Results stream in as each tool completes.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
-              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Add a streaming scan to my app:
 
@@ -447,7 +447,7 @@ My stack: [YOUR_STACK]`}</pre>
             </div>
             <button
               className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-              onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+              onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Add a streaming scan to my app:
 
@@ -560,7 +560,7 @@ My stack: [YOUR_STACK]`)}
               <div>
                 <h4 className="font-semibold mb-2">Example Request</h4>
                 <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-                  <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/sessions \\
+                  <pre className="text-sm">{`curl -X POST https://bugrit.com/api/sessions \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -604,7 +604,7 @@ My stack: [YOUR_STACK]`)}
               Poll for live updates. Three modes: full report, progress only, or incremental.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
-              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Build a polling system with three modes:
 
@@ -628,7 +628,7 @@ My stack: [YOUR_STACK]`}</pre>
             </div>
             <button
               className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-              onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+              onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Build a polling system with three modes:
 
@@ -804,7 +804,7 @@ My stack: [YOUR_STACK]`)}
               Get a list of your recent scan sessions.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
-              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Create a session history component:
 
@@ -821,7 +821,7 @@ My stack: [YOUR_STACK]`}</pre>
             </div>
             <button
               className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-              onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+              onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Create a session history component:
 
@@ -996,7 +996,7 @@ My stack: [YOUR_STACK]`)}
               Switch from the old Scans API to the new Sessions API.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
-              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Migrate my existing scan integration to use Sessions:
 
@@ -1020,7 +1020,7 @@ My stack: [YOUR_STACK]`}</pre>
             </div>
             <button
               className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-              onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.dev/docs/api-reference/sessions
+              onClick={() => copyToClipboard(`Read the Bugrit Sessions API at https://bugrit.com/docs/api-reference/sessions
 
 Migrate my existing scan integration to use Sessions:
 

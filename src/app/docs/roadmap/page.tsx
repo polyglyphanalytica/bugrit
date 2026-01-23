@@ -81,8 +81,8 @@ export default function RoadmapPage() {
         <h2 className="text-2xl font-bold mb-4">Feature Requests</h2>
         <p className="text-muted-foreground">
           Have a feature request? Let us know at{' '}
-          <a href="mailto:feedback@bugrit.dev" className="text-primary hover:underline">
-            feedback@bugrit.dev
+          <a href="mailto:feedback@bugrit.com" className="text-primary hover:underline">
+            feedback@bugrit.com
           </a>{' '}
           or open an issue on our{' '}
           <a href="https://github.com/buggered/feedback" className="text-primary hover:underline">

@@ -137,7 +137,7 @@ exports.config = {
           Submit your Tauri project for cross-platform testing:
         </p>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+          <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -248,14 +248,14 @@ exports.config = {
           "name": "should save file to local filesystem",
           "platform": "macos",
           "error": "File permission denied",
-          "screenshot": "https://cdn.bugrit.dev/scn-xyz/file-save-failure.png",
-          "logs": "https://cdn.bugrit.dev/scn-xyz/tauri-logs.txt"
+          "screenshot": "https://cdn.bugrit.com/scn-xyz/file-save-failure.png",
+          "logs": "https://cdn.bugrit.com/scn-xyz/tauri-logs.txt"
         },
         {
           "name": "should open native file dialog",
           "platform": "linux",
           "error": "Dialog not detected within timeout",
-          "screenshot": "https://cdn.bugrit.dev/scn-xyz/dialog-failure.png"
+          "screenshot": "https://cdn.bugrit.com/scn-xyz/dialog-failure.png"
         }
       ]
     },
@@ -334,7 +334,7 @@ describe('My Tauri App', () => {
           Pass environment variables to your Tauri app during testing:
         </p>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+          <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{

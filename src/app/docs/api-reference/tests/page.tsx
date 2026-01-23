@@ -80,7 +80,7 @@ export default function FindingsApiPage() {
                 Automatically create GitHub issues when critical security issues are found.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Findings API at https://bugrit.dev/docs/api-reference/tests
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Findings API at https://bugrit.com/docs/api-reference/tests
 
 Create a script that auto-creates GitHub issues for critical findings:
 
@@ -99,7 +99,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Findings API at https://bugrit.dev/docs/api-reference/tests
+                onClick={() => copyToClipboard(`Read the Bugrit Findings API at https://bugrit.com/docs/api-reference/tests
 
 Create a script that auto-creates GitHub issues for critical findings:
 
@@ -162,7 +162,7 @@ My stack: [YOUR_STACK]`)}
                 Build a filterable list of security findings for your dashboard.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Findings API at https://bugrit.dev/docs/api-reference/tests
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Findings API at https://bugrit.com/docs/api-reference/tests
 
 Create a findings list component:
 
@@ -185,7 +185,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Findings API at https://bugrit.dev/docs/api-reference/tests
+                onClick={() => copyToClipboard(`Read the Bugrit Findings API at https://bugrit.com/docs/api-reference/tests
 
 Create a findings list component:
 
@@ -221,7 +221,7 @@ My stack: [YOUR_STACK]`)}
                 Let your AI assistant fix the vulnerabilities in your code.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Findings API at https://bugrit.dev/docs/api-reference/tests
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Findings API at https://bugrit.com/docs/api-reference/tests
 
 Look at the findings from my Bugrit scan and fix them:
 
@@ -241,7 +241,7 @@ The scan ID is: [PASTE_SCAN_ID_HERE]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Findings API at https://bugrit.dev/docs/api-reference/tests
+                onClick={() => copyToClipboard(`Read the Bugrit Findings API at https://bugrit.com/docs/api-reference/tests
 
 Look at the findings from my Bugrit scan and fix them:
 
@@ -274,7 +274,7 @@ The scan ID is: [PASTE_SCAN_ID_HERE]`)}
                 Add a pre-deploy check that fails if unresolved critical issues exist.
               </p>
               <div className="bg-slate-900 p-4 rounded-lg">
-                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Findings API at https://bugrit.dev/docs/api-reference/tests
+                <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Findings API at https://bugrit.com/docs/api-reference/tests
 
 Add a pre-deploy check to my CI/CD pipeline:
 
@@ -291,7 +291,7 @@ My stack: [YOUR_STACK]`}</pre>
               </div>
               <button
                 className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-                onClick={() => copyToClipboard(`Read the Bugrit Findings API at https://bugrit.dev/docs/api-reference/tests
+                onClick={() => copyToClipboard(`Read the Bugrit Findings API at https://bugrit.com/docs/api-reference/tests
 
 Add a pre-deploy check to my CI/CD pipeline:
 
@@ -323,7 +323,7 @@ My stack: [YOUR_STACK]`)}
               Retrieve all security and quality findings from a scan.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
-              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Findings API at https://bugrit.dev/docs/api-reference/tests
+              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Findings API at https://bugrit.com/docs/api-reference/tests
 
 Build a function to fetch and display findings:
 
@@ -338,7 +338,7 @@ My stack: [YOUR_STACK]`}</pre>
             </div>
             <button
               className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-              onClick={() => copyToClipboard(`Read the Bugrit Findings API at https://bugrit.dev/docs/api-reference/tests
+              onClick={() => copyToClipboard(`Read the Bugrit Findings API at https://bugrit.com/docs/api-reference/tests
 
 Build a function to fetch and display findings:
 
@@ -478,7 +478,7 @@ My stack: [YOUR_STACK]`)}
               Update the status of findings as you fix them.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
-              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Findings API at https://bugrit.dev/docs/api-reference/tests
+              <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Findings API at https://bugrit.com/docs/api-reference/tests
 
 Add status update buttons to my findings view:
 
@@ -499,7 +499,7 @@ My stack: [YOUR_STACK]`}</pre>
             </div>
             <button
               className="mt-3 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:bg-primary/90"
-              onClick={() => copyToClipboard(`Read the Bugrit Findings API at https://bugrit.dev/docs/api-reference/tests
+              onClick={() => copyToClipboard(`Read the Bugrit Findings API at https://bugrit.com/docs/api-reference/tests
 
 Add status update buttons to my findings view:
 
@@ -559,7 +559,7 @@ My stack: [YOUR_STACK]`)}
               <div>
                 <h4 className="font-semibold mb-2">Example Request</h4>
                 <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-                  <pre className="text-sm">{`curl -X PATCH https://bugrit.dev/api/v1/findings/fnd-001 \\
+                  <pre className="text-sm">{`curl -X PATCH https://bugrit.com/api/v1/findings/fnd-001 \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{

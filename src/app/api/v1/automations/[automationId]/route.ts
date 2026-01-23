@@ -188,7 +188,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       updates.trigger = body.trigger;
       // Update webhook URL if trigger type changed to/from webhook
       if (body.trigger.type === 'webhook' && !existingAutomation.webhookUrl) {
-        updates.webhookUrl = `https://bugrit.dev/api/webhooks/${automationId}`;
+        updates.webhookUrl = `https://bugrit.com/api/webhooks/${automationId}`;
       } else if (body.trigger.type !== 'webhook') {
         updates.webhookUrl = null;
       }

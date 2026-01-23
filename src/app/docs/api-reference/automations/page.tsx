@@ -13,7 +13,7 @@ export default function AutomationsApiPage() {
       <section>
         <h2 className="text-2xl font-bold mb-4">Base URL</h2>
         <code className="block bg-muted p-4 rounded-lg text-sm">
-          https://bugrit.dev/api/v1/automations
+          https://bugrit.com/api/v1/automations
         </code>
       </section>
 
@@ -80,7 +80,7 @@ export default function AutomationsApiPage() {
 
         <h4 className="font-semibold mb-2">Example Request</h4>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto mb-4">
-          <pre className="text-sm">{`curl https://bugrit.dev/api/v1/automations?project_id=proj-abc123 \\
+          <pre className="text-sm">{`curl https://bugrit.com/api/v1/automations?project_id=proj-abc123 \\
   -H "Authorization: Bearer YOUR_API_KEY"`}</pre>
         </div>
 
@@ -137,7 +137,7 @@ export default function AutomationsApiPage() {
 
         <h4 className="font-semibold mb-2">Example Request</h4>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`curl https://bugrit.dev/api/v1/automations/auto-xyz789 \\
+          <pre className="text-sm">{`curl https://bugrit.com/api/v1/automations/auto-xyz789 \\
   -H "Authorization: Bearer YOUR_API_KEY"`}</pre>
         </div>
       </section>
@@ -291,7 +291,7 @@ export default function AutomationsApiPage() {
 
         <h4 className="font-semibold mb-2">Example Request</h4>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/automations \\
+          <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/automations \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -364,7 +364,7 @@ export default function AutomationsApiPage() {
 
         <h4 className="font-semibold mb-2">Example Request</h4>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`curl -X PATCH https://bugrit.dev/api/v1/automations/auto-xyz789 \\
+          <pre className="text-sm">{`curl -X PATCH https://bugrit.com/api/v1/automations/auto-xyz789 \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -394,7 +394,7 @@ export default function AutomationsApiPage() {
 
         <h4 className="font-semibold mb-2">Example Request</h4>
         <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-          <pre className="text-sm">{`curl -X DELETE https://bugrit.dev/api/v1/automations/auto-xyz789 \\
+          <pre className="text-sm">{`curl -X DELETE https://bugrit.com/api/v1/automations/auto-xyz789 \\
   -H "Authorization: Bearer YOUR_API_KEY"`}</pre>
         </div>
 
@@ -454,7 +454,7 @@ export default function AutomationsApiPage() {
         <div className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/30 rounded-lg">
           <pre className="text-sm whitespace-pre-wrap">{`I need to create a Bugrit automation via the API. Here are the details:
 
-API Base: https://bugrit.dev/api/v1/automations
+API Base: https://bugrit.com/api/v1/automations
 Auth: Bearer token in Authorization header
 
 Help me create an automation that:

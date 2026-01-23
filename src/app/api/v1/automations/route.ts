@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
         trigger: body.trigger,
         action: body.action,
         webhookUrl: body.trigger.type === 'webhook'
-          ? `https://bugrit.dev/api/webhooks/${nanoid(16)}`
+          ? `https://bugrit.com/api/webhooks/${nanoid(16)}`
           : null,
         enabled: body.enabled !== false,
         lastTriggeredAt: null,
@@ -295,7 +295,7 @@ export async function POST(request: NextRequest) {
       trigger: body.trigger,
       action: body.action,
       webhookUrl: body.trigger.type === 'webhook'
-        ? `https://bugrit.dev/api/webhooks/${automationId}`
+        ? `https://bugrit.com/api/webhooks/${automationId}`
         : null,
       enabled: body.enabled !== false,
       lastTriggeredAt: null,

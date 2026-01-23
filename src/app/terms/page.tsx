@@ -35,7 +35,7 @@ export default function TermsPage() {
               <section className="mb-10">
                 <h2 className="text-2xl font-bold mb-4">1. Introduction and Acceptance</h2>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  These Terms of Service (&quot;Terms&quot;, &quot;Agreement&quot;) constitute a legally binding agreement between you (&quot;User&quot;, &quot;you&quot;, or &quot;your&quot;) and Polyglyph Analytica (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) governing your access to and use of the Bugrit code quality analysis platform, including our website at bugrit.dev, applications, APIs, and all related services (collectively, the &quot;Service&quot;).
+                  These Terms of Service (&quot;Terms&quot;, &quot;Agreement&quot;) constitute a legally binding agreement between you (&quot;User&quot;, &quot;you&quot;, or &quot;your&quot;) and Polyglyph Analytica (&quot;Company&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) governing your access to and use of the Bugrit code quality analysis platform, including our website at bugrit.com, applications, APIs, and all related services (collectively, the &quot;Service&quot;).
                 </p>
                 <p className="text-muted-foreground leading-relaxed mb-4">
                   BY ACCESSING OR USING THE SERVICE, YOU ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND AGREE TO BE BOUND BY THESE TERMS. IF YOU ARE ENTERING INTO THIS AGREEMENT ON BEHALF OF A COMPANY OR OTHER LEGAL ENTITY, YOU REPRESENT THAT YOU HAVE THE AUTHORITY TO BIND SUCH ENTITY TO THESE TERMS.
@@ -424,7 +424,7 @@ export default function TermsPage() {
 
                 <h3 className="text-xl font-semibold mb-3 mt-6">14.2 Informal Resolution</h3>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  Before initiating any formal dispute resolution, you agree to first contact us at legal@bugrit.dev to attempt to resolve any dispute informally. We will attempt to resolve disputes within 30 days.
+                  Before initiating any formal dispute resolution, you agree to first contact us at legal@bugrit.com to attempt to resolve any dispute informally. We will attempt to resolve disputes within 30 days.
                 </p>
 
                 <h3 className="text-xl font-semibold mb-3 mt-6">14.3 Arbitration</h3>
@@ -473,7 +473,7 @@ export default function TermsPage() {
 
                 <h3 className="text-xl font-semibold mb-3 mt-6">15.6 Notices</h3>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  Notices to you may be sent to the email address associated with your Account. Notices to us should be sent to legal@bugrit.dev.
+                  Notices to you may be sent to the email address associated with your Account. Notices to us should be sent to legal@bugrit.com.
                 </p>
 
                 <h3 className="text-xl font-semibold mb-3 mt-6">15.7 No Third-Party Beneficiaries</h3>
@@ -505,8 +505,8 @@ export default function TermsPage() {
                 <div className="bg-muted/30 rounded-xl p-6">
                   <p className="font-semibold mb-2">Polyglyph Analytica</p>
                   <p className="text-muted-foreground text-sm mb-4">
-                    Email: <a href="mailto:legal@bugrit.dev" className="text-primary hover:underline">legal@bugrit.dev</a><br />
-                    General Enquiries: <a href="mailto:hello@bugrit.dev" className="text-primary hover:underline">hello@bugrit.dev</a>
+                    Email: <a href="mailto:legal@bugrit.com" className="text-primary hover:underline">legal@bugrit.com</a><br />
+                    General Enquiries: <a href="mailto:hello@bugrit.com" className="text-primary hover:underline">hello@bugrit.com</a>
                   </p>
                 </div>
               </section>

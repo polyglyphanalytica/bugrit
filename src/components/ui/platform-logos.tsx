@@ -426,7 +426,7 @@ export function PlatformLogos() {
       <div className="mt-12 pt-8 border-t border-border/30">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-            Bugrit is the vision of a Product and Tech leader who has worked at top global banks
+            Bugrit is the vision of a Product and Tech leader who has worked at top financial institutions
           </p>
           <div className="flex items-center justify-center gap-6 md:gap-10 flex-wrap">
             {/* eslint-disable-next-line @next/next/no-img-element */}

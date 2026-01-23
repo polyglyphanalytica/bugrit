@@ -99,7 +99,7 @@ export default function GettingStartedPage() {
             Create an application to organize your tests and scans:
           </p>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-            <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/applications \\
+            <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/applications \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -124,7 +124,7 @@ export default function GettingStartedPage() {
 
           <h4 className="font-semibold mb-2">Playwright (Web E2E)</h4>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto mb-4">
-            <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+            <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -144,7 +144,7 @@ export default function GettingStartedPage() {
 
           <h4 className="font-semibold mb-2">Appium (Mobile)</h4>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto mb-4">
-            <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+            <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -F "applicationId=app-abc123" \\
   -F "sourceType=mobile" \\
@@ -161,7 +161,7 @@ export default function GettingStartedPage() {
 
           <h4 className="font-semibold mb-2">Tauri (Desktop)</h4>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-            <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+            <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -190,7 +190,7 @@ export default function GettingStartedPage() {
 
           <h4 className="font-semibold mb-2">Option A: Scan a GitHub Repository</h4>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto mb-4">
-            <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+            <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -203,7 +203,7 @@ export default function GettingStartedPage() {
 
           <h4 className="font-semibold mb-2">Option B: Scan a Live URL</h4>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto mb-4">
-            <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+            <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -215,7 +215,7 @@ export default function GettingStartedPage() {
 
           <h4 className="font-semibold mb-2">Option C: Upload Source Code</h4>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-            <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+            <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -F "applicationId=app-abc123" \\
   -F "sourceType=upload" \\
@@ -230,7 +230,7 @@ export default function GettingStartedPage() {
             Get the full picture by running tests and scanning code in a single request:
           </p>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-            <pre className="text-sm">{`curl -X POST https://bugrit.dev/api/v1/scans \\
+            <pre className="text-sm">{`curl -X POST https://bugrit.com/api/v1/scans \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -266,7 +266,7 @@ export default function GettingStartedPage() {
             </p>
             <div className="bg-muted p-4 rounded-lg overflow-x-auto mb-3">
               <pre className="text-sm">{`# Start a streaming session
-curl -X POST https://bugrit.dev/api/sessions \\
+curl -X POST https://bugrit.com/api/sessions \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -278,13 +278,13 @@ curl -X POST https://bugrit.dev/api/sessions \\
 # { "sessionId": "sess-abc123", "pollUrls": { ... } }
 
 # Poll for live progress (lightweight)
-curl "https://bugrit.dev/api/sessions/sess-abc123?progress=true" \\
+curl "https://bugrit.com/api/sessions/sess-abc123?progress=true" \\
   -H "Authorization: Bearer YOUR_API_KEY"
 
 # Response: { "status": "running", "progress": { "completed": 23, "total": 71, "percentage": 32 } }
 
 # Get only NEW results since last poll (efficient)
-curl "https://bugrit.dev/api/sessions/sess-abc123?since=2026-01-22T10:30:00Z" \\
+curl "https://bugrit.com/api/sessions/sess-abc123?since=2026-01-22T10:30:00Z" \\
   -H "Authorization: Bearer YOUR_API_KEY"`}</pre>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -297,7 +297,7 @@ curl "https://bugrit.dev/api/sessions/sess-abc123?since=2026-01-22T10:30:00Z" \\
             Poll the scan status until tests and tools have completed:
           </p>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-            <pre className="text-sm">{`curl https://bugrit.dev/api/v1/scans/scn-xyz789 \\
+            <pre className="text-sm">{`curl https://bugrit.com/api/v1/scans/scn-xyz789 \\
   -H "Authorization: Bearer YOUR_API_KEY"`}</pre>
           </div>
           <p className="text-muted-foreground mt-4">
@@ -341,7 +341,7 @@ curl "https://bugrit.dev/api/sessions/sess-abc123?since=2026-01-22T10:30:00Z" \\
             or retrieve it via API:
           </p>
           <div className="bg-muted p-4 rounded-lg overflow-x-auto">
-            <pre className="text-sm">{`curl https://bugrit.dev/api/v1/reports/rpt-abc123 \\
+            <pre className="text-sm">{`curl https://bugrit.com/api/v1/reports/rpt-abc123 \\
   -H "Authorization: Bearer YOUR_API_KEY"`}</pre>
           </div>
           <p className="text-muted-foreground mt-4">
