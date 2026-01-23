@@ -110,6 +110,23 @@ const RESET_COLOR = '\x1b[0m';
 const isBrowser = typeof window !== 'undefined';
 
 /**
+ * Production domains where console output should be suppressed
+ */
+const PRODUCTION_DOMAINS = ['bugrit.dev', 'bugrit.com'];
+
+/**
+ * Check if running on a production domain (browser only)
+ * Returns true if console output should be suppressed
+ */
+const isProductionDomain = (): boolean => {
+  if (!isBrowser) return false;
+  const hostname = window.location.hostname;
+  return PRODUCTION_DOMAINS.some(
+    (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+  );
+};
+
+/**
  * Determine the current environment
  */
 const getEnvironment = (): string => {
@@ -218,6 +235,11 @@ function log(
   context?: LogContext,
   config: LoggerConfig = defaultConfig
 ): void {
+  // Suppress all console output on production domains (browser only)
+  if (isProductionDomain()) {
+    return;
+  }
+
   // Check if this log level should be output
   if (LOG_LEVEL_VALUES[level] < LOG_LEVEL_VALUES[config.minLevel]) {
     return;
