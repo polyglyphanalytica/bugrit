@@ -106,7 +106,7 @@ export const TIERS: Record<TierName, TierDefinition> = {
         learningMode: true,        // Free educational content
         repoHealthProfile: false,
         explainCodebase: false,
-        trustBadge: false,
+        trustBadge: true,          // Available on all tiers
         teamDashboard: false,
         // Support
         prioritySupport: false,
@@ -157,7 +157,7 @@ export const TIERS: Record<TierName, TierDefinition> = {
         learningMode: true,
         repoHealthProfile: true,   // Public profile
         explainCodebase: false,
-        trustBadge: false,
+        trustBadge: true,          // Available on all tiers
         teamDashboard: false,
         // Support
         prioritySupport: false,
@@ -209,7 +209,7 @@ export const TIERS: Record<TierName, TierDefinition> = {
         learningMode: true,
         repoHealthProfile: true,
         explainCodebase: false,
-        trustBadge: false,
+        trustBadge: true,          // Available on all tiers
         teamDashboard: false,
         // Support
         prioritySupport: false,
