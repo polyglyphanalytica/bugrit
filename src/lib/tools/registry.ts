@@ -1,13 +1,13 @@
 /**
  * Comprehensive Tool Registry
  *
- * 79 security, quality, and compliance tools supporting multiple languages.
+ * 88 security, quality, and compliance tools supporting multiple languages.
  *
  * Deployment types:
- * - Native JS (26 tools): Run via npm packages on Node.js
- * - Docker (53 tools): Run via Google Cloud Build containers
+ * - Native JS (29 tools): Run via npm packages on Node.js
+ * - Docker (59 tools): Run via Google Cloud Build containers
  *
- * Total: 79 tools across 11 categories
+ * Total: 88 tools across 11 categories
  */
 
 export interface ToolDefinition {
@@ -804,6 +804,97 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     filePatterns: ['**/*.md', '**/*.txt', '**/*.rst'],
     credits: 0,
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 6: January 2026 Expansion Part 2 (9 tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // --- npm Tools ---
+  {
+    id: 'html-validate',
+    name: 'html-validate',
+    description: 'Offline HTML validator with extensive rule set',
+    category: 'quality',
+    npm: 'html-validate',
+    languages: ['html'],
+    filePatterns: ['**/*.html', '**/*.htm'],
+    credits: 0,
+  },
+  {
+    id: 'textlint',
+    name: 'textlint',
+    description: 'Pluggable natural language linter for text and markdown',
+    category: 'documentation',
+    npm: 'textlint',
+    filePatterns: ['**/*.md', '**/*.txt'],
+    credits: 0,
+  },
+  {
+    id: 'npm-check-updates',
+    name: 'npm-check-updates',
+    description: 'Find outdated, incorrect, and unused dependencies',
+    category: 'dependencies',
+    npm: 'npm-check-updates',
+    filePatterns: ['**/package.json'],
+    credits: 0,
+  },
+
+  // --- Docker Tools ---
+  {
+    id: 'yamllint',
+    name: 'yamllint',
+    description: 'Linter for YAML files (syntax, formatting, best practices)',
+    category: 'quality',
+    docker: 'cytopia/yamllint:latest',
+    filePatterns: ['**/*.yaml', '**/*.yml'],
+    credits: 0,
+  },
+  {
+    id: 'bearer',
+    name: 'Bearer',
+    description: 'Data privacy scanner - finds PII exposure and sensitive data flows',
+    category: 'security',
+    docker: 'bearer/bearer:latest',
+    credits: 2,
+  },
+  {
+    id: 'pylint',
+    name: 'Pylint',
+    description: 'Comprehensive Python static code analyzer',
+    category: 'quality',
+    docker: 'python:3.12-slim',
+    languages: ['python'],
+    filePatterns: ['**/*.py'],
+    credits: 1,
+  },
+  {
+    id: 'dart-analyze',
+    name: 'Dart Analyzer',
+    description: 'Static analysis for Dart and Flutter projects',
+    category: 'quality',
+    docker: 'dart:stable',
+    languages: ['dart'],
+    filePatterns: ['**/*.dart'],
+    credits: 1,
+  },
+  {
+    id: 'ktlint',
+    name: 'ktlint',
+    description: 'Kotlin linter with built-in formatter',
+    category: 'quality',
+    docker: 'pinterest/ktlint:latest',
+    languages: ['kotlin'],
+    filePatterns: ['**/*.kt', '**/*.kts'],
+    credits: 1,
+  },
+  {
+    id: 'prowler',
+    name: 'Prowler',
+    description: 'AWS security best practices assessment and auditing',
+    category: 'cloud-native',
+    docker: 'prowler/prowler:latest',
+    credits: 3,
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -844,7 +935,7 @@ export function getTotalCredits(toolIds: string[]): number {
   }, 0);
 }
 
-export const TOOL_COUNT = TOOL_REGISTRY.length;  // 79 tools (26 npm + 53 docker)
+export const TOOL_COUNT = TOOL_REGISTRY.length;  // 88 tools (29 npm + 59 docker)
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   linting: 'Linting & Formatting',

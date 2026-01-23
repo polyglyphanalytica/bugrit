@@ -1,7 +1,7 @@
 /**
  * Tool Runner
  *
- * Executes all 79 tools using a mix of npm packages and CLI execution.
+ * Executes all 88 tools using a mix of npm packages and CLI execution.
  * CLI execution is used for tools with native bindings that can't be bundled.
  */
 
@@ -292,6 +292,96 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
             });
           }
         }
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // html-validate (HTML validation)
+  // ─────────────────────────────────────────────────────────────
+  'html-validate': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx html-validate --formatter json "**/*.html" 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const result of data.results || data || []) {
+          for (const message of result.messages || []) {
+            findings.push({
+              id: `html-validate-${result.filePath}-${message.line || 0}-${message.column || 0}`,
+              severity: message.severity === 2 ? 'error' : 'warning',
+              message: message.message || 'HTML validation issue',
+              file: result.filePath,
+              line: message.line,
+              column: message.column,
+              rule: message.ruleId,
+            });
+          }
+        }
+      } catch {
+        // JSON parse error - tool may have returned non-JSON output
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // textlint (natural language linter)
+  // ─────────────────────────────────────────────────────────────
+  textlint: async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx textlint --format json "**/*.md" "**/*.txt" 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const result of data || []) {
+          for (const message of result.messages || []) {
+            findings.push({
+              id: `textlint-${result.filePath}-${message.line || 0}-${message.column || 0}`,
+              severity: message.severity === 2 ? 'error' : 'warning',
+              message: message.message || 'Text lint issue',
+              file: result.filePath,
+              line: message.line,
+              column: message.column,
+              rule: message.ruleId,
+              suggestion: message.fix?.text,
+            });
+          }
+        }
+      } catch {
+        // JSON parse error
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // npm-check-updates (find outdated dependencies)
+  // ─────────────────────────────────────────────────────────────
+  'npm-check-updates': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx npm-check-updates --jsonUpgraded 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const [pkg, version] of Object.entries(data || {})) {
+          findings.push({
+            id: `ncu-${pkg}`,
+            severity: 'info',
+            message: `${pkg} can be updated to ${version}`,
+            file: 'package.json',
+            suggestion: `Run: npm install ${pkg}@${version}`,
+          });
+        }
+      } catch {
+        // JSON parse error
       }
     }
 

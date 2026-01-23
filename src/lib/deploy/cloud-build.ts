@@ -1217,6 +1217,156 @@ export const DOCKER_TOOLS = {
       },
     ],
   },
+
+  // ============================================================
+  // Wave 6: January 2026 Expansion Part 2 (6 tools)
+  // ============================================================
+
+  // YAML Linting
+  'yamllint': {
+    image: 'cytopia/yamllint:latest',
+    timeout: '120s',
+    memory: '1GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'cytopia/yamllint:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'yamllint -f json /workspace/source > /workspace/yamllint-report.json 2>&1 || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/yamllint-report.json', `gs://${outputBucket}/${jobId}/yamllint-report.json`],
+      },
+    ],
+  },
+
+  // Security - Data Privacy
+  'bearer': {
+    image: 'bearer/bearer:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'bearer/bearer:latest',
+        args: ['scan', '/workspace/source', '--format', 'json', '--output', '/workspace/bearer-report.json'],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/bearer-report.json', `gs://${outputBucket}/${jobId}/bearer-report.json`],
+      },
+    ],
+  },
+
+  // Python - Pylint
+  'pylint': {
+    image: 'python:3.12-slim',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'python:3.12-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'pip install pylint -q && find /workspace/source -name "*.py" | xargs pylint --output-format=json > /workspace/pylint-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/pylint-report.json', `gs://${outputBucket}/${jobId}/pylint-report.json`],
+      },
+    ],
+  },
+
+  // Dart/Flutter
+  'dart-analyze': {
+    image: 'dart:stable',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'dart:stable',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && dart analyze --format=json > /workspace/dart-analyze-report.json 2>&1 || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/dart-analyze-report.json', `gs://${outputBucket}/${jobId}/dart-analyze-report.json`],
+      },
+    ],
+  },
+
+  // Kotlin
+  'ktlint': {
+    image: 'pinterest/ktlint:latest',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'pinterest/ktlint:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'ktlint --reporter=json /workspace/source/**/*.kt /workspace/source/**/*.kts > /workspace/ktlint-report.json 2>&1 || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/ktlint-report.json', `gs://${outputBucket}/${jobId}/ktlint-report.json`],
+      },
+    ],
+  },
+
+  // AWS Security
+  'prowler': {
+    image: 'prowler/prowler:latest',
+    timeout: '1200s',
+    memory: '8GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'prowler/prowler:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'prowler aws --output-formats json --output-directory /workspace || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/prowler-output*.json', `gs://${outputBucket}/${jobId}/prowler-report.json`],
+      },
+    ],
+  },
 } as const;
 
 export type DockerToolId = keyof typeof DOCKER_TOOLS;
@@ -1506,6 +1656,13 @@ export class CloudBuildRunner {
       'kics': 'kics-report.json',
       'cfn-lint': 'cfn-lint-report.json',
       'vale': 'vale-report.json',
+      // Wave 6: January 2026 Expansion Part 2
+      'yamllint': 'yamllint-report.json',
+      'bearer': 'bearer-report.json',
+      'pylint': 'pylint-report.json',
+      'dart-analyze': 'dart-analyze-report.json',
+      'ktlint': 'ktlint-report.json',
+      'prowler': 'prowler-report.json',
     };
 
     const outputFile = outputFiles[toolId];

@@ -1,7 +1,7 @@
 /**
  * Docker Image Version Registry
  *
- * Pinned versions for all 53 Docker-based scanning tools.
+ * Pinned versions for all 59 Docker-based scanning tools.
  * This ensures reproducible builds and controlled updates.
  *
  * Update Policy:
@@ -399,6 +399,58 @@ export const DOCKER_VERSIONS: Record<string, DockerImageVersion> = {
     version: '3.9.5',
     lastUpdated: '2026-01-23',
     releaseNotes: 'https://github.com/errata-ai/vale/releases',
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 6: January 2026 Expansion Part 2 (6 Docker tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // YAML
+  'yamllint': {
+    image: 'cytopia/yamllint',
+    version: '1.35',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/adrienverge/yamllint/releases',
+  },
+
+  // Security
+  'bearer': {
+    image: 'bearer/bearer',
+    version: '1.46.0',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/Bearer/bearer/releases',
+  },
+
+  // Python
+  'pylint': {
+    image: 'python',
+    version: '3.12-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'Pylint 3.3.x installed via pip',
+  },
+
+  // Dart/Flutter
+  'dart-analyze': {
+    image: 'dart',
+    version: 'stable',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://dart.dev/tools/dart-analyze',
+  },
+
+  // Kotlin
+  'ktlint': {
+    image: 'pinterest/ktlint',
+    version: '1.5.0',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/pinterest/ktlint/releases',
+  },
+
+  // AWS Security
+  'prowler': {
+    image: 'prowler/prowler',
+    version: '4.6.2',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/prowler-cloud/prowler/releases',
   },
 };
 
