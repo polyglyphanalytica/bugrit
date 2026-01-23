@@ -8,7 +8,7 @@ export default function DocsPage() {
         <h1 className="text-4xl font-bold mb-4">Bugrit Documentation</h1>
         <p className="text-lg text-muted-foreground">
           Bugrit is a testing and code scanning platform. Run automated tests across web, mobile,
-          and desktop with Playwright, Appium, and Tauri. Scan your code with 69 analysis tools.
+          and desktop with Playwright, Appium, and Tauri. Scan your code with 115 analysis tools.
           Get one unified, AI-powered report.
         </p>
       </div>
@@ -31,7 +31,7 @@ export default function DocsPage() {
               <span className="font-semibold">Code Scanning</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              69 analysis tools for security, linting, mobile, API, cloud native, and more
+              115 analysis tools for security, linting, mobile, API, cloud native, and more
             </p>
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function DocsPage() {
           <span>🔍</span> Code Scanning Tools
         </h2>
         <p className="text-muted-foreground mb-4">
-          69 analysis tools run in parallel and consolidate findings into one report.
+          115 analysis tools run in parallel and consolidate findings into one report.
         </p>
         <div className="grid md:grid-cols-4 gap-3 text-sm">
           <div className="p-3 bg-muted/50 rounded-lg">

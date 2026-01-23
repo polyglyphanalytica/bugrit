@@ -28,7 +28,7 @@ export default function GettingStartedPage() {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">→</span>
-            <span><strong>One report, 69 tools:</strong> Instead of setting up ESLint, Prettier, audit-ci, and 22 other tools separately, get everything in one scan</span>
+            <span><strong>One report, 115 tools:</strong> Instead of setting up ESLint, Prettier, audit-ci, and 22 other tools separately, get everything in one scan</span>
           </li>
         </ul>
       </div>
@@ -39,7 +39,7 @@ export default function GettingStartedPage() {
           <span>⚡</span> NEW: Real-Time Results
         </h2>
         <p className="text-muted-foreground mb-4">
-          Watch your scan results <strong>stream in live</strong> as each tool completes. No more waiting for all 71 tools to finish!
+          Watch your scan results <strong>stream in live</strong> as each tool completes. No more waiting for all 115 tools to finish!
         </p>
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div className="p-3 bg-background/80 rounded-lg text-sm">
@@ -74,7 +74,7 @@ export default function GettingStartedPage() {
               <span className="font-semibold">Scan Code</span>
             </div>
             <p className="text-sm text-muted-foreground mb-3">
-              Analyze your code with 69 security, quality, and performance tools
+              Analyze your code with 115 security, quality, and performance tools
             </p>
             <a href="#scanning" className="text-sm text-primary hover:underline">Jump to scanning setup</a>
           </div>
@@ -185,7 +185,7 @@ export default function GettingStartedPage() {
             <span>🔍</span> 3b. Scan Code
           </h2>
           <p className="text-muted-foreground mb-4">
-            Submit your code for analysis with 69 tools covering security, quality, dependencies, and more.
+            Submit your code for analysis with 115 tools covering security, quality, dependencies, and more.
           </p>
 
           <h4 className="font-semibold mb-2">Option A: Scan a GitHub Repository</h4>
@@ -281,7 +281,7 @@ curl -X POST https://bugrit.com/api/sessions \\
 curl "https://bugrit.com/api/sessions/sess-abc123?progress=true" \\
   -H "Authorization: Bearer YOUR_API_KEY"
 
-# Response: { "status": "running", "progress": { "completed": 23, "total": 71, "percentage": 32 } }
+# Response: { "status": "running", "progress": { "completed": 23, "total": 115, "percentage": 32 } }
 
 # Get only NEW results since last poll (efficient)
 curl "https://bugrit.com/api/sessions/sess-abc123?since=2026-01-22T10:30:00Z" \\
@@ -315,8 +315,8 @@ curl "https://bugrit.com/api/sessions/sess-abc123?since=2026-01-22T10:30:00Z" \\
       "frameworks": ["playwright", "appium"]
     },
     "scanning": {
-      "toolsTotal": 69,
-      "toolsCompleted": 69,
+      "toolsTotal": 115,
+      "toolsCompleted": 115,
       "summary": {
         "critical": 2,
         "high": 5,
@@ -349,7 +349,7 @@ curl "https://bugrit.com/api/sessions/sess-abc123?since=2026-01-22T10:30:00Z" \\
           </p>
           <ul className="list-disc list-inside text-muted-foreground space-y-1 mt-2">
             <li>Test results from Playwright, Appium, and Tauri with screenshots/videos</li>
-            <li>Deduplicated findings from all 69 scanning tools</li>
+            <li>Deduplicated findings from all 115 scanning tools</li>
             <li>AI-generated plain English explanations</li>
             <li>Prioritized issues by severity</li>
             <li>Correlation between test failures and code issues</li>
