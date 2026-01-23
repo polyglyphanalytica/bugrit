@@ -1,8 +1,8 @@
 /**
  * Tool Health Aggregation and Monitoring
  *
- * Tracks health of all 71 tools, aggregates metrics,
- * and provides alerting capabilities.
+ * Dynamically tracks health of all tools (currently 100),
+ * aggregates metrics, and provides alerting capabilities.
  */
 
 import { circuitRegistry, CircuitStats, CircuitState } from './circuit-breaker';
