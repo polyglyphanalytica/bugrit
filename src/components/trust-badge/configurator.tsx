@@ -409,24 +409,48 @@ function generateAIPrompt(
   domain: string,
   config: { size: BadgeSize; theme: BadgeTheme; position: BadgePosition }
 ): string {
-  return `Add the Bugrit Trust Badge to my website (${domain}).
+  return `# Add Bugrit Trust Badge to ${domain}
 
-This badge shows visitors that the site has been scanned for security and quality issues.
+Add this script just before </body>:
 
-Add this script just before the closing </body> tag:
-
+\`\`\`html
 <script src="https://bugrit.dev/badge/embed.js"
   data-site-id="${siteId}"
   data-size="${config.size}"
   data-theme="${config.theme}"
   data-position="${config.position}"
   async></script>
+\`\`\`
 
-The badge will automatically:
-- Display our current Vibe Score (security/quality rating)
-- Link to our verification page on Bugrit
-- Match the site's theme (${config.theme})
-- Appear ${config.position === 'inline' ? 'where the script is placed' : `as a fixed widget in the ${config.position.replace('fixed-', '')}`}
+## Badge Behavior
 
-No additional configuration needed. The badge is dynamic and will always show our latest score.`;
+The badge dynamically verifies:
+1. Site has a legitimate scan on Bugrit
+2. Site owner has a valid subscription
+
+**If verified:** Shows "Checked for Safety [SCORE] by Bugrit" → Links to verification page
+**If not verified:** Shows "A Vibe Coder's Best Friend - Bugrit" → Links to Bugrit homepage
+
+## Configuration Options
+
+| Attribute | Values | Current |
+|-----------|--------|---------|
+| data-size | small (120×40), medium (160×52), large (200×64) | ${config.size} |
+| data-theme | light, dark, auto | ${config.theme} |
+| data-position | inline, fixed-bottom-right, fixed-bottom-left | ${config.position} |
+
+## Optional: Explicit Placement
+
+To control exactly where the badge appears:
+
+\`\`\`html
+<div id="bugrit-badge"></div>
+<script src="https://bugrit.dev/badge/embed.js"
+  data-site-id="${siteId}"
+  data-size="${config.size}"
+  data-theme="${config.theme}"
+  async></script>
+\`\`\`
+
+The badge cannot be faked - it fetches the real score from Bugrit's API and verifies the domain.`;
 }

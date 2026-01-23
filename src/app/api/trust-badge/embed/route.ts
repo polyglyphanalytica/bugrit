@@ -176,11 +176,13 @@ function generateAIPrompt(
   domain: string,
   config: { size: BadgeSize; theme: BadgeTheme; position: BadgePosition }
 ): string {
-  return `# Add Bugrit Trust Badge to Website
+  const sizeDimensions: Record<BadgeSize, string> = {
+    small: '120×40',
+    medium: '160×52',
+    large: '200×64',
+  };
 
-Add this trust badge to show visitors that ${domain} has been scanned for security and quality.
-
-## Quick Install
+  return `# Add Bugrit Trust Badge to ${domain}
 
 Add this script just before </body>:
 
@@ -193,22 +195,24 @@ Add this script just before </body>:
   async></script>
 \`\`\`
 
-## What it does
+## Badge Behavior
 
-- Displays current Vibe Score (${config.size} size)
-- Theme: ${config.theme === 'auto' ? 'matches user preference' : config.theme}
-- Position: ${config.position === 'inline' ? 'where script is placed' : config.position.replace('fixed-', 'fixed ')}
-- Links to verification page with scan details
+The badge dynamically verifies:
+1. Site has a legitimate scan on Bugrit
+2. Site owner has a valid subscription
 
-## Options
+**If verified:** Shows "Checked for Safety [SCORE] by Bugrit" → Links to verification page
+**If not verified:** Shows "A Vibe Coder's Best Friend - Bugrit" → Links to Bugrit homepage
 
-| Attribute | Values | Default |
-|-----------|--------|---------|
-| data-size | small, medium, large | medium |
-| data-theme | light, dark, auto | auto |
-| data-position | inline, fixed-bottom-right, fixed-bottom-left | inline |
+## Configuration Options
 
-## Explicit Placement
+| Attribute | Values | Dimensions | Current |
+|-----------|--------|------------|---------|
+| data-size | small, medium, large | 120×40, 160×52, 200×64 | ${config.size} (${sizeDimensions[config.size]}) |
+| data-theme | light, dark, auto | — | ${config.theme} |
+| data-position | inline, fixed-bottom-right, fixed-bottom-left | — | ${config.position} |
+
+## Optional: Explicit Placement
 
 To control exactly where the badge appears:
 
@@ -221,5 +225,5 @@ To control exactly where the badge appears:
   async></script>
 \`\`\`
 
-The badge will render inside the #bugrit-badge container.`;
+The badge cannot be faked - it fetches the real score from Bugrit's API and verifies the domain.`;
 }

@@ -129,29 +129,48 @@ export function generateEmbedScript(siteId: string, config: Partial<TrustBadgeCo
  * Generate AI-friendly prompt for embedding the badge
  */
 export function generateAIPrompt(siteId: string, domain: string): string {
-  return `Add the Bugrit Trust Badge to my website.
+  return `# Add Bugrit Trust Badge to ${domain}
 
-Site ID: ${siteId}
-Domain: ${domain}
+Add this script just before </body>:
 
-Instructions:
-1. Add this script tag just before </body>:
+\`\`\`html
+<script src="https://bugrit.dev/badge/embed.js"
+  data-site-id="${siteId}"
+  data-size="medium"
+  data-theme="auto"
+  data-position="inline"
+  async></script>
+\`\`\`
 
+## Badge Behavior
+
+The badge dynamically verifies the site:
+1. Site has a legitimate scan on Bugrit
+2. Site owner has a valid subscription
+
+**If verified:** Shows "Checked for Safety [SCORE] by Bugrit" → Links to verification page
+**If not verified:** Shows "A Vibe Coder's Best Friend - Bugrit" → Links to Bugrit homepage
+
+## Configuration Options
+
+| Attribute | Values | Dimensions |
+|-----------|--------|------------|
+| data-size | small, medium, large | 120×40, 160×52, 200×64 |
+| data-theme | light, dark, auto | — |
+| data-position | inline, fixed-bottom-right, fixed-bottom-left | — |
+
+## Optional: Explicit Placement
+
+To control exactly where the badge appears:
+
+\`\`\`html
+<div id="bugrit-badge"></div>
 <script src="https://bugrit.dev/badge/embed.js"
   data-site-id="${siteId}"
   data-size="medium"
   data-theme="auto"
   async></script>
+\`\`\`
 
-2. Optionally, add a container where you want the badge to appear:
-<div id="bugrit-badge"></div>
-
-3. If no container is found, the badge will appear as a fixed widget in the bottom-right corner.
-
-Available options:
-- data-size: "small" | "medium" | "large"
-- data-theme: "light" | "dark" | "auto"
-- data-position: "inline" | "fixed-bottom-right" | "fixed-bottom-left"
-
-The badge will automatically display our current Vibe Score and link to our verification page on Bugrit.`;
+The badge cannot be faked - it fetches the real score from Bugrit's API and verifies the domain.`;
 }
