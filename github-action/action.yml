@@ -1,0 +1,162 @@
+name: 'Bugrit Scan'
+description: 'Scan your codebase with 118 security and quality tools. Get a Vibe Score.'
+author: 'Bugrit'
+
+branding:
+  icon: 'shield'
+  color: 'purple'
+
+inputs:
+  api-key:
+    description: 'Your Bugrit API key'
+    required: true
+
+  mode:
+    description: 'Scan mode: ship-it, quick-check, full-audit, or deep-dive'
+    required: false
+    default: 'quick-check'
+
+  fail-on:
+    description: 'Fail the build on severity level: critical, high, medium, low, none'
+    required: false
+    default: 'critical'
+
+  min-score:
+    description: 'Minimum Vibe Score required (0-100). Build fails if below this.'
+    required: false
+    default: '0'
+
+  target-url:
+    description: 'URL to scan for accessibility/performance (optional)'
+    required: false
+
+  comment-on-pr:
+    description: 'Post scan results as a PR comment'
+    required: false
+    default: 'true'
+
+  badge:
+    description: 'Update README badge with current score'
+    required: false
+    default: 'false'
+
+outputs:
+  vibe-score:
+    description: 'The overall Vibe Score (0-100)'
+    value: ${{ steps.scan.outputs.vibe-score }}
+
+  grade:
+    description: 'The letter grade (A+ to F)'
+    value: ${{ steps.scan.outputs.grade }}
+
+  critical-count:
+    description: 'Number of critical findings'
+    value: ${{ steps.scan.outputs.critical-count }}
+
+  high-count:
+    description: 'Number of high findings'
+    value: ${{ steps.scan.outputs.high-count }}
+
+  report-url:
+    description: 'URL to full scan report'
+    value: ${{ steps.scan.outputs.report-url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Run Bugrit Scan
+      id: scan
+      shell: bash
+      env:
+        BUGRIT_API_KEY: ${{ inputs.api-key }}
+        BUGRIT_MODE: ${{ inputs.mode }}
+        BUGRIT_FAIL_ON: ${{ inputs.fail-on }}
+        BUGRIT_MIN_SCORE: ${{ inputs.min-score }}
+        BUGRIT_TARGET_URL: ${{ inputs.target-url }}
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        # Download and run the Bugrit CLI scanner
+        curl -fsSL https://bugrit.dev/cli/install.sh | bash
+
+        # Run the scan
+        bugrit scan \
+          --mode "$BUGRIT_MODE" \
+          --output json \
+          --ci \
+          > scan-results.json
+
+        # Parse results
+        VIBE_SCORE=$(jq -r '.vibeScore.overall' scan-results.json)
+        GRADE=$(jq -r '.vibeScore.grade' scan-results.json)
+        CRITICAL_COUNT=$(jq -r '.findings | map(select(.severity == "critical")) | length' scan-results.json)
+        HIGH_COUNT=$(jq -r '.findings | map(select(.severity == "high")) | length' scan-results.json)
+        REPORT_URL=$(jq -r '.reportUrl' scan-results.json)
+
+        # Set outputs
+        echo "vibe-score=$VIBE_SCORE" >> $GITHUB_OUTPUT
+        echo "grade=$GRADE" >> $GITHUB_OUTPUT
+        echo "critical-count=$CRITICAL_COUNT" >> $GITHUB_OUTPUT
+        echo "high-count=$HIGH_COUNT" >> $GITHUB_OUTPUT
+        echo "report-url=$REPORT_URL" >> $GITHUB_OUTPUT
+
+        # Check fail conditions
+        if [ "$BUGRIT_FAIL_ON" = "critical" ] && [ "$CRITICAL_COUNT" -gt 0 ]; then
+          echo "::error::Found $CRITICAL_COUNT critical issues"
+          exit 1
+        fi
+
+        if [ "$BUGRIT_FAIL_ON" = "high" ] && [ "$((CRITICAL_COUNT + HIGH_COUNT))" -gt 0 ]; then
+          echo "::error::Found $CRITICAL_COUNT critical and $HIGH_COUNT high issues"
+          exit 1
+        fi
+
+        if [ "$BUGRIT_MIN_SCORE" -gt 0 ] && [ "$VIBE_SCORE" -lt "$BUGRIT_MIN_SCORE" ]; then
+          echo "::error::Vibe Score $VIBE_SCORE is below minimum $BUGRIT_MIN_SCORE"
+          exit 1
+        fi
+
+        echo "✅ Scan complete! Vibe Score: $VIBE_SCORE ($GRADE)"
+
+    - name: Comment on PR
+      if: inputs.comment-on-pr == 'true' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const score = '${{ steps.scan.outputs.vibe-score }}';
+          const grade = '${{ steps.scan.outputs.grade }}';
+          const criticalCount = '${{ steps.scan.outputs.critical-count }}';
+          const highCount = '${{ steps.scan.outputs.high-count }}';
+          const reportUrl = '${{ steps.scan.outputs.report-url }}';
+
+          const gradeEmoji = {
+            'A+': '🌟', 'A': '✅', 'A-': '✅',
+            'B+': '👍', 'B': '👍', 'B-': '👍',
+            'C+': '⚠️', 'C': '⚠️', 'C-': '⚠️',
+            'D': '🔶', 'F': '❌'
+          };
+
+          const emoji = gradeEmoji[grade] || '📊';
+
+          let body = `## ${emoji} Bugrit Scan Results\n\n`;
+          body += `| Metric | Value |\n`;
+          body += `|--------|-------|\n`;
+          body += `| **Vibe Score** | ${score}/100 (${grade}) |\n`;
+          body += `| Critical Issues | ${criticalCount} |\n`;
+          body += `| High Issues | ${highCount} |\n`;
+          body += `\n[View Full Report](${reportUrl})\n`;
+
+          if (parseInt(criticalCount) > 0) {
+            body += `\n⚠️ **Action Required**: ${criticalCount} critical issues need immediate attention.\n`;
+          }
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: body
+          });
