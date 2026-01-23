@@ -21,6 +21,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Application } from '@/lib/types';
 import { apiClient } from '@/lib/api-client';
+import { QuickScan, ScanSource } from '@/components/scan';
 
 type SourceType = 'url' | 'github' | 'gitlab' | 'upload' | 'docker' | 'npm' | 'mobile';
 
@@ -230,6 +231,57 @@ export default function NewScanPage() {
     );
   }
 
+  // Handle QuickScan submission
+  const handleQuickScan = async (source: ScanSource) => {
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('applicationId', appId);
+
+      if (source.type === 'github') {
+        formData.append('sourceType', 'github');
+        formData.append('repoUrl', source.value);
+        formData.append('branch', source.branch || 'main');
+        if (source.accessToken) {
+          formData.append('accessToken', source.accessToken);
+        }
+      } else if (source.type === 'url') {
+        formData.append('sourceType', 'url');
+        formData.append('targetUrl', source.value);
+      } else if (source.type === 'upload' && source.file) {
+        formData.append('sourceType', 'upload');
+        formData.append('file', source.file);
+      }
+
+      const idToken = await user!.getIdToken();
+      const res = await fetch('/api/scans', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${idToken}` },
+        body: formData,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        toast({
+          title: 'Scan Started!',
+          description: 'We\'re checking your code now. This usually takes less than 2 minutes.',
+        });
+        router.push(`/scans/${data.scan.id}`);
+      } else {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to start scan');
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to start scan',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <DashboardNav />
@@ -241,9 +293,23 @@ export default function NewScanPage() {
           </Link>
           <h1 className="text-3xl font-bold mt-2">New Scan</h1>
           <p className="text-muted-foreground">
-            Point us to your application and we'll run all 115 tools automatically.
+            Paste your GitHub URL or upload your code. We&apos;ll check everything.
           </p>
         </div>
+
+        {/* Quick Scan - Primary Option */}
+        <div className="mb-8">
+          <QuickScan onScan={handleQuickScan} isSubmitting={submitting} />
+        </div>
+
+        {/* Advanced Options - Collapsed by default */}
+        <details className="group">
+          <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground flex items-center gap-2 mb-4">
+            <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+            More options (Docker, npm, GitLab, Mobile)
+          </summary>
 
         {/* Source Selection */}
         <Card>
@@ -546,58 +612,53 @@ export default function NewScanPage() {
           </CardContent>
         </Card>
 
-        {/* What Gets Analyzed */}
+        {/* What Gets Analyzed - Simplified */}
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle className="text-lg">115 Tools Run Automatically</CardTitle>
+            <CardTitle className="text-lg">What We Check</CardTitle>
+            <CardDescription>100+ tools run automatically in under 2 minutes</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="font-semibold text-primary">Linting</div>
-                <div className="text-xs text-muted-foreground">ESLint, Biome, Stylelint, Prettier</div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+              <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/20">
+                <div className="font-semibold text-red-500">Security Holes</div>
+                <div className="text-xs text-muted-foreground">Ways hackers could break in</div>
               </div>
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="font-semibold text-primary">Security</div>
-                <div className="text-xs text-muted-foreground">Secretlint, audit-ci, lockfile-lint</div>
+              <div className="p-3 bg-orange-500/10 rounded-lg border border-orange-500/20">
+                <div className="font-semibold text-orange-500">Leaked Secrets</div>
+                <div className="text-xs text-muted-foreground">Exposed passwords & API keys</div>
               </div>
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="font-semibold text-primary">Dependencies</div>
-                <div className="text-xs text-muted-foreground">npm audit, depcheck, license-checker, madge</div>
+              <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                <div className="font-semibold text-yellow-500">Risky Packages</div>
+                <div className="text-xs text-muted-foreground">Vulnerable dependencies</div>
               </div>
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="font-semibold text-primary">Accessibility</div>
-                <div className="text-xs text-muted-foreground">axe-core, Pa11y</div>
+              <div className="p-3 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                <div className="font-semibold text-purple-500">Accessibility</div>
+                <div className="text-xs text-muted-foreground">Issues blocking users</div>
               </div>
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="font-semibold text-primary">Quality</div>
-                <div className="text-xs text-muted-foreground">TypeScript, knip, jscpd, cspell</div>
+              <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                <div className="font-semibold text-blue-500">Code Bugs</div>
+                <div className="text-xs text-muted-foreground">Problems that cause crashes</div>
               </div>
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="font-semibold text-primary">Documentation</div>
-                <div className="text-xs text-muted-foreground">markdownlint, remark-lint, alex</div>
-              </div>
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="font-semibold text-primary">Git</div>
-                <div className="text-xs text-muted-foreground">commitlint</div>
-              </div>
-              <div className="p-3 bg-muted/50 rounded-lg">
-                <div className="font-semibold text-primary">Performance</div>
-                <div className="text-xs text-muted-foreground">Lighthouse, size-limit</div>
+              <div className="p-3 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                <div className="font-semibold text-cyan-500">Speed Issues</div>
+                <div className="text-xs text-muted-foreground">Things slowing your app</div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Start Button */}
+        {/* Start Button for advanced options */}
         <div className="mt-6 flex justify-end gap-4">
           <Button variant="outline" asChild>
             <Link href={`/applications/${appId}`}>Cancel</Link>
           </Button>
           <Button onClick={handleStartScan} disabled={submitting}>
-            {submitting ? 'Starting Scan...' : 'Start Scan'}
+            {submitting ? 'Starting Scan...' : 'Start Advanced Scan'}
           </Button>
         </div>
+
+        </details>
       </main>
       <DashboardFooter />
     </div>
