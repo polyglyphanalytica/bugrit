@@ -328,23 +328,29 @@ export type WebhookEventType =
 // ============================================================================
 
 export const AVAILABLE_TOOLS = [
-  // Linting (4)
-  'eslint', 'biome', 'stylelint', 'prettier',
-  // Security (19)
+  // Linting (5)
+  'eslint', 'biome', 'stylelint', 'prettier', 'oxlint',
+  // Security (27)
   'semgrep', 'gitleaks', 'trivy', 'grype', 'nuclei', 'checkov', 'secretlint',
   'npm-audit', 'bandit', 'gosec', 'brakeman', 'owasp-zap', 'dependency-check',
   'tfsec', 'dockle', 'syft', 'flawfinder', 'garak', 'modelscan',
-  // Dependencies (7)
+  'trufflehog', 'bearer', 'clair', 'falco', 'slither', 'infer', 'cosign', 'safety',
+  // Dependencies (13)
   'depcheck', 'license-checker', 'madge', 'dependency-cruiser', 'osv-scanner',
-  'pip-audit', 'cargo-audit',
-  // Accessibility (2)
-  'axe-core', 'pa11y',
-  // Quality (16)
+  'pip-audit', 'cargo-audit', 'npm-check-updates', 'lockfile-lint', 'audit-ci',
+  'scancode-toolkit', 'licensee',
+  // Accessibility (3)
+  'axe-core', 'pa11y', 'accessibility-checker',
+  // Quality (41)
   'typescript', 'knip', 'jscpd', 'cspell', 'publint', 'codeclimate', 'phpstan',
   'psalm', 'spotbugs', 'pmd', 'checkstyle', 'rubocop', 'detekt', 'cppcheck',
-  'clippy', 'shellcheck',
-  // Documentation (3)
-  'markdownlint', 'remark-lint', 'alex',
+  'clippy', 'shellcheck', 'ruff', 'mypy', 'hadolint', 'sqlfluff', 'golangci-lint',
+  'actionlint', 'html-validate', 'yamllint', 'pylint', 'dart-analyze', 'ktlint',
+  'webhint', 'error-prone', 'credo', 'sonar-scanner', 'pyright', 'nbqa',
+  'eslint-plugin-vue', 'eslint-plugin-react', 'scalafmt', 'scalafix', 'hlint',
+  'buf', 'angular-eslint', 'sqlcheck', 'pgformatter',
+  // Documentation (5)
+  'markdownlint', 'remark-lint', 'alex', 'vale', 'textlint',
   // Git (1)
   'commitlint',
   // Performance (3)
@@ -353,9 +359,10 @@ export const AVAILABLE_TOOLS = [
   'mobsf', 'apkleaks', 'androguard', 'swiftlint',
   // API Security (4)
   'spectral', 'dredd', 'graphql-cop', 'schemathesis',
-  // Cloud Native (5)
+  // Cloud Native (9)
   'kubesec', 'kube-bench', 'polaris', 'terrascan', 'kube-hunter',
-] as const;  // Total: 68 tools
+  'kics', 'cfn-lint', 'prowler', 'steampipe',
+] as const;  // Total: 115 tools
 
 export type ToolName = (typeof AVAILABLE_TOOLS)[number];
 

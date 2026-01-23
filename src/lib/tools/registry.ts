@@ -1,13 +1,13 @@
 /**
  * Comprehensive Tool Registry
  *
- * 68 security, quality, and compliance tools supporting multiple languages.
+ * 115 security, quality, and compliance tools supporting multiple languages.
  *
  * Deployment types:
- * - Native JS (25 tools): Run via npm packages on Node.js
- * - Docker (43 tools): Run via Google Cloud Build containers
+ * - Native JS (37 tools): Run via npm packages on Node.js
+ * - Docker (78 tools): Run via Google Cloud Build containers
  *
- * Total: 68 tools across 11 categories
+ * Total: 115 tools across 11 categories
  */
 
 export interface ToolDefinition {
@@ -681,6 +681,490 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     docker: 'aquasec/kube-hunter:latest',
     credits: 3,
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // NEW TOOLS - January 2026 Expansion (11 tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // --- Linting ---
+  {
+    id: 'oxlint',
+    name: 'Oxlint',
+    description: 'Ultra-fast JavaScript/TypeScript linter (50-100x faster than ESLint)',
+    category: 'linting',
+    npm: 'oxlint',
+    languages: ['javascript', 'typescript'],
+    filePatterns: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+    credits: 0,
+  },
+
+  // --- Python Quality ---
+  {
+    id: 'ruff',
+    name: 'Ruff',
+    description: 'Extremely fast Python linter and formatter (replaces Flake8, Black, isort)',
+    category: 'quality',
+    docker: 'ghcr.io/astral-sh/ruff:latest',
+    languages: ['python'],
+    filePatterns: ['**/*.py'],
+    credits: 1,
+  },
+  {
+    id: 'mypy',
+    name: 'Mypy',
+    description: 'Static type checker for Python',
+    category: 'quality',
+    docker: 'python:3.11-slim',  // pip install mypy
+    languages: ['python'],
+    filePatterns: ['**/*.py'],
+    credits: 1,
+  },
+
+  // --- Dockerfile & SQL ---
+  {
+    id: 'hadolint',
+    name: 'Hadolint',
+    description: 'Dockerfile linter for best practices (uses ShellCheck for RUN instructions)',
+    category: 'quality',
+    docker: 'hadolint/hadolint:latest',
+    filePatterns: ['**/Dockerfile', '**/Dockerfile.*', '**/*.dockerfile'],
+    credits: 1,
+  },
+  {
+    id: 'sqlfluff',
+    name: 'SQLFluff',
+    description: 'SQL linter supporting 15+ dialects (PostgreSQL, MySQL, BigQuery, etc.)',
+    category: 'quality',
+    docker: 'sqlfluff/sqlfluff:latest',
+    languages: ['sql'],
+    filePatterns: ['**/*.sql'],
+    credits: 1,
+  },
+
+  // --- Go ---
+  {
+    id: 'golangci-lint',
+    name: 'GolangCI-Lint',
+    description: 'Fast Go linters runner - runs 50+ linters in parallel',
+    category: 'quality',
+    docker: 'golangci/golangci-lint:latest',
+    languages: ['go'],
+    filePatterns: ['**/*.go'],
+    credits: 2,
+  },
+
+  // --- Security ---
+  {
+    id: 'trufflehog',
+    name: 'TruffleHog',
+    description: 'Deep secrets scanner - scans git history for leaked credentials',
+    category: 'security',
+    docker: 'trufflesecurity/trufflehog:latest',
+    credits: 2,
+  },
+
+  // --- CI/CD ---
+  {
+    id: 'actionlint',
+    name: 'actionlint',
+    description: 'Static checker for GitHub Actions workflow files',
+    category: 'quality',
+    docker: 'rhysd/actionlint:latest',
+    filePatterns: ['**/.github/workflows/*.yml', '**/.github/workflows/*.yaml'],
+    credits: 1,
+  },
+
+  // --- Cloud Native / IaC ---
+  {
+    id: 'kics',
+    name: 'KICS',
+    description: 'Keeping Infrastructure as Code Secure - comprehensive IaC scanner',
+    category: 'cloud-native',
+    docker: 'checkmarx/kics:latest',
+    filePatterns: ['**/*.tf', '**/*.yaml', '**/*.yml', '**/Dockerfile'],
+    credits: 2,
+  },
+  {
+    id: 'cfn-lint',
+    name: 'cfn-lint',
+    description: 'AWS CloudFormation linter for template validation',
+    category: 'cloud-native',
+    docker: 'python:3.11-slim',  // pip install cfn-lint
+    filePatterns: ['**/*.template', '**/*.template.json', '**/*.template.yaml', '**/cloudformation/*.yml'],
+    credits: 1,
+  },
+
+  // --- Documentation ---
+  {
+    id: 'vale',
+    name: 'Vale',
+    description: 'Prose linter for technical writing - enforces style guides',
+    category: 'documentation',
+    docker: 'jdkato/vale:latest',
+    filePatterns: ['**/*.md', '**/*.txt', '**/*.rst'],
+    credits: 0,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 6: January 2026 Expansion Part 2 (9 tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // --- npm Tools ---
+  {
+    id: 'html-validate',
+    name: 'html-validate',
+    description: 'Offline HTML validator with extensive rule set',
+    category: 'quality',
+    npm: 'html-validate',
+    languages: ['html'],
+    filePatterns: ['**/*.html', '**/*.htm'],
+    credits: 0,
+  },
+  {
+    id: 'textlint',
+    name: 'textlint',
+    description: 'Pluggable natural language linter for text and markdown',
+    category: 'documentation',
+    npm: 'textlint',
+    filePatterns: ['**/*.md', '**/*.txt'],
+    credits: 0,
+  },
+  {
+    id: 'npm-check-updates',
+    name: 'npm-check-updates',
+    description: 'Find outdated, incorrect, and unused dependencies',
+    category: 'dependencies',
+    npm: 'npm-check-updates',
+    filePatterns: ['**/package.json'],
+    credits: 0,
+  },
+
+  // --- Docker Tools ---
+  {
+    id: 'yamllint',
+    name: 'yamllint',
+    description: 'Linter for YAML files (syntax, formatting, best practices)',
+    category: 'quality',
+    docker: 'cytopia/yamllint:latest',
+    filePatterns: ['**/*.yaml', '**/*.yml'],
+    credits: 0,
+  },
+  {
+    id: 'bearer',
+    name: 'Bearer',
+    description: 'Data privacy scanner - finds PII exposure and sensitive data flows',
+    category: 'security',
+    docker: 'bearer/bearer:latest',
+    credits: 2,
+  },
+  {
+    id: 'pylint',
+    name: 'Pylint',
+    description: 'Comprehensive Python static code analyzer',
+    category: 'quality',
+    docker: 'python:3.12-slim',
+    languages: ['python'],
+    filePatterns: ['**/*.py'],
+    credits: 1,
+  },
+  {
+    id: 'dart-analyze',
+    name: 'Dart Analyzer',
+    description: 'Static analysis for Dart and Flutter projects',
+    category: 'quality',
+    docker: 'dart:stable',
+    languages: ['dart'],
+    filePatterns: ['**/*.dart'],
+    credits: 1,
+  },
+  {
+    id: 'ktlint',
+    name: 'ktlint',
+    description: 'Kotlin linter with built-in formatter',
+    category: 'quality',
+    docker: 'pinterest/ktlint:latest',
+    languages: ['kotlin'],
+    filePatterns: ['**/*.kt', '**/*.kts'],
+    credits: 1,
+  },
+  {
+    id: 'prowler',
+    name: 'Prowler',
+    description: 'AWS security best practices assessment and auditing',
+    category: 'cloud-native',
+    docker: 'prowler/prowler:latest',
+    credits: 3,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 7: January 2026 Expansion Part 3 (12 tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // --- npm Tools (4) ---
+  {
+    id: 'lockfile-lint',
+    name: 'lockfile-lint',
+    description: 'Lint npm/yarn lockfiles for security policies and trusted sources',
+    category: 'dependencies',
+    npm: 'lockfile-lint',
+    filePatterns: ['**/package-lock.json', '**/yarn.lock'],
+    credits: 0,
+  },
+  {
+    id: 'audit-ci',
+    name: 'audit-ci',
+    description: 'CI-friendly npm/yarn audit with configurable severity thresholds',
+    category: 'dependencies',
+    npm: 'audit-ci',
+    filePatterns: ['**/package.json', '**/package-lock.json'],
+    credits: 0,
+  },
+  {
+    id: 'webhint',
+    name: 'webhint',
+    description: 'Web best practices linter for performance, accessibility, and security',
+    category: 'quality',
+    npm: 'hint',
+    languages: ['html', 'css', 'javascript'],
+    filePatterns: ['**/*.html'],
+    credits: 1,
+  },
+  {
+    id: 'accessibility-checker',
+    name: 'Accessibility Checker',
+    description: 'IBM Equal Access automated accessibility testing',
+    category: 'accessibility',
+    npm: 'accessibility-checker',
+    languages: ['html'],
+    filePatterns: ['**/*.html'],
+    credits: 1,
+  },
+
+  // --- Docker Tools (8) ---
+  {
+    id: 'clair',
+    name: 'Clair',
+    description: 'Static analysis for container vulnerabilities (CoreOS/Quay)',
+    category: 'security',
+    docker: 'quay.io/projectquay/clair:latest',
+    credits: 2,
+  },
+  {
+    id: 'falco',
+    name: 'Falco',
+    description: 'Cloud-native runtime security and threat detection (CNCF)',
+    category: 'security',
+    docker: 'falcosecurity/falco:latest',
+    credits: 3,
+  },
+  {
+    id: 'slither',
+    name: 'Slither',
+    description: 'Solidity smart contract static analyzer (Trail of Bits)',
+    category: 'security',
+    docker: 'trailofbits/slither:latest',
+    languages: ['solidity'],
+    filePatterns: ['**/*.sol'],
+    credits: 2,
+  },
+  {
+    id: 'error-prone',
+    name: 'Error Prone',
+    description: 'Java compile-time bug detection (Google)',
+    category: 'quality',
+    docker: 'maven:3.9-eclipse-temurin-21',
+    languages: ['java'],
+    filePatterns: ['**/*.java'],
+    credits: 2,
+  },
+  {
+    id: 'credo',
+    name: 'Credo',
+    description: 'Static code analysis for Elixir with focus on consistency',
+    category: 'quality',
+    docker: 'elixir:1.16-slim',
+    languages: ['elixir'],
+    filePatterns: ['**/*.ex', '**/*.exs'],
+    credits: 1,
+  },
+  {
+    id: 'steampipe',
+    name: 'Steampipe',
+    description: 'SQL-based cloud infrastructure queries and compliance checks',
+    category: 'cloud-native',
+    docker: 'turbot/steampipe:latest',
+    credits: 2,
+  },
+  {
+    id: 'sonar-scanner',
+    name: 'SonarScanner',
+    description: 'Multi-language code quality and security scanner (SonarQube)',
+    category: 'quality',
+    docker: 'sonarsource/sonar-scanner-cli:latest',
+    languages: ['javascript', 'typescript', 'python', 'java', 'go', 'php', 'ruby'],
+    credits: 2,
+  },
+  {
+    id: 'infer',
+    name: 'Infer',
+    description: 'Static analysis for C, C++, Java, and Objective-C (Meta)',
+    category: 'security',
+    docker: 'facebook/infer:latest',
+    languages: ['c', 'cpp', 'java', 'objective-c'],
+    filePatterns: ['**/*.c', '**/*.cpp', '**/*.java', '**/*.m'],
+    credits: 2,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 8: January 2026 Expansion Part 4 (15 tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // --- npm Tools (4) ---
+  {
+    id: 'pyright',
+    name: 'Pyright',
+    description: 'Fast Python type checker with full type inference (Microsoft)',
+    category: 'quality',
+    npm: 'pyright',
+    languages: ['python'],
+    filePatterns: ['**/*.py'],
+    credits: 1,
+  },
+  {
+    id: 'nbqa',
+    name: 'nbqa',
+    description: 'Run any Python linter or formatter on Jupyter notebooks',
+    category: 'quality',
+    npm: 'nbqa',
+    filePatterns: ['**/*.ipynb'],
+    credits: 1,
+  },
+  {
+    id: 'eslint-plugin-vue',
+    name: 'eslint-plugin-vue',
+    description: 'Official ESLint plugin for Vue.js with 100+ rules',
+    category: 'quality',
+    npm: 'eslint-plugin-vue',
+    languages: ['vue', 'javascript'],
+    filePatterns: ['**/*.vue'],
+    credits: 0,
+  },
+  {
+    id: 'eslint-plugin-react',
+    name: 'eslint-plugin-react',
+    description: 'React-specific linting rules for ESLint',
+    category: 'quality',
+    npm: 'eslint-plugin-react',
+    languages: ['javascript', 'typescript', 'jsx', 'tsx'],
+    filePatterns: ['**/*.jsx', '**/*.tsx'],
+    credits: 0,
+  },
+
+  // --- Docker Tools (11) ---
+  {
+    id: 'scalafmt',
+    name: 'scalafmt',
+    description: 'Code formatter for Scala with configurable style',
+    category: 'quality',
+    docker: 'scalameta/scalafmt:latest',
+    languages: ['scala'],
+    filePatterns: ['**/*.scala', '**/*.sbt'],
+    credits: 1,
+  },
+  {
+    id: 'scalafix',
+    name: 'Scalafix',
+    description: 'Refactoring and linting tool for Scala',
+    category: 'quality',
+    docker: 'scalacenter/scalafix:latest',
+    languages: ['scala'],
+    filePatterns: ['**/*.scala'],
+    credits: 1,
+  },
+  {
+    id: 'hlint',
+    name: 'HLint',
+    description: 'Haskell source code suggestions and linting',
+    category: 'quality',
+    docker: 'haskell:9.6-slim',
+    languages: ['haskell'],
+    filePatterns: ['**/*.hs', '**/*.lhs'],
+    credits: 1,
+  },
+  {
+    id: 'buf',
+    name: 'Buf',
+    description: 'Protocol Buffers linting and breaking change detection',
+    category: 'quality',
+    docker: 'bufbuild/buf:latest',
+    filePatterns: ['**/*.proto'],
+    credits: 1,
+  },
+  {
+    id: 'angular-eslint',
+    name: 'angular-eslint',
+    description: 'Angular-specific linting rules and best practices',
+    category: 'quality',
+    docker: 'node:20-slim',
+    languages: ['typescript', 'angular'],
+    filePatterns: ['**/*.component.ts', '**/*.module.ts'],
+    credits: 1,
+  },
+  {
+    id: 'scancode-toolkit',
+    name: 'ScanCode Toolkit',
+    description: 'Scan code for licenses, copyrights, and dependencies',
+    category: 'dependencies',
+    docker: 'ghcr.io/nexb/scancode-toolkit:latest',
+    credits: 2,
+  },
+  {
+    id: 'licensee',
+    name: 'Licensee',
+    description: 'Detect open source licenses from LICENSE files (GitHub)',
+    category: 'dependencies',
+    docker: 'ruby:3.2-slim',
+    filePatterns: ['**/LICENSE*', '**/COPYING*'],
+    credits: 1,
+  },
+  {
+    id: 'cosign',
+    name: 'Cosign',
+    description: 'Container image signing and verification (Sigstore)',
+    category: 'security',
+    docker: 'gcr.io/projectsigstore/cosign:latest',
+    credits: 2,
+  },
+  {
+    id: 'safety',
+    name: 'Safety',
+    description: 'Python dependency vulnerability scanner',
+    category: 'dependencies',
+    docker: 'python:3.12-slim',
+    languages: ['python'],
+    filePatterns: ['**/requirements*.txt', '**/Pipfile', '**/pyproject.toml'],
+    credits: 1,
+  },
+  {
+    id: 'sqlcheck',
+    name: 'sqlcheck',
+    description: 'Automatically detect SQL anti-patterns',
+    category: 'quality',
+    docker: 'aaronmorgenegg/sqlcheck:latest',
+    languages: ['sql'],
+    filePatterns: ['**/*.sql'],
+    credits: 1,
+  },
+  {
+    id: 'pgformatter',
+    name: 'pgFormatter',
+    description: 'PostgreSQL SQL syntax beautifier and formatter',
+    category: 'quality',
+    docker: 'darold/pgformatter:latest',
+    languages: ['sql'],
+    filePatterns: ['**/*.sql'],
+    credits: 0,
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -721,7 +1205,7 @@ export function getTotalCredits(toolIds: string[]): number {
   }, 0);
 }
 
-export const TOOL_COUNT = TOOL_REGISTRY.length;  // 68 tools (25 npm + 43 docker)
+export const TOOL_COUNT = TOOL_REGISTRY.length;  // 115 tools (37 npm + 78 docker)
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   linting: 'Linting & Formatting',

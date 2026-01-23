@@ -1,7 +1,7 @@
 /**
  * Docker Image Version Registry
  *
- * Pinned versions for all 43 Docker-based scanning tools.
+ * Pinned versions for all 59 Docker-based scanning tools.
  * This ensures reproducible builds and controlled updates.
  *
  * Update Policy:
@@ -14,7 +14,7 @@
  * - Use date-based tags for tools without semver (e.g., :2024.01.15)
  * - Avoid :latest in production
  *
- * Last full audit: 2026-01-21
+ * Last full audit: 2026-01-23
  */
 
 export interface DockerImageVersion {
@@ -321,6 +321,286 @@ export const DOCKER_VERSIONS: Record<string, DockerImageVersion> = {
     version: '3.12-slim',
     lastUpdated: '2024-01-01',
     releaseNotes: 'ModelScan installed via pip',
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 5: January 2026 Expansion (10 tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // Python Quality
+  'ruff': {
+    image: 'ghcr.io/astral-sh/ruff',
+    version: '0.9.2',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/astral-sh/ruff/releases',
+  },
+  'mypy': {
+    image: 'python',
+    version: '3.12-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'Mypy 1.14.x installed via pip',
+  },
+
+  // Dockerfile & SQL
+  'hadolint': {
+    image: 'hadolint/hadolint',
+    version: '2.12.0-alpine',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/hadolint/hadolint/releases',
+  },
+  'sqlfluff': {
+    image: 'sqlfluff/sqlfluff',
+    version: '3.3.0',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/sqlfluff/sqlfluff/releases',
+  },
+
+  // Go
+  'golangci-lint': {
+    image: 'golangci/golangci-lint',
+    version: '1.63.4',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/golangci/golangci-lint/releases',
+  },
+
+  // Security
+  'trufflehog': {
+    image: 'trufflesecurity/trufflehog',
+    version: '3.88.0',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/trufflesecurity/trufflehog/releases',
+  },
+
+  // CI/CD
+  'actionlint': {
+    image: 'rhysd/actionlint',
+    version: '1.7.7',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/rhysd/actionlint/releases',
+  },
+
+  // Cloud Native / IaC
+  'kics': {
+    image: 'checkmarx/kics',
+    version: '2.1.4',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/Checkmarx/kics/releases',
+  },
+  'cfn-lint': {
+    image: 'python',
+    version: '3.12-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'cfn-lint installed via pip',
+  },
+
+  // Documentation
+  'vale': {
+    image: 'jdkato/vale',
+    version: '3.9.5',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/errata-ai/vale/releases',
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 6: January 2026 Expansion Part 2 (6 Docker tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // YAML
+  'yamllint': {
+    image: 'cytopia/yamllint',
+    version: '1.35',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/adrienverge/yamllint/releases',
+  },
+
+  // Security
+  'bearer': {
+    image: 'bearer/bearer',
+    version: '1.46.0',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/Bearer/bearer/releases',
+  },
+
+  // Python
+  'pylint': {
+    image: 'python',
+    version: '3.12-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'Pylint 3.3.x installed via pip',
+  },
+
+  // Dart/Flutter
+  'dart-analyze': {
+    image: 'dart',
+    version: 'stable',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://dart.dev/tools/dart-analyze',
+  },
+
+  // Kotlin
+  'ktlint': {
+    image: 'pinterest/ktlint',
+    version: '1.5.0',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/pinterest/ktlint/releases',
+  },
+
+  // AWS Security
+  'prowler': {
+    image: 'prowler/prowler',
+    version: '4.6.2',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/prowler-cloud/prowler/releases',
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 7: January 2026 Expansion Part 3 (8 Docker tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // Container Security
+  'clair': {
+    image: 'quay.io/projectquay/clair',
+    version: '4.7.4',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/quay/clair/releases',
+  },
+  'falco': {
+    image: 'falcosecurity/falco',
+    version: '0.39.2',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/falcosecurity/falco/releases',
+  },
+
+  // Smart Contract Security
+  'slither': {
+    image: 'trailofbits/slither',
+    version: '0.10.4',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/crytic/slither/releases',
+  },
+
+  // Java Quality
+  'error-prone': {
+    image: 'maven',
+    version: '3.9-eclipse-temurin-21',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'Error Prone 2.36.x via Maven plugin',
+  },
+
+  // Elixir Quality
+  'credo': {
+    image: 'elixir',
+    version: '1.16-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'Credo installed via mix',
+  },
+
+  // Cloud Infrastructure
+  'steampipe': {
+    image: 'turbot/steampipe',
+    version: '0.24.2',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/turbot/steampipe/releases',
+  },
+
+  // Multi-language Quality
+  'sonar-scanner': {
+    image: 'sonarsource/sonar-scanner-cli',
+    version: '5.0.1',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/SonarSource/sonar-scanner-cli/releases',
+  },
+
+  // Static Analysis (Meta)
+  'infer': {
+    image: 'facebook/infer',
+    version: '1.2.0',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/facebook/infer/releases',
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 8: January 2026 Expansion Part 4 (11 Docker tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // Scala
+  'scalafmt': {
+    image: 'scalameta/scalafmt',
+    version: '3.8.3',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/scalameta/scalafmt/releases',
+  },
+  'scalafix': {
+    image: 'scalacenter/scalafix',
+    version: '0.12.1',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/scalacenter/scalafix/releases',
+  },
+
+  // Haskell
+  'hlint': {
+    image: 'haskell',
+    version: '9.6-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'HLint 3.8.x installed via cabal',
+  },
+
+  // Protocol Buffers
+  'buf': {
+    image: 'bufbuild/buf',
+    version: '1.47.2',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/bufbuild/buf/releases',
+  },
+
+  // Angular
+  'angular-eslint': {
+    image: 'node',
+    version: '20-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: '@angular-eslint 18.x installed via npm',
+  },
+
+  // License Scanning
+  'scancode-toolkit': {
+    image: 'ghcr.io/nexb/scancode-toolkit',
+    version: '32.3.0',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/nexB/scancode-toolkit/releases',
+  },
+  'licensee': {
+    image: 'ruby',
+    version: '3.2-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'Licensee gem installed via bundler',
+  },
+
+  // Security
+  'cosign': {
+    image: 'gcr.io/projectsigstore/cosign',
+    version: '2.4.1',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/sigstore/cosign/releases',
+  },
+  'safety': {
+    image: 'python',
+    version: '3.12-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'Safety 3.x installed via pip',
+  },
+
+  // SQL Quality
+  'sqlcheck': {
+    image: 'aaronmorgenegg/sqlcheck',
+    version: 'latest',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/jarulraj/sqlcheck',
+  },
+  'pgformatter': {
+    image: 'darold/pgformatter',
+    version: '5.5',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/darold/pgFormatter/releases',
   },
 };
 

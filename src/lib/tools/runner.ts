@@ -1,7 +1,7 @@
 /**
  * Tool Runner
  *
- * Executes all 69 tools using a mix of npm packages and CLI execution.
+ * Executes all 88 tools using a mix of npm packages and CLI execution.
  * CLI execution is used for tools with native bindings that can't be bundled.
  */
 
@@ -248,6 +248,140 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
           file,
           suggestion: 'Run prettier --write to fix',
         });
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Oxlint (ultra-fast JS/TS linter via CLI - Rust binary)
+  // ─────────────────────────────────────────────────────────────
+  oxlint: async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx oxlint --format json . 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const diagnostic of data.diagnostics || data || []) {
+          findings.push({
+            id: `oxlint-${diagnostic.filename || 'unknown'}-${diagnostic.line || 0}-${diagnostic.column || 0}`,
+            severity: diagnostic.severity === 'error' ? 'error' : 'warning',
+            message: diagnostic.message || 'Oxlint issue detected',
+            file: diagnostic.filename,
+            line: diagnostic.line,
+            column: diagnostic.column,
+            rule: diagnostic.rule_id || diagnostic.rule,
+            suggestion: diagnostic.help || diagnostic.fix?.message,
+          });
+        }
+      } catch {
+        // Fallback: parse line-by-line output if JSON fails
+        const lines = output.split('\n').filter(l => l.includes('error') || l.includes('warning'));
+        for (const line of lines) {
+          const match = line.match(/(.+?):(\d+):(\d+):\s*(error|warning)\s*(.+)/);
+          if (match) {
+            findings.push({
+              id: `oxlint-${match[1]}-${match[2]}`,
+              severity: match[4] as 'error' | 'warning',
+              message: match[5],
+              file: match[1],
+              line: parseInt(match[2], 10),
+              column: parseInt(match[3], 10),
+            });
+          }
+        }
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // html-validate (HTML validation)
+  // ─────────────────────────────────────────────────────────────
+  'html-validate': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx html-validate --formatter json "**/*.html" 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const result of data.results || data || []) {
+          for (const message of result.messages || []) {
+            findings.push({
+              id: `html-validate-${result.filePath}-${message.line || 0}-${message.column || 0}`,
+              severity: message.severity === 2 ? 'error' : 'warning',
+              message: message.message || 'HTML validation issue',
+              file: result.filePath,
+              line: message.line,
+              column: message.column,
+              rule: message.ruleId,
+            });
+          }
+        }
+      } catch {
+        // JSON parse error - tool may have returned non-JSON output
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // textlint (natural language linter)
+  // ─────────────────────────────────────────────────────────────
+  textlint: async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx textlint --format json "**/*.md" "**/*.txt" 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const result of data || []) {
+          for (const message of result.messages || []) {
+            findings.push({
+              id: `textlint-${result.filePath}-${message.line || 0}-${message.column || 0}`,
+              severity: message.severity === 2 ? 'error' : 'warning',
+              message: message.message || 'Text lint issue',
+              file: result.filePath,
+              line: message.line,
+              column: message.column,
+              rule: message.ruleId,
+              suggestion: message.fix?.text,
+            });
+          }
+        }
+      } catch {
+        // JSON parse error
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // npm-check-updates (find outdated dependencies)
+  // ─────────────────────────────────────────────────────────────
+  'npm-check-updates': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx npm-check-updates --jsonUpgraded 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const [pkg, version] of Object.entries(data || {})) {
+          findings.push({
+            id: `ncu-${pkg}`,
+            severity: 'info',
+            message: `${pkg} can be updated to ${version}`,
+            file: 'package.json',
+            suggestion: `Run: npm install ${pkg}@${version}`,
+          });
+        }
+      } catch {
+        // JSON parse error
       }
     }
 
@@ -1015,6 +1149,206 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
           file: 'package.json',
           suggestion: 'Add "size-limit" config to track bundle sizes',
         });
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // webhint (web best practices linter)
+  // ─────────────────────────────────────────────────────────────
+  'webhint': async ({ targetUrl }) => {
+    if (!targetUrl) {
+      return {
+        findings: [{
+          id: 'webhint-no-url',
+          severity: 'info' as const,
+          message: 'webhint requires a target URL for web best practices analysis',
+        }],
+        summary: { total: 1, errors: 0, warnings: 0, info: 1 },
+      };
+    }
+
+    const findings: Finding[] = [];
+    const output = runCli(`npx hint ${targetUrl} --formatters json 2>/dev/null`, process.cwd(), 120000);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const problem of data.problems || []) {
+          findings.push({
+            id: `webhint-${problem.hintId || 'unknown'}`,
+            severity: problem.severity === 2 ? 'error' : problem.severity === 1 ? 'warning' : 'info',
+            message: problem.message,
+            rule: problem.hintId,
+            suggestion: problem.documentation?.url,
+          });
+        }
+      } catch {
+        // JSON parse error
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // accessibility-checker (IBM Equal Access)
+  // ─────────────────────────────────────────────────────────────
+  'accessibility-checker': async ({ targetUrl }) => {
+    if (!targetUrl) {
+      return {
+        findings: [{
+          id: 'a11y-no-url',
+          severity: 'info' as const,
+          message: 'accessibility-checker requires a target URL for accessibility testing',
+        }],
+        summary: { total: 1, errors: 0, warnings: 0, info: 1 },
+      };
+    }
+
+    const findings: Finding[] = [];
+    const output = runCli(`npx achecker ${targetUrl} --outputFormat json 2>/dev/null`, process.cwd(), 60000);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        const results = data.results || data.report?.results || [];
+        for (const result of results) {
+          if (result.level === 'violation' || result.level === 'potentialviolation') {
+            findings.push({
+              id: `a11y-${result.ruleId || 'unknown'}`,
+              severity: result.level === 'violation' ? 'error' : 'warning',
+              message: result.message || result.reasonId,
+              rule: result.ruleId,
+              suggestion: result.help || result.snippet,
+            });
+          }
+        }
+      } catch {
+        // JSON parse error
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // pyright (Python type checker - Microsoft)
+  // ─────────────────────────────────────────────────────────────
+  'pyright': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx pyright --outputjson 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const diag of data.generalDiagnostics || []) {
+          findings.push({
+            id: `pyright-${diag.rule || 'error'}`,
+            severity: diag.severity === 'error' ? 'error' : 'warning',
+            message: diag.message,
+            file: diag.file,
+            line: diag.range?.start?.line,
+            rule: diag.rule,
+          });
+        }
+      } catch {
+        // JSON parse error
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // nbqa (Jupyter notebook quality)
+  // ─────────────────────────────────────────────────────────────
+  'nbqa': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    // Run ruff on notebooks via nbqa
+    const output = runCli('npx nbqa ruff . --output-format=json 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const issue of data) {
+          findings.push({
+            id: `nbqa-${issue.code || 'unknown'}`,
+            severity: issue.code?.startsWith('E') ? 'error' : 'warning',
+            message: issue.message,
+            file: issue.filename,
+            line: issue.location?.row,
+            rule: issue.code,
+          });
+        }
+      } catch {
+        // JSON parse error or no issues
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // eslint-plugin-vue (Vue.js linting rules)
+  // ─────────────────────────────────────────────────────────────
+  'eslint-plugin-vue': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx eslint --ext .vue --format json . 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const file of data) {
+          for (const msg of file.messages || []) {
+            if (msg.ruleId?.startsWith('vue/')) {
+              findings.push({
+                id: `vue-${msg.ruleId}`,
+                severity: msg.severity === 2 ? 'error' : 'warning',
+                message: msg.message,
+                file: file.filePath,
+                line: msg.line,
+                rule: msg.ruleId,
+              });
+            }
+          }
+        }
+      } catch {
+        // JSON parse error
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // eslint-plugin-react (React linting rules)
+  // ─────────────────────────────────────────────────────────────
+  'eslint-plugin-react': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx eslint --ext .jsx,.tsx --format json . 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const file of data) {
+          for (const msg of file.messages || []) {
+            if (msg.ruleId?.startsWith('react/') || msg.ruleId?.startsWith('react-hooks/')) {
+              findings.push({
+                id: `react-${msg.ruleId}`,
+                severity: msg.severity === 2 ? 'error' : 'warning',
+                message: msg.message,
+                file: file.filePath,
+                line: msg.line,
+                rule: msg.ruleId,
+              });
+            }
+          }
+        }
+      } catch {
+        // JSON parse error
       }
     }
 
