@@ -192,7 +192,7 @@ export default function NewScanPage() {
         const data = await res.json();
         toast({
           title: 'Scan Started',
-          description: '69 tools are now analyzing your application. This typically takes under 60 seconds.',
+          description: '115 tools are now analyzing your application. This typically takes under 60 seconds.',
         });
         router.push(`/applications/${appId}/scans/${data.scan.id}`);
       } else {
@@ -241,7 +241,7 @@ export default function NewScanPage() {
           </Link>
           <h1 className="text-3xl font-bold mt-2">New Scan</h1>
           <p className="text-muted-foreground">
-            Point us to your application and we'll run all 69 tools automatically.
+            Point us to your application and we'll run all 115 tools automatically.
           </p>
         </div>
 
@@ -549,7 +549,7 @@ export default function NewScanPage() {
         {/* What Gets Analyzed */}
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle className="text-lg">69 Tools Run Automatically</CardTitle>
+            <CardTitle className="text-lg">115 Tools Run Automatically</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">

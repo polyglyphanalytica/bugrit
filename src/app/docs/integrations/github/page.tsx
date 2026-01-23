@@ -135,7 +135,7 @@ export default function GitHubIntegrationPage() {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">2.</span>
-            <span>Run 69 analysis tools on your code</span>
+            <span>Run 115 analysis tools on your code</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">3.</span>

@@ -5,7 +5,7 @@ export default function JestIntegrationPage() {
         <h1 className="text-4xl font-bold mb-4">Jest Unit Tests</h1>
         <p className="text-lg text-muted-foreground">
           Include your Jest tests with your code submission. Bugrit will run
-          them alongside our 69 analysis tools and include results in your unified report.
+          them alongside our 115 analysis tools and include results in your unified report.
         </p>
       </div>
 

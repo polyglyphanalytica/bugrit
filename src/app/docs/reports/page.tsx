@@ -14,7 +14,7 @@ export default function ReportsDocPage() {
           <span>💡</span> Why This Matters
         </h2>
         <p className="text-muted-foreground mb-4">
-          Running 69 tools gives you 69 different reports in 69 different formats. Our AI combines everything into one readable report with plain English explanations—no security PhD required.
+          Running 115 tools gives you 115 different reports in 115 different formats. Our AI combines everything into one readable report with plain English explanations—no security PhD required.
         </p>
         <ul className="space-y-2 text-sm">
           <li className="flex items-start gap-2">
@@ -36,7 +36,7 @@ export default function ReportsDocPage() {
         <h2 className="text-xl font-bold mb-3">Two Report Sections, One View</h2>
         <p className="text-muted-foreground mb-4">
           Bugrit combines your test results (Playwright, Appium, Tauri) and code scanning findings
-          (69 tools) into a single unified report. No more switching between dashboards.
+          (115 tools) into a single unified report. No more switching between dashboards.
         </p>
         <div className="grid md:grid-cols-2 gap-4">
           <div className="p-4 bg-background rounded-lg border">
@@ -54,7 +54,7 @@ export default function ReportsDocPage() {
               <span className="font-semibold">Scanning Report</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Deduplicated findings from 69 tools, prioritized issues, plain English explanations
+              Deduplicated findings from 115 tools, prioritized issues, plain English explanations
             </p>
           </div>
         </div>
@@ -242,7 +242,7 @@ export default function ReportsDocPage() {
           <span>🔍</span> Code Scanning Report
         </h2>
         <p className="text-muted-foreground mb-6">
-          69 analysis tools run in parallel. Findings are deduplicated, conflicts resolved, and presented in plain English.
+          115 analysis tools run in parallel. Findings are deduplicated, conflicts resolved, and presented in plain English.
         </p>
 
         {/* Scanning Report Mockup */}
@@ -255,7 +255,7 @@ export default function ReportsDocPage() {
                 <p className="text-sm text-muted-foreground">E-Commerce App • Jan 20, 2026</p>
               </div>
               <div className="text-right">
-                <div className="text-sm text-muted-foreground">69 tools completed</div>
+                <div className="text-sm text-muted-foreground">115 tools completed</div>
                 <div className="text-sm text-muted-foreground">Scan time: 47s</div>
               </div>
             </div>
@@ -348,7 +348,7 @@ export default function ReportsDocPage() {
 
           {/* Tools Run */}
           <div className="p-6">
-            <h4 className="font-semibold mb-3">Tools Executed (69)</h4>
+            <h4 className="font-semibold mb-3">Tools Executed (115)</h4>
             <div className="flex flex-wrap gap-2">
               <span className="px-2 py-1 bg-muted text-xs rounded">ESLint</span>
               <span className="px-2 py-1 bg-muted text-xs rounded">Biome</span>
