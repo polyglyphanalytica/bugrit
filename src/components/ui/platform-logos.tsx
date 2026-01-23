@@ -285,46 +285,6 @@ const TECH_LOGOS: TechLogo[] = [
   },
 ];
 
-// Bank logos for founder's experience
-const BANK_LOGOS: TechLogo[] = [
-  {
-    name: 'Citi',
-    color: '#056dae',
-    svg: (
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M2.5 11.5c0-1.933.683-3.583 2.05-4.95C5.917 5.183 7.567 4.5 9.5 4.5c1.4 0 2.667.35 3.8 1.05a7.24 7.24 0 0 1 2.7 2.85l-2.4 1.4a4.45 4.45 0 0 0-1.65-1.8 4.27 4.27 0 0 0-2.45-.75c-1.267 0-2.35.45-3.25 1.35-.9.9-1.35 1.983-1.35 3.25v.3c0 1.267.45 2.35 1.35 3.25.9.9 1.983 1.35 3.25 1.35.9 0 1.717-.25 2.45-.75a4.45 4.45 0 0 0 1.65-1.8l2.4 1.4a7.24 7.24 0 0 1-2.7 2.85c-1.133.7-2.4 1.05-3.8 1.05-1.933 0-3.583-.683-4.95-2.05C3.183 15.083 2.5 13.433 2.5 11.5zm10.3-7V7h1.4V4.5h2.6V7h1.4V4.5h2.6V7h.7v10h-.7v2.5h-2.6V17h-1.4v2.5h-2.6V17h-1.4v2.5H10V17h-.7V7h.7V4.5h2.8zm.9 10h5.1V8h-5.1v5.5z" />
-      </svg>
-    ),
-  },
-  {
-    name: 'JP Morgan',
-    color: '#ffffff',
-    svg: (
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M2 12c0 5.523 4.477 10 10 10s10-4.477 10-10S17.523 2 12 2 2 6.477 2 12zm1.5 0c0-4.687 3.813-8.5 8.5-8.5s8.5 3.813 8.5 8.5-3.813 8.5-8.5 8.5-8.5-3.813-8.5-8.5zm4 0c0 .276.224.5.5.5h8c.276 0 .5-.224.5-.5s-.224-.5-.5-.5H8c-.276 0-.5.224-.5.5zm0 2c0 .276.224.5.5.5h6c.276 0 .5-.224.5-.5s-.224-.5-.5-.5H8c-.276 0-.5.224-.5.5zm0-4c0 .276.224.5.5.5h6c.276 0 .5-.224.5-.5s-.224-.5-.5-.5H8c-.276 0-.5.224-.5.5z" />
-      </svg>
-    ),
-  },
-  {
-    name: 'Barclays',
-    color: '#00aeef',
-    svg: (
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-3-8.5l2.5 2.5 4.5-4.5 1.5 1.5-6 6-4-4 1.5-1.5z" />
-      </svg>
-    ),
-  },
-  {
-    name: 'Deutsche Bank',
-    color: '#0018a8',
-    svg: (
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M2 4v16h20V4H2zm18 14H4V6h16v12zM6 8h2v8H6V8zm4 0h2v8h-2V8zm4 0h2v8h-2V8zm4 0h2v8h-2V8z" />
-      </svg>
-    ),
-  },
-];
-
 export function PlatformLogos() {
   return (
     <div className="w-full py-12">
@@ -380,26 +340,9 @@ export function PlatformLogos() {
       {/* Founder's experience section */}
       <div className="mt-12 pt-8 border-t border-border/30">
         <div className="max-w-3xl mx-auto text-center">
-          <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+          <p className="text-muted-foreground text-sm leading-relaxed">
             Bugrit is the vision of a Product and Tech leader who has worked at top global banks
           </p>
-          <div className="flex items-center justify-center gap-8 flex-wrap">
-            {BANK_LOGOS.map((bank) => (
-              <div
-                key={bank.name}
-                className="flex items-center justify-center"
-                title={bank.name}
-              >
-                <div
-                  className="w-8 h-8 flex items-center justify-center opacity-50 hover:opacity-80 transition-opacity duration-300"
-                  style={{ color: bank.color }}
-                >
-                  {bank.svg}
-                </div>
-                <span className="ml-2 text-xs font-medium text-muted-foreground">{bank.name}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
