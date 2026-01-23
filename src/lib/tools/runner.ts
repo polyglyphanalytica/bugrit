@@ -1156,34 +1156,6 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   },
 
   // ─────────────────────────────────────────────────────────────
-  // audit-ci (CI-friendly npm/yarn audit)
-  // ─────────────────────────────────────────────────────────────
-  'audit-ci': async ({ targetPath }) => {
-    const findings: Finding[] = [];
-    const output = runCli('npx audit-ci --json 2>/dev/null', targetPath);
-
-    if (output) {
-      try {
-        const data = JSON.parse(output);
-        for (const advisory of data.advisories || Object.values(data.vulnerabilities || {})) {
-          const adv = advisory as { severity?: string; module_name?: string; title?: string; recommendation?: string; url?: string };
-          findings.push({
-            id: `audit-ci-${adv.module_name || 'unknown'}`,
-            severity: adv.severity === 'critical' || adv.severity === 'high' ? 'error' : 'warning',
-            message: `${adv.module_name}: ${adv.title || 'Security vulnerability'}`,
-            file: 'package.json',
-            suggestion: adv.recommendation || adv.url || 'Update affected package',
-          });
-        }
-      } catch {
-        // JSON parse error or no vulnerabilities
-      }
-    }
-
-    return { findings, summary: summarizeFindings(findings) };
-  },
-
-  // ─────────────────────────────────────────────────────────────
   // webhint (web best practices linter)
   // ─────────────────────────────────────────────────────────────
   'webhint': async ({ targetUrl }) => {

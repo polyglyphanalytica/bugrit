@@ -1,13 +1,14 @@
 /**
  * Cloud Build Tool Integrations
  *
- * Wraps the 44 Docker-based tools from cloud-build.ts as proper ToolIntegration
+ * Wraps the 78 Docker-based tools from cloud-build.ts as proper ToolIntegration
  * classes so they can be used by the AuditOrchestrator.
  *
  * Wave 1 (6 tools): Core security & performance
  * Wave 2 (10 tools): Advanced security scanning
  * Wave 3 (8 tools): Language-specific analysis
  * Wave 4 (20 tools): Dependencies, API, Mobile, Cloud Native, AI/ML
+ * Wave 5-8 (34 tools): Extended language support, Cloud compliance, Supply chain
  */
 
 import {
@@ -302,6 +303,218 @@ const TOOL_METADATA: Record<
     category: 'security',
     description: 'Android APK reverse engineering and malware analysis',
     website: 'https://github.com/androguard/androguard',
+    targetType: 'source',
+  },
+  // Wave 5: Additional tools
+  ruff: {
+    category: 'code-quality',
+    description: 'Fast Python linter and formatter',
+    website: 'https://docs.astral.sh/ruff/',
+    targetType: 'source',
+  },
+  mypy: {
+    category: 'code-quality',
+    description: 'Python static type checker',
+    website: 'https://mypy-lang.org/',
+    targetType: 'source',
+  },
+  hadolint: {
+    category: 'code-quality',
+    description: 'Dockerfile linter and best practices checker',
+    website: 'https://github.com/hadolint/hadolint',
+    targetType: 'source',
+  },
+  sqlfluff: {
+    category: 'code-quality',
+    description: 'SQL linter and auto-formatter',
+    website: 'https://sqlfluff.com/',
+    targetType: 'source',
+  },
+  'golangci-lint': {
+    category: 'code-quality',
+    description: 'Fast Go linters aggregator',
+    website: 'https://golangci-lint.run/',
+    targetType: 'source',
+  },
+  trufflehog: {
+    category: 'security',
+    description: 'Finds leaked credentials and secrets',
+    website: 'https://trufflesecurity.com/trufflehog',
+    targetType: 'source',
+  },
+  actionlint: {
+    category: 'code-quality',
+    description: 'GitHub Actions workflow linter',
+    website: 'https://github.com/rhysd/actionlint',
+    targetType: 'source',
+  },
+  kics: {
+    category: 'security',
+    description: 'Infrastructure as Code security scanner',
+    website: 'https://kics.io/',
+    targetType: 'source',
+  },
+  'cfn-lint': {
+    category: 'code-quality',
+    description: 'AWS CloudFormation linter',
+    website: 'https://github.com/aws-cloudformation/cfn-lint',
+    targetType: 'source',
+  },
+  vale: {
+    category: 'code-quality',
+    description: 'Prose linter for technical writing',
+    website: 'https://vale.sh/',
+    targetType: 'source',
+  },
+  yamllint: {
+    category: 'code-quality',
+    description: 'YAML syntax and style linter',
+    website: 'https://github.com/adrienverge/yamllint',
+    targetType: 'source',
+  },
+  bearer: {
+    category: 'security',
+    description: 'Data security scanner for code',
+    website: 'https://www.bearer.com/',
+    targetType: 'source',
+  },
+  pylint: {
+    category: 'code-quality',
+    description: 'Python code analysis tool',
+    website: 'https://pylint.org/',
+    targetType: 'source',
+  },
+  'dart-analyze': {
+    category: 'code-quality',
+    description: 'Dart static analyzer',
+    website: 'https://dart.dev/tools/dart-analyze',
+    targetType: 'source',
+  },
+  ktlint: {
+    category: 'code-quality',
+    description: 'Kotlin linter and formatter',
+    website: 'https://ktlint.github.io/',
+    targetType: 'source',
+  },
+  prowler: {
+    category: 'security',
+    description: 'AWS/Azure/GCP security assessment tool',
+    website: 'https://prowler.com/',
+    targetType: 'source',
+  },
+  clair: {
+    category: 'security',
+    description: 'Container vulnerability scanner',
+    website: 'https://quay.github.io/clair/',
+    targetType: 'image',
+  },
+  falco: {
+    category: 'security',
+    description: 'Cloud-native runtime security',
+    website: 'https://falco.org/',
+    targetType: 'source',
+  },
+  slither: {
+    category: 'security',
+    description: 'Solidity smart contract analyzer',
+    website: 'https://github.com/crytic/slither',
+    targetType: 'source',
+  },
+  'error-prone': {
+    category: 'code-quality',
+    description: 'Java static analysis tool by Google',
+    website: 'https://errorprone.info/',
+    targetType: 'source',
+  },
+  credo: {
+    category: 'code-quality',
+    description: 'Elixir static code analysis',
+    website: 'https://hexdocs.pm/credo/',
+    targetType: 'source',
+  },
+  steampipe: {
+    category: 'security',
+    description: 'Cloud infrastructure compliance scanner',
+    website: 'https://steampipe.io/',
+    targetType: 'source',
+  },
+  'sonar-scanner': {
+    category: 'code-quality',
+    description: 'SonarQube code quality scanner',
+    website: 'https://docs.sonarqube.org/',
+    targetType: 'source',
+  },
+  infer: {
+    category: 'security',
+    description: 'Facebook static analyzer for Java/C/C++/Objective-C',
+    website: 'https://fbinfer.com/',
+    targetType: 'source',
+  },
+  // Wave 8: January 2026 expansion
+  scalafmt: {
+    category: 'code-quality',
+    description: 'Scala code formatter',
+    website: 'https://scalameta.org/scalafmt/',
+    targetType: 'source',
+  },
+  scalafix: {
+    category: 'code-quality',
+    description: 'Scala refactoring and linting tool',
+    website: 'https://scalacenter.github.io/scalafix/',
+    targetType: 'source',
+  },
+  hlint: {
+    category: 'code-quality',
+    description: 'Haskell source code suggestions',
+    website: 'https://github.com/ndmitchell/hlint',
+    targetType: 'source',
+  },
+  buf: {
+    category: 'code-quality',
+    description: 'Protocol buffer linter and breaking change detector',
+    website: 'https://buf.build/',
+    targetType: 'source',
+  },
+  'angular-eslint': {
+    category: 'code-quality',
+    description: 'ESLint plugin for Angular projects',
+    website: 'https://github.com/angular-eslint/angular-eslint',
+    targetType: 'source',
+  },
+  'scancode-toolkit': {
+    category: 'security',
+    description: 'License and copyright scanner',
+    website: 'https://scancode-toolkit.readthedocs.io/',
+    targetType: 'source',
+  },
+  licensee: {
+    category: 'security',
+    description: 'License detection tool',
+    website: 'https://github.com/licensee/licensee',
+    targetType: 'source',
+  },
+  cosign: {
+    category: 'security',
+    description: 'Container signing and verification',
+    website: 'https://docs.sigstore.dev/cosign/',
+    targetType: 'image',
+  },
+  safety: {
+    category: 'security',
+    description: 'Python dependency vulnerability checker',
+    website: 'https://safetycli.com/',
+    targetType: 'source',
+  },
+  sqlcheck: {
+    category: 'code-quality',
+    description: 'SQL anti-pattern detector',
+    website: 'https://github.com/jarulraj/sqlcheck',
+    targetType: 'source',
+  },
+  pgformatter: {
+    category: 'code-quality',
+    description: 'PostgreSQL SQL formatter',
+    website: 'https://github.com/darold/pgFormatter',
     targetType: 'source',
   },
 };
@@ -1666,7 +1879,880 @@ export class CloudBuildAndroguardIntegration extends CloudBuildIntegration {
   }
 }
 
-// Export all Cloud Build integrations (44 Docker-based tools)
+// ============================================================
+// Wave 5-8: Additional Tools
+// ============================================================
+
+export class CloudBuildRuffIntegration extends CloudBuildIntegration {
+  name = 'Ruff (Cloud)';
+  toolId: DockerToolId = 'ruff';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const issue of data as Array<{ code: string; message: string; filename: string; location: { row: number; column: number } }>) {
+      findings.push(this.createFinding({
+        title: issue.code,
+        description: issue.message,
+        severity: issue.code.startsWith('E') ? 'high' : 'medium',
+        file: issue.filename,
+        line: issue.location.row,
+        column: issue.location.column,
+        ruleId: issue.code,
+        tags: ['python', 'ruff', 'linting'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildMypyIntegration extends CloudBuildIntegration {
+  name = 'mypy (Cloud)';
+  toolId: DockerToolId = 'mypy';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const lines = typeof output === 'string' ? output.split('\n').filter(Boolean) : [];
+
+    for (const line of lines) {
+      const match = line.match(/^(.+):(\d+): (error|warning|note): (.+)$/);
+      if (match) {
+        findings.push(this.createFinding({
+          title: 'Type Error',
+          description: match[4],
+          severity: match[3] === 'error' ? 'high' : 'medium',
+          file: match[1],
+          line: parseInt(match[2], 10),
+          tags: ['python', 'mypy', 'type-checking'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildHadolintIntegration extends CloudBuildIntegration {
+  name = 'Hadolint (Cloud)';
+  toolId: DockerToolId = 'hadolint';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const issue of data as Array<{ code: string; message: string; file: string; line: number; level: string }>) {
+      findings.push(this.createFinding({
+        title: issue.code,
+        description: issue.message,
+        severity: this.mapSeverity(issue.level),
+        file: issue.file,
+        line: issue.line,
+        ruleId: issue.code,
+        documentationUrl: `https://github.com/hadolint/hadolint/wiki/${issue.code}`,
+        tags: ['docker', 'dockerfile', 'hadolint'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildSqlfluffIntegration extends CloudBuildIntegration {
+  name = 'SQLFluff (Cloud)';
+  toolId: DockerToolId = 'sqlfluff';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const file of data as Array<{ filepath: string; violations: Array<{ code: string; description: string; start_line_no: number; start_line_pos: number }> }>) {
+      for (const violation of file.violations || []) {
+        findings.push(this.createFinding({
+          title: violation.code,
+          description: violation.description,
+          severity: 'medium',
+          file: file.filepath,
+          line: violation.start_line_no,
+          column: violation.start_line_pos,
+          ruleId: violation.code,
+          tags: ['sql', 'sqlfluff', 'linting'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildGolangciLintIntegration extends CloudBuildIntegration {
+  name = 'golangci-lint (Cloud)';
+  toolId: DockerToolId = 'golangci-lint';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { Issues?: Array<{ FromLinter: string; Text: string; Severity: string; Pos: { Filename: string; Line: number; Column: number } }> };
+
+    for (const issue of data.Issues || []) {
+      findings.push(this.createFinding({
+        title: issue.FromLinter,
+        description: issue.Text,
+        severity: this.mapSeverity(issue.Severity),
+        file: issue.Pos.Filename,
+        line: issue.Pos.Line,
+        column: issue.Pos.Column,
+        ruleId: issue.FromLinter,
+        tags: ['go', 'golang', 'linting'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildTrufflehogIntegration extends CloudBuildIntegration {
+  name = 'TruffleHog (Cloud)';
+  toolId: DockerToolId = 'trufflehog';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const lines = typeof output === 'string' ? output.split('\n').filter(Boolean) : [];
+
+    for (const line of lines) {
+      try {
+        const result = JSON.parse(line) as { DetectorName: string; SourceMetadata?: { Data?: { Filesystem?: { file: string; line?: number } } }; Raw?: string };
+        findings.push(this.createFinding({
+          title: `Secret Found: ${result.DetectorName}`,
+          description: `Potential ${result.DetectorName} credential detected`,
+          severity: 'critical',
+          file: result.SourceMetadata?.Data?.Filesystem?.file,
+          line: result.SourceMetadata?.Data?.Filesystem?.line,
+          codeSnippet: result.Raw ? '***REDACTED***' : undefined,
+          tags: ['secret', 'credential', 'trufflehog'],
+        }));
+      } catch {
+        // Skip non-JSON lines
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildActionlintIntegration extends CloudBuildIntegration {
+  name = 'actionlint (Cloud)';
+  toolId: DockerToolId = 'actionlint';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const issue of data as Array<{ message: string; filepath: string; line: number; column: number; kind: string }>) {
+      findings.push(this.createFinding({
+        title: issue.kind,
+        description: issue.message,
+        severity: 'medium',
+        file: issue.filepath,
+        line: issue.line,
+        column: issue.column,
+        ruleId: issue.kind,
+        tags: ['github-actions', 'workflow', 'ci-cd'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildKicsIntegration extends CloudBuildIntegration {
+  name = 'KICS (Cloud)';
+  toolId: DockerToolId = 'kics';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { queries?: Array<{ query_name: string; severity: string; description: string; files?: Array<{ file_name: string; line: number }> }> };
+
+    for (const query of data.queries || []) {
+      for (const file of query.files || []) {
+        findings.push(this.createFinding({
+          title: query.query_name,
+          description: query.description,
+          severity: this.mapSeverity(query.severity),
+          file: file.file_name,
+          line: file.line,
+          ruleId: query.query_name,
+          tags: ['iac', 'security', 'kics'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildCfnLintIntegration extends CloudBuildIntegration {
+  name = 'cfn-lint (Cloud)';
+  toolId: DockerToolId = 'cfn-lint';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const issue of data as Array<{ Rule: { Id: string; Description: string }; Level: string; Message: string; Filename: string; Location: { Start: { LineNumber: number; ColumnNumber: number } } }>) {
+      findings.push(this.createFinding({
+        title: issue.Rule.Id,
+        description: issue.Message,
+        severity: this.mapSeverity(issue.Level),
+        file: issue.Filename,
+        line: issue.Location.Start.LineNumber,
+        column: issue.Location.Start.ColumnNumber,
+        ruleId: issue.Rule.Id,
+        tags: ['cloudformation', 'aws', 'iac'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildValeIntegration extends CloudBuildIntegration {
+  name = 'Vale (Cloud)';
+  toolId: DockerToolId = 'vale';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as Record<string, Array<{ Line: number; Span: [number, number]; Check: string; Message: string; Severity: string }>>;
+
+    for (const [file, issues] of Object.entries(data || {})) {
+      for (const issue of issues) {
+        findings.push(this.createFinding({
+          title: issue.Check,
+          description: issue.Message,
+          severity: this.mapSeverity(issue.Severity),
+          file,
+          line: issue.Line,
+          column: issue.Span[0],
+          ruleId: issue.Check,
+          tags: ['prose', 'documentation', 'vale'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildYamllintIntegration extends CloudBuildIntegration {
+  name = 'yamllint (Cloud)';
+  toolId: DockerToolId = 'yamllint';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const lines = typeof output === 'string' ? output.split('\n').filter(Boolean) : [];
+
+    for (const line of lines) {
+      const match = line.match(/^(.+):(\d+):(\d+): \[(\w+)\] (.+) \((.+)\)$/);
+      if (match) {
+        findings.push(this.createFinding({
+          title: match[6],
+          description: match[5],
+          severity: match[4] === 'error' ? 'high' : 'medium',
+          file: match[1],
+          line: parseInt(match[2], 10),
+          column: parseInt(match[3], 10),
+          ruleId: match[6],
+          tags: ['yaml', 'linting', 'yamllint'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildBearerIntegration extends CloudBuildIntegration {
+  name = 'Bearer (Cloud)';
+  toolId: DockerToolId = 'bearer';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { findings?: Array<{ rule_id: string; title: string; description: string; severity: string; filename: string; line_number: number }> };
+
+    for (const finding of data.findings || []) {
+      findings.push(this.createFinding({
+        title: finding.title,
+        description: finding.description,
+        severity: this.mapSeverity(finding.severity),
+        file: finding.filename,
+        line: finding.line_number,
+        ruleId: finding.rule_id,
+        tags: ['data-security', 'privacy', 'bearer'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildPylintIntegration extends CloudBuildIntegration {
+  name = 'Pylint (Cloud)';
+  toolId: DockerToolId = 'pylint';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const issue of data as Array<{ type: string; module: string; obj: string; line: number; column: number; path: string; symbol: string; message: string; 'message-id': string }>) {
+      findings.push(this.createFinding({
+        title: `${issue['message-id']}: ${issue.symbol}`,
+        description: issue.message,
+        severity: this.mapPylintType(issue.type),
+        file: issue.path,
+        line: issue.line,
+        column: issue.column,
+        ruleId: issue['message-id'],
+        tags: ['python', 'pylint', 'linting'],
+      }));
+    }
+    return findings;
+  }
+
+  private mapPylintType(type: string): Severity {
+    if (type === 'error' || type === 'fatal') return 'high';
+    if (type === 'warning') return 'medium';
+    return 'low';
+  }
+}
+
+export class CloudBuildDartAnalyzeIntegration extends CloudBuildIntegration {
+  name = 'dart analyze (Cloud)';
+  toolId: DockerToolId = 'dart-analyze';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { diagnostics?: Array<{ code: string; severity: string; type: string; location: { file: string; range: { start: { line: number; column: number } } }; problemMessage: string }> };
+
+    for (const diag of data.diagnostics || []) {
+      findings.push(this.createFinding({
+        title: diag.code,
+        description: diag.problemMessage,
+        severity: this.mapSeverity(diag.severity),
+        file: diag.location.file,
+        line: diag.location.range.start.line,
+        column: diag.location.range.start.column,
+        ruleId: diag.code,
+        tags: ['dart', 'flutter', 'analysis'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildKtlintIntegration extends CloudBuildIntegration {
+  name = 'ktlint (Cloud)';
+  toolId: DockerToolId = 'ktlint';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const file of data as Array<{ file: string; errors: Array<{ line: number; column: number; message: string; rule: string }> }>) {
+      for (const error of file.errors || []) {
+        findings.push(this.createFinding({
+          title: error.rule,
+          description: error.message,
+          severity: 'medium',
+          file: file.file,
+          line: error.line,
+          column: error.column,
+          ruleId: error.rule,
+          tags: ['kotlin', 'ktlint', 'style'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildProwlerIntegration extends CloudBuildIntegration {
+  name = 'Prowler (Cloud)';
+  toolId: DockerToolId = 'prowler';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const check of data as Array<{ CheckID: string; CheckTitle: string; Status: string; Severity: string; ResourceId: string; StatusExtended: string }>) {
+      if (check.Status === 'FAIL') {
+        findings.push(this.createFinding({
+          title: `${check.CheckID}: ${check.CheckTitle}`,
+          description: check.StatusExtended,
+          severity: this.mapSeverity(check.Severity),
+          ruleId: check.CheckID,
+          tags: ['cloud', 'aws', 'azure', 'gcp', 'security', check.ResourceId],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildClairIntegration extends CloudBuildIntegration {
+  name = 'Clair (Cloud)';
+  toolId: DockerToolId = 'clair';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { vulnerabilities?: Record<string, Array<{ Name: string; Severity: string; Description: string; Link: string; FixedBy?: string }>> };
+
+    for (const [, vulns] of Object.entries(data.vulnerabilities || {})) {
+      for (const vuln of vulns) {
+        findings.push(this.createFinding({
+          title: vuln.Name,
+          description: vuln.Description,
+          severity: this.mapSeverity(vuln.Severity),
+          ruleId: vuln.Name,
+          documentationUrl: vuln.Link,
+          recommendation: vuln.FixedBy ? `Upgrade to ${vuln.FixedBy}` : 'No fix available',
+          tags: ['container', 'vulnerability', 'clair'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildFalcoIntegration extends CloudBuildIntegration {
+  name = 'Falco (Cloud)';
+  toolId: DockerToolId = 'falco';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const event of data as Array<{ rule: string; priority: string; output: string; output_fields?: Record<string, string> }>) {
+      findings.push(this.createFinding({
+        title: event.rule,
+        description: event.output,
+        severity: this.mapFalcoPriority(event.priority),
+        ruleId: event.rule,
+        tags: ['runtime', 'security', 'falco', 'kubernetes'],
+      }));
+    }
+    return findings;
+  }
+
+  private mapFalcoPriority(priority: string): Severity {
+    const p = priority.toLowerCase();
+    if (p === 'critical' || p === 'emergency' || p === 'alert') return 'critical';
+    if (p === 'error' || p === 'warning') return 'high';
+    if (p === 'notice') return 'medium';
+    return 'low';
+  }
+}
+
+export class CloudBuildSlitherIntegration extends CloudBuildIntegration {
+  name = 'Slither (Cloud)';
+  toolId: DockerToolId = 'slither';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { results?: { detectors?: Array<{ check: string; impact: string; confidence: string; description: string; elements?: Array<{ source_mapping?: { filename: string; lines: number[] } }> }> } };
+
+    for (const detector of data.results?.detectors || []) {
+      const elem = detector.elements?.[0];
+      findings.push(this.createFinding({
+        title: detector.check,
+        description: detector.description,
+        severity: this.mapSlitherImpact(detector.impact),
+        file: elem?.source_mapping?.filename,
+        line: elem?.source_mapping?.lines?.[0],
+        ruleId: detector.check,
+        tags: ['solidity', 'smart-contract', 'security', 'slither'],
+      }));
+    }
+    return findings;
+  }
+
+  private mapSlitherImpact(impact: string): Severity {
+    if (impact === 'High') return 'critical';
+    if (impact === 'Medium') return 'high';
+    if (impact === 'Low') return 'medium';
+    return 'low';
+  }
+}
+
+export class CloudBuildErrorProneIntegration extends CloudBuildIntegration {
+  name = 'Error Prone (Cloud)';
+  toolId: DockerToolId = 'error-prone';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const lines = typeof output === 'string' ? output.split('\n').filter(Boolean) : [];
+
+    for (const line of lines) {
+      const match = line.match(/^(.+):(\d+): (error|warning): \[(\w+)\] (.+)$/);
+      if (match) {
+        findings.push(this.createFinding({
+          title: match[4],
+          description: match[5],
+          severity: match[3] === 'error' ? 'high' : 'medium',
+          file: match[1],
+          line: parseInt(match[2], 10),
+          ruleId: match[4],
+          documentationUrl: `https://errorprone.info/bugpattern/${match[4]}`,
+          tags: ['java', 'error-prone', 'static-analysis'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildCredoIntegration extends CloudBuildIntegration {
+  name = 'Credo (Cloud)';
+  toolId: DockerToolId = 'credo';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { issues?: Array<{ category: string; check: string; message: string; filename: string; line_no: number; column: number; priority: number }> };
+
+    for (const issue of data.issues || []) {
+      findings.push(this.createFinding({
+        title: issue.check,
+        description: issue.message,
+        severity: this.mapCredoPriority(issue.priority),
+        file: issue.filename,
+        line: issue.line_no,
+        column: issue.column,
+        ruleId: issue.check,
+        tags: ['elixir', 'credo', issue.category.toLowerCase()],
+      }));
+    }
+    return findings;
+  }
+
+  private mapCredoPriority(priority: number): Severity {
+    if (priority >= 20) return 'high';
+    if (priority >= 10) return 'medium';
+    return 'low';
+  }
+}
+
+export class CloudBuildSteampipeIntegration extends CloudBuildIntegration {
+  name = 'Steampipe (Cloud)';
+  toolId: DockerToolId = 'steampipe';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { controls?: Array<{ control_id: string; title: string; status: string; severity: string; reason: string; resource: string }> };
+
+    for (const control of data.controls || []) {
+      if (control.status === 'alarm') {
+        findings.push(this.createFinding({
+          title: `${control.control_id}: ${control.title}`,
+          description: control.reason,
+          severity: this.mapSeverity(control.severity),
+          ruleId: control.control_id,
+          tags: ['cloud', 'compliance', 'steampipe', control.resource],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildSonarScannerIntegration extends CloudBuildIntegration {
+  name = 'SonarScanner (Cloud)';
+  toolId: DockerToolId = 'sonar-scanner';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { issues?: Array<{ rule: string; severity: string; component: string; line?: number; message: string; type: string }> };
+
+    for (const issue of data.issues || []) {
+      findings.push(this.createFinding({
+        title: issue.rule,
+        description: issue.message,
+        severity: this.mapSeverity(issue.severity),
+        file: issue.component,
+        line: issue.line,
+        ruleId: issue.rule,
+        tags: ['sonarqube', 'code-quality', issue.type.toLowerCase()],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildInferIntegration extends CloudBuildIntegration {
+  name = 'Infer (Cloud)';
+  toolId: DockerToolId = 'infer';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const issue of data as Array<{ bug_type: string; severity: string; file: string; line: number; column: number; procedure: string; qualifier: string }>) {
+      findings.push(this.createFinding({
+        title: issue.bug_type,
+        description: issue.qualifier,
+        severity: this.mapSeverity(issue.severity),
+        file: issue.file,
+        line: issue.line,
+        column: issue.column,
+        ruleId: issue.bug_type,
+        tags: ['infer', 'facebook', 'static-analysis', issue.procedure],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildScalafmtIntegration extends CloudBuildIntegration {
+  name = 'Scalafmt (Cloud)';
+  toolId: DockerToolId = 'scalafmt';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const lines = typeof output === 'string' ? output.split('\n').filter(Boolean) : [];
+
+    for (const line of lines) {
+      if (line.includes('error') || line.includes('would reformat')) {
+        const match = line.match(/^(.+\.scala)/);
+        findings.push(this.createFinding({
+          title: 'Formatting Issue',
+          description: line,
+          severity: 'low',
+          file: match?.[1],
+          ruleId: 'scalafmt',
+          tags: ['scala', 'formatting', 'scalafmt'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildScalafixIntegration extends CloudBuildIntegration {
+  name = 'Scalafix (Cloud)';
+  toolId: DockerToolId = 'scalafix';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { diagnostics?: Array<{ message: string; position: { path: string; startLine: number; startColumn: number }; severity: string }> };
+
+    for (const diag of data.diagnostics || []) {
+      findings.push(this.createFinding({
+        title: 'Scalafix Issue',
+        description: diag.message,
+        severity: this.mapSeverity(diag.severity),
+        file: diag.position.path,
+        line: diag.position.startLine,
+        column: diag.position.startColumn,
+        tags: ['scala', 'refactoring', 'scalafix'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildHlintIntegration extends CloudBuildIntegration {
+  name = 'HLint (Cloud)';
+  toolId: DockerToolId = 'hlint';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const hint of data as Array<{ hint: string; severity: string; file: string; startLine: number; startColumn: number; from: string; to: string }>) {
+      findings.push(this.createFinding({
+        title: hint.hint,
+        description: `Replace "${hint.from}" with "${hint.to}"`,
+        severity: this.mapSeverity(hint.severity),
+        file: hint.file,
+        line: hint.startLine,
+        column: hint.startColumn,
+        codeSnippet: hint.from,
+        fixExample: hint.to,
+        tags: ['haskell', 'hlint', 'suggestions'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildBufIntegration extends CloudBuildIntegration {
+  name = 'Buf (Cloud)';
+  toolId: DockerToolId = 'buf';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const lines = typeof output === 'string' ? output.split('\n').filter(Boolean) : [];
+
+    for (const line of lines) {
+      const match = line.match(/^(.+):(\d+):(\d+):(.+)$/);
+      if (match) {
+        findings.push(this.createFinding({
+          title: 'Buf Lint Issue',
+          description: match[4].trim(),
+          severity: 'medium',
+          file: match[1],
+          line: parseInt(match[2], 10),
+          column: parseInt(match[3], 10),
+          tags: ['protobuf', 'grpc', 'buf'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildAngularEslintIntegration extends CloudBuildIntegration {
+  name = 'angular-eslint (Cloud)';
+  toolId: DockerToolId = 'angular-eslint';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = Array.isArray(output) ? output : [];
+
+    for (const file of data as Array<{ filePath: string; messages: Array<{ ruleId: string; severity: number; message: string; line: number; column: number }> }>) {
+      for (const msg of file.messages || []) {
+        findings.push(this.createFinding({
+          title: msg.ruleId || 'Angular Lint Issue',
+          description: msg.message,
+          severity: msg.severity === 2 ? 'high' : 'medium',
+          file: file.filePath,
+          line: msg.line,
+          column: msg.column,
+          ruleId: msg.ruleId,
+          tags: ['angular', 'typescript', 'eslint'],
+        }));
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildScancodeToolkitIntegration extends CloudBuildIntegration {
+  name = 'ScanCode Toolkit (Cloud)';
+  toolId: DockerToolId = 'scancode-toolkit';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { files?: Array<{ path: string; licenses?: Array<{ key: string; name: string; category: string; spdx_license_key: string }>; copyrights?: Array<{ copyright: string }> }> };
+
+    for (const file of data.files || []) {
+      for (const license of file.licenses || []) {
+        if (license.category === 'Copyleft' || license.category === 'Proprietary') {
+          findings.push(this.createFinding({
+            title: `License: ${license.name}`,
+            description: `Found ${license.category} license: ${license.spdx_license_key}`,
+            severity: license.category === 'Proprietary' ? 'high' : 'medium',
+            file: file.path,
+            ruleId: license.key,
+            tags: ['license', 'compliance', 'scancode'],
+          }));
+        }
+      }
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildLicenseeIntegration extends CloudBuildIntegration {
+  name = 'Licensee (Cloud)';
+  toolId: DockerToolId = 'licensee';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { licenses?: Array<{ spdx_id: string; key: string; name: string; matched_files: string[] }> };
+
+    if (!data.licenses?.length) {
+      findings.push(this.createFinding({
+        title: 'No License Detected',
+        description: 'Could not detect a license file in the repository',
+        severity: 'medium',
+        tags: ['license', 'compliance', 'licensee'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildCosignIntegration extends CloudBuildIntegration {
+  name = 'Cosign (Cloud)';
+  toolId: DockerToolId = 'cosign';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { verified?: boolean; signatures?: Array<{ issuer?: string; subject?: string }>; error?: string };
+
+    if (!data.verified) {
+      findings.push(this.createFinding({
+        title: 'Container Signature Verification Failed',
+        description: data.error || 'Container image signature could not be verified',
+        severity: 'high',
+        tags: ['container', 'signing', 'cosign', 'supply-chain'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildSafetyIntegration extends CloudBuildIntegration {
+  name = 'Safety (Cloud)';
+  toolId: DockerToolId = 'safety';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { vulnerabilities?: Array<{ package_name: string; vulnerable_versions: string; id: string; advisory: string; severity: string; more_info_url?: string }> };
+
+    for (const vuln of data.vulnerabilities || []) {
+      findings.push(this.createFinding({
+        title: `${vuln.id} in ${vuln.package_name}`,
+        description: vuln.advisory,
+        severity: this.mapSeverity(vuln.severity),
+        ruleId: vuln.id,
+        documentationUrl: vuln.more_info_url,
+        tags: ['python', 'dependency', 'vulnerability', 'safety'],
+      }));
+    }
+    return findings;
+  }
+}
+
+export class CloudBuildSqlcheckIntegration extends CloudBuildIntegration {
+  name = 'sqlcheck (Cloud)';
+  toolId: DockerToolId = 'sqlcheck';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    const findings: AuditFinding[] = [];
+    const data = output as { issues?: Array<{ risk_level: string; query: string; pattern_name: string; description: string; file?: string; line?: number }> };
+
+    for (const issue of data.issues || []) {
+      findings.push(this.createFinding({
+        title: issue.pattern_name,
+        description: issue.description,
+        severity: this.mapSqlcheckRisk(issue.risk_level),
+        file: issue.file,
+        line: issue.line,
+        codeSnippet: issue.query,
+        ruleId: issue.pattern_name,
+        tags: ['sql', 'anti-pattern', 'sqlcheck'],
+      }));
+    }
+    return findings;
+  }
+
+  private mapSqlcheckRisk(risk: string): Severity {
+    if (risk === 'high') return 'high';
+    if (risk === 'medium') return 'medium';
+    return 'low';
+  }
+}
+
+export class CloudBuildPgformatterIntegration extends CloudBuildIntegration {
+  name = 'pgFormatter (Cloud)';
+  toolId: DockerToolId = 'pgformatter';
+
+  protected normalizeOutput(output: unknown): AuditFinding[] {
+    // pgFormatter is a formatter, not a linter - returns empty findings
+    // but formatted output is stored in result metadata
+    return [];
+  }
+}
+
+// Export all Cloud Build integrations (78 Docker-based tools)
 export const CLOUD_BUILD_INTEGRATIONS: ToolIntegration[] = [
   // Wave 1: Core security & performance
   new CloudBuildOWASPZAPIntegration(),
@@ -1719,8 +2805,45 @@ export const CLOUD_BUILD_INTEGRATIONS: ToolIntegration[] = [
   new CloudBuildGarakIntegration(),
   new CloudBuildModelScanIntegration(),
   new CloudBuildAndroguardIntegration(),
+
+  // Wave 5-8: Additional tools
+  new CloudBuildRuffIntegration(),
+  new CloudBuildMypyIntegration(),
+  new CloudBuildHadolintIntegration(),
+  new CloudBuildSqlfluffIntegration(),
+  new CloudBuildGolangciLintIntegration(),
+  new CloudBuildTrufflehogIntegration(),
+  new CloudBuildActionlintIntegration(),
+  new CloudBuildKicsIntegration(),
+  new CloudBuildCfnLintIntegration(),
+  new CloudBuildValeIntegration(),
+  new CloudBuildYamllintIntegration(),
+  new CloudBuildBearerIntegration(),
+  new CloudBuildPylintIntegration(),
+  new CloudBuildDartAnalyzeIntegration(),
+  new CloudBuildKtlintIntegration(),
+  new CloudBuildProwlerIntegration(),
+  new CloudBuildClairIntegration(),
+  new CloudBuildFalcoIntegration(),
+  new CloudBuildSlitherIntegration(),
+  new CloudBuildErrorProneIntegration(),
+  new CloudBuildCredoIntegration(),
+  new CloudBuildSteampipeIntegration(),
+  new CloudBuildSonarScannerIntegration(),
+  new CloudBuildInferIntegration(),
+  new CloudBuildScalafmtIntegration(),
+  new CloudBuildScalafixIntegration(),
+  new CloudBuildHlintIntegration(),
+  new CloudBuildBufIntegration(),
+  new CloudBuildAngularEslintIntegration(),
+  new CloudBuildScancodeToolkitIntegration(),
+  new CloudBuildLicenseeIntegration(),
+  new CloudBuildCosignIntegration(),
+  new CloudBuildSafetyIntegration(),
+  new CloudBuildSqlcheckIntegration(),
+  new CloudBuildPgformatterIntegration(),
 ];
 
 // Export count for verification
-// Note: 44 integrations because spectral has both npm and Docker support
-export const CLOUD_BUILD_TOOL_COUNT = CLOUD_BUILD_INTEGRATIONS.length;  // 44 Docker integrations
+// Total: 78 Docker-based tool integrations
+export const CLOUD_BUILD_TOOL_COUNT = CLOUD_BUILD_INTEGRATIONS.length;  // 78 Docker integrations
