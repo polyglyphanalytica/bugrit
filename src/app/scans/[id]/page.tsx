@@ -17,6 +17,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { formatDistanceToNow } from 'date-fns';
+import { ScanProgress, PrioritizedResults, NoIssuesFound, Finding } from '@/components/scan';
+import { PlainEnglishProvider } from '@/contexts/plain-english-context';
 
 interface Finding {
   id: string;
@@ -216,19 +218,14 @@ export default function ScanDetailPage() {
           </div>
         </div>
 
-        {/* Progress (if running) */}
+        {/* Progress (if running) - Using new component */}
         {(scan.status === 'running' || scan.status === 'pending') && (
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">
-                  Running tools... {scan.toolsCompleted} of {scan.toolsTotal}
-                </span>
-                <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-            </CardContent>
-          </Card>
+          <ScanProgress
+            toolsCompleted={scan.toolsCompleted}
+            toolsTotal={scan.toolsTotal}
+            status={scan.status}
+            className="mb-6"
+          />
         )}
 
         {/* Error message */}
@@ -240,37 +237,34 @@ export default function ScanDetailPage() {
           </Card>
         )}
 
-        {/* Summary */}
-        {scan.summary && scan.status === 'completed' && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-3xl font-bold">{scan.summary.totalFindings}</div>
-                <p className="text-sm text-muted-foreground">Total Findings</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-3xl font-bold text-red-600">{scan.summary.errors}</div>
-                <p className="text-sm text-muted-foreground">Errors</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-3xl font-bold text-yellow-600">{scan.summary.warnings}</div>
-                <p className="text-sm text-muted-foreground">Warnings</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-3xl font-bold text-blue-600">{scan.summary.info}</div>
-                <p className="text-sm text-muted-foreground">Info</p>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Prioritized Results - New UX */}
+        {scan.summary && scan.status === 'completed' && scan.results && (
+          <PlainEnglishProvider>
+            {scan.summary.totalFindings === 0 ? (
+              <NoIssuesFound className="mb-6" />
+            ) : (
+              <PrioritizedResults
+                results={scan.results.map(r => ({
+                  ...r,
+                  findings: r.findings.map((f, i) => ({
+                    ...f,
+                    id: f.id || `${r.toolId}-${i}`,
+                    toolName: r.toolName,
+                  })) as Finding[],
+                }))}
+                summary={scan.summary}
+                className="mb-6"
+              />
+            )}
+          </PlainEnglishProvider>
         )}
 
-        {/* Tool Results */}
+        {/* Legacy Tool Results - Collapsed */}
+        {scan.results && scan.results.length > 0 && scan.summary && scan.summary.totalFindings > 0 && (
+          <details className="mb-6">
+            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground mb-4">
+              View results by tool (advanced)
+            </summary>
         {scan.results && scan.results.length > 0 && (
           <Card>
             <CardHeader>
@@ -381,6 +375,8 @@ export default function ScanDetailPage() {
               </Accordion>
             </CardContent>
           </Card>
+        )}
+          </details>
         )}
 
         {/* Metadata */}

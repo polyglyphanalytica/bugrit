@@ -226,15 +226,15 @@ export default function DashboardPage() {
                 Code Scanning
               </CardTitle>
               <CardDescription>
-                Analyze your code with 69 built-in security and quality tools
+                Check your code with 100+ security and quality tools
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2 mb-4">
                 <Badge variant="outline">Security</Badge>
-                <Badge variant="outline">Linting</Badge>
                 <Badge variant="outline">Dependencies</Badge>
-                <Badge variant="outline">+5 more</Badge>
+                <Badge variant="outline">Accessibility</Badge>
+                <Badge variant="outline">+8 more</Badge>
               </div>
               <Button asChild variant="outline" size="sm">
                 <Link href="/docs">View Scanning Docs</Link>
@@ -345,16 +345,41 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="mb-8">
+          <Card className="mb-8 border-2 border-dashed">
             <CardContent className="py-12 text-center">
-              <div className="text-4xl mb-4">🚀</div>
-              <h3 className="text-lg font-semibold mb-2">Get Started</h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Register your first application to run tests with Playwright, Appium, or Tauri,
-                and scan with 115 analysis tools. Get one unified, AI-powered report.
+              <div className="text-5xl mb-4">👋</div>
+              <h3 className="text-2xl font-bold mb-2">Welcome to Bugrit!</h3>
+              <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
+                Let&apos;s scan your first project. Just create an app and paste your GitHub URL.
+                We&apos;ll check for security issues, bugs, and more in under 2 minutes.
               </p>
-              <Button asChild>
-                <Link href="/applications">Create Application</Link>
+
+              <div className="max-w-md mx-auto mb-8">
+                <div className="flex items-start gap-4 text-left mb-4">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">1</div>
+                  <div>
+                    <p className="font-medium">Create an application</p>
+                    <p className="text-sm text-muted-foreground">Give it a name and select the type (web, mobile, etc.)</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 text-left mb-4">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">2</div>
+                  <div>
+                    <p className="font-medium">Paste your GitHub URL</p>
+                    <p className="text-sm text-muted-foreground">Or upload a ZIP file if you prefer</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 text-left">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">3</div>
+                  <div>
+                    <p className="font-medium">Get your results</p>
+                    <p className="text-sm text-muted-foreground">See what to fix with copy-paste AI prompts for each issue</p>
+                  </div>
+                </div>
+              </div>
+
+              <Button asChild size="lg">
+                <Link href="/applications">Create Your First App</Link>
               </Button>
             </CardContent>
           </Card>
@@ -368,9 +393,20 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {recentScans.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                No scans yet. Start a scan from any application to see results here.
-              </p>
+              <div className="text-center py-8">
+                <div className="text-3xl mb-3">🔍</div>
+                <p className="font-medium mb-1">No scans yet</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Your scan history will appear here after you run your first scan.
+                </p>
+                {applications.length > 0 && (
+                  <Button variant="outline" asChild size="sm">
+                    <Link href={`/applications/${applications[0].id}/new-scan`}>
+                      Run Your First Scan
+                    </Link>
+                  </Button>
+                )}
+              </div>
             ) : (
               <Table>
                 <TableHeader>

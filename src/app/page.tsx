@@ -173,92 +173,154 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {/* Hero Section - Empowering, not frightening */}
       <section className="pt-32 pb-20 md:pt-40 md:pb-32">
         <div className="container-wide">
           <div className="max-w-4xl mx-auto text-center">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-950 border border-red-700 mb-8 animate-fade-down">
+            {/* Badge - Positive */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/30 mb-8 animate-fade-down">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-400"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
-              <span className="text-sm font-medium text-red-200">Your code has problems you don&apos;t know about</span>
+              <span className="text-sm font-medium text-primary">Ship code you can trust</span>
             </div>
 
-            {/* Title */}
+            {/* Title - Empowering */}
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 animate-fade-up">
-              Vibe Coding Is Fun.
+              Ship With
               <br />
-              <span className="bg-gradient-to-r from-red-500 via-orange-500 to-red-500 bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_auto]">
-                Until You Get Hacked.
+              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_auto]">
+                Confidence
               </span>
             </h1>
 
-            {/* Description - Updated messaging */}
+            {/* Description - Value focused */}
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-6 animate-fade-up delay-200 fill-both leading-relaxed">
-              You shipped fast. You built something amazing. But did you check for SQL injection? XSS vulnerabilities? Leaked API keys? Outdated dependencies with known exploits?
+              You build fast. <strong className="text-foreground">We check everything.</strong>
             </p>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 animate-fade-up delay-300 fill-both">
-              <strong className="text-foreground">Bugrit is built by security experts from around the world.</strong> We&apos;ve assembled the industry&apos;s best open-source scanning tools into one simple platform. One click. One report. Your app becomes safer.
+              One click runs <strong className="text-foreground">{TOOL_REGISTRY.length}+ automated checks</strong> for security holes, leaked secrets, buggy dependencies, accessibility issues, and more. No expertise required.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up delay-400 fill-both">
               <Link href="/register">
-                <GradientButton size="xl" glow className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-orange-500">
-                  Audit your app now
+                <GradientButton size="xl" glow className="w-full sm:w-auto">
+                  Scan My Code Free
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </GradientButton>
               </Link>
-              <Link href="#risks">
+              <Link href="#how-it-works">
                 <GradientButton variant="outline" size="xl" className="w-full sm:w-auto">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  See The Risks
+                  See How It Works
                 </GradientButton>
               </Link>
             </div>
 
-            {/* Scary Stats */}
+            {/* Value Stats - Positive framing */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 animate-fade-up delay-500 fill-both">
-              <div className="p-4 rounded-xl bg-red-950 border-2 border-red-700 backdrop-blur-sm">
-                <span className="text-3xl font-bold text-red-300">62%</span>
-                <p className="text-sm text-gray-200 mt-1">of AI-generated code contains known vulnerabilities</p>
+              <div className="p-4 rounded-xl bg-primary/10 border-2 border-primary/30 backdrop-blur-sm">
+                <span className="text-3xl font-bold text-primary">{TOOL_REGISTRY.length}+</span>
+                <p className="text-sm text-muted-foreground mt-1">security & quality tools in one scan</p>
               </div>
-              <div className="p-4 rounded-xl bg-orange-950 border-2 border-orange-700 backdrop-blur-sm">
-                <span className="text-3xl font-bold text-orange-300">60%</span>
-                <p className="text-sm text-gray-200 mt-1">of small businesses close within 6 months of a breach</p>
+              <div className="p-4 rounded-xl bg-green-500/10 border-2 border-green-500/30 backdrop-blur-sm">
+                <span className="text-3xl font-bold text-green-500">&lt;2min</span>
+                <p className="text-sm text-muted-foreground mt-1">to scan your entire codebase</p>
               </div>
-              <div className="p-4 rounded-xl bg-yellow-950 border-2 border-yellow-700 backdrop-blur-sm">
-                <span className="text-3xl font-bold text-yellow-300">85%</span>
-                <p className="text-sm text-gray-200 mt-1">of ransomware attacks target small businesses</p>
+              <div className="p-4 rounded-xl bg-blue-500/10 border-2 border-blue-500/30 backdrop-blur-sm">
+                <span className="text-3xl font-bold text-blue-500">1-click</span>
+                <p className="text-sm text-muted-foreground mt-1">AI-powered fix suggestions</p>
               </div>
-              <div className="p-4 rounded-xl bg-violet-950 border-2 border-violet-700 backdrop-blur-sm">
-                <span className="text-3xl font-bold text-violet-200">{TOOL_REGISTRY.length}</span>
-                <p className="text-sm text-gray-200 mt-1">expert-built tools protecting your code</p>
+              <div className="p-4 rounded-xl bg-violet-500/10 border-2 border-violet-500/30 backdrop-blur-sm">
+                <span className="text-3xl font-bold text-violet-400">15+</span>
+                <p className="text-sm text-muted-foreground mt-1">programming languages supported</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Expert Credibility Section */}
-      <section className="py-16 bg-gradient-to-b from-transparent to-muted/20">
+      {/* What We Check - Plain English */}
+      <section id="what-we-check" className="py-16 bg-gradient-to-b from-transparent to-muted/20">
         <div className="container-wide">
-          <div className="max-w-4xl mx-auto text-center">
-            <p className="text-lg text-muted-foreground mb-8">
-              Bugrit combines the world&apos;s most trusted security and quality tools—the same tools used by Fortune 500 companies, open-source maintainers, and security researchers. We didn&apos;t reinvent the wheel. We made it easy for you to use.
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-4">What We Check For</h2>
+            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+              Plain English explanations of everything we scan. No jargon required.
             </p>
-            <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
-              <span className="px-4 py-2 rounded-full border border-border">Used by 10M+ developers</span>
-              <span className="px-4 py-2 rounded-full border border-border">Open-source foundations</span>
-              <span className="px-4 py-2 rounded-full border border-border">Backed by security experts</span>
-              <span className="px-4 py-2 rounded-full border border-border">Continuously updated</span>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="p-5 rounded-xl bg-red-500/10 border border-red-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">🔓</span>
+                  <h3 className="font-semibold text-red-500">Security Holes</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Ways hackers could break into your app, steal data, or take over your server. We catch these before they do.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-xl bg-orange-500/10 border border-orange-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">🔑</span>
+                  <h3 className="font-semibold text-orange-500">Leaked Secrets</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Passwords, API keys, or tokens accidentally left in your code. Anyone who sees your code could steal them.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">📦</span>
+                  <h3 className="font-semibold text-yellow-500">Risky Packages</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Libraries you installed that have known security issues, are outdated, or might have hidden malware.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-xl bg-purple-500/10 border border-purple-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">♿</span>
+                  <h3 className="font-semibold text-purple-500">Accessibility Issues</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Things that prevent people with disabilities from using your app. Missing image descriptions, poor contrast, etc.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-xl bg-blue-500/10 border border-blue-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">🐛</span>
+                  <h3 className="font-semibold text-blue-500">Code Bugs</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Problems that could crash your app, cause weird behavior, or make it hard to maintain your code later.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">⚡</span>
+                  <h3 className="font-semibold text-cyan-500">Speed Issues</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Things slowing down your app—huge file sizes, slow loading, poor performance scores that hurt your Google ranking.
+                </p>
+              </div>
             </div>
+
+            <p className="text-center text-muted-foreground mt-8">
+              These are the same tools used by Google, Microsoft, and Netflix. We just made them <strong className="text-foreground">easy to use</strong>.
+            </p>
           </div>
         </div>
       </section>
@@ -677,44 +739,44 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="section bg-muted/30">
+      <section id="how-it-works" className="section bg-muted/30">
         <div className="container-wide">
           <SectionHeading
-            badge="Dead Simple"
-            title="Expert Protection in Three Steps"
-            titleGradient="Three Steps"
-            description="You don't need to be a security expert. We are. Just connect your code."
+            badge="3 Simple Steps"
+            title="How It Works"
+            titleGradient="It Works"
+            description="No setup. No expertise needed. Just paste your code."
           />
 
           <div className="grid md:grid-cols-3 gap-8 mt-16">
             {[
               {
                 step: '01',
-                title: 'Connect Your Code',
-                description: 'GitHub, GitLab, ZIP upload, or API. Auto-scan on every deploy if you want.',
+                title: 'Paste Your GitHub URL',
+                description: 'Just paste your repo link. We auto-detect the language, framework, and what to scan. Private repo? One-click GitHub connect.',
                 icon: (
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
                 ),
               },
               {
                 step: '02',
-                title: 'We Run Everything',
-                description: `${TOOL_REGISTRY.length} industry-leading tools scan your code in parallel. Under 2 minutes.`,
+                title: 'We Check Everything',
+                description: `${TOOL_REGISTRY.length}+ tools scan for security holes, leaked secrets, buggy packages, accessibility issues, and more. Takes under 2 minutes.`,
                 icon: (
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
                 ),
               },
               {
                 step: '03',
-                title: 'Fix What Matters',
-                description: 'Prioritized report shows critical issues first. AI explains each problem in plain English.',
+                title: 'Get Fixes You Can Use',
+                description: 'See what to fix first. Each issue has plain English explanations and AI-ready prompts you can paste into Cursor or Copilot.',
                 icon: (
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 ),
               },
@@ -737,6 +799,21 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+
+          {/* Demo preview */}
+          <div className="mt-16 p-8 rounded-2xl bg-background border-2 border-border">
+            <div className="max-w-xl mx-auto">
+              <p className="text-sm text-muted-foreground text-center mb-4">Try it now - just paste a URL</p>
+              <div className="flex gap-2">
+                <div className="flex-1 px-4 py-3 rounded-lg bg-muted border text-muted-foreground font-mono text-sm">
+                  https://github.com/your-username/your-repo
+                </div>
+                <Link href="/register">
+                  <GradientButton>Scan Free</GradientButton>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -745,9 +822,9 @@ export default function HomePage() {
         <div className="container-wide">
           <div className="max-w-4xl mx-auto text-center">
             <p className="text-2xl font-bold mb-8">
-              &ldquo;I shipped my app in a weekend with AI. Bugrit found 23 security issues I had no idea about. Fixed them in an hour. <span className="text-primary">Probably saved my startup.</span>&rdquo;
+              &ldquo;Built my app with Cursor in a weekend. Bugrit found 23 issues I had no idea about. <span className="text-primary">Copy-pasted the AI prompts and fixed everything in an hour.</span>&rdquo;
             </p>
-            <p className="text-muted-foreground">— A vibe coder who didn&apos;t get hacked</p>
+            <p className="text-muted-foreground">— Solo developer shipping their first SaaS</p>
           </div>
         </div>
       </section>
@@ -756,10 +833,10 @@ export default function HomePage() {
       <section id="pricing" className="section bg-muted/30">
         <div className="container-wide">
           <SectionHeading
-            badge="Cheaper Than a Breach"
+            badge="Simple Pricing"
             title="Choose Your Plan"
             titleGradient="Your Plan"
-            description="SMB breaches cost $120K-$1.24M. 60% never recover. Expert protection costs less than your coffee habit."
+            description="Start free. Upgrade when you need more scans. No surprises."
           />
 
           <div className="grid md:grid-cols-4 gap-6 mt-16 max-w-6xl mx-auto">
@@ -860,15 +937,15 @@ export default function HomePage() {
         <div className="container-tight">
           <GlassCard gradient className="p-12 md:p-16 text-center">
             <h2 className="text-3xl md:text-5xl font-bold mb-6">
-              Don&apos;t Ship Your Next Vulnerability.
+              Ready to Ship With Confidence?
             </h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              You&apos;ve worked too hard to let a preventable bug tank your launch. Let the experts check your code before you deploy.
+              Paste your GitHub URL and see what we find. Free scan, no credit card, takes 2 minutes.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/register">
                 <GradientButton size="xl" glow>
-                  Scan My Code Now
+                  Scan My Code Free
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
@@ -876,7 +953,7 @@ export default function HomePage() {
               </Link>
             </div>
             <p className="text-sm text-muted-foreground mt-4">
-              Free tier available. No credit card required. {TOOL_REGISTRY.length} expert tools at your fingertips.
+              5 free scans included. {TOOL_REGISTRY.length}+ tools check everything for you.
             </p>
           </GlassCard>
 
