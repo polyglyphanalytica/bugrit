@@ -71,3 +71,23 @@ gcloud run deploy bugrit-worker \
 - [ ] Monitor Cloud Run metrics for worker
 - [ ] Track scan success/failure rates
 - [ ] Monitor billing/credit usage
+
+## Tool Updates (Ongoing)
+
+### Automatic (No Action)
+- Trivy, Grype: Download fresh CVE databases on each scan
+- Semgrep: Fetches rules from registry at runtime
+
+### Weekly (Scheduled)
+```bash
+# Set up Cloud Scheduler to run infra/update-tools.yaml
+gcloud scheduler jobs create http update-security-tools \
+  --schedule="0 3 * * 0" \
+  --uri="https://cloudbuild.googleapis.com/v1/projects/PROJECT/triggers/update-tools:run" \
+  --http-method=POST
+```
+
+### Monthly (Dependabot)
+- [ ] Enable Dependabot for npm package updates
+- [ ] Review and merge security tool updates
+- [ ] Test scans after major version updates

@@ -1,0 +1,97 @@
+# Cloud Build configuration for updating security tool images
+# Schedule this to run weekly via Cloud Scheduler
+#
+# gcloud scheduler jobs create http update-security-tools \
+#   --schedule="0 3 * * 0" \
+#   --uri="https://cloudbuild.googleapis.com/v1/projects/YOUR_PROJECT/triggers/update-tools:run" \
+#   --http-method=POST
+
+steps:
+  # Pull latest security tool images
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-trivy'
+    args: ['pull', 'aquasec/trivy:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-grype'
+    args: ['pull', 'anchore/grype:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-semgrep'
+    args: ['pull', 'returntocorp/semgrep:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-zap'
+    args: ['pull', 'ghcr.io/zaproxy/zaproxy:stable']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-checkov'
+    args: ['pull', 'bridgecrew/checkov:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-nuclei'
+    args: ['pull', 'projectdiscovery/nuclei:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-gitleaks'
+    args: ['pull', 'zricethezav/gitleaks:latest']
+
+  # Tag and push to your project's Container Registry for faster pulls
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'tag-trivy'
+    args: ['tag', 'aquasec/trivy:latest', 'gcr.io/$PROJECT_ID/trivy:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-trivy'
+    args: ['push', 'gcr.io/$PROJECT_ID/trivy:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'tag-grype'
+    args: ['tag', 'anchore/grype:latest', 'gcr.io/$PROJECT_ID/grype:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-grype'
+    args: ['push', 'gcr.io/$PROJECT_ID/grype:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'tag-semgrep'
+    args: ['tag', 'returntocorp/semgrep:latest', 'gcr.io/$PROJECT_ID/semgrep:latest']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-semgrep'
+    args: ['push', 'gcr.io/$PROJECT_ID/semgrep:latest']
+
+  # Rebuild worker with latest dependencies
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'rebuild-worker'
+    dir: 'worker'
+    args:
+      - 'build'
+      - '--no-cache'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/bugrit-worker:latest'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-worker'
+    args: ['push', 'gcr.io/$PROJECT_ID/bugrit-worker:latest']
+
+  # Deploy updated worker to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-worker'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'bugrit-worker'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/bugrit-worker:latest'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '1800s'  # 30 minutes
