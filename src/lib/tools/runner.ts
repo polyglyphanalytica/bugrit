@@ -1,7 +1,7 @@
 /**
  * Tool Runner
  *
- * Executes all 69 tools using a mix of npm packages and CLI execution.
+ * Executes all 79 tools using a mix of npm packages and CLI execution.
  * CLI execution is used for tools with native bindings that can't be bundled.
  */
 
@@ -248,6 +248,50 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
           file,
           suggestion: 'Run prettier --write to fix',
         });
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Oxlint (ultra-fast JS/TS linter via CLI - Rust binary)
+  // ─────────────────────────────────────────────────────────────
+  oxlint: async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx oxlint --format json . 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const diagnostic of data.diagnostics || data || []) {
+          findings.push({
+            id: `oxlint-${diagnostic.filename || 'unknown'}-${diagnostic.line || 0}-${diagnostic.column || 0}`,
+            severity: diagnostic.severity === 'error' ? 'error' : 'warning',
+            message: diagnostic.message || 'Oxlint issue detected',
+            file: diagnostic.filename,
+            line: diagnostic.line,
+            column: diagnostic.column,
+            rule: diagnostic.rule_id || diagnostic.rule,
+            suggestion: diagnostic.help || diagnostic.fix?.message,
+          });
+        }
+      } catch {
+        // Fallback: parse line-by-line output if JSON fails
+        const lines = output.split('\n').filter(l => l.includes('error') || l.includes('warning'));
+        for (const line of lines) {
+          const match = line.match(/(.+?):(\d+):(\d+):\s*(error|warning)\s*(.+)/);
+          if (match) {
+            findings.push({
+              id: `oxlint-${match[1]}-${match[2]}`,
+              severity: match[4] as 'error' | 'warning',
+              message: match[5],
+              file: match[1],
+              line: parseInt(match[2], 10),
+              column: parseInt(match[3], 10),
+            });
+          }
+        }
       }
     }
 

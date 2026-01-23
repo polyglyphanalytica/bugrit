@@ -1,13 +1,13 @@
 /**
  * Comprehensive Tool Registry
  *
- * 68 security, quality, and compliance tools supporting multiple languages.
+ * 79 security, quality, and compliance tools supporting multiple languages.
  *
  * Deployment types:
- * - Native JS (25 tools): Run via npm packages on Node.js
- * - Docker (43 tools): Run via Google Cloud Build containers
+ * - Native JS (26 tools): Run via npm packages on Node.js
+ * - Docker (53 tools): Run via Google Cloud Build containers
  *
- * Total: 68 tools across 11 categories
+ * Total: 79 tools across 11 categories
  */
 
 export interface ToolDefinition {
@@ -681,6 +681,129 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     docker: 'aquasec/kube-hunter:latest',
     credits: 3,
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // NEW TOOLS - January 2026 Expansion (11 tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // --- Linting ---
+  {
+    id: 'oxlint',
+    name: 'Oxlint',
+    description: 'Ultra-fast JavaScript/TypeScript linter (50-100x faster than ESLint)',
+    category: 'linting',
+    npm: 'oxlint',
+    languages: ['javascript', 'typescript'],
+    filePatterns: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+    credits: 0,
+  },
+
+  // --- Python Quality ---
+  {
+    id: 'ruff',
+    name: 'Ruff',
+    description: 'Extremely fast Python linter and formatter (replaces Flake8, Black, isort)',
+    category: 'quality',
+    docker: 'ghcr.io/astral-sh/ruff:latest',
+    languages: ['python'],
+    filePatterns: ['**/*.py'],
+    credits: 1,
+  },
+  {
+    id: 'mypy',
+    name: 'Mypy',
+    description: 'Static type checker for Python',
+    category: 'quality',
+    docker: 'python:3.11-slim',  // pip install mypy
+    languages: ['python'],
+    filePatterns: ['**/*.py'],
+    credits: 1,
+  },
+
+  // --- Dockerfile & SQL ---
+  {
+    id: 'hadolint',
+    name: 'Hadolint',
+    description: 'Dockerfile linter for best practices (uses ShellCheck for RUN instructions)',
+    category: 'quality',
+    docker: 'hadolint/hadolint:latest',
+    filePatterns: ['**/Dockerfile', '**/Dockerfile.*', '**/*.dockerfile'],
+    credits: 1,
+  },
+  {
+    id: 'sqlfluff',
+    name: 'SQLFluff',
+    description: 'SQL linter supporting 15+ dialects (PostgreSQL, MySQL, BigQuery, etc.)',
+    category: 'quality',
+    docker: 'sqlfluff/sqlfluff:latest',
+    languages: ['sql'],
+    filePatterns: ['**/*.sql'],
+    credits: 1,
+  },
+
+  // --- Go ---
+  {
+    id: 'golangci-lint',
+    name: 'GolangCI-Lint',
+    description: 'Fast Go linters runner - runs 50+ linters in parallel',
+    category: 'quality',
+    docker: 'golangci/golangci-lint:latest',
+    languages: ['go'],
+    filePatterns: ['**/*.go'],
+    credits: 2,
+  },
+
+  // --- Security ---
+  {
+    id: 'trufflehog',
+    name: 'TruffleHog',
+    description: 'Deep secrets scanner - scans git history for leaked credentials',
+    category: 'security',
+    docker: 'trufflesecurity/trufflehog:latest',
+    credits: 2,
+  },
+
+  // --- CI/CD ---
+  {
+    id: 'actionlint',
+    name: 'actionlint',
+    description: 'Static checker for GitHub Actions workflow files',
+    category: 'quality',
+    docker: 'rhysd/actionlint:latest',
+    filePatterns: ['**/.github/workflows/*.yml', '**/.github/workflows/*.yaml'],
+    credits: 1,
+  },
+
+  // --- Cloud Native / IaC ---
+  {
+    id: 'kics',
+    name: 'KICS',
+    description: 'Keeping Infrastructure as Code Secure - comprehensive IaC scanner',
+    category: 'cloud-native',
+    docker: 'checkmarx/kics:latest',
+    filePatterns: ['**/*.tf', '**/*.yaml', '**/*.yml', '**/Dockerfile'],
+    credits: 2,
+  },
+  {
+    id: 'cfn-lint',
+    name: 'cfn-lint',
+    description: 'AWS CloudFormation linter for template validation',
+    category: 'cloud-native',
+    docker: 'python:3.11-slim',  // pip install cfn-lint
+    filePatterns: ['**/*.template', '**/*.template.json', '**/*.template.yaml', '**/cloudformation/*.yml'],
+    credits: 1,
+  },
+
+  // --- Documentation ---
+  {
+    id: 'vale',
+    name: 'Vale',
+    description: 'Prose linter for technical writing - enforces style guides',
+    category: 'documentation',
+    docker: 'jdkato/vale:latest',
+    filePatterns: ['**/*.md', '**/*.txt', '**/*.rst'],
+    credits: 0,
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -721,7 +844,7 @@ export function getTotalCredits(toolIds: string[]): number {
   }, 0);
 }
 
-export const TOOL_COUNT = TOOL_REGISTRY.length;  // 68 tools (25 npm + 43 docker)
+export const TOOL_COUNT = TOOL_REGISTRY.length;  // 79 tools (26 npm + 53 docker)
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   linting: 'Linting & Formatting',

@@ -982,6 +982,241 @@ export const DOCKER_TOOLS = {
       },
     ],
   },
+
+  // ============================================================
+  // Wave 5: January 2026 Expansion (10 tools)
+  // ============================================================
+
+  // Python Quality
+  'ruff': {
+    image: 'ghcr.io/astral-sh/ruff:latest',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'ghcr.io/astral-sh/ruff:latest',
+        args: ['check', '--output-format', 'json', '/workspace/source'],
+        env: ['OUTPUT_FILE=/workspace/ruff-report.json'],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/ruff-report.json', `gs://${outputBucket}/${jobId}/ruff-report.json`],
+      },
+    ],
+  },
+  'mypy': {
+    image: 'python:3.12-slim',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'python:3.12-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'pip install mypy -q && mypy /workspace/source --ignore-missing-imports --output json > /workspace/mypy-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/mypy-report.json', `gs://${outputBucket}/${jobId}/mypy-report.json`],
+      },
+    ],
+  },
+
+  // Dockerfile & SQL
+  'hadolint': {
+    image: 'hadolint/hadolint:latest',
+    timeout: '120s',
+    memory: '1GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'hadolint/hadolint:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'find /workspace/source -name "Dockerfile*" -o -name "*.dockerfile" | xargs -I {} hadolint --format json {} > /workspace/hadolint-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/hadolint-report.json', `gs://${outputBucket}/${jobId}/hadolint-report.json`],
+      },
+    ],
+  },
+  'sqlfluff': {
+    image: 'sqlfluff/sqlfluff:latest',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'sqlfluff/sqlfluff:latest',
+        args: ['lint', '--format', 'json', '/workspace/source'],
+        env: ['OUTPUT_FILE=/workspace/sqlfluff-report.json'],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/sqlfluff-report.json', `gs://${outputBucket}/${jobId}/sqlfluff-report.json`],
+      },
+    ],
+  },
+
+  // Go
+  'golangci-lint': {
+    image: 'golangci/golangci-lint:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'golangci/golangci-lint:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'cd /workspace/source && golangci-lint run --out-format json > /workspace/golangci-lint-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/golangci-lint-report.json', `gs://${outputBucket}/${jobId}/golangci-lint-report.json`],
+      },
+    ],
+  },
+
+  // Security
+  'trufflehog': {
+    image: 'trufflesecurity/trufflehog:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'trufflesecurity/trufflehog:latest',
+        args: ['filesystem', '--json', '--directory', '/workspace/source'],
+        env: ['OUTPUT_FILE=/workspace/trufflehog-report.json'],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/trufflehog-report.json', `gs://${outputBucket}/${jobId}/trufflehog-report.json`],
+      },
+    ],
+  },
+
+  // CI/CD
+  'actionlint': {
+    image: 'rhysd/actionlint:latest',
+    timeout: '120s',
+    memory: '1GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'rhysd/actionlint:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'actionlint -format "{{json .}}" /workspace/source/.github/workflows/*.yml /workspace/source/.github/workflows/*.yaml > /workspace/actionlint-report.json 2>/dev/null || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/actionlint-report.json', `gs://${outputBucket}/${jobId}/actionlint-report.json`],
+      },
+    ],
+  },
+
+  // Cloud Native / IaC
+  'kics': {
+    image: 'checkmarx/kics:latest',
+    timeout: '600s',
+    memory: '4GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'checkmarx/kics:latest',
+        args: ['scan', '-p', '/workspace/source', '-o', '/workspace', '--report-formats', 'json'],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/results.json', `gs://${outputBucket}/${jobId}/kics-report.json`],
+      },
+    ],
+  },
+  'cfn-lint': {
+    image: 'python:3.12-slim',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'python:3.12-slim',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'pip install cfn-lint -q && find /workspace/source -name "*.template*" -o -name "*cloudformation*.yml" -o -name "*cloudformation*.yaml" | xargs cfn-lint --format json > /workspace/cfn-lint-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/cfn-lint-report.json', `gs://${outputBucket}/${jobId}/cfn-lint-report.json`],
+      },
+    ],
+  },
+
+  // Documentation
+  'vale': {
+    image: 'jdkato/vale:latest',
+    timeout: '300s',
+    memory: '2GB',
+    buildSteps: (sourcePath: string, outputBucket: string, jobId: string) => [
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '-r', `gs://${sourcePath}/*`, '/workspace/source/'],
+      },
+      {
+        name: 'jdkato/vale:latest',
+        entrypoint: 'sh',
+        args: [
+          '-c',
+          'vale --output=JSON /workspace/source > /workspace/vale-report.json || true',
+        ],
+      },
+      {
+        name: 'gcr.io/cloud-builders/gsutil',
+        args: ['cp', '/workspace/vale-report.json', `gs://${outputBucket}/${jobId}/vale-report.json`],
+      },
+    ],
+  },
 } as const;
 
 export type DockerToolId = keyof typeof DOCKER_TOOLS;
@@ -1260,6 +1495,17 @@ export class CloudBuildRunner {
       'garak': 'garak-report.jsonl',
       'modelscan': 'modelscan-report.json',
       'androguard': 'androguard-report.json',
+      // Wave 5: January 2026 Expansion
+      'ruff': 'ruff-report.json',
+      'mypy': 'mypy-report.json',
+      'hadolint': 'hadolint-report.json',
+      'sqlfluff': 'sqlfluff-report.json',
+      'golangci-lint': 'golangci-lint-report.json',
+      'trufflehog': 'trufflehog-report.json',
+      'actionlint': 'actionlint-report.json',
+      'kics': 'kics-report.json',
+      'cfn-lint': 'cfn-lint-report.json',
+      'vale': 'vale-report.json',
     };
 
     const outputFile = outputFiles[toolId];
