@@ -218,67 +218,53 @@ export default function PricingPage() {
                   )}
 
                   {/* Features */}
-                  <div className="space-y-2 pt-4 border-t text-sm">
-                    <FeatureItem
-                      included={true}
-                      text={`Up to ${formatRepoSize(tier.limits.maxRepoSize)}`}
-                    />
-                    <FeatureItem
-                      included={true}
-                      text={tier.limits.projects === -1 ? 'Unlimited projects' : `${tier.limits.projects} projects`}
-                    />
-                    <FeatureItem
-                      included={true}
-                      text={`${tier.limits.teamMembers} team member${tier.limits.teamMembers > 1 ? 's' : ''}`}
-                    />
-                    <FeatureItem
-                      included={true}
-                      text={`${tier.limits.historyDays}-day history`}
-                    />
-
+                  <div className="space-y-1 pt-4 border-t text-xs">
+                    {/* Limits */}
+                    <FeatureItem included={true} text={`Up to ${formatRepoSize(tier.limits.maxRepoSize)}`} />
+                    <FeatureItem included={true} text={tier.limits.projects === -1 ? 'Unlimited projects' : `${tier.limits.projects} projects`} />
+                    <FeatureItem included={true} text={`${tier.limits.teamMembers} team member${tier.limits.teamMembers > 1 ? 's' : ''}`} />
+                    <FeatureItem included={true} text={`${tier.limits.historyDays}-day history`} />
                     {tier.limits.creditsRollover > 0 && (
-                      <FeatureItem
-                        included={true}
-                        text={`Rollover up to ${tier.limits.creditsRollover}`}
-                      />
+                      <FeatureItem included={true} text={`Rollover ${tier.limits.creditsRollover} credits`} />
                     )}
 
-                    {tier.limits.overageRate && (
-                      <FeatureItem
-                        included={true}
-                        text={`$${tier.limits.overageRate}/credit overage`}
-                      />
-                    )}
+                    {/* Vibe Score */}
+                    <div className="pt-1.5 mt-1.5 border-t border-dashed">
+                      <FeatureItem included={tier.limits.features.vibeScore} text="Vibe Score (0-100)" />
+                      <FeatureItem included={tier.limits.features.vibeScoreBadge} text="Embeddable badge" />
+                      <FeatureItem included={tier.limits.features.repoHealthProfile} text="Health profile page" />
+                    </div>
 
-                    <div className="pt-2">
-                      <FeatureItem
-                        included={tier.limits.features.aiSummary}
-                        text="AI scan summaries"
-                      />
-                      <FeatureItem
-                        included={tier.limits.features.aiExplanations}
-                        text="AI issue explanations"
-                      />
-                      <FeatureItem
-                        included={tier.limits.features.aiFixSuggestions}
-                        text="AI fix suggestions"
-                      />
-                      <FeatureItem
-                        included={tier.limits.features.githubIntegration}
-                        text="GitHub integration"
-                      />
-                      <FeatureItem
-                        included={tier.limits.features.slackIntegration}
-                        text="Slack + webhooks"
-                      />
-                      <FeatureItem
-                        included={tier.limits.features.apiAccess}
-                        text="API access"
-                      />
-                      <FeatureItem
-                        included={tier.limits.features.prioritySupport}
-                        text="Priority support"
-                      />
+                    {/* AI Features */}
+                    <div className="pt-1.5 mt-1.5 border-t border-dashed">
+                      <FeatureItem included={tier.limits.features.aiSummary} text="AI summaries" />
+                      <FeatureItem included={tier.limits.features.aiExplanations} text="AI explanations" />
+                      <FeatureItem included={tier.limits.features.aiFixSuggestions} text="AI fix suggestions" />
+                      <FeatureItem included={tier.limits.features.oneClickFixes} text="One-Click Fixes" />
+                      <FeatureItem included={tier.limits.features.aiReviewMerge} text="AI Review & Merge" />
+                      <FeatureItem included={tier.limits.features.explainCodebase} text="Explain Codebase" />
+                    </div>
+
+                    {/* Scanning */}
+                    <div className="pt-1.5 mt-1.5 border-t border-dashed">
+                      <FeatureItem included={tier.limits.features.shipItMode} text="Ship It Mode" />
+                      <FeatureItem included={tier.limits.features.learningMode} text="Learning Mode" />
+                    </div>
+
+                    {/* Integrations */}
+                    <div className="pt-1.5 mt-1.5 border-t border-dashed">
+                      <FeatureItem included={tier.limits.features.githubIntegration} text="GitHub integration" />
+                      <FeatureItem included={tier.limits.features.githubAction} text="GitHub Action" />
+                      <FeatureItem included={tier.limits.features.slackIntegration} text="Slack notifications" />
+                      <FeatureItem included={tier.limits.features.webhooks} text="Webhooks" />
+                      <FeatureItem included={tier.limits.features.apiAccess} text="API access" />
+                    </div>
+
+                    {/* Business */}
+                    <div className="pt-1.5 mt-1.5 border-t border-dashed">
+                      <FeatureItem included={tier.limits.features.trustBadge} text="Trust Badge (verified)" />
+                      <FeatureItem included={tier.limits.features.teamDashboard} text="Team Dashboard" />
+                      <FeatureItem included={tier.limits.features.prioritySupport} text="Priority support" />
                     </div>
                   </div>
                 </CardContent>
@@ -390,19 +376,6 @@ export default function PricingPage() {
           <p className="text-center text-muted-foreground mt-6 text-sm">
             <Link href="/docs/pricing" className="text-primary hover:underline">Read the complete pricing documentation →</Link>
           </p>
-        </div>
-
-        {/* Enterprise */}
-        <div className="max-w-2xl mx-auto mt-16 text-center">
-          <GlassCard className="p-8">
-            <h2 className="text-2xl font-bold mb-2">Enterprise</h2>
-            <p className="text-muted-foreground mb-4">
-              Unlimited scans, monorepo support, SSO, SLA, and dedicated support.
-            </p>
-            <Link href="/contact">
-              <Button variant="outline">Contact Sales</Button>
-            </Link>
-          </GlassCard>
         </div>
 
         {/* FAQ */}

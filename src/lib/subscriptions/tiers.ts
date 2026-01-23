@@ -25,14 +25,29 @@ export interface TierLimits {
     desktop: boolean;
   };
   features: {
+    // Core AI Features
     aiSummary: boolean;
     aiExplanations: boolean;
     aiFixSuggestions: boolean;
     aiPrioritization: boolean;
+    // Integrations
     githubIntegration: boolean;
+    githubAction: boolean;
     slackIntegration: boolean;
     webhooks: boolean;
     apiAccess: boolean;
+    // Vibe Coder Features (NEW)
+    vibeScore: boolean;
+    vibeScoreBadge: boolean;
+    oneClickFixes: boolean;
+    aiReviewMerge: boolean;
+    shipItMode: boolean;
+    learningMode: boolean;
+    repoHealthProfile: boolean;
+    explainCodebase: boolean;
+    trustBadge: boolean;
+    teamDashboard: boolean;
+    // Support
     prioritySupport: boolean;
   };
 }
@@ -71,14 +86,29 @@ export const TIERS: Record<TierName, TierDefinition> = {
         desktop: false,
       },
       features: {
+        // Core AI Features
         aiSummary: false,
         aiExplanations: false,
         aiFixSuggestions: false,
         aiPrioritization: false,
+        // Integrations
         githubIntegration: false,
+        githubAction: false,
         slackIntegration: false,
         webhooks: false,
         apiAccess: false,
+        // Vibe Coder Features
+        vibeScore: true,           // Basic score for all
+        vibeScoreBadge: false,
+        oneClickFixes: false,
+        aiReviewMerge: false,
+        shipItMode: false,
+        learningMode: true,        // Free educational content
+        repoHealthProfile: false,
+        explainCodebase: false,
+        trustBadge: false,
+        teamDashboard: false,
+        // Support
         prioritySupport: false,
       },
     },
@@ -107,14 +137,29 @@ export const TIERS: Record<TierName, TierDefinition> = {
         desktop: false,
       },
       features: {
+        // Core AI Features
         aiSummary: true,
         aiExplanations: false,
         aiFixSuggestions: false,
         aiPrioritization: false,
+        // Integrations
         githubIntegration: false,
+        githubAction: false,
         slackIntegration: false,
         webhooks: false,
         apiAccess: false,
+        // Vibe Coder Features
+        vibeScore: true,
+        vibeScoreBadge: true,      // Embeddable badge
+        oneClickFixes: false,
+        aiReviewMerge: false,
+        shipItMode: true,          // Quick/Standard modes
+        learningMode: true,
+        repoHealthProfile: true,   // Public profile
+        explainCodebase: false,
+        trustBadge: false,
+        teamDashboard: false,
+        // Support
         prioritySupport: false,
       },
     },
@@ -144,14 +189,29 @@ export const TIERS: Record<TierName, TierDefinition> = {
         desktop: false,
       },
       features: {
+        // Core AI Features
         aiSummary: true,
         aiExplanations: true,
         aiFixSuggestions: false,
         aiPrioritization: true,
+        // Integrations
         githubIntegration: true,
+        githubAction: true,        // CI/CD integration
         slackIntegration: false,
         webhooks: false,
         apiAccess: false,
+        // Vibe Coder Features
+        vibeScore: true,
+        vibeScoreBadge: true,
+        oneClickFixes: false,
+        aiReviewMerge: false,
+        shipItMode: true,          // All scan modes
+        learningMode: true,
+        repoHealthProfile: true,
+        explainCodebase: false,
+        trustBadge: false,
+        teamDashboard: false,
+        // Support
         prioritySupport: false,
       },
     },
@@ -180,14 +240,29 @@ export const TIERS: Record<TierName, TierDefinition> = {
         desktop: true,
       },
       features: {
+        // Core AI Features
         aiSummary: true,
         aiExplanations: true,
         aiFixSuggestions: true,
         aiPrioritization: true,
+        // Integrations
         githubIntegration: true,
+        githubAction: true,
         slackIntegration: true,
         webhooks: true,
         apiAccess: true,
+        // Vibe Coder Features (ALL ENABLED)
+        vibeScore: true,
+        vibeScoreBadge: true,
+        oneClickFixes: true,       // Auto-generate & push fixes
+        aiReviewMerge: true,       // AI agent review prompts
+        shipItMode: true,          // All scan modes including Paranoid
+        learningMode: true,
+        repoHealthProfile: true,
+        explainCodebase: true,     // AI codebase analysis
+        trustBadge: true,          // Verified trust badges
+        teamDashboard: true,       // Team collaboration
+        // Support
         prioritySupport: true,
       },
     },

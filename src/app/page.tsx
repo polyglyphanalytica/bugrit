@@ -959,9 +959,6 @@ export default function HomePage() {
             ))}
           </div>
 
-          <p className="text-center text-muted-foreground mt-8">
-            Need more? <Link href="/contact" className="text-primary hover:underline">Contact us</Link> for Enterprise pricing with unlimited scans, SSO, and SLA.
-          </p>
         </div>
       </section>
 
