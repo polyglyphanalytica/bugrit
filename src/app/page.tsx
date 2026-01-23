@@ -166,7 +166,7 @@ export default function HomePage() {
             <Link href="/login">
               <GradientButton variant="ghost" size="sm">Sign in</GradientButton>
             </Link>
-            <Link href="/register">
+            <Link href="/signup">
               <GradientButton size="sm" glow>Scan My Code</GradientButton>
             </Link>
           </div>
@@ -205,7 +205,7 @@ export default function HomePage() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up delay-400 fill-both">
-              <Link href="/register">
+              <Link href="/signup">
                 <GradientButton size="xl" glow className="w-full sm:w-auto">
                   Scan My Code Free
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -808,7 +808,7 @@ export default function HomePage() {
                 <div className="flex-1 px-4 py-3 rounded-lg bg-muted border text-muted-foreground font-mono text-sm">
                   https://github.com/your-username/your-repo
                 </div>
-                <Link href="/register">
+                <Link href="/signup">
                   <GradientButton>Scan Free</GradientButton>
                 </Link>
               </div>
@@ -912,7 +912,7 @@ export default function HomePage() {
                     </li>
                   ))}
                 </ul>
-                <Link href="/register">
+                <Link href="/signup">
                   <GradientButton
                     variant={plan.popular ? 'primary' : 'outline'}
                     className="w-full"
@@ -943,7 +943,7 @@ export default function HomePage() {
               Paste your GitHub URL and see what we find. Get AI-ready fix prompts you can drop right into Cursor. Free scan, no credit card, takes 2 minutes.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/register">
+              <Link href="/signup">
                 <GradientButton size="xl" glow>
                   Scan My Code Free
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
