@@ -518,6 +518,90 @@ export const DOCKER_VERSIONS: Record<string, DockerImageVersion> = {
     lastUpdated: '2026-01-23',
     releaseNotes: 'https://github.com/facebook/infer/releases',
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 8: January 2026 Expansion Part 4 (11 Docker tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // Scala
+  'scalafmt': {
+    image: 'scalameta/scalafmt',
+    version: '3.8.3',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/scalameta/scalafmt/releases',
+  },
+  'scalafix': {
+    image: 'scalacenter/scalafix',
+    version: '0.12.1',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/scalacenter/scalafix/releases',
+  },
+
+  // Haskell
+  'hlint': {
+    image: 'haskell',
+    version: '9.6-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'HLint 3.8.x installed via cabal',
+  },
+
+  // Protocol Buffers
+  'buf': {
+    image: 'bufbuild/buf',
+    version: '1.47.2',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/bufbuild/buf/releases',
+  },
+
+  // Angular
+  'angular-eslint': {
+    image: 'node',
+    version: '20-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: '@angular-eslint 18.x installed via npm',
+  },
+
+  // License Scanning
+  'scancode-toolkit': {
+    image: 'ghcr.io/nexb/scancode-toolkit',
+    version: '32.3.0',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/nexB/scancode-toolkit/releases',
+  },
+  'licensee': {
+    image: 'ruby',
+    version: '3.2-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'Licensee gem installed via bundler',
+  },
+
+  // Security
+  'cosign': {
+    image: 'gcr.io/projectsigstore/cosign',
+    version: '2.4.1',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/sigstore/cosign/releases',
+  },
+  'safety': {
+    image: 'python',
+    version: '3.12-slim',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'Safety 3.x installed via pip',
+  },
+
+  // SQL Quality
+  'sqlcheck': {
+    image: 'aaronmorgenegg/sqlcheck',
+    version: 'latest',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/jarulraj/sqlcheck',
+  },
+  'pgformatter': {
+    image: 'darold/pgformatter',
+    version: '5.5',
+    lastUpdated: '2026-01-23',
+    releaseNotes: 'https://github.com/darold/pgFormatter/releases',
+  },
 };
 
 /**

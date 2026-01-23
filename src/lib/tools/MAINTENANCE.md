@@ -1,13 +1,13 @@
 # Tool Maintenance Guide
 
-This document describes how to keep the 100 external scanning tools updated and protected from deprecated versions.
+This document describes how to keep the 115 external scanning tools updated and protected from deprecated versions.
 
 ## Overview
 
 | Type | Count | Update Method |
 |------|-------|---------------|
-| npm packages | 33 | Renovate/Dependabot |
-| Docker images | 67 | Manual version pinning |
+| npm packages | 37 | Renovate/Dependabot |
+| Docker images | 78 | Manual version pinning |
 
 ## Quick Commands
 
@@ -279,7 +279,8 @@ When a tool is deprecated:
 
 | Date | Change |
 |------|--------|
-| 2026-01-23 | Added 12 more tools (lockfile-lint, audit-ci, webhint, accessibility-checker, Clair, Falco, Slither, Error Prone, Credo, Steampipe, SonarScanner, Infer) - total now 100 |
+| 2026-01-23 | Added 15 more tools (Pyright, nbqa, eslint-plugin-vue, eslint-plugin-react, scalafmt, Scalafix, HLint, Buf, angular-eslint, ScanCode, Licensee, Cosign, Safety, sqlcheck, pgFormatter) - total now 115 |
+| 2026-01-23 | Added 12 more tools (lockfile-lint, audit-ci, webhint, accessibility-checker, Clair, Falco, Slither, Error Prone, Credo, Steampipe, SonarScanner, Infer) |
 | 2026-01-23 | Added 9 more tools (html-validate, textlint, npm-check-updates, yamllint, Bearer, Pylint, Dart Analyzer, ktlint, Prowler) |
 | 2026-01-23 | Added 11 new tools (Oxlint, Ruff, Mypy, Hadolint, SQLFluff, GolangCI-Lint, TruffleHog, actionlint, KICS, cfn-lint, Vale) |
 | 2026-01-21 | Initial maintenance guide |

@@ -1,7 +1,7 @@
 /**
  * Tool Health Aggregation and Monitoring
  *
- * Dynamically tracks health of all tools (currently 100),
+ * Dynamically tracks health of all tools (currently 115),
  * aggregates metrics, and provides alerting capabilities.
  */
 

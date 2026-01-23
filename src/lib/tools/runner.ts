@@ -1261,6 +1261,127 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
 
     return { findings, summary: summarizeFindings(findings) };
   },
+
+  // ─────────────────────────────────────────────────────────────
+  // pyright (Python type checker - Microsoft)
+  // ─────────────────────────────────────────────────────────────
+  'pyright': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx pyright --outputjson 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const diag of data.generalDiagnostics || []) {
+          findings.push({
+            id: `pyright-${diag.rule || 'error'}`,
+            severity: diag.severity === 'error' ? 'error' : 'warning',
+            message: diag.message,
+            file: diag.file,
+            line: diag.range?.start?.line,
+            rule: diag.rule,
+          });
+        }
+      } catch {
+        // JSON parse error
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // nbqa (Jupyter notebook quality)
+  // ─────────────────────────────────────────────────────────────
+  'nbqa': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    // Run ruff on notebooks via nbqa
+    const output = runCli('npx nbqa ruff . --output-format=json 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const issue of data) {
+          findings.push({
+            id: `nbqa-${issue.code || 'unknown'}`,
+            severity: issue.code?.startsWith('E') ? 'error' : 'warning',
+            message: issue.message,
+            file: issue.filename,
+            line: issue.location?.row,
+            rule: issue.code,
+          });
+        }
+      } catch {
+        // JSON parse error or no issues
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // eslint-plugin-vue (Vue.js linting rules)
+  // ─────────────────────────────────────────────────────────────
+  'eslint-plugin-vue': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx eslint --ext .vue --format json . 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const file of data) {
+          for (const msg of file.messages || []) {
+            if (msg.ruleId?.startsWith('vue/')) {
+              findings.push({
+                id: `vue-${msg.ruleId}`,
+                severity: msg.severity === 2 ? 'error' : 'warning',
+                message: msg.message,
+                file: file.filePath,
+                line: msg.line,
+                rule: msg.ruleId,
+              });
+            }
+          }
+        }
+      } catch {
+        // JSON parse error
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // eslint-plugin-react (React linting rules)
+  // ─────────────────────────────────────────────────────────────
+  'eslint-plugin-react': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx eslint --ext .jsx,.tsx --format json . 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const file of data) {
+          for (const msg of file.messages || []) {
+            if (msg.ruleId?.startsWith('react/') || msg.ruleId?.startsWith('react-hooks/')) {
+              findings.push({
+                id: `react-${msg.ruleId}`,
+                severity: msg.severity === 2 ? 'error' : 'warning',
+                message: msg.message,
+                file: file.filePath,
+                line: msg.line,
+                rule: msg.ruleId,
+              });
+            }
+          }
+        }
+      } catch {
+        // JSON parse error
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════

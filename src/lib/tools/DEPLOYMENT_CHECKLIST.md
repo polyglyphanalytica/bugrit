@@ -4,7 +4,7 @@ A comprehensive checklist for deploying new scanning tools to the Bugrit platfor
 All items must be completed for a tool to be production-ready.
 
 **Current Tool Counts:**
-- Total: 100 tools (33 npm + 67 Docker)
+- Total: 115 tools (37 npm + 78 Docker)
 - Last updated: January 2026
 
 ---
@@ -376,7 +376,7 @@ Usage:
 
 ## Compliance Matrix
 
-Use this matrix to verify all 100 tools are properly deployed:
+Use this matrix to verify all 115 tools are properly deployed:
 
 | Tool ID | Registry | API Types | Integration | Wizard | Docs |
 |---------|----------|-----------|-------------|--------|------|
@@ -403,6 +403,7 @@ node scripts/verify-all-tools.js
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2026-01-23 | Updated tool counts: 100 → 115 (added 15 more tools: Pyright, nbqa, eslint-plugin-vue, eslint-plugin-react, scalafmt, Scalafix, HLint, Buf, angular-eslint, ScanCode, Licensee, Cosign, Safety, sqlcheck, pgFormatter) | Claude |
 | 2026-01-23 | Updated tool counts: 88 → 100 (added 12 more tools: lockfile-lint, audit-ci, webhint, accessibility-checker, Clair, Falco, Slither, Error Prone, Credo, Steampipe, SonarScanner, Infer) | Claude |
 | 2026-01-23 | Updated tool counts: 79 → 88 (added 9 more tools: html-validate, textlint, npm-check-updates, yamllint, Bearer, Pylint, Dart Analyzer, ktlint, Prowler) | Claude |
 | 2026-01-23 | Updated tool counts: 68 → 79 (added 11 new tools) | Claude |

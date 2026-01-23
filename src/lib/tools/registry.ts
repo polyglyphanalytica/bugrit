@@ -1,13 +1,13 @@
 /**
  * Comprehensive Tool Registry
  *
- * 100 security, quality, and compliance tools supporting multiple languages.
+ * 115 security, quality, and compliance tools supporting multiple languages.
  *
  * Deployment types:
- * - Native JS (33 tools): Run via npm packages on Node.js
- * - Docker (67 tools): Run via Google Cloud Build containers
+ * - Native JS (37 tools): Run via npm packages on Node.js
+ * - Docker (78 tools): Run via Google Cloud Build containers
  *
- * Total: 100 tools across 11 categories
+ * Total: 115 tools across 11 categories
  */
 
 export interface ToolDefinition {
@@ -1014,6 +1014,157 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     filePatterns: ['**/*.c', '**/*.cpp', '**/*.java', '**/*.m'],
     credits: 2,
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 8: January 2026 Expansion Part 4 (15 tools)
+  // ═══════════════════════════════════════════════════════════════
+
+  // --- npm Tools (4) ---
+  {
+    id: 'pyright',
+    name: 'Pyright',
+    description: 'Fast Python type checker with full type inference (Microsoft)',
+    category: 'quality',
+    npm: 'pyright',
+    languages: ['python'],
+    filePatterns: ['**/*.py'],
+    credits: 1,
+  },
+  {
+    id: 'nbqa',
+    name: 'nbqa',
+    description: 'Run any Python linter or formatter on Jupyter notebooks',
+    category: 'quality',
+    npm: 'nbqa',
+    filePatterns: ['**/*.ipynb'],
+    credits: 1,
+  },
+  {
+    id: 'eslint-plugin-vue',
+    name: 'eslint-plugin-vue',
+    description: 'Official ESLint plugin for Vue.js with 100+ rules',
+    category: 'quality',
+    npm: 'eslint-plugin-vue',
+    languages: ['vue', 'javascript'],
+    filePatterns: ['**/*.vue'],
+    credits: 0,
+  },
+  {
+    id: 'eslint-plugin-react',
+    name: 'eslint-plugin-react',
+    description: 'React-specific linting rules for ESLint',
+    category: 'quality',
+    npm: 'eslint-plugin-react',
+    languages: ['javascript', 'typescript', 'jsx', 'tsx'],
+    filePatterns: ['**/*.jsx', '**/*.tsx'],
+    credits: 0,
+  },
+
+  // --- Docker Tools (11) ---
+  {
+    id: 'scalafmt',
+    name: 'scalafmt',
+    description: 'Code formatter for Scala with configurable style',
+    category: 'quality',
+    docker: 'scalameta/scalafmt:latest',
+    languages: ['scala'],
+    filePatterns: ['**/*.scala', '**/*.sbt'],
+    credits: 1,
+  },
+  {
+    id: 'scalafix',
+    name: 'Scalafix',
+    description: 'Refactoring and linting tool for Scala',
+    category: 'quality',
+    docker: 'scalacenter/scalafix:latest',
+    languages: ['scala'],
+    filePatterns: ['**/*.scala'],
+    credits: 1,
+  },
+  {
+    id: 'hlint',
+    name: 'HLint',
+    description: 'Haskell source code suggestions and linting',
+    category: 'quality',
+    docker: 'haskell:9.6-slim',
+    languages: ['haskell'],
+    filePatterns: ['**/*.hs', '**/*.lhs'],
+    credits: 1,
+  },
+  {
+    id: 'buf',
+    name: 'Buf',
+    description: 'Protocol Buffers linting and breaking change detection',
+    category: 'quality',
+    docker: 'bufbuild/buf:latest',
+    filePatterns: ['**/*.proto'],
+    credits: 1,
+  },
+  {
+    id: 'angular-eslint',
+    name: 'angular-eslint',
+    description: 'Angular-specific linting rules and best practices',
+    category: 'quality',
+    docker: 'node:20-slim',
+    languages: ['typescript', 'angular'],
+    filePatterns: ['**/*.component.ts', '**/*.module.ts'],
+    credits: 1,
+  },
+  {
+    id: 'scancode-toolkit',
+    name: 'ScanCode Toolkit',
+    description: 'Scan code for licenses, copyrights, and dependencies',
+    category: 'dependencies',
+    docker: 'ghcr.io/nexb/scancode-toolkit:latest',
+    credits: 2,
+  },
+  {
+    id: 'licensee',
+    name: 'Licensee',
+    description: 'Detect open source licenses from LICENSE files (GitHub)',
+    category: 'dependencies',
+    docker: 'ruby:3.2-slim',
+    filePatterns: ['**/LICENSE*', '**/COPYING*'],
+    credits: 1,
+  },
+  {
+    id: 'cosign',
+    name: 'Cosign',
+    description: 'Container image signing and verification (Sigstore)',
+    category: 'security',
+    docker: 'gcr.io/projectsigstore/cosign:latest',
+    credits: 2,
+  },
+  {
+    id: 'safety',
+    name: 'Safety',
+    description: 'Python dependency vulnerability scanner',
+    category: 'dependencies',
+    docker: 'python:3.12-slim',
+    languages: ['python'],
+    filePatterns: ['**/requirements*.txt', '**/Pipfile', '**/pyproject.toml'],
+    credits: 1,
+  },
+  {
+    id: 'sqlcheck',
+    name: 'sqlcheck',
+    description: 'Automatically detect SQL anti-patterns',
+    category: 'quality',
+    docker: 'aaronmorgenegg/sqlcheck:latest',
+    languages: ['sql'],
+    filePatterns: ['**/*.sql'],
+    credits: 1,
+  },
+  {
+    id: 'pgformatter',
+    name: 'pgFormatter',
+    description: 'PostgreSQL SQL syntax beautifier and formatter',
+    category: 'quality',
+    docker: 'darold/pgformatter:latest',
+    languages: ['sql'],
+    filePatterns: ['**/*.sql'],
+    credits: 0,
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -1054,7 +1205,7 @@ export function getTotalCredits(toolIds: string[]): number {
   }, 0);
 }
 
-export const TOOL_COUNT = TOOL_REGISTRY.length;  // 100 tools (33 npm + 67 docker)
+export const TOOL_COUNT = TOOL_REGISTRY.length;  // 115 tools (37 npm + 78 docker)
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   linting: 'Linting & Formatting',
