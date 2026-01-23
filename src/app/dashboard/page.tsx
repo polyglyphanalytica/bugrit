@@ -188,9 +188,9 @@ export default function DashboardPage() {
       </Suspense>
       <DashboardNav />
       <main className="flex-1 mx-auto w-full px-4 md:px-6 lg:px-8 py-6 max-w-7xl">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <Button asChild>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
+          <Button asChild size="sm" className="w-full sm:w-auto">
             <Link href="/applications">Manage Applications</Link>
           </Button>
         </div>
@@ -244,7 +244,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Overall Statistics Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 mb-8">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Applications</CardTitle>
@@ -408,72 +408,132 @@ export default function DashboardPage() {
                 )}
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Application</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Findings</TableHead>
-                    <TableHead>Time</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <>
+                {/* Mobile: Card view */}
+                <div className="space-y-3 md:hidden">
                   {recentScans.map((scan) => (
-                    <TableRow key={scan.id}>
-                      <TableCell className="font-medium">
-                        {scan.applicationName || 'Unknown'}
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-muted-foreground">
-                          {scan.sourceType}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(scan.status)}>
-                          {scan.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {scan.summary ? (
-                          <div className="flex gap-2 text-xs">
-                            {scan.summary.critical > 0 && (
-                              <span className={getSeverityColor('critical')}>
-                                {scan.summary.critical}C
-                              </span>
-                            )}
-                            {scan.summary.high > 0 && (
-                              <span className={getSeverityColor('high')}>
-                                {scan.summary.high}H
-                              </span>
-                            )}
-                            {scan.summary.medium > 0 && (
-                              <span className={getSeverityColor('medium')}>
-                                {scan.summary.medium}M
-                              </span>
-                            )}
-                            {scan.summary.low > 0 && (
-                              <span className={getSeverityColor('low')}>
-                                {scan.summary.low}L
-                              </span>
-                            )}
-                            {!scan.summary.critical && !scan.summary.high && !scan.summary.medium && !scan.summary.low && (
-                              <span className="text-green-600">Clean</span>
-                            )}
+                    <Link key={scan.id} href={`/scans/${scan.id}`} className="block">
+                      <div className="p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div>
+                            <p className="font-medium">{scan.applicationName || 'Unknown'}</p>
+                            <p className="text-xs text-muted-foreground">{scan.sourceType}</p>
                           </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatDistanceToNow(new Date(scan.createdAt), {
-                          addSuffix: true,
-                        })}
-                      </TableCell>
-                    </TableRow>
+                          <Badge variant={getStatusBadgeVariant(scan.status)}>
+                            {scan.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          {scan.summary ? (
+                            <div className="flex gap-2 text-xs">
+                              {scan.summary.critical > 0 && (
+                                <span className={getSeverityColor('critical')}>
+                                  {scan.summary.critical}C
+                                </span>
+                              )}
+                              {scan.summary.high > 0 && (
+                                <span className={getSeverityColor('high')}>
+                                  {scan.summary.high}H
+                                </span>
+                              )}
+                              {scan.summary.medium > 0 && (
+                                <span className={getSeverityColor('medium')}>
+                                  {scan.summary.medium}M
+                                </span>
+                              )}
+                              {scan.summary.low > 0 && (
+                                <span className={getSeverityColor('low')}>
+                                  {scan.summary.low}L
+                                </span>
+                              )}
+                              {!scan.summary.critical && !scan.summary.high && !scan.summary.medium && !scan.summary.low && (
+                                <span className="text-green-600">Clean</span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(scan.createdAt), {
+                              addSuffix: true,
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+
+                {/* Desktop: Table view */}
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Application</TableHead>
+                        <TableHead>Source</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Findings</TableHead>
+                        <TableHead>Time</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {recentScans.map((scan) => (
+                        <TableRow key={scan.id}>
+                          <TableCell className="font-medium">
+                            {scan.applicationName || 'Unknown'}
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-muted-foreground">
+                              {scan.sourceType}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusBadgeVariant(scan.status)}>
+                              {scan.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {scan.summary ? (
+                              <div className="flex gap-2 text-xs">
+                                {scan.summary.critical > 0 && (
+                                  <span className={getSeverityColor('critical')}>
+                                    {scan.summary.critical}C
+                                  </span>
+                                )}
+                                {scan.summary.high > 0 && (
+                                  <span className={getSeverityColor('high')}>
+                                    {scan.summary.high}H
+                                  </span>
+                                )}
+                                {scan.summary.medium > 0 && (
+                                  <span className={getSeverityColor('medium')}>
+                                    {scan.summary.medium}M
+                                  </span>
+                                )}
+                                {scan.summary.low > 0 && (
+                                  <span className={getSeverityColor('low')}>
+                                    {scan.summary.low}L
+                                  </span>
+                                )}
+                                {!scan.summary.critical && !scan.summary.high && !scan.summary.medium && !scan.summary.low && (
+                                  <span className="text-green-600">Clean</span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {formatDistanceToNow(new Date(scan.createdAt), {
+                              addSuffix: true,
+                            })}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

@@ -209,7 +209,7 @@ export function QuickScan({ onScan, isSubmitting = false, className }: QuickScan
 
           {/* Advanced options */}
           {showAdvanced && sourceType === 'github' && (
-            <div className="grid grid-cols-2 gap-3 pt-2 border-t">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t">
               <div className="space-y-1">
                 <label className="text-sm text-muted-foreground">Branch</label>
                 <Input

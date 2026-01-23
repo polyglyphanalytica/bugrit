@@ -1,0 +1,548 @@
+# Cloud Build configuration for updating ALL security tool images
+# Schedule this to run weekly via Cloud Scheduler
+#
+# gcloud scheduler jobs create http update-security-tools \
+#   --schedule="0 3 * * 0" \
+#   --uri="https://cloudbuild.googleapis.com/v1/projects/YOUR_PROJECT/triggers/update-tools:run" \
+#   --http-method=POST
+#
+# This config updates all 78 Docker-based tools in the registry.
+# Tools are grouped for parallel execution where possible.
+
+steps:
+  # ═══════════════════════════════════════════════════════════════
+  # Group 1: Core Security Scanners (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-semgrep'
+    args: ['pull', 'returntocorp/semgrep:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-gitleaks'
+    args: ['pull', 'ghcr.io/gitleaks/gitleaks:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-trivy'
+    args: ['pull', 'aquasec/trivy:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-grype'
+    args: ['pull', 'anchore/grype:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-nuclei'
+    args: ['pull', 'projectdiscovery/nuclei:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-checkov'
+    args: ['pull', 'bridgecrew/checkov:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-trufflehog'
+    args: ['pull', 'trufflesecurity/trufflehog:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-bearer'
+    args: ['pull', 'bearer/bearer:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 2: Vulnerability Scanners (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-owasp-zap'
+    args: ['pull', 'ghcr.io/zaproxy/zaproxy:stable']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-dependency-check'
+    args: ['pull', 'owasp/dependency-check:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-osv-scanner'
+    args: ['pull', 'ghcr.io/google/osv-scanner:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-clair'
+    args: ['pull', 'quay.io/projectquay/clair:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-falco'
+    args: ['pull', 'falcosecurity/falco:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-cosign'
+    args: ['pull', 'gcr.io/projectsigstore/cosign:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 3: Language-Specific Security (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-bandit'
+    args: ['pull', 'ghcr.io/pycqa/bandit/bandit:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-gosec'
+    args: ['pull', 'securego/gosec:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-brakeman'
+    args: ['pull', 'presidentbeef/brakeman:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-slither'
+    args: ['pull', 'trailofbits/slither:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-infer'
+    args: ['pull', 'facebook/infer:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-garak'
+    args: ['pull', 'ghcr.io/leondz/garak:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 4: Container & IaC Security (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-tfsec'
+    args: ['pull', 'aquasec/tfsec:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-dockle'
+    args: ['pull', 'goodwithtech/dockle:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-hadolint'
+    args: ['pull', 'hadolint/hadolint:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-kics'
+    args: ['pull', 'checkmarx/kics:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-terrascan'
+    args: ['pull', 'tenable/terrascan:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 5: Cloud Native / Kubernetes (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-kubesec'
+    args: ['pull', 'kubesec/kubesec:v2']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-kube-bench'
+    args: ['pull', 'aquasec/kube-bench:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-polaris'
+    args: ['pull', 'quay.io/fairwinds/polaris:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-kube-hunter'
+    args: ['pull', 'aquasec/kube-hunter:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-prowler'
+    args: ['pull', 'prowler/prowler:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-steampipe'
+    args: ['pull', 'turbot/steampipe:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 6: Code Quality - Multi-language (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-codeclimate'
+    args: ['pull', 'codeclimate/codeclimate']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-sonar-scanner'
+    args: ['pull', 'sonarsource/sonar-scanner-cli:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-syft'
+    args: ['pull', 'anchore/syft:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-scancode'
+    args: ['pull', 'ghcr.io/nexb/scancode-toolkit:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 7: PHP Tools (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-phpstan'
+    args: ['pull', 'ghcr.io/phpstan/phpstan:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-psalm'
+    args: ['pull', 'vimeo/psalm:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 8: Java/JVM Tools (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-spotbugs'
+    args: ['pull', 'spotbugs/spotbugs:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-pmd'
+    args: ['pull', 'pmd/pmd:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-checkstyle'
+    args: ['pull', 'checkstyle/checkstyle:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-error-prone'
+    args: ['pull', 'maven:3.9-eclipse-temurin-21']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 9: Kotlin/Scala Tools (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-detekt'
+    args: ['pull', 'detekt/detekt:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-ktlint'
+    args: ['pull', 'pinterest/ktlint:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-scalafmt'
+    args: ['pull', 'scalameta/scalafmt:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-scalafix'
+    args: ['pull', 'scalacenter/scalafix:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 10: Go Tools (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-golangci-lint'
+    args: ['pull', 'golangci/golangci-lint:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 11: Python Tools (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-ruff'
+    args: ['pull', 'ghcr.io/astral-sh/ruff:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 12: C/C++ Tools (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-cppcheck'
+    args: ['pull', 'neszt/cppcheck:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 13: Shell/CI Tools (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-shellcheck'
+    args: ['pull', 'koalaman/shellcheck:stable']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-actionlint'
+    args: ['pull', 'rhysd/actionlint:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 14: API Tools (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-schemathesis'
+    args: ['pull', 'schemathesis/schemathesis:stable']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 15: Mobile Tools (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-mobsf'
+    args: ['pull', 'opensecurity/mobile-security-framework-mobsf:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-swiftlint'
+    args: ['pull', 'norionomura/swiftlint:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 16: Documentation/Linting Tools (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-vale'
+    args: ['pull', 'jdkato/vale:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-yamllint'
+    args: ['pull', 'cytopia/yamllint:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-sqlfluff'
+    args: ['pull', 'sqlfluff/sqlfluff:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-sqlcheck'
+    args: ['pull', 'aaronmorgenegg/sqlcheck:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-pgformatter'
+    args: ['pull', 'darold/pgformatter:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-buf'
+    args: ['pull', 'bufbuild/buf:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 17: Performance Tools (run in parallel)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-sitespeed'
+    args: ['pull', 'sitespeedio/sitespeed.io:latest']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Group 18: Base Images for pip/gem/cargo tools (run in parallel)
+  # These are used by tools that install packages at runtime
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-python-311'
+    args: ['pull', 'python:3.11-slim']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-python-312'
+    args: ['pull', 'python:3.12-slim']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-rust'
+    args: ['pull', 'rust:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-ruby'
+    args: ['pull', 'ruby:latest']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-ruby-32'
+    args: ['pull', 'ruby:3.2-slim']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-node-20'
+    args: ['pull', 'node:20-slim']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-dart'
+    args: ['pull', 'dart:stable']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-elixir'
+    args: ['pull', 'elixir:1.16-slim']
+    waitFor: ['-']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'pull-haskell'
+    args: ['pull', 'haskell:9.6-slim']
+    waitFor: ['-']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Tag and push critical images to project registry for faster pulls
+  # (Only the most commonly used security tools)
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'tag-trivy'
+    args: ['tag', 'aquasec/trivy:latest', 'gcr.io/$PROJECT_ID/trivy:latest']
+    waitFor: ['pull-trivy']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-trivy'
+    args: ['push', 'gcr.io/$PROJECT_ID/trivy:latest']
+    waitFor: ['tag-trivy']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'tag-semgrep'
+    args: ['tag', 'returntocorp/semgrep:latest', 'gcr.io/$PROJECT_ID/semgrep:latest']
+    waitFor: ['pull-semgrep']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-semgrep'
+    args: ['push', 'gcr.io/$PROJECT_ID/semgrep:latest']
+    waitFor: ['tag-semgrep']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'tag-grype'
+    args: ['tag', 'anchore/grype:latest', 'gcr.io/$PROJECT_ID/grype:latest']
+    waitFor: ['pull-grype']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-grype'
+    args: ['push', 'gcr.io/$PROJECT_ID/grype:latest']
+    waitFor: ['tag-grype']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'tag-gitleaks'
+    args: ['tag', 'ghcr.io/gitleaks/gitleaks:latest', 'gcr.io/$PROJECT_ID/gitleaks:latest']
+    waitFor: ['pull-gitleaks']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-gitleaks'
+    args: ['push', 'gcr.io/$PROJECT_ID/gitleaks:latest']
+    waitFor: ['tag-gitleaks']
+
+  # ═══════════════════════════════════════════════════════════════
+  # Rebuild and deploy worker with latest dependencies
+  # ═══════════════════════════════════════════════════════════════
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'rebuild-worker'
+    dir: 'worker'
+    args:
+      - 'build'
+      - '--no-cache'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/bugrit-worker:latest'
+      - '.'
+    waitFor:
+      - 'push-trivy'
+      - 'push-semgrep'
+      - 'push-grype'
+      - 'push-gitleaks'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-worker'
+    args: ['push', 'gcr.io/$PROJECT_ID/bugrit-worker:latest']
+    waitFor: ['rebuild-worker']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-worker'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'bugrit-worker'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/bugrit-worker:latest'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+    waitFor: ['push-worker']
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'  # Faster machine for parallel pulls
+
+timeout: '3600s'  # 60 minutes (more images = more time)
+
+# ═══════════════════════════════════════════════════════════════
+# Coverage Summary:
+# ═══════════════════════════════════════════════════════════════
+# This configuration pulls 65 unique Docker images covering:
+#
+# Security Scanners (19):
+#   semgrep, gitleaks, trivy, grype, nuclei, checkov, trufflehog,
+#   bearer, owasp-zap, dependency-check, osv-scanner, clair, falco,
+#   cosign, bandit, gosec, brakeman, slither, infer, garak
+#
+# Container/IaC Security (5):
+#   tfsec, dockle, hadolint, kics, terrascan
+#
+# Cloud Native/K8s (6):
+#   kubesec, kube-bench, polaris, kube-hunter, prowler, steampipe
+#
+# Code Quality (20):
+#   codeclimate, sonar-scanner, syft, scancode, phpstan, psalm,
+#   spotbugs, pmd, checkstyle, error-prone, detekt, ktlint,
+#   scalafmt, scalafix, golangci-lint, ruff, cppcheck, shellcheck,
+#   actionlint, schemathesis
+#
+# Documentation/Linting (6):
+#   vale, yamllint, sqlfluff, sqlcheck, pgformatter, buf
+#
+# Mobile (2):
+#   mobsf, swiftlint
+#
+# Performance (1):
+#   sitespeed
+#
+# Base Images for pip/gem/cargo tools (9):
+#   python:3.11-slim, python:3.12-slim, rust:latest, ruby:latest,
+#   ruby:3.2-slim, node:20-slim, dart:stable, elixir:1.16-slim,
+#   haskell:9.6-slim
+#
+# Tools using base images (installed at runtime via pip/gem/cargo):
+#   - flawfinder, modelscan, pip-audit, mypy, cfn-lint, graphql-cop,
+#     apkleaks, androguard, pylint, safety (Python)
+#   - rubocop, licensee (Ruby)
+#   - cargo-audit, clippy (Rust)
+#   - angular-eslint (Node)
+#   - credo (Elixir)
+#   - hlint (Haskell)
+#   - dart-analyze (Dart)
+#
+# NPM-based tools (37 total) are managed separately via Dependabot.
+# See .github/dependabot.yml for npm package updates.

@@ -8,6 +8,7 @@ import { SectionHeading } from '@/components/ui/section-heading';
 import { Logo } from '@/components/ui/logo';
 import { PlatformLogos } from '@/components/ui/platform-logos';
 import { TOOL_REGISTRY, ToolCategory } from '@/lib/tools/registry';
+import { Menu, X } from 'lucide-react';
 
 // Category value propositions - what each category DOES for users
 const CATEGORY_VALUE: Record<ToolCategory, {
@@ -144,6 +145,7 @@ function getToolNames(category: ToolCategory): string[] {
 
 export default function HomePage() {
   const [expandedCategory, setExpandedCategory] = useState<ToolCategory | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const categories = Object.keys(CATEGORY_VALUE) as ToolCategory[];
   // Prioritize the most important categories
@@ -157,20 +159,51 @@ export default function HomePage() {
         <div className="container-wide flex items-center justify-between h-16">
           <Logo href="/" />
           <div className="hidden md:flex items-center gap-8">
-            <Link href="#risks" className="nav-link">The Risks</Link>
-            <Link href="#protection" className="nav-link">How We Help</Link>
+            <Link href="#what-we-check" className="nav-link">What We Check</Link>
+            <Link href="#how-it-works" className="nav-link">How It Works</Link>
             <Link href="#pricing" className="nav-link">Pricing</Link>
             <Link href="/docs" className="nav-link">Docs</Link>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/login">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/login" className="hidden sm:block">
               <GradientButton variant="ghost" size="sm">Sign in</GradientButton>
             </Link>
             <Link href="/signup">
-              <GradientButton size="sm" glow>Scan My Code</GradientButton>
+              <GradientButton size="sm" glow className="text-xs sm:text-sm">Scan My Code</GradientButton>
             </Link>
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setMobileNavOpen(!mobileNavOpen)}
+              className="md:hidden p-2 text-muted-foreground hover:text-foreground"
+            >
+              {mobileNavOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
+        {/* Mobile nav dropdown */}
+        {mobileNavOpen && (
+          <div className="md:hidden border-t border-white/10 bg-background/95 backdrop-blur">
+            <div className="container-wide py-4 space-y-2">
+              <Link href="#what-we-check" className="block py-2 text-sm font-medium" onClick={() => setMobileNavOpen(false)}>
+                What We Check
+              </Link>
+              <Link href="#how-it-works" className="block py-2 text-sm font-medium" onClick={() => setMobileNavOpen(false)}>
+                How It Works
+              </Link>
+              <Link href="#pricing" className="block py-2 text-sm font-medium" onClick={() => setMobileNavOpen(false)}>
+                Pricing
+              </Link>
+              <Link href="/docs" className="block py-2 text-sm font-medium" onClick={() => setMobileNavOpen(false)}>
+                Docs
+              </Link>
+              <div className="pt-2 border-t border-white/10">
+                <Link href="/login" className="block py-2 text-sm text-muted-foreground" onClick={() => setMobileNavOpen(false)}>
+                  Sign in
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section - Speaks directly to vibe coders */}
@@ -187,7 +220,7 @@ export default function HomePage() {
             </div>
 
             {/* Title - Vibe coder identity + empowering */}
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 animate-fade-up">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6 sm:mb-8 animate-fade-up">
               Vibe Coders
               <br />
               <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-gradient-shift bg-[length:200%_auto]">
@@ -196,11 +229,11 @@ export default function HomePage() {
             </h1>
 
             {/* Description - Validates their workflow */}
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-6 animate-fade-up delay-200 fill-both leading-relaxed">
+            <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-4 sm:mb-6 animate-fade-up delay-200 fill-both leading-relaxed px-4">
               You build with Cursor, Copilot, and vibes. <strong className="text-foreground">We make sure it&apos;s actually secure.</strong>
             </p>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-12 animate-fade-up delay-300 fill-both">
-              One click runs <strong className="text-foreground">{TOOL_REGISTRY.length}+ automated checks</strong> for security holes, leaked secrets, and bugs. Get AI-ready fix prompts you can paste right back into your editor. No security expertise required.
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 sm:mb-12 animate-fade-up delay-300 fill-both px-4">
+              One click runs <strong className="text-foreground">{TOOL_REGISTRY.length}+ automated checks</strong> for security holes, leaked secrets, and bugs. Get AI-ready fix prompts you can paste right back into your editor.
             </p>
 
             {/* CTA Buttons */}

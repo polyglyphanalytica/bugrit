@@ -176,16 +176,16 @@ export default function ApplicationsPage() {
     <div className="min-h-screen bg-background flex flex-col">
       <DashboardNav />
       <main className="flex-1 mx-auto w-full px-4 md:px-6 lg:px-8 py-6 max-w-7xl">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold">Applications</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-bold">Applications</h1>
+            <p className="text-sm text-muted-foreground">
               Manage your registered applications and their settings
             </p>
           </div>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>New Application</Button>
+              <Button className="w-full sm:w-auto">New Application</Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>

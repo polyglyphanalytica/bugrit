@@ -292,6 +292,140 @@ app.post('/accessibility', authenticateRequest, async (req: Request, res: Respon
   }
 });
 
+// Pa11y accessibility scan endpoint
+app.post('/pa11y', authenticateRequest, async (req: Request, res: Response) => {
+  const requestId = req.headers['x-request-id'] as string;
+
+  try {
+    const { url, scanId, standard = 'WCAG2AA' } = req.body;
+
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
+
+    console.log(`[${requestId}] Running Pa11y scan for ${url} (${standard})`);
+
+    const puppeteer = await import('puppeteer');
+
+    const browser = await puppeteer.launch({
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+    });
+
+    const page = await browser.newPage();
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+
+    const pageTitle = await page.title();
+
+    // Run basic accessibility checks (simplified Pa11y-style)
+    const issues = await page.evaluate(() => {
+      const results: Array<{
+        code: string;
+        type: 'error' | 'warning' | 'notice';
+        message: string;
+        context: string;
+        selector: string;
+      }> = [];
+
+      // Check images without alt
+      document.querySelectorAll('img:not([alt])').forEach((img, i) => {
+        results.push({
+          code: 'WCAG2AA.Principle1.Guideline1_1.1_1_1.H37',
+          type: 'error',
+          message: 'Img element missing an alt attribute.',
+          context: (img as HTMLElement).outerHTML.slice(0, 100),
+          selector: `img:nth-of-type(${i + 1})`,
+        });
+      });
+
+      // Check form inputs without labels
+      document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"])').forEach((input, i) => {
+        const id = (input as HTMLInputElement).id;
+        const hasLabel = id && document.querySelector(`label[for="${id}"]`);
+        const hasAria = input.hasAttribute('aria-label') || input.hasAttribute('aria-labelledby');
+        if (!hasLabel && !hasAria) {
+          results.push({
+            code: 'WCAG2AA.Principle1.Guideline1_3.1_3_1.H44',
+            type: 'error',
+            message: 'Form input element has no label.',
+            context: (input as HTMLElement).outerHTML.slice(0, 100),
+            selector: `input:nth-of-type(${i + 1})`,
+          });
+        }
+      });
+
+      // Check missing document title
+      if (!document.title?.trim()) {
+        results.push({
+          code: 'WCAG2AA.Principle2.Guideline2_4.2_4_2.H25',
+          type: 'error',
+          message: 'Document has no title element.',
+          context: '<head>...</head>',
+          selector: 'head',
+        });
+      }
+
+      // Check missing lang attribute
+      if (!document.documentElement.lang) {
+        results.push({
+          code: 'WCAG2AA.Principle3.Guideline3_1.3_1_1.H57',
+          type: 'error',
+          message: 'The html element should have a lang attribute.',
+          context: '<html>',
+          selector: 'html',
+        });
+      }
+
+      // Check empty links
+      document.querySelectorAll('a').forEach((link, i) => {
+        const hasText = link.textContent?.trim();
+        const hasAria = link.hasAttribute('aria-label');
+        const hasImg = link.querySelector('img[alt]:not([alt=""])');
+        if (!hasText && !hasAria && !hasImg) {
+          results.push({
+            code: 'WCAG2AA.Principle2.Guideline2_4.2_4_4.H77',
+            type: 'error',
+            message: 'Link has no text content.',
+            context: link.outerHTML.slice(0, 100),
+            selector: `a:nth-of-type(${i + 1})`,
+          });
+        }
+      });
+
+      // Check empty buttons
+      document.querySelectorAll('button').forEach((btn, i) => {
+        const hasText = btn.textContent?.trim();
+        const hasAria = btn.hasAttribute('aria-label');
+        if (!hasText && !hasAria) {
+          results.push({
+            code: 'WCAG2AA.Principle4.Guideline4_1.4_1_2.H91',
+            type: 'error',
+            message: 'Button has no text content.',
+            context: btn.outerHTML.slice(0, 100),
+            selector: `button:nth-of-type(${i + 1})`,
+          });
+        }
+      });
+
+      return results;
+    });
+
+    await browser.close();
+
+    res.json({
+      scanId,
+      url,
+      pageTitle,
+      issues,
+    });
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error(`[${requestId}] Pa11y scan failed:`, err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Initialize Cloud Build runner (lazy)
 let cloudBuildRunner: CloudBuildRunner | null = null;
 

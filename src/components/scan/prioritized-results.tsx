@@ -160,68 +160,74 @@ export function PrioritizedResults({ results, summary, className }: PrioritizedR
       />
 
       {/* Priority Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <button
           onClick={() => setSelectedPriority('critical')}
           className={cn(
-            'p-4 rounded-xl border-2 transition-all text-left',
+            'p-4 rounded-xl border-2 transition-all text-left flex sm:block items-center gap-4',
             selectedPriority === 'critical'
               ? 'border-red-500 bg-red-500/10'
               : 'border-border hover:border-red-500/50'
           )}
         >
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 sm:mb-1">
             <AlertCircle className="w-5 h-5 text-red-600" />
             <span className="text-2xl font-bold text-red-600">{criticalCount}</span>
           </div>
-          <p className="text-sm font-medium">
-            {plainMode ? 'Fix Now' : 'Critical'}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {plainMode ? 'These need immediate attention' : 'Critical & High severity'}
-          </p>
+          <div className="flex-1 sm:flex-none">
+            <p className="text-sm font-medium">
+              {plainMode ? 'Fix Now' : 'Critical'}
+            </p>
+            <p className="text-xs text-muted-foreground hidden sm:block">
+              {plainMode ? 'These need immediate attention' : 'Critical & High severity'}
+            </p>
+          </div>
         </button>
 
         <button
           onClick={() => setSelectedPriority('recommended')}
           className={cn(
-            'p-4 rounded-xl border-2 transition-all text-left',
+            'p-4 rounded-xl border-2 transition-all text-left flex sm:block items-center gap-4',
             selectedPriority === 'recommended'
               ? 'border-yellow-500 bg-yellow-500/10'
               : 'border-border hover:border-yellow-500/50'
           )}
         >
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 sm:mb-1">
             <AlertTriangle className="w-5 h-5 text-yellow-600" />
             <span className="text-2xl font-bold text-yellow-600">{recommendedCount}</span>
           </div>
-          <p className="text-sm font-medium">
-            {plainMode ? 'Fix Soon' : 'Recommended'}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {plainMode ? 'Worth fixing when you can' : 'Medium severity warnings'}
-          </p>
+          <div className="flex-1 sm:flex-none">
+            <p className="text-sm font-medium">
+              {plainMode ? 'Fix Soon' : 'Recommended'}
+            </p>
+            <p className="text-xs text-muted-foreground hidden sm:block">
+              {plainMode ? 'Worth fixing when you can' : 'Medium severity warnings'}
+            </p>
+          </div>
         </button>
 
         <button
           onClick={() => setSelectedPriority('optional')}
           className={cn(
-            'p-4 rounded-xl border-2 transition-all text-left',
+            'p-4 rounded-xl border-2 transition-all text-left flex sm:block items-center gap-4',
             selectedPriority === 'optional'
               ? 'border-blue-500 bg-blue-500/10'
               : 'border-border hover:border-blue-500/50'
           )}
         >
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 sm:mb-1">
             <CheckCircle2 className="w-5 h-5 text-blue-600" />
             <span className="text-2xl font-bold text-blue-600">{optionalCount}</span>
           </div>
-          <p className="text-sm font-medium">
-            {plainMode ? 'Nice to Have' : 'Optional'}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {plainMode ? 'Improvements when you have time' : 'Low severity & info'}
-          </p>
+          <div className="flex-1 sm:flex-none">
+            <p className="text-sm font-medium">
+              {plainMode ? 'Nice to Have' : 'Optional'}
+            </p>
+            <p className="text-xs text-muted-foreground hidden sm:block">
+              {plainMode ? 'Improvements when you have time' : 'Low severity & info'}
+            </p>
+          </div>
         </button>
       </div>
 
@@ -306,7 +312,7 @@ export function PrioritizedResults({ results, summary, className }: PrioritizedR
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-2">
               {Object.entries(findingsByCategory)
                 .filter(([_, findings]) => findings.length > 0)
                 .map(([category, findings]) => (

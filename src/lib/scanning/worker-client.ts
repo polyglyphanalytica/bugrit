@@ -13,8 +13,14 @@ import { ToolCategory } from '../tools/registry';
 import { ToolResult } from '../tools/runner';
 
 // Environment configuration
-const WORKER_URL = process.env.SCAN_WORKER_URL || 'https://bugrit-scan-worker-xxxxx.run.app';
+// SCAN_WORKER_URL must be set for browser-based tools to work
+const WORKER_URL = process.env.SCAN_WORKER_URL || '';
 const WORKER_SECRET = process.env.WORKER_SECRET || '';
+
+// Check if the worker is properly configured
+export function isWorkerConfigured(): boolean {
+  return !!(WORKER_URL && WORKER_SECRET);
+}
 const CALLBACK_URL = process.env.NEXT_PUBLIC_APP_URL
   ? `${process.env.NEXT_PUBLIC_APP_URL}/api/internal/scan-callback`
   : undefined;
@@ -92,10 +98,32 @@ export interface AccessibilityResponse {
   inapplicable: number;
 }
 
+export interface Pa11yRequest {
+  scanId: string;
+  url: string;
+  standard?: 'WCAG2A' | 'WCAG2AA' | 'WCAG2AAA';
+}
+
+export interface Pa11yResponse {
+  scanId: string;
+  url: string;
+  pageTitle: string;
+  issues: Array<{
+    code: string;
+    type: 'error' | 'warning' | 'notice';
+    message: string;
+    context: string;
+    selector: string;
+  }>;
+}
+
 /**
  * Check if the worker service is available
  */
 export async function isWorkerAvailable(): Promise<boolean> {
+  if (!isWorkerConfigured()) {
+    return false;
+  }
   try {
     const response = await fetch(`${WORKER_URL}/health`, {
       method: 'GET',
@@ -113,6 +141,9 @@ export async function isWorkerAvailable(): Promise<boolean> {
  * Check if the worker is ready (Chromium available)
  */
 export async function isWorkerReady(): Promise<boolean> {
+  if (!isWorkerConfigured()) {
+    return false;
+  }
   try {
     const response = await fetch(`${WORKER_URL}/ready`, {
       method: 'GET',
@@ -207,6 +238,33 @@ export async function runAccessibilityScan(
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
     throw new Error(error.error || `Accessibility scan failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Run Pa11y accessibility scan on the worker
+ */
+export async function runPa11yScan(
+  request: Pa11yRequest
+): Promise<Pa11yResponse> {
+  if (!WORKER_SECRET) {
+    throw new Error('WORKER_SECRET not configured');
+  }
+
+  const response = await fetch(`${WORKER_URL}/pa11y`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${WORKER_SECRET}`,
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || `Pa11y scan failed: ${response.status}`);
   }
 
   return response.json();
@@ -377,8 +435,8 @@ export async function runHybridScan(
  */
 export function getWorkerConfig() {
   return {
-    url: WORKER_URL,
-    configured: !!WORKER_SECRET,
+    url: WORKER_URL || '(not configured)',
+    configured: isWorkerConfigured(),
     callbackUrl: CALLBACK_URL,
   };
 }

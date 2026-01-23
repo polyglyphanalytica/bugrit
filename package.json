@@ -15,7 +15,15 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "deploy:worker": "npx ts-node scripts/deploy-worker.ts",
-    "worker:dev": "npx ts-node worker/server.ts"
+    "worker:dev": "npx ts-node worker/server.ts",
+    "deploy": "npm run build && firebase deploy --only hosting",
+    "deploy:firebase": "firebase deploy",
+    "deploy:firestore": "firebase deploy --only firestore",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy:cloudrun": "gcloud builds submit --config cloudbuild.yaml",
+    "deploy:apphosting": "firebase apphosting:backends:deploy bugrit",
+    "emulators": "firebase emulators:start",
+    "emulators:firestore": "firebase emulators:start --only firestore"
   },
   "dependencies": {
     "@axe-core/cli": "^4.8.0",
