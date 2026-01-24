@@ -170,6 +170,14 @@ Complete these checks before accepting production traffic.
 - [ ] Export results (if implemented)
 - [ ] View scan history
 
+### GitHub Integration
+- [ ] Settings → Integrations page loads
+- [ ] "Connect GitHub" redirects to GitHub OAuth
+- [ ] OAuth callback saves connection successfully
+- [ ] Connected state shows GitHub username
+- [ ] Disconnect GitHub works
+- [ ] Scanning private repo works after connecting (auto-injects token)
+
 ### Error Handling
 - [ ] Failed scans show clear error messages
 - [ ] Network errors have retry option
@@ -242,7 +250,26 @@ Complete these checks before accepting production traffic.
 - [ ] Create `ADMIN_ENCRYPTION_KEY` secret
 - [ ] Create `STRIPE_SECRET_KEY` secret
 - [ ] Create `STRIPE_WEBHOOK_SECRET` secret
+- [ ] Create `GITHUB_CLIENT_ID` secret (for GitHub OAuth)
+- [ ] Create `GITHUB_CLIENT_SECRET` secret (for GitHub OAuth)
+- [ ] Create `GITHUB_APP_ID` secret (optional, for GitHub App installations)
+- [ ] Create `GITHUB_APP_PRIVATE_KEY` secret (optional, for GitHub App)
 - [ ] Create any additional secrets referenced in apphosting.yaml
+
+### GitHub OAuth Setup (Private Repository Access)
+- [ ] Create GitHub OAuth App at https://github.com/settings/developers
+  - Application name: `Bugrit`
+  - Homepage URL: `https://bugrit.com`
+  - Authorization callback URL: `https://bugrit.com/api/auth/github/callback`
+- [ ] Copy Client ID to `GITHUB_CLIENT_ID` secret
+- [ ] Copy Client Secret to `GITHUB_CLIENT_SECRET` secret
+- [ ] Set `GITHUB_REDIRECT_URI` to `https://bugrit.com/api/auth/github/callback`
+- [ ] (Optional) Create GitHub App for organization installations:
+  - Go to https://github.com/settings/apps/new
+  - Set permissions: Contents (read), Metadata (read), Pull requests (write)
+  - Generate and download private key
+  - Add App ID to `GITHUB_APP_ID`
+  - Add private key (with `\n` for newlines) to `GITHUB_APP_PRIVATE_KEY`
 
 ### IAM Permissions for Cloud Build Service Account
 - [ ] Grant Cloud Run Admin role

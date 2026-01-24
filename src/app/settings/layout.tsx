@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { DashboardFooter } from '@/components/dashboard-footer';
-import { User, Key, Users, CreditCard, Settings, Zap } from 'lucide-react';
+import { User, Key, Users, CreditCard, Settings, Zap, GitBranch, Bell } from 'lucide-react';
 
 const settingsNavItems = [
   { href: '/settings', label: 'Profile', icon: User },
+  { href: '/settings/notifications', label: 'Notifications', icon: Bell },
   { href: '/settings/api-keys', label: 'API Keys', icon: Key },
+  { href: '/settings/integrations', label: 'Integrations', icon: GitBranch },
   { href: '/settings/automations', label: 'Automations', icon: Zap },
   { href: '/settings/team', label: 'Team', icon: Users },
   { href: '/settings/subscription', label: 'Subscription', icon: CreditCard },

@@ -297,22 +297,38 @@ async function getInstallationAccessToken(installationId: number): Promise<strin
 
 /**
  * Generate JWT for GitHub App authentication
+ * Uses RS256 algorithm with the GitHub App private key
  */
 async function generateAppJwt(): Promise<string> {
-  // In a real implementation, use jsonwebtoken or similar
-  // This is a placeholder that would need proper JWT signing
-  const now = Math.floor(Date.now() / 1000);
-  const payload = {
-    iat: now - 60, // issued at time (allow clock drift)
-    exp: now + 600, // expires in 10 minutes
-    iss: GITHUB_APP_ID,
-  };
+  if (!GITHUB_APP_ID || !GITHUB_APP_PRIVATE_KEY) {
+    console.warn('GitHub App not configured - missing APP_ID or PRIVATE_KEY');
+    return '';
+  }
 
-  // Note: In production, use proper JWT signing with the private key
-  // This requires a library like jsonwebtoken
-  // For now, return empty string - real implementation needed
-  console.warn('JWT generation requires jsonwebtoken library');
-  return '';
+  try {
+    // Import jose for JWT signing
+    const { SignJWT, importPKCS8 } = await import('jose');
+
+    // Parse the private key (GitHub gives us a PKCS#8 PEM format key)
+    // Handle both escaped newlines from env vars and actual newlines
+    const privateKeyPem = GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, '\n');
+    const privateKey = await importPKCS8(privateKeyPem, 'RS256');
+
+    const now = Math.floor(Date.now() / 1000);
+
+    // Create and sign the JWT
+    const jwt = await new SignJWT({})
+      .setProtectedHeader({ alg: 'RS256' })
+      .setIssuedAt(now - 60) // Allow 60 seconds clock drift
+      .setExpirationTime(now + 600) // 10 minutes (GitHub max)
+      .setIssuer(GITHUB_APP_ID)
+      .sign(privateKey);
+
+    return jwt;
+  } catch (error) {
+    console.error('Failed to generate GitHub App JWT:', error);
+    return '';
+  }
 }
 
 /**
