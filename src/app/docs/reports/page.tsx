@@ -73,7 +73,7 @@ Start with critical issues first.`
           <span>💡</span> Why This Matters
         </h2>
         <p className="text-muted-foreground mb-4">
-          Running 115 tools gives you 115 different reports. Our AI combines everything
+          Running 140+ tools with 5,000+ individual checks gives you massive amounts of data. Our AI combines everything
           into one readable report with plain English explanations—no security PhD required.
         </p>
         <ul className="space-y-2 text-sm">
@@ -109,7 +109,7 @@ Start with critical issues first.`
             <span className="font-semibold">Scanning Report</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Deduplicated findings from 115 tools with plain English explanations
+            Deduplicated findings from 140+ tools (5,000+ checks) with plain English explanations
           </p>
         </div>
       </div>
@@ -210,7 +210,7 @@ Authorization: Bearer YOUR_API_KEY`}</pre>
                 <p className="text-sm text-muted-foreground">E-Commerce App • Jan 20, 2026</p>
               </div>
               <div className="text-right text-sm text-muted-foreground">
-                <div>115 tools completed</div>
+                <div>140+ tools, 5,000+ checks</div>
                 <div>Scan time: 47s</div>
               </div>
             </div>
