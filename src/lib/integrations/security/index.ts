@@ -10,3 +10,4 @@ export { NPMAuditIntegration } from './npm-audit';
 export { BanditIntegration } from './bandit';
 export { GosecIntegration } from './gosec';
 export { BrakemanIntegration } from './brakeman';
+export { NucleiIntegration } from './nuclei';
