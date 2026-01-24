@@ -26,6 +26,7 @@ export async function getAllTestCases(): Promise<TestCase[]> {
     const snapshot = await db
       .collection(COLLECTIONS.TEST_CASES)
       .orderBy('updatedAt', 'desc')
+      .limit(1000)
       .get();
 
     return snapshot.docs.map((doc) => {
@@ -276,17 +277,21 @@ export async function getTestCasesByStatus(
 
 /**
  * Search test cases
+ * Note: For production with large datasets, consider Algolia or Elasticsearch
  */
-export async function searchTestCases(query: string): Promise<TestCase[]> {
+export async function searchTestCases(query: string, limit: number = 100): Promise<TestCase[]> {
   // Note: Firestore doesn't support full-text search
+  // This implementation fetches limited records and filters client-side
   // For production, consider Algolia or Elasticsearch
   const allCases = await getAllTestCases();
   const lowerQuery = query.toLowerCase();
 
-  return allCases.filter(
-    (tc) =>
-      tc.name.toLowerCase().includes(lowerQuery) ||
-      tc.description.toLowerCase().includes(lowerQuery) ||
-      tc.category.toLowerCase().includes(lowerQuery)
-  );
+  return allCases
+    .filter(
+      (tc) =>
+        tc.name.toLowerCase().includes(lowerQuery) ||
+        tc.description.toLowerCase().includes(lowerQuery) ||
+        tc.category.toLowerCase().includes(lowerQuery)
+    )
+    .slice(0, limit);
 }
