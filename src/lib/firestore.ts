@@ -117,11 +117,24 @@ export function toTimestamp(date: Date | undefined): Timestamp {
 }
 
 /**
- * Generate a unique ID
+ * Generate a unique ID using crypto for better randomness
  */
 export function generateId(prefix: string = ''): string {
   const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 9);
+  // Use crypto.getRandomValues for better randomness
+  const randomBytes = new Uint8Array(5);
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(randomBytes);
+  } else {
+    // Fallback for Node.js environments
+    const nodeCrypto = require('crypto');
+    const nodeRandom = nodeCrypto.randomBytes(5);
+    randomBytes.set(nodeRandom);
+  }
+  const random = Array.from(randomBytes)
+    .map(b => b.toString(36).padStart(2, '0'))
+    .join('')
+    .substring(0, 7);
   return prefix ? `${prefix}-${timestamp}${random}` : `${timestamp}${random}`;
 }
 

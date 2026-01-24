@@ -94,42 +94,8 @@ export async function GET(request: NextRequest) {
     const db = getDb();
 
     if (!db) {
-      // Demo mode - return mock data
-      const mockAutomations: Automation[] = [
-        {
-          id: 'auto-demo1',
-          name: 'Scan on push to main',
-          projectId: 'proj-demo',
-          organizationId: context.organizationId,
-          trigger: {
-            type: 'github_push',
-            config: { repository: 'demo/repo', branches: ['main'] },
-          },
-          action: {
-            type: 'scan',
-            config: { platform: 'web', tools: 'all', failOn: 'critical' },
-          },
-          enabled: true,
-          lastTriggeredAt: new Date().toISOString(),
-          triggerCount: 42,
-          creditsPerScan: 12,
-          estimatedTriggersPerMonth: 60,
-          estimatedMonthlyCredits: 720,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ];
-
-      const response = successResponse(
-        { automations: mockAutomations },
-        200,
-        { page, perPage, total: mockAutomations.length }
-      );
-      const rateLimitHeaders = getRateLimitHeaders(context);
-      Object.entries(rateLimitHeaders).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-      return response;
+      // Database not available - return error instead of mock data
+      return handleError(new Error('Database connection unavailable'));
     }
 
     // Build query
@@ -221,33 +187,8 @@ export async function POST(request: NextRequest) {
     const db = getDb();
 
     if (!db) {
-      // Demo mode - return mock created automation
-      const mockAutomation: Automation = {
-        id: `auto-${nanoid(10)}`,
-        name: body.name,
-        projectId: body.projectId,
-        organizationId: context.organizationId,
-        trigger: body.trigger,
-        action: body.action,
-        webhookUrl: body.trigger.type === 'webhook'
-          ? `https://bugrit.com/api/webhooks/${nanoid(16)}`
-          : null,
-        enabled: body.enabled !== false,
-        lastTriggeredAt: null,
-        triggerCount: 0,
-        creditsPerScan: body.creditsPerScan || 12,
-        estimatedTriggersPerMonth: body.estimatedTriggersPerMonth || 30,
-        estimatedMonthlyCredits: body.estimatedMonthlyCredits || 360,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      const response = successResponse({ automation: mockAutomation }, 201);
-      const rateLimitHeaders = getRateLimitHeaders(context);
-      Object.entries(rateLimitHeaders).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-      return response;
+      // Database not available - return error instead of mock data
+      return handleError(new Error('Database connection unavailable'));
     }
 
     // Verify project access

@@ -40,39 +40,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const db = getDb();
 
     if (!db) {
-      // Demo mode
-      if (automationId === 'auto-demo1') {
-        const mockAutomation: Automation = {
-          id: 'auto-demo1',
-          name: 'Scan on push to main',
-          projectId: 'proj-demo',
-          organizationId: context.organizationId,
-          trigger: {
-            type: 'github_push',
-            config: { repository: 'demo/repo', branches: ['main'] },
-          },
-          action: {
-            type: 'scan',
-            config: { platform: 'web', tools: 'all', failOn: 'critical' },
-          },
-          enabled: true,
-          lastTriggeredAt: new Date().toISOString(),
-          triggerCount: 42,
-          creditsPerScan: 12,
-          estimatedTriggersPerMonth: 60,
-          estimatedMonthlyCredits: 720,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-
-        const response = successResponse({ automation: mockAutomation });
-        const rateLimitHeaders = getRateLimitHeaders(context);
-        Object.entries(rateLimitHeaders).forEach(([key, value]) => {
-          response.headers.set(key, value);
-        });
-        return response;
-      }
-      return Errors.notFound('Automation');
+      return handleError(new Error('Database connection unavailable'));
     }
 
     const automationDoc = await db.collection('automations').doc(automationId).get();
@@ -111,36 +79,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const db = getDb();
 
     if (!db) {
-      // Demo mode - return mock updated automation
-      const mockAutomation: Automation = {
-        id: automationId,
-        name: body.name || 'Updated Automation',
-        projectId: 'proj-demo',
-        organizationId: context.organizationId,
-        trigger: body.trigger || {
-          type: 'github_push',
-          config: { repository: 'demo/repo', branches: ['main'] },
-        },
-        action: body.action || {
-          type: 'scan',
-          config: { platform: 'web', tools: 'all', failOn: 'critical' },
-        },
-        enabled: body.enabled !== undefined ? body.enabled : true,
-        lastTriggeredAt: new Date().toISOString(),
-        triggerCount: 42,
-        creditsPerScan: body.creditsPerScan || 12,
-        estimatedTriggersPerMonth: body.estimatedTriggersPerMonth || 60,
-        estimatedMonthlyCredits: body.estimatedMonthlyCredits || 720,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      const response = successResponse({ automation: mockAutomation });
-      const rateLimitHeaders = getRateLimitHeaders(context);
-      Object.entries(rateLimitHeaders).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-      return response;
+      return handleError(new Error('Database connection unavailable'));
     }
 
     const automationDoc = await db.collection('automations').doc(automationId).get();
@@ -228,16 +167,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const db = getDb();
 
     if (!db) {
-      // Demo mode
-      const response = successResponse({
-        success: true,
-        message: 'Automation deleted successfully',
-      });
-      const rateLimitHeaders = getRateLimitHeaders(context);
-      Object.entries(rateLimitHeaders).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-      return response;
+      return handleError(new Error('Database connection unavailable'));
     }
 
     const automationDoc = await db.collection('automations').doc(automationId).get();

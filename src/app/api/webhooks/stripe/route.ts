@@ -7,6 +7,7 @@ import {
   handlePaymentFailure as createDunningState,
   resolvePaymentSuccess,
 } from '@/lib/billing/dunning';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/webhooks/stripe
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     // Check idempotency - prevent duplicate processing
     const eventProcessed = await checkEventProcessed(event.id);
     if (eventProcessed) {
-      console.log(`Event ${event.id} already processed, skipping`);
+      logger.info('Event already processed, skipping', { eventId: event.id });
       return NextResponse.json({ received: true, duplicate: true });
     }
 
@@ -91,7 +92,7 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        logger.debug('Unhandled event type', { eventType: event.type });
     }
 
     // Mark event as processed for idempotency
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error('Webhook error:', error);
+    logger.error('Webhook error', { error });
     // Return 500 so Stripe retries the webhook
     return NextResponse.json(
       { error: 'Webhook handler failed' },
@@ -199,7 +200,7 @@ async function handleSubscriptionCheckout(session: Stripe.Checkout.Session) {
 
   await batch.commit();
 
-  console.log(`Subscription created for user ${userId}: ${tier}`);
+  logger.info('Subscription created', { userId, tier });
 }
 
 /**
@@ -273,7 +274,7 @@ async function handleCreditPurchase(session: Stripe.Checkout.Session) {
     purchasedAt: new Date(),
   });
 
-  console.log(`Credit purchase completed for user ${userId}: ${credits} credits`);
+  logger.info('Credit purchase completed', { userId, credits });
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
@@ -281,12 +282,12 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   // Default to 'starter' (lowest paid tier) if metadata missing - safer than 'free' which would downgrade paid users
   const tier = (subscription.metadata.tier as TierName) || 'starter';
   if (!subscription.metadata.tier) {
-    console.warn(`Subscription ${subscription.id} missing tier metadata in update, defaulting to 'starter'`);
+    logger.warn('Subscription missing tier metadata in update, defaulting to starter', { subscriptionId: subscription.id });
   }
 
   if (!userId) {
     // Log but don't throw - subscription may have been created outside our app
-    console.warn(`No user ID in subscription ${subscription.id} metadata. Skipping update.`);
+    logger.warn('No user ID in subscription metadata, skipping update', { subscriptionId: subscription.id });
     return;
   }
 
@@ -357,14 +358,14 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   await batch.commit();
 
-  console.log(`Subscription updated for user ${userId}: ${tier} (${subscription.status})`);
+  logger.info('Subscription updated', { userId, tier, status: subscription.status });
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const userId = subscription.metadata.userId;
 
   if (!userId) {
-    console.warn(`No user ID in deleted subscription ${subscription.id} metadata. Skipping.`);
+    logger.warn('No user ID in deleted subscription metadata, skipping', { subscriptionId: subscription.id });
     return;
   }
 
@@ -419,7 +420,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   await batch.commit();
 
-  console.log(`Subscription canceled for user ${userId}`);
+  logger.info('Subscription canceled', { userId });
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
@@ -470,7 +471,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
   await batch.commit();
 
-  console.log(`Payment succeeded for subscription ${subscriptionId}`);
+  logger.info('Payment succeeded', { subscriptionId });
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
@@ -538,7 +539,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     createdAt: now,
   });
 
-  console.log(`Payment failed for subscription ${subscriptionId} (attempt ${dunningState?.failureCount || 1})`);
+  logger.warn('Payment failed', { subscriptionId, attempt: dunningState?.failureCount || 1 });
 }
 
 /**
@@ -601,7 +602,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
 
   await batch.commit();
 
-  console.log(`Invoice paid for subscription ${subscriptionId}${wasInDunning ? ' (recovered from dunning)' : ''}`);
+  logger.info('Invoice paid', { subscriptionId, recoveredFromDunning: wasInDunning });
 }
 
 /**
@@ -662,7 +663,7 @@ async function handlePaymentActionRequired(invoice: Stripe.Invoice) {
 
   await batch.commit();
 
-  console.log(`Payment action required for subscription ${subscriptionId} (user: ${userId})`);
+  logger.info('Payment action required', { subscriptionId, userId });
 }
 
 /**
@@ -684,7 +685,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     .get();
 
   if (snapshot.empty) {
-    console.warn(`No user found for customer ${customerId} in refund event`);
+    logger.warn('No user found for customer in refund event', { customerId });
     return;
   }
 
@@ -712,7 +713,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     createdAt: now,
   });
 
-  console.log(`Refund processed for user ${userId}: $${(refundAmount / 100).toFixed(2)}`);
+  logger.info('Refund processed', { userId, refundAmountCents: refundAmount });
 }
 
 /**
@@ -751,7 +752,7 @@ async function handleDisputeCreated(dispute: Stripe.Dispute) {
     createdAt: now,
   });
 
-  console.error(`CRITICAL: Dispute created - ${dispute.id} for $${(amount / 100).toFixed(2)} (${reason})`);
+  logger.error('CRITICAL: Dispute created', { disputeId: dispute.id, amountCents: amount, reason });
 }
 
 /**
@@ -792,5 +793,5 @@ async function handleDisputeClosed(dispute: Stripe.Dispute) {
     });
   }
 
-  console.log(`Dispute ${dispute.id} closed with status: ${dispute.status}`);
+  logger.info('Dispute closed', { disputeId: dispute.id, status: dispute.status });
 }

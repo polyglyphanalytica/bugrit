@@ -350,7 +350,22 @@ export async function addAllowedDomain(
 // ═══════════════════════════════════════════════════════════════
 
 function generateSiteId(): string {
-  return `site_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`;
+  const timestamp = Date.now().toString(36);
+  // Use crypto.getRandomValues for better randomness
+  const randomBytes = new Uint8Array(5);
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(randomBytes);
+  } else {
+    // Fallback for Node.js environments
+    const nodeCrypto = require('crypto');
+    const nodeRandom = nodeCrypto.randomBytes(5);
+    randomBytes.set(nodeRandom);
+  }
+  const random = Array.from(randomBytes)
+    .map(b => b.toString(36).padStart(2, '0'))
+    .join('')
+    .substring(0, 7);
+  return `site_${timestamp}_${random}`;
 }
 
 function normalizeDomain(domain: string): string {

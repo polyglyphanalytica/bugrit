@@ -144,10 +144,10 @@ class Store {
 
   // ==================== Test Cases ====================
 
-  getAllTestCases(): TestCase[] {
-    return Array.from(this.testCases.values()).sort(
-      (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
-    );
+  getAllTestCases(limit: number = 100): TestCase[] {
+    return Array.from(this.testCases.values())
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+      .slice(0, limit);
   }
 
   getTestCase(id: string): TestCase | undefined {
@@ -188,10 +188,10 @@ class Store {
 
   // ==================== Test Runs ====================
 
-  getAllTestRuns(): TestRun[] {
-    return Array.from(this.testRuns.values()).sort(
-      (a, b) => b.startedAt.getTime() - a.startedAt.getTime()
-    );
+  getAllTestRuns(limit: number = 100): TestRun[] {
+    return Array.from(this.testRuns.values())
+      .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
+      .slice(0, limit);
   }
 
   getRecentTestRuns(limit: number = 5): TestRun[] {
@@ -230,10 +230,10 @@ class Store {
 
   // ==================== Test Scripts ====================
 
-  getAllTestScripts(): TestScript[] {
-    return Array.from(this.testScripts.values()).sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-    );
+  getAllTestScripts(limit: number = 100): TestScript[] {
+    return Array.from(this.testScripts.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, limit);
   }
 
   getRegressionScripts(): TestScript[] {
@@ -274,10 +274,10 @@ class Store {
 
   // ==================== Executions ====================
 
-  getAllExecutions(): TestExecution[] {
-    return Array.from(this.executions.values()).sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-    );
+  getAllExecutions(limit: number = 100): TestExecution[] {
+    return Array.from(this.executions.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, limit);
   }
 
   getExecution(id: string): TestExecution | undefined {
@@ -321,8 +321,8 @@ class Store {
 
   // ==================== API Keys ====================
 
-  getAllApiKeys(): ApiKey[] {
-    return Array.from(this.apiKeys.values());
+  getAllApiKeys(limit: number = 100): ApiKey[] {
+    return Array.from(this.apiKeys.values()).slice(0, limit);
   }
 
   getApiKey(id: string): ApiKey | undefined {
@@ -366,8 +366,8 @@ class Store {
 
   // ==================== Workers ====================
 
-  getAllWorkers(): Worker[] {
-    return Array.from(this.workers.values());
+  getAllWorkers(limit: number = 100): Worker[] {
+    return Array.from(this.workers.values()).slice(0, limit);
   }
 
   getWorker(id: string): Worker | undefined {
@@ -404,8 +404,8 @@ class Store {
 
   // ==================== Jobs ====================
 
-  getAllJobs(): TestJob[] {
-    return Array.from(this.jobs.values());
+  getAllJobs(limit: number = 100): TestJob[] {
+    return Array.from(this.jobs.values()).slice(0, limit);
   }
 
   getQueuedJobs(): TestJob[] {
@@ -417,7 +417,7 @@ class Store {
   }
 
   createJob(job: Omit<TestJob, 'id' | 'createdAt' | 'status' | 'retryCount'>): TestJob {
-    const id = `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const id = `job-${Date.now()}-${generateRandomString(9)}`;
     const newJob: TestJob = {
       ...job,
       id,
@@ -490,12 +490,21 @@ class Store {
   }
 }
 
-// Helper function to generate random string
+// Helper function to generate cryptographically secure random string
 function generateRandomString(length: number): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const randomBytes = new Uint8Array(length);
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(randomBytes);
+  } else {
+    // Fallback for Node.js environments
+    const nodeCrypto = require('crypto');
+    const nodeRandom = nodeCrypto.randomBytes(length);
+    randomBytes.set(nodeRandom);
+  }
   let result = '';
   for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+    result += chars.charAt(randomBytes[i] % chars.length);
   }
   return result;
 }
