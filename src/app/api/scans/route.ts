@@ -15,6 +15,7 @@ import {
 } from '@/lib/billing';
 import { ToolCategory, TOOL_COUNT } from '@/lib/tools/registry';
 import { getAccessTokenForUser } from '@/lib/github/connections';
+import { notifyScanCompleted, notifyScanFailed, notifySecurityAlert } from '@/lib/notifications/dispatcher';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -94,6 +95,25 @@ async function getScansForUser(userId: string, applicationId?: string | null): P
   }
   const snapshot = await query.orderBy('createdAt', 'desc').limit(100).get();
   return snapshot.docs.map(doc => doc.data() as Scan);
+}
+
+// Helper to get user email for notifications
+async function getUserEmail(userId: string): Promise<string> {
+  // In production, look up from Firebase Auth or user profile in Firestore
+  // For now, return a placeholder - the notification system will skip email if not found
+  const db = getDb();
+  if (db) {
+    try {
+      // Try to get email from user profile or organizations
+      const userDoc = await db.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        return userDoc.data()?.email || userId;
+      }
+    } catch {
+      // Fall through
+    }
+  }
+  return userId; // userId might be an email for some auth methods
 }
 
 export async function POST(request: NextRequest) {
@@ -511,6 +531,41 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
       creditsCharged: billingResult.creditsCharged,
       autoTopupTriggered: billingResult.autoTopupTriggered,
     });
+
+    // Send notification for scan completion
+    try {
+      const userEmail = await getUserEmail(options.userId);
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bugrit.com';
+      const reportUrl = `${baseUrl}/scans/${scanId}`;
+
+      // Send scan completed notification
+      await notifyScanCompleted({
+        userId: options.userId,
+        userEmail,
+        scanId,
+        applicationName: scan.applicationId, // Could look up app name
+        totalFindings: summary.totalFindings,
+        critical: summary.errors, // Using errors as proxy for critical
+        high: summary.warnings,   // Using warnings as proxy for high
+        reportUrl,
+      });
+
+      // Send security alert if critical issues found
+      if (summary.errors > 0) {
+        await notifySecurityAlert({
+          userId: options.userId,
+          userEmail,
+          scanId,
+          applicationName: scan.applicationId,
+          critical: summary.errors,
+          high: summary.warnings,
+          topIssues: [], // Would need to extract from results
+          reportUrl,
+        });
+      }
+    } catch (notifyError) {
+      logger.warn('Failed to send scan completion notification', { scanId, error: notifyError });
+    }
   } catch (error) {
     logger.error('Scan failed', { scanId, error });
     scan.status = 'failed';
@@ -521,6 +576,23 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
     // Release the reserved credits since scan failed
     await releaseReservation(scanId);
     logger.info('Released credit reservation for failed scan', { scanId });
+
+    // Send notification for scan failure
+    try {
+      const userEmail = await getUserEmail(options.userId);
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bugrit.com';
+
+      await notifyScanFailed({
+        userId: options.userId,
+        userEmail,
+        scanId,
+        applicationName: scan.applicationId,
+        error: scan.error || 'Unknown error',
+        scanUrl: `${baseUrl}/scans/${scanId}`,
+      });
+    } catch (notifyError) {
+      logger.warn('Failed to send scan failure notification', { scanId, error: notifyError });
+    }
   } finally {
     // Cleanup temp directory
     if (tempDir) {

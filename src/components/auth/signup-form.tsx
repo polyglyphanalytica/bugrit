@@ -10,9 +10,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { authSchema } from "@/lib/schemas";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -21,7 +23,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-type SignupFormValues = z.infer<typeof authSchema>;
+// Extended schema with notification preferences
+const signupSchema = authSchema.extend({
+  notifyEmail: z.boolean().default(true),
+  notifyPush: z.boolean().default(false),
+});
+
+type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupForm() {
   const { toast } = useToast();
@@ -34,10 +42,12 @@ export default function SignupForm() {
   const intervalParam = searchParams.get('interval') || 'month';
 
   const form = useForm<SignupFormValues>({
-    resolver: zodResolver(authSchema),
+    resolver: zodResolver(signupSchema),
     defaultValues: {
       email: "",
       password: "",
+      notifyEmail: true,
+      notifyPush: false,
     },
   });
 
@@ -45,11 +55,29 @@ export default function SignupForm() {
     setIsLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const token = await userCredential.user.getIdToken();
+
+      // Save notification preferences
+      try {
+        await fetch('/api/notifications/preferences/init', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            emailEnabled: values.notifyEmail,
+            pushEnabled: values.notifyPush,
+          }),
+        });
+      } catch (prefError) {
+        // Non-critical, continue with signup
+        console.error('Failed to save notification preferences:', prefError);
+      }
 
       // If user came from pricing page with a plan, initiate checkout
       if (planParam && planParam !== 'free') {
         try {
-          const token = await userCredential.user.getIdToken();
           const res = await fetch('/api/subscription/checkout', {
             method: 'POST',
             headers: {
@@ -132,6 +160,56 @@ export default function SignupForm() {
             </FormItem>
           )}
         />
+
+        {/* Notification Preferences */}
+        <div className="space-y-3 pt-2">
+          <p className="text-sm font-medium">Notification preferences</p>
+          <FormField
+            control={form.control}
+            name="notifyEmail"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="font-normal">
+                    Email notifications
+                  </FormLabel>
+                  <FormDescription className="text-xs">
+                    Scan results, security alerts, and updates
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="notifyPush"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="font-normal">
+                    Push notifications
+                  </FormLabel>
+                  <FormDescription className="text-xs">
+                    Real-time alerts on mobile and desktop
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
+        </div>
+
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Sign Up

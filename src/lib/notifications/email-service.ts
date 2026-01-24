@@ -282,3 +282,261 @@ Time: ${payload.timestamp.toISOString()}
     return !!this.apiKey;
   }
 }
+
+// ============================================================================
+// Standalone email functions for use by the notification dispatcher
+// ============================================================================
+
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const EMAIL_FROM = process.env.EMAIL_FROM_ADDRESS || 'noreply@bugrit.com';
+const EMAIL_FROM_NAME = 'Bugrit';
+
+/**
+ * Send a single email via Resend
+ */
+export async function sendEmail(params: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+}): Promise<{ success: boolean; error?: string; messageId?: string }> {
+  if (!RESEND_API_KEY) {
+    console.warn('Email not configured: RESEND_API_KEY missing');
+    return { success: false, error: 'Email service not configured' };
+  }
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: `${EMAIL_FROM_NAME} <${EMAIL_FROM}>`,
+        to: params.to,
+        subject: params.subject,
+        html: params.html,
+        text: params.text,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      return { success: false, error: `Email API error: ${error}` };
+    }
+
+    const data = await response.json();
+    return { success: true, messageId: data.id };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Email send failed' };
+  }
+}
+
+/**
+ * Build scan completed email
+ */
+export function buildScanCompletedEmail(params: {
+  applicationName: string;
+  totalFindings: number;
+  critical: number;
+  high: number;
+  vibeScore?: number;
+  reportUrl: string;
+}): { subject: string; html: string; text: string } {
+  const hasCritical = params.critical > 0;
+  const emoji = hasCritical ? '⚠️' : params.totalFindings > 0 ? '📋' : '✅';
+
+  const subject = hasCritical
+    ? `${emoji} Scan Complete: ${params.critical} critical issues - ${params.applicationName}`
+    : `${emoji} Scan Complete: ${params.totalFindings} findings - ${params.applicationName}`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { text-align: center; padding: 30px 0; }
+          .emoji { font-size: 48px; }
+          h1 { margin: 15px 0 5px; }
+          .subtitle { color: #666; }
+          .stats { display: flex; justify-content: center; gap: 20px; margin: 30px 0; flex-wrap: wrap; }
+          .stat { text-align: center; padding: 15px 25px; background: #f5f5f5; border-radius: 8px; }
+          .stat-value { font-size: 28px; font-weight: bold; }
+          .stat-label { font-size: 12px; color: #666; margin-top: 5px; }
+          .critical { color: #dc2626; }
+          .high { color: #ea580c; }
+          .vibe { color: #8b5cf6; }
+          .btn { display: inline-block; padding: 14px 28px; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; margin-top: 20px; }
+          .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #999; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="emoji">${emoji}</div>
+          <h1>Scan Complete</h1>
+          <p class="subtitle">${params.applicationName}</p>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value">${params.totalFindings}</div>
+            <div class="stat-label">Total Findings</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value critical">${params.critical}</div>
+            <div class="stat-label">Critical</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value high">${params.high}</div>
+            <div class="stat-label">High</div>
+          </div>
+          ${params.vibeScore !== undefined ? `
+          <div class="stat">
+            <div class="stat-value vibe">${params.vibeScore}</div>
+            <div class="stat-label">Vibe Score</div>
+          </div>
+          ` : ''}
+        </div>
+
+        <div style="text-align: center;">
+          <a href="${params.reportUrl}" class="btn">View Full Report</a>
+        </div>
+
+        <div class="footer">
+          <p>Bugrit - A vibe coder's best friend</p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const text = `
+Scan Complete - ${params.applicationName}
+
+Total Findings: ${params.totalFindings}
+Critical: ${params.critical}
+High: ${params.high}
+${params.vibeScore !== undefined ? `Vibe Score: ${params.vibeScore}/100` : ''}
+
+View report: ${params.reportUrl}
+  `.trim();
+
+  return { subject, html, text };
+}
+
+/**
+ * Build scan failed email
+ */
+export function buildScanFailedEmail(params: {
+  applicationName: string;
+  error: string;
+  scanUrl: string;
+}): { subject: string; html: string; text: string } {
+  const subject = `❌ Scan Failed - ${params.applicationName}`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { text-align: center; padding: 30px 0; }
+          .emoji { font-size: 48px; }
+          h1 { margin: 15px 0 5px; color: #dc2626; }
+          .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0; }
+          .error-label { font-size: 12px; color: #991b1b; font-weight: 500; margin-bottom: 5px; }
+          .error-message { color: #991b1b; }
+          .btn { display: inline-block; padding: 14px 28px; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; }
+          .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #999; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="emoji">❌</div>
+          <h1>Scan Failed</h1>
+          <p style="color: #666;">${params.applicationName}</p>
+        </div>
+
+        <div class="error-box">
+          <div class="error-label">ERROR</div>
+          <div class="error-message">${params.error}</div>
+        </div>
+
+        <div style="text-align: center;">
+          <a href="${params.scanUrl}" class="btn">View Details</a>
+        </div>
+
+        <div class="footer">
+          <p>Bugrit - A vibe coder's best friend</p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const text = `
+Scan Failed - ${params.applicationName}
+
+Error: ${params.error}
+
+View details: ${params.scanUrl}
+  `.trim();
+
+  return { subject, html, text };
+}
+
+/**
+ * Build generic notification email
+ */
+export function buildGenericEmail(params: {
+  title: string;
+  message: string;
+  actionUrl?: string;
+  actionLabel?: string;
+}): { subject: string; html: string; text: string } {
+  const subject = `Bugrit: ${params.title}`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { text-align: center; padding: 30px 0; border-bottom: 1px solid #eee; }
+          .content { padding: 30px 0; }
+          .btn { display: inline-block; padding: 14px 28px; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: 500; }
+          .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #999; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${params.title}</h1>
+        </div>
+
+        <div class="content">
+          <p>${params.message}</p>
+
+          ${params.actionUrl ? `
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${params.actionUrl}" class="btn">${params.actionLabel || 'View Details'}</a>
+          </div>
+          ` : ''}
+        </div>
+
+        <div class="footer">
+          <p>Bugrit - A vibe coder's best friend</p>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const text = `
+${params.title}
+
+${params.message}
+
+${params.actionUrl ? `${params.actionLabel || 'View details'}: ${params.actionUrl}` : ''}
+  `.trim();
+
+  return { subject, html, text };
+}

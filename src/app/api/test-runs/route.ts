@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { store } from '@/lib/store';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
+import { notifyTestCompleted, notifyTestFailed } from '@/lib/notifications/dispatcher';
+import { getDb } from '@/lib/firestore';
+
+/**
+ * Get user email from Firestore
+ */
+async function getUserEmail(userId: string): Promise<string> {
+  const db = getDb();
+  if (db) {
+    try {
+      const userDoc = await db.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        return userDoc.data()?.email || userId;
+      }
+    } catch (error) {
+      console.warn('Could not fetch user email:', error);
+    }
+  }
+  return userId; // Fallback to userId
+}
 
 // GET /api/test-runs - Get all test runs
 export async function GET(request: NextRequest) {
@@ -36,6 +56,10 @@ export async function POST(request: NextRequest) {
       return authResult;
     }
 
+    // authResult is the userId string
+    const userId = authResult;
+    const userEmail = await getUserEmail(userId);
+
     const body = await request.json();
 
     const { testCaseId, testCaseName, runnerType, config, code } = body;
@@ -54,11 +78,17 @@ export async function POST(request: NextRequest) {
       status: 'running',
     });
 
+    // Get base URL for notification links
+    const baseUrl = request.headers.get('origin') || 'https://bugrit.com';
+
     // Execute test in background using dynamic import
-    executeTestInBackground(testRun.id, {
+    executeTestInBackground(testRun.id, testCaseName, {
       runnerType: runnerType || 'playwright',
       config: config || {},
       code: code || '',
+      userId,
+      userEmail,
+      baseUrl,
     });
 
     return NextResponse.json(testRun, { status: 201 });
@@ -75,6 +105,9 @@ interface TestExecutionOptions {
   runnerType: 'playwright' | 'appium' | 'tauri-driver';
   config: Record<string, unknown>;
   code: string;
+  userId: string;
+  userEmail: string;
+  baseUrl: string;
 }
 
 // Runner interface for test execution
@@ -91,8 +124,9 @@ interface TestRunner {
 }
 
 // Execute test using dynamically imported test runners
-async function executeTestInBackground(testRunId: string, options: TestExecutionOptions) {
+async function executeTestInBackground(testRunId: string, testName: string, options: TestExecutionOptions) {
   const startTime = Date.now();
+  const testUrl = `${options.baseUrl}/test-runs/${testRunId}`;
 
   try {
     // Dynamically import runners to avoid bundling issues
@@ -142,6 +176,19 @@ async function executeTestInBackground(testRunId: string, options: TestExecution
         logs: result.logs,
         screenshots: result.screenshots,
       });
+
+      // Send notification
+      if (options.userId && options.userEmail) {
+        await notifyTestCompleted({
+          userId: options.userId,
+          userEmail: options.userEmail,
+          testRunId,
+          testName,
+          duration: result.duration,
+          passed: result.success,
+          testUrl,
+        });
+      }
     } finally {
       // Always cleanup runner
       await runner.cleanup();
@@ -157,5 +204,17 @@ async function executeTestInBackground(testRunId: string, options: TestExecution
       error: errorMessage,
       logs: [`Test execution failed: ${errorMessage}`],
     });
+
+    // Send failure notification
+    if (options.userId && options.userEmail) {
+      await notifyTestFailed({
+        userId: options.userId,
+        userEmail: options.userEmail,
+        testRunId,
+        testName,
+        error: errorMessage,
+        testUrl,
+      });
+    }
   }
 }

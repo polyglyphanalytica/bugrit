@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { Menu, X, LayoutDashboard, AppWindow, Scan, FileText, Settings, Key, LogOut } from 'lucide-react';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 interface NavItem {
   href: string;
@@ -142,8 +143,10 @@ export function DashboardNav() {
           </nav>
         </div>
 
-        {/* Right: User Menu (hidden on mobile, shown in sheet) */}
-        <DropdownMenu>
+        {/* Right: Notifications + User Menu */}
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2">
               <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
@@ -190,6 +193,7 @@ export function DashboardNav() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </div>
     </header>
   );
