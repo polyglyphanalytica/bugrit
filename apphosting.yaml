@@ -24,11 +24,11 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     secret: FIREBASE_API_KEY
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: YOUR_PROJECT_ID.firebaseapp.com  # Replace with your project
+    value: YOUR_PROJECT_ID.firebaseapp.com # Replace with your project
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: YOUR_PROJECT_ID  # Replace with your project
+    value: YOUR_PROJECT_ID # Replace with your project
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: YOUR_PROJECT_ID.appspot.com  # Replace with your project
+    value: YOUR_PROJECT_ID.appspot.com # Replace with your project
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
     secret: FIREBASE_MESSAGING_SENDER_ID
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
@@ -38,7 +38,7 @@ env:
   # Firebase Admin SDK (server-side only)
   # ============================================================
   - variable: FIREBASE_PROJECT_ID
-    value: YOUR_PROJECT_ID  # Replace with your project
+    value: YOUR_PROJECT_ID # Replace with your project
   - variable: FIREBASE_SERVICE_ACCOUNT_KEY
     secret: FIREBASE_SERVICE_ACCOUNT_KEY
 
@@ -46,11 +46,11 @@ env:
   # Application Configuration
   # ============================================================
   - variable: NEXT_PUBLIC_APP_URL
-    value: https://YOUR_DOMAIN.web.app  # Replace with your domain
+    value: https://YOUR_DOMAIN.web.app # Replace with your domain
   - variable: ADMIN_ENCRYPTION_KEY
     secret: ADMIN_ENCRYPTION_KEY
   - variable: SUPERADMIN_EMAIL
-    value: admin@yourdomain.com  # Replace with your admin email
+    value: admin@yourdomain.com # Replace with your admin email
 
   # ============================================================
   # Stripe Billing (if using payments)
@@ -66,7 +66,10 @@ env:
   # Google Cloud (for Docker-based scanning tools)
   # ============================================================
   - variable: GOOGLE_CLOUD_PROJECT
-    value: YOUR_PROJECT_ID  # Replace with your project
+    value: YOUR_PROJECT_ID # Replace with your project
   - variable: SCAN_OUTPUT_BUCKET
-    value: YOUR_PROJECT_ID-bugrit-scans  # Replace with your bucket
-
+    value: YOUR_PROJECT_ID-bugrit-scans # Replace with your bucket
+  - variable: GCP_BILLING_DATASET_ID
+    secret: GCP_BILLING_DATASET_ID
+  - variable: GCP_PROJECT_ID
+    secret: GCP_PROJECT_ID
