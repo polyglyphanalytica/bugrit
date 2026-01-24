@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createBillingPortalSession } from '@/lib/subscriptions/stripe';
 import { db } from '@/lib/firebase/admin';
 import { verifySession } from '@/lib/auth/session';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/subscription/portal
@@ -56,7 +57,7 @@ export async function POST() {
 
     return NextResponse.json({ url });
   } catch (error) {
-    console.error('Failed to create billing portal session:', error);
+    logger.error('Failed to create billing portal session', { error });
     return NextResponse.json(
       { error: 'Failed to create billing portal session' },
       { status: 500 }

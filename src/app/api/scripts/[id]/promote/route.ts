@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { store } from '@/lib/store';
 import { requirePermission } from '@/lib/api-auth';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       script,
     });
   } catch (error) {
-    console.error('Error promoting script:', error);
+    logger.error('Error promoting script', { error });
     return NextResponse.json(
       { error: 'Failed to promote script' },
       { status: 500 }

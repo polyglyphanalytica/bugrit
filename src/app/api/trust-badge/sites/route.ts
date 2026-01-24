@@ -6,6 +6,7 @@ import {
   getSiteByDomain as dbGetSiteByDomain,
 } from '@/lib/trust-badge/store';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
+import { logger } from '@/lib/logger';
 
 /**
  * Trust Badge Sites API
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('[TrustBadge] List sites error:', error);
+    logger.error('[TrustBadge] List sites error', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to list sites' },
       { status: 500 }
@@ -130,7 +131,7 @@ export async function POST(request: NextRequest) {
       ],
     }, { status: 201 });
   } catch (error) {
-    console.error('[TrustBadge] Register site error:', error);
+    logger.error('[TrustBadge] Register site error', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to register site' },
       { status: 500 }

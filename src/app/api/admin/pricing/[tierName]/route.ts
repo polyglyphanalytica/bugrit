@@ -6,6 +6,7 @@ import {
   deletePricingTier,
 } from '@/lib/admin/service';
 import { archiveStripeProduct, getStripeProductUrl } from '@/lib/admin/stripe-sync';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ tierName: string }>;
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ tier, stripeUrl });
   } catch (error) {
-    console.error('Failed to get tier:', error);
+    logger.error('Failed to get tier', { error });
     return NextResponse.json({ error: 'Failed to get tier' }, { status: 500 });
   }
 }
@@ -77,7 +78,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true, tier: updated });
   } catch (error) {
-    console.error('Failed to update tier:', error);
+    logger.error('Failed to update tier', { error });
     return NextResponse.json({ error: 'Failed to update tier' }, { status: 500 });
   }
 }
@@ -111,7 +112,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     if (existing.stripeProductId) {
       const archiveResult = await archiveStripeProduct(tierName, auth.context.userId);
       if (!archiveResult.success) {
-        console.warn('Failed to archive Stripe product:', archiveResult.error);
+        logger.warn('Failed to archive Stripe product', { error: archiveResult.error });
         // Continue with local deletion even if Stripe archive fails
       }
     }
@@ -120,7 +121,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to delete tier:', error);
+    logger.error('Failed to delete tier', { error });
     return NextResponse.json({ error: 'Failed to delete tier' }, { status: 500 });
   }
 }

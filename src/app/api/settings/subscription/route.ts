@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedUser, errorResponse } from '@/lib/api-auth';
 import { db } from '@/lib/firebase/admin';
 import { getPricingConfig } from '@/lib/admin/service';
+import { logger } from '@/lib/logger';
 
 export async function GET(req: NextRequest) {
   try {
@@ -71,7 +72,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Subscription status error:', error);
+    logger.error('Subscription status error', { error });
     return errorResponse('Failed to fetch subscription status', 500);
   }
 }

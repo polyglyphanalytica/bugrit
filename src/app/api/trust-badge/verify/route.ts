@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSiteById, trackBadgeView as dbTrackBadgeView } from '@/lib/trust-badge/store';
 import { getDb, COLLECTIONS } from '@/lib/firestore';
+import { logger } from '@/lib/logger';
 
 /**
  * Trust Badge Verification API
@@ -120,7 +121,7 @@ export async function GET(request: NextRequest) {
     }
 
     // All checks passed! Track view and return score
-    trackBadgeViewLocal(siteId).catch(console.error);
+    trackBadgeViewLocal(siteId).catch(err => logger.error('Failed to track badge view', { siteId, error: err }));
 
     return NextResponse.json(
       {
@@ -137,7 +138,7 @@ export async function GET(request: NextRequest) {
       { headers: corsHeaders }
     );
   } catch (error) {
-    console.error('[TrustBadge] Verification error:', error);
+    logger.error('TrustBadge verification error', { error });
     // On error, show advertising badge (fail gracefully)
     return NextResponse.json(
       {
@@ -162,7 +163,7 @@ export async function OPTIONS() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Helper functions (TODO: Move to store module)
+// Helper functions
 // ═══════════════════════════════════════════════════════════════
 
 interface RegisteredSite {
@@ -271,7 +272,7 @@ async function getSubscriptionStatus(userId: string): Promise<SubscriptionStatus
       reason: 'subscription_expired',
     };
   } catch (error) {
-    console.error('[TrustBadge] Subscription check error:', error);
+    logger.error('TrustBadge subscription check error', { error });
     // On error, allow badge display (fail open for better UX)
     return { isValid: true, tier: 'free', expiresAt: null };
   }
@@ -315,6 +316,6 @@ async function trackBadgeViewLocal(siteId: string): Promise<void> {
     await dbTrackBadgeView(siteId);
   } catch (error) {
     // Non-critical - just log and continue
-    console.error(`[TrustBadge] Failed to track view for ${siteId}:`, error);
+    logger.error('TrustBadge failed to track view', { siteId, error });
   }
 }

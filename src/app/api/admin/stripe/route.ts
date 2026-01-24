@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifySuperadmin } from '@/lib/admin/middleware';
 import { getStripeConfig, updateStripeConfig } from '@/lib/admin/service';
 import { testStripeConnection, syncPricingToStripe, importFromStripe } from '@/lib/admin/stripe-sync';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/stripe
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
       connection: connectionTest,
     });
   } catch (error) {
-    console.error('Failed to get Stripe config:', error);
+    logger.error('Failed to get Stripe config', { error });
     return NextResponse.json({ error: 'Failed to get Stripe config' }, { status: 500 });
   }
 }
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       connection: connectionTest,
     });
   } catch (error) {
-    console.error('Failed to update Stripe config:', error);
+    logger.error('Failed to update Stripe config', { error });
     return NextResponse.json({ error: 'Failed to update Stripe config' }, { status: 500 });
   }
 }

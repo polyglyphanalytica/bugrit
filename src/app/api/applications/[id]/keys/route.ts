@@ -9,6 +9,7 @@ import {
 import { isApplicationOwner } from '@/lib/db/applications';
 import { CreateApiKeyRequest } from '@/lib/types';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       count: keys.length,
     });
   } catch (error) {
-    console.error('Error fetching API keys:', error);
+    logger.error('Error fetching API keys', { error });
     return NextResponse.json(
       { error: 'Failed to fetch API keys' },
       { status: 500 }
@@ -99,7 +100,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error creating API key:', error);
+    logger.error('Error creating API key', { error });
     return NextResponse.json(
       { error: 'Failed to create API key' },
       { status: 500 }
@@ -166,7 +167,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ message: 'API key revoked successfully' });
     }
   } catch (error) {
-    console.error('Error deleting/revoking API key:', error);
+    logger.error('Error deleting/revoking API key', { error });
     return NextResponse.json(
       { error: 'Failed to process request' },
       { status: 500 }

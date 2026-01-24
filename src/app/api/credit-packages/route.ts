@@ -3,6 +3,7 @@ import {
   getAllCreditPackages,
   initializeDefaultCreditPackages,
 } from '@/lib/admin/service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/credit-packages
@@ -33,7 +34,7 @@ export async function GET() {
 
     return NextResponse.json({ packages: publicPackages });
   } catch (error) {
-    console.error('Failed to get credit packages:', error);
+    logger.error('Failed to get credit packages', { error });
     return NextResponse.json({ error: 'Failed to get credit packages' }, { status: 500 });
   }
 }

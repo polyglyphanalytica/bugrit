@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { store } from '@/lib/store';
 import { requirePermission } from '@/lib/api-auth';
 import { BrowserType, NativePlatform } from '@/lib/types';
+import { logger } from '@/lib/logger';
 
 // GET /api/executions - Get all executions
 export async function GET(request: NextRequest) {
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
       count: executions.length,
     });
   } catch (error) {
-    console.error('Error fetching executions:', error);
+    logger.error('Error fetching executions', { error });
     return NextResponse.json(
       { error: 'Failed to fetch executions' },
       { status: 500 }
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error creating execution:', error);
+    logger.error('Error creating execution', { error });
     return NextResponse.json(
       { error: 'Failed to create execution' },
       { status: 500 }

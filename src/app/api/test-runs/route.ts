@@ -3,6 +3,7 @@ import { store } from '@/lib/store';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { notifyTestCompleted, notifyTestFailed } from '@/lib/notifications/dispatcher';
 import { getDb } from '@/lib/firestore';
+import { logger } from '@/lib/logger';
 
 /**
  * Get user email from Firestore
@@ -16,7 +17,7 @@ async function getUserEmail(userId: string): Promise<string> {
         return userDoc.data()?.email || userId;
       }
     } catch (error) {
-      console.warn('Could not fetch user email:', error);
+      logger.warn('Could not fetch user email', { error });
     }
   }
   return userId; // Fallback to userId
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
       count: runs.length,
     });
   } catch (error) {
-    console.error('Error fetching test runs:', error);
+    logger.error('Error fetching test runs', { error });
     return NextResponse.json(
       { error: 'Failed to fetch test runs' },
       { status: 500 }
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(testRun, { status: 201 });
   } catch (error) {
-    console.error('Error creating test run:', error);
+    logger.error('Error creating test run', { error });
     return NextResponse.json(
       { error: 'Failed to create test run' },
       { status: 500 }

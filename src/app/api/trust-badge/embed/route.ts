@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // TODO: Fetch site from database
+    // Fetch site from database
     const site = await getRegisteredSite(siteId);
 
     if (!site) {

@@ -28,8 +28,7 @@ export async function GET(
   const scoreOverride = searchParams.get('score');
   const gradeOverride = searchParams.get('grade');
 
-  // TODO: Fetch actual score from database
-  // For now, use demo data or query params
+  // Fetch actual score from database (or use override for testing)
   const score = scoreOverride ? parseInt(scoreOverride) : await getRepoScore(owner, repo);
   const grade = gradeOverride || scoreToGrade(score);
 

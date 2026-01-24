@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedUser, errorResponse } from '@/lib/api-auth';
 import { db } from '@/lib/firebase/admin';
 import { getCreditPackage } from '@/lib/admin/service';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
   try {
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Auto-topup settings error:', error);
+    logger.error('Auto-topup settings error', { error });
     return errorResponse('Failed to update auto-topup settings', 500);
   }
 }

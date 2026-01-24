@@ -9,6 +9,7 @@ import {
   MemberRole,
 } from '@/lib/organizations';
 import { verifySession } from '@/lib/auth/session';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ orgId: string }>;
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ invites });
   } catch (error) {
-    console.error('Failed to fetch invites:', error);
+    logger.error('Failed to fetch invites', { error });
     return NextResponse.json({ error: 'Failed to fetch invites' }, { status: 500 });
   }
 }
@@ -109,7 +110,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       message: `Invite sent to ${email}`,
     });
   } catch (error) {
-    console.error('Failed to create invite:', error);
+    logger.error('Failed to create invite', { error });
     return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
   }
 }
@@ -150,7 +151,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to cancel invite:', error);
+    logger.error('Failed to cancel invite', { error });
     return NextResponse.json({ error: 'Failed to cancel invite' }, { status: 500 });
   }
 }

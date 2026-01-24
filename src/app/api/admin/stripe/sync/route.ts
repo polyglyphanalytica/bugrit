@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySuperadmin } from '@/lib/admin/middleware';
 import { syncPricingToStripe, importFromStripe } from '@/lib/admin/stripe-sync';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/admin/stripe/sync
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('Stripe sync failed:', error);
+    logger.error('Stripe sync failed', { error });
     return NextResponse.json({ error: 'Stripe sync failed' }, { status: 500 });
   }
 }

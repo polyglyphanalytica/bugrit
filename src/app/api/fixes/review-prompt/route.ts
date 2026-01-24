@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateReviewMergePrompt, generateQuickReviewPrompt } from '@/ai/flows/generate-fix';
+import { getDb, COLLECTIONS } from '@/lib/firestore';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/fixes/review-prompt
@@ -26,7 +28,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch scan details (mock for now - replace with actual DB call)
+    // Fetch scan details from database
     const scanData = await getScanData(scanId);
 
     if (!scanData) {
@@ -81,7 +83,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error generating review prompt:', error);
+    logger.error('Error generating review prompt', { error });
     return NextResponse.json(
       { error: 'Failed to generate review prompt' },
       { status: 500 }
@@ -89,40 +91,53 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Mock function - replace with actual database call
+// Fetch scan data from Firestore
 async function getScanData(scanId: string) {
-  // TODO: Replace with actual Firestore query
-  // const scan = await db.collection('scans').doc(scanId).get();
-  // const fixes = await db.collection('fixes').where('scanId', '==', scanId).get();
+  const db = getDb();
+  if (!db) {
+    logger.warn('Firestore not available for scan lookup');
+    return null;
+  }
 
-  // Mock data for development
-  return {
-    repoUrl: 'https://github.com/example/repo',
-    baseBranch: 'main',
-    fixBranch: `bugrit/fixes-${scanId}`,
-    prUrl: `https://github.com/example/repo/pull/123`,
-    findings: [
-      {
-        id: 'finding-1',
-        severity: 'critical',
-        title: 'SQL Injection vulnerability',
-        file: 'src/api/users.ts',
-        line: 42,
-      },
-      {
-        id: 'finding-2',
-        severity: 'high',
-        title: 'Cross-Site Scripting (XSS)',
-        file: 'src/components/Comment.tsx',
-        line: 18,
-      },
-      {
-        id: 'finding-3',
-        severity: 'medium',
-        title: 'Missing input validation',
-        file: 'src/api/posts.ts',
-        line: 55,
-      },
-    ],
-  };
+  try {
+    const scanDoc = await db.collection(COLLECTIONS.SCANS).doc(scanId).get();
+    if (!scanDoc.exists) {
+      return null;
+    }
+
+    const scanData = scanDoc.data();
+    if (!scanData) {
+      return null;
+    }
+
+    // Get findings from the scan
+    const findingsSnapshot = await db
+      .collection(COLLECTIONS.SCANS)
+      .doc(scanId)
+      .collection('findings')
+      .limit(100)
+      .get();
+
+    const findings = findingsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        severity: data.severity || 'medium',
+        title: data.title || data.message || 'Unknown finding',
+        file: data.file || data.location?.file,
+        line: data.line || data.location?.line,
+      };
+    });
+
+    return {
+      repoUrl: scanData.source?.repoUrl || scanData.source?.url || '',
+      baseBranch: scanData.baseBranch || 'main',
+      fixBranch: scanData.fixBranch || `bugrit/fixes-${scanId}`,
+      prUrl: scanData.prUrl || null,
+      findings,
+    };
+  } catch (error) {
+    logger.error('Error fetching scan data for review prompt', { scanId, error });
+    return null;
+  }
 }

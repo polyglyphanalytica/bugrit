@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { GitHubOAuth } from '@/lib/github/oauth';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,7 +56,7 @@ export async function GET(request: NextRequest) {
     // Redirect to GitHub
     return NextResponse.redirect(authUrl);
   } catch (error) {
-    console.error('GitHub OAuth initiation error:', error);
+    logger.error('GitHub OAuth initiation error', { error });
     return NextResponse.json({ error: 'Failed to initiate GitHub OAuth' }, { status: 500 });
   }
 }

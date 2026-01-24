@@ -541,6 +541,15 @@ export async function GET(request: NextRequest) {
       profitability,
       usage,
       alerts,
+      // Indicate when mock/demo data is being shown
+      ...(useMock && {
+        _meta: {
+          usingMockData: true,
+          reason: !process.env.GCP_PROJECT_ID
+            ? 'GCP_PROJECT_ID not configured'
+            : 'Mock data requested via query param',
+        },
+      }),
     };
 
     return NextResponse.json(response);

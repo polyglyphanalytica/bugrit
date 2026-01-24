@@ -13,6 +13,7 @@ import {
   deleteGitHubConnectionByUser,
   toPublicConnection,
 } from '@/lib/github/connections';
+import { logger } from '@/lib/logger';
 
 async function getUserFromSession(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -46,7 +47,7 @@ export async function GET() {
       oauthConfigured: true,
     });
   } catch (error) {
-    console.error('Error fetching GitHub status:', error);
+    logger.error('Error fetching GitHub status', { error });
     return NextResponse.json({ error: 'Failed to fetch GitHub status' }, { status: 500 });
   }
 }
@@ -74,7 +75,7 @@ export async function DELETE() {
       await oauth.revokeToken(connection.accessToken);
     } catch (revokeError) {
       // Token revocation failed, but continue with deletion
-      console.warn('Failed to revoke GitHub token:', revokeError);
+      logger.warn('Failed to revoke GitHub token', { error: revokeError });
     }
 
     // Delete the connection from our database
@@ -86,7 +87,7 @@ export async function DELETE() {
 
     return NextResponse.json({ success: true, message: 'GitHub account disconnected' });
   } catch (error) {
-    console.error('Error disconnecting GitHub:', error);
+    logger.error('Error disconnecting GitHub', { error });
     return NextResponse.json({ error: 'Failed to disconnect GitHub' }, { status: 500 });
   }
 }

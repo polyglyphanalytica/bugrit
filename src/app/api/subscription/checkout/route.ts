@@ -4,6 +4,7 @@ import { TierName, TIERS } from '@/lib/subscriptions/tiers';
 import { verifySession } from '@/lib/auth/session';
 import { db } from '@/lib/firebase/admin';
 import { canChangeSubscriptionPlan } from '@/lib/billing/dunning';
+import { logger } from '@/lib/logger';
 
 // Get valid paid tiers from TIERS constant
 const PAID_TIER_NAMES = (Object.keys(TIERS) as TierName[]).filter(
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url });
   } catch (error) {
-    console.error('Failed to create checkout session:', error);
+    logger.error('Failed to create checkout session', { error });
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }

@@ -6,6 +6,7 @@ import {
   MemberRole,
 } from '@/lib/organizations';
 import { verifySession } from '@/lib/auth/session';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ orgId: string }>;
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ members });
   } catch (error) {
-    console.error('Failed to fetch members:', error);
+    logger.error('Failed to fetch members', { error });
     return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 });
   }
 }
@@ -69,7 +70,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to remove member:', error);
+    logger.error('Failed to remove member', { error });
     return NextResponse.json({ error: 'Failed to remove member' }, { status: 500 });
   }
 }
@@ -106,7 +107,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to update member:', error);
+    logger.error('Failed to update member', { error });
     return NextResponse.json({ error: 'Failed to update member' }, { status: 500 });
   }
 }

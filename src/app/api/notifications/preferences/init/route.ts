@@ -14,6 +14,7 @@ import {
   updateUserNotificationPreferences,
   markOptInCompleted,
 } from '@/lib/notifications/preferences';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
       message: 'Notification preferences initialized',
     });
   } catch (error) {
-    console.error('Error initializing notification preferences:', error);
+    logger.error('Error initializing notification preferences', { error });
     return NextResponse.json(
       { error: 'Failed to initialize notification preferences' },
       { status: 500 }

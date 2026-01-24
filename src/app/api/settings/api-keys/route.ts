@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getApiKeysByOwner, createApiKey } from '@/lib/db/api-keys';
 import { ApiKeyPermission, API_PERMISSION_GROUPS } from '@/lib/types';
 import { cookies } from 'next/headers';
+import { logger } from '@/lib/logger';
 
 // Helper to get user ID from session
 async function getUserFromSession(): Promise<string | null> {
@@ -35,7 +36,7 @@ export async function GET() {
 
     return NextResponse.json({ keys });
   } catch (error) {
-    console.error('Error fetching API keys:', error);
+    logger.error('Error fetching API keys', { error });
     return NextResponse.json({ error: 'Failed to fetch API keys' }, { status: 500 });
   }
 }
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
       fullKey,
     }, { status: 201 });
   } catch (error) {
-    console.error('Error creating API key:', error);
+    logger.error('Error creating API key', { error });
     return NextResponse.json({ error: 'Failed to create API key' }, { status: 500 });
   }
 }

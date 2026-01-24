@@ -3,6 +3,7 @@ import { acceptInvite } from '@/lib/organizations';
 import { verifySession } from '@/lib/auth/session';
 import { getAuth } from 'firebase-admin/auth';
 import { getApps } from 'firebase-admin/app';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ token: string }>;
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       message: 'Successfully joined organization',
     });
   } catch (error) {
-    console.error('Failed to accept invite:', error);
+    logger.error('Failed to accept invite', { error });
     return NextResponse.json({ error: 'Failed to accept invite' }, { status: 500 });
   }
 }

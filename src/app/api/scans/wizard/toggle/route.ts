@@ -6,6 +6,7 @@ import {
   resetToRecommended,
   SelectionState,
 } from '@/lib/wizard';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/scans/wizard/toggle
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Toggle error:', error);
+    logger.error('Toggle error', { error });
     return NextResponse.json(
       { error: 'Failed to process selection change' },
       { status: 500 }

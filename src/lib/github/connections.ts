@@ -6,6 +6,8 @@
  */
 
 import { getDb, toDate, toTimestamp, generateId } from '../firestore';
+import { Timestamp } from 'firebase-admin/firestore';
+import { logger } from '../logger';
 
 const COLLECTION = 'githubConnections';
 
@@ -232,7 +234,8 @@ export async function hasValidGitHubConnection(userId: string): Promise<boolean>
 }
 
 /**
- * Get access token for a user, updating last used time
+ * Get access token for a user, updating last used time.
+ * Automatically refreshes the token if expired and refresh token is available.
  */
 export async function getAccessTokenForUser(userId: string): Promise<string | null> {
   const connection = await getGitHubConnectionByUser(userId);
@@ -240,7 +243,18 @@ export async function getAccessTokenForUser(userId: string): Promise<string | nu
 
   // Check if expired
   if (connection.expiresAt && connection.expiresAt < new Date()) {
-    // TODO: Implement refresh token flow
+    // Attempt to refresh the token
+    if (connection.refreshToken) {
+      try {
+        const refreshed = await refreshGitHubToken(connection);
+        if (refreshed) {
+          return refreshed.accessToken;
+        }
+      } catch (error) {
+        // Refresh failed - connection needs to be re-established
+        logger.warn('GitHub token refresh failed', { userId, error });
+      }
+    }
     return null;
   }
 
@@ -248,6 +262,45 @@ export async function getAccessTokenForUser(userId: string): Promise<string | nu
   await updateLastUsed(connection.id);
 
   return connection.accessToken;
+}
+
+/**
+ * Refresh a GitHub token using the refresh token
+ */
+async function refreshGitHubToken(connection: GitHubConnection): Promise<GitHubConnection | null> {
+  if (!connection.refreshToken) return null;
+
+  try {
+    const { GitHubOAuth } = await import('./oauth');
+    const oauth = new GitHubOAuth();
+    const tokenData = await oauth.refreshAccessToken(connection.refreshToken);
+
+    // Update the connection with new tokens
+    const db = getDb();
+    if (!db) return null;
+
+    const updates = {
+      accessToken: tokenData.accessToken,
+      refreshToken: tokenData.refreshToken || connection.refreshToken,
+      expiresAt: tokenData.expiresAt || null,
+    };
+
+    await db.collection(COLLECTION).doc(connection.id).update({
+      ...updates,
+      expiresAt: updates.expiresAt ? Timestamp.fromDate(updates.expiresAt) : null,
+    });
+
+    logger.info('GitHub token refreshed successfully', { connectionId: connection.id });
+
+    return {
+      ...connection,
+      ...updates,
+      expiresAt: updates.expiresAt || undefined,
+    };
+  } catch (error) {
+    logger.error('Failed to refresh GitHub token', { connectionId: connection.id, error });
+    return null;
+  }
 }
 
 /**

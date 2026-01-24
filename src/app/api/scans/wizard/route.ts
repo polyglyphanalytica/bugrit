@@ -11,6 +11,7 @@ import {
   AppSensitivity,
   AICodingAgent,
 } from '@/lib/wizard';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/scans/wizard
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
       recommendations,
     });
   } catch (error) {
-    console.error('Wizard error:', error);
+    logger.error('Wizard error', { error });
     return NextResponse.json(
       { error: 'Failed to generate recommendations' },
       { status: 500 }
