@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { store } from '@/lib/store';
+import { logger } from '@/lib/logger';
 
 // GET /api/test-cases - Get all test cases
 export async function GET() {
@@ -11,7 +12,7 @@ export async function GET() {
       count: testCases.length,
     });
   } catch (error) {
-    console.error('Error fetching test cases:', error);
+    logger.error('Error fetching test cases', { error });
     return NextResponse.json(
       { error: 'Failed to fetch test cases' },
       { status: 500 }
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(testCase, { status: 201 });
   } catch (error) {
-    console.error('Error creating test case:', error);
+    logger.error('Error creating test case', { error });
     return NextResponse.json(
       { error: 'Failed to create test case' },
       { status: 500 }

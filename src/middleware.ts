@@ -27,18 +27,31 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   // Restrict browser features
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
-  // Content Security Policy - allows self, inline scripts/styles for Next.js, and necessary domains
+  // Content Security Policy
+  // Note: 'unsafe-inline' is required for Next.js styled-jsx and inline styles
+  // Firebase Auth popup may require 'unsafe-eval' in some edge cases - add only if needed
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseapp.com",
+    // Scripts: self + specific trusted domains. 'unsafe-inline' for Next.js hydration
+    "script-src 'self' 'unsafe-inline' https://apis.google.com https://*.firebaseapp.com https://www.googletagmanager.com",
+    // Styles: self + inline (required for Next.js) + Google Fonts
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    // Images: allow data URIs for inline images, https for external
     "img-src 'self' data: https: blob:",
+    // Fonts: self + Google Fonts
     "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://api.stripe.com",
-    "frame-src 'self' https://*.firebaseapp.com https://js.stripe.com",
+    // API connections: Firebase, Stripe, Google APIs
+    "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com wss://*.firebaseio.com https://api.stripe.com https://*.google-analytics.com",
+    // Frames: Firebase auth popup, Stripe checkout
+    "frame-src 'self' https://*.firebaseapp.com https://js.stripe.com https://accounts.google.com",
+    // Prevent this page from being embedded
     "frame-ancestors 'none'",
+    // Forms can only submit to self
     "form-action 'self'",
+    // Base URI restricted to self
     "base-uri 'self'",
+    // Upgrade HTTP requests to HTTPS
+    "upgrade-insecure-requests",
   ].join('; ');
   response.headers.set('Content-Security-Policy', csp);
 

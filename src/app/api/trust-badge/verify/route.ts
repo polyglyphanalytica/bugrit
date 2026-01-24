@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSiteById, trackBadgeView as dbTrackBadgeView } from '@/lib/trust-badge/store';
+import { getDb, COLLECTIONS } from '@/lib/firestore';
+import { logger } from '@/lib/logger';
 
 /**
  * Trust Badge Verification API
@@ -118,7 +121,7 @@ export async function GET(request: NextRequest) {
     }
 
     // All checks passed! Track view and return score
-    trackBadgeView(siteId).catch(console.error);
+    trackBadgeViewLocal(siteId).catch(err => logger.error('Failed to track badge view', { siteId, error: err }));
 
     return NextResponse.json(
       {
@@ -135,7 +138,7 @@ export async function GET(request: NextRequest) {
       { headers: corsHeaders }
     );
   } catch (error) {
-    console.error('[TrustBadge] Verification error:', error);
+    logger.error('TrustBadge verification error', { error });
     // On error, show advertising badge (fail gracefully)
     return NextResponse.json(
       {
@@ -160,7 +163,7 @@ export async function OPTIONS() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Helper functions (TODO: Move to store module)
+// Helper functions
 // ═══════════════════════════════════════════════════════════════
 
 interface RegisteredSite {
@@ -191,54 +194,88 @@ interface SubscriptionStatus {
 }
 
 async function getRegisteredSite(siteId: string): Promise<RegisteredSite | null> {
-  // TODO: Implement Firestore lookup
-  // For demo, return mock data
-  if (siteId.startsWith('site_')) {
-    return {
-      id: siteId,
-      domain: 'example.com',
-      ownerId: 'user_demo123',
-      metadata: {
-        siteName: 'Example Site',
-        description: 'A sample website',
-      },
-      latestScan: {
-        vibeScore: 87,
-        grade: 'B+',
-        scannedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        scanId: 'scan_abc123', // Proves this is a legitimate scan
-      },
-      badgeConfig: {
-        enabled: true,
-        allowedDomains: ['example.com', 'www.example.com', 'localhost'],
-      },
-    };
-  }
-  return null;
+  const site = await getSiteById(siteId);
+  if (!site) return null;
+
+  return {
+    id: site.id,
+    domain: site.domain,
+    ownerId: site.ownerId,
+    metadata: {
+      siteName: site.metadata.siteName,
+      description: site.metadata.description || '',
+    },
+    latestScan: site.latestScan
+      ? {
+          vibeScore: site.latestScan.vibeScore,
+          grade: site.latestScan.grade,
+          scannedAt: site.latestScan.scannedAt,
+          scanId: site.latestScan.scanId,
+        }
+      : null,
+    badgeConfig: {
+      enabled: site.badgeConfig.enabled,
+      allowedDomains: site.badgeConfig.allowedDomains,
+    },
+  };
 }
 
 async function getSubscriptionStatus(userId: string): Promise<SubscriptionStatus> {
-  // TODO: Implement actual subscription check from Stripe/billing system
-  // Check:
-  // 1. User has an active subscription (not expired)
-  // 2. User is on a paid tier OR free tier with badge feature enabled
-  // 3. Subscription is not cancelled/paused
-
-  // For demo, check if user exists and return valid status
-  if (userId) {
-    return {
-      isValid: true,
-      tier: 'pro',
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-    };
+  const db = getDb();
+  if (!db) {
+    // If no database, allow badge display (graceful degradation)
+    return { isValid: true, tier: 'free', expiresAt: null };
   }
 
-  return {
-    isValid: false,
-    tier: null,
-    expiresAt: null,
-    reason: 'no_subscription',
-  };
+  try {
+    // Check user's subscription in Firestore
+    const userDoc = await db.collection(COLLECTIONS.USERS).doc(userId).get();
+    if (!userDoc.exists) {
+      return { isValid: false, tier: null, expiresAt: null, reason: 'user_not_found' };
+    }
+
+    const userData = userDoc.data();
+    const subscription = userData?.subscription;
+
+    if (!subscription) {
+      // Free tier users can still use badges
+      return { isValid: true, tier: 'free', expiresAt: null };
+    }
+
+    // Check if subscription is active
+    const now = new Date();
+    const expiresAt = subscription.currentPeriodEnd
+      ? new Date(subscription.currentPeriodEnd)
+      : null;
+
+    if (subscription.status === 'active' || subscription.status === 'trialing') {
+      return {
+        isValid: true,
+        tier: subscription.tier || 'pro',
+        expiresAt,
+      };
+    }
+
+    // Check if within grace period (subscription cancelled but not yet expired)
+    if (expiresAt && expiresAt > now) {
+      return {
+        isValid: true,
+        tier: subscription.tier || 'pro',
+        expiresAt,
+      };
+    }
+
+    return {
+      isValid: false,
+      tier: null,
+      expiresAt: null,
+      reason: 'subscription_expired',
+    };
+  } catch (error) {
+    logger.error('TrustBadge subscription check error', { error });
+    // On error, allow badge display (fail open for better UX)
+    return { isValid: true, tier: 'free', expiresAt: null };
+  }
 }
 
 function normalizeDomain(domain: string): string {
@@ -274,7 +311,11 @@ function isDomainAllowed(domain: string, site: RegisteredSite): boolean {
   return false;
 }
 
-async function trackBadgeView(siteId: string): Promise<void> {
-  // TODO: Implement analytics tracking
-  console.log(`[TrustBadge] View tracked for ${siteId}`);
+async function trackBadgeViewLocal(siteId: string): Promise<void> {
+  try {
+    await dbTrackBadgeView(siteId);
+  } catch (error) {
+    // Non-critical - just log and continue
+    logger.error('TrustBadge failed to track view', { siteId, error });
+  }
 }

@@ -5,6 +5,7 @@ import {
   createCreditPackage,
   initializeDefaultCreditPackages,
 } from '@/lib/admin/service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/credit-packages
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ packages });
   } catch (error) {
-    console.error('Failed to get credit packages:', error);
+    logger.error('Failed to get credit packages', { error });
     return NextResponse.json({ error: 'Failed to get credit packages' }, { status: 500 });
   }
 }
@@ -64,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, package: newPackage }, { status: 201 });
   } catch (error) {
-    console.error('Failed to create credit package:', error);
+    logger.error('Failed to create credit package', { error });
     return NextResponse.json({ error: 'Failed to create credit package' }, { status: 500 });
   }
 }

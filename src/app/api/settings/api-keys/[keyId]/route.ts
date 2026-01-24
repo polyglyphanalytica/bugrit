@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiKey, revokeApiKey, deleteApiKey } from '@/lib/db/api-keys';
 import { cookies } from 'next/headers';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ keyId: string }>;
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ apiKey });
   } catch (error) {
-    console.error('Error fetching API key:', error);
+    logger.error('Error fetching API key', { error });
     return NextResponse.json({ error: 'Failed to fetch API key' }, { status: 500 });
   }
 }
@@ -77,7 +78,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true, message: 'API key revoked' });
   } catch (error) {
-    console.error('Error revoking API key:', error);
+    logger.error('Error revoking API key', { error });
     return NextResponse.json({ error: 'Failed to revoke API key' }, { status: 500 });
   }
 }

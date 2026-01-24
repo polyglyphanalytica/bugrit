@@ -5,6 +5,7 @@ import {
   updateCreditPackage,
   deleteCreditPackage,
 } from '@/lib/admin/service';
+import { logger } from '@/lib/logger';
 
 interface RouteContext {
   params: Promise<{ packageId: string }>;
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ package: pkg });
   } catch (error) {
-    console.error('Failed to get credit package:', error);
+    logger.error('Failed to get credit package', { error });
     return NextResponse.json({ error: 'Failed to get credit package' }, { status: 500 });
   }
 }
@@ -58,7 +59,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const updated = await getCreditPackage(packageId);
     return NextResponse.json({ success: true, package: updated });
   } catch (error) {
-    console.error('Failed to update credit package:', error);
+    logger.error('Failed to update credit package', { error });
     return NextResponse.json({ error: 'Failed to update credit package' }, { status: 500 });
   }
 }
@@ -84,7 +85,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to delete credit package:', error);
+    logger.error('Failed to delete credit package', { error });
     return NextResponse.json({ error: 'Failed to delete credit package' }, { status: 500 });
   }
 }

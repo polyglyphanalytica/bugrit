@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminPermission } from '@/lib/admin/middleware';
 import { getFeatureFlag, updateFeatureFlag, deleteFeatureFlag } from '@/lib/admin/service';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ flagId: string }>;
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ flag });
   } catch (error) {
-    console.error('Failed to get feature flag:', error);
+    logger.error('Failed to get feature flag', { error });
     return NextResponse.json({ error: 'Failed to get feature flag' }, { status: 500 });
   }
 }
@@ -52,7 +53,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true, flag: updated });
   } catch (error) {
-    console.error('Failed to update feature flag:', error);
+    logger.error('Failed to update feature flag', { error });
     return NextResponse.json({ error: 'Failed to update feature flag' }, { status: 500 });
   }
 }
@@ -77,7 +78,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to delete feature flag:', error);
+    logger.error('Failed to delete feature flag', { error });
     return NextResponse.json({ error: 'Failed to delete feature flag' }, { status: 500 });
   }
 }

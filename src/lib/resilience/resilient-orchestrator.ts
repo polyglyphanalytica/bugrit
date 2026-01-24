@@ -69,7 +69,20 @@ export class ResilientOrchestrator {
     config: ResilientOrchestratorConfig = {}
   ): Promise<ResilientAuditReport> {
     const startTime = Date.now();
-    const reportId = `audit-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    // Generate cryptographically secure random ID
+    const randomBytes = new Uint8Array(5);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      crypto.getRandomValues(randomBytes);
+    } else {
+      const nodeCrypto = require('crypto');
+      const nodeRandom = nodeCrypto.randomBytes(5);
+      randomBytes.set(nodeRandom);
+    }
+    const random = Array.from(randomBytes)
+      .map(b => b.toString(36).padStart(2, '0'))
+      .join('')
+      .substring(0, 9);
+    const reportId = `audit-${Date.now()}-${random}`;
 
     const resilience = {
       retriedTools: [] as string[],

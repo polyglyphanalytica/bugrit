@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminPermission } from '@/lib/admin/middleware';
 import { getAuditLogs } from '@/lib/admin/service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/audit
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ logs });
   } catch (error) {
-    console.error('Failed to get audit logs:', error);
+    logger.error('Failed to get audit logs', { error });
     return NextResponse.json({ error: 'Failed to get audit logs' }, { status: 500 });
   }
 }

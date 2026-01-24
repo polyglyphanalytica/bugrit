@@ -732,6 +732,13 @@ async function downloadNpmPackage(packageName: string, version: string, targetDi
 
 // Cancel a running scan
 export async function DELETE(request: NextRequest) {
+  // Authenticate user
+  const authResult = requireAuthenticatedUser(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+  const userId = authResult;
+
   const { searchParams } = new URL(request.url);
   const scanId = searchParams.get('scanId');
 
@@ -740,7 +747,17 @@ export async function DELETE(request: NextRequest) {
   }
 
   const scan = await getScan(scanId);
-  if (scan && scan.status === 'running') {
+
+  if (!scan) {
+    return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
+  }
+
+  // Verify ownership - user can only cancel their own scans
+  if (scan.userId !== userId) {
+    return NextResponse.json({ error: 'Not authorized to cancel this scan' }, { status: 403 });
+  }
+
+  if (scan.status === 'running') {
     scan.status = 'failed';
     scan.error = 'Cancelled by user';
     scan.completedAt = new Date().toISOString();
@@ -748,7 +765,7 @@ export async function DELETE(request: NextRequest) {
 
     // Release the reserved credits
     await releaseReservation(scanId);
-    logger.info('Released credit reservation for cancelled scan', { scanId });
+    logger.info('Released credit reservation for cancelled scan', { scanId, userId });
   }
 
   return NextResponse.json({ success: true });

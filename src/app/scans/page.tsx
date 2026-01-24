@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
@@ -107,13 +107,15 @@ export default function ScansPage() {
     }
   };
 
-  const getTotalFindings = (findings: Scan['findings']) => {
+  const getTotalFindings = useCallback((findings: Scan['findings']) => {
     return findings.critical + findings.high + findings.medium + findings.low;
-  };
+  }, []);
 
-  const filteredScans = statusFilter === 'all'
-    ? scans
-    : scans.filter((scan) => scan.status === statusFilter);
+  const filteredScans = useMemo(() => {
+    return statusFilter === 'all'
+      ? scans
+      : scans.filter((scan) => scan.status === statusFilter);
+  }, [scans, statusFilter]);
 
   if (authLoading || loading) {
     return (

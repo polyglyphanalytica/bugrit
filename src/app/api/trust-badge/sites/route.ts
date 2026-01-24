@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { SiteCategory } from '@/lib/trust-badge/types';
+import {
+  registerSite as dbRegisterSite,
+  getSitesByOwner,
+  getSiteByDomain as dbGetSiteByDomain,
+} from '@/lib/trust-badge/store';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
+import { logger } from '@/lib/logger';
 
 /**
  * Trust Badge Sites API
@@ -10,11 +17,15 @@ import type { SiteCategory } from '@/lib/trust-badge/types';
 
 // GET - List user's registered sites
 export async function GET(request: NextRequest) {
-  // TODO: Get user from auth
-  const userId = request.headers.get('x-user-id') || 'demo-user';
+  // Authenticate user
+  const authResult = requireAuthenticatedUser(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+  const userId = authResult;
 
   try {
-    const sites = await getUserSites(userId);
+    const sites = await getSitesByOwner(userId);
 
     return NextResponse.json({
       success: true,
@@ -31,7 +42,7 @@ export async function GET(request: NextRequest) {
       })),
     });
   } catch (error) {
-    console.error('[TrustBadge] List sites error:', error);
+    logger.error('[TrustBadge] List sites error', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to list sites' },
       { status: 500 }
@@ -41,8 +52,12 @@ export async function GET(request: NextRequest) {
 
 // POST - Register a new site
 export async function POST(request: NextRequest) {
-  // TODO: Get user from auth
-  const userId = request.headers.get('x-user-id') || 'demo-user';
+  // Authenticate user
+  const authResult = requireAuthenticatedUser(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+  const userId = authResult;
 
   try {
     const body = await request.json();
@@ -78,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if domain already registered
-    const existingSite = await getSiteByDomain(domain);
+    const existingSite = await dbGetSiteByDomain(domain);
     if (existingSite) {
       return NextResponse.json(
         { success: false, error: 'Domain is already registered' },
@@ -87,7 +102,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Register the site
-    const site = await registerSite(domain, userId, {
+    const site = await dbRegisterSite(domain, userId, {
       siteName,
       description,
       category: category || 'other',
@@ -116,7 +131,7 @@ export async function POST(request: NextRequest) {
       ],
     }, { status: 201 });
   } catch (error) {
-    console.error('[TrustBadge] Register site error:', error);
+    logger.error('[TrustBadge] Register site error', { error });
     return NextResponse.json(
       { success: false, error: 'Failed to register site' },
       { status: 500 }
@@ -125,101 +140,8 @@ export async function POST(request: NextRequest) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Helper functions (TODO: Import from store once available)
+// Helper functions
 // ═══════════════════════════════════════════════════════════════
-
-interface Site {
-  id: string;
-  domain: string;
-  verifiedAt: Date | null;
-  metadata: {
-    siteName: string;
-    description: string;
-    category: string;
-  };
-  latestScan: {
-    vibeScore: number;
-    grade: string;
-    scannedAt: Date;
-  } | null;
-  badgeConfig: {
-    enabled: boolean;
-  };
-  stats: {
-    badgeViews: number;
-    badgeClicks: number;
-    verificationPageViews: number;
-  };
-}
-
-async function getUserSites(userId: string): Promise<Site[]> {
-  // TODO: Implement actual database query
-  return [
-    {
-      id: 'site_demo123',
-      domain: 'example.com',
-      verifiedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      metadata: {
-        siteName: 'Example Site',
-        description: 'A demo website',
-        category: 'saas',
-      },
-      latestScan: {
-        vibeScore: 87,
-        grade: 'B+',
-        scannedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      },
-      badgeConfig: {
-        enabled: true,
-      },
-      stats: {
-        badgeViews: 1234,
-        badgeClicks: 56,
-        verificationPageViews: 89,
-      },
-    },
-  ];
-}
-
-async function getSiteByDomain(domain: string): Promise<Site | null> {
-  // TODO: Implement actual database query
-  return null;
-}
-
-async function registerSite(
-  domain: string,
-  userId: string,
-  metadata: {
-    siteName: string;
-    description?: string;
-    category: SiteCategory;
-    contactEmail?: string;
-    privacyPolicyUrl?: string;
-  }
-): Promise<Site> {
-  // TODO: Implement actual database insert
-  const siteId = `site_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`;
-
-  return {
-    id: siteId,
-    domain: domain.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, ''),
-    verifiedAt: null,
-    metadata: {
-      siteName: metadata.siteName,
-      description: metadata.description || '',
-      category: metadata.category,
-    },
-    latestScan: null,
-    badgeConfig: {
-      enabled: true,
-    },
-    stats: {
-      badgeViews: 0,
-      badgeClicks: 0,
-      verificationPageViews: 0,
-    },
-  };
-}
 
 function generateEmbedScript(siteId: string): string {
   return `<script src="https://bugrit.dev/badge/embed.js"

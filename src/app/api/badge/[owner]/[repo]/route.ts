@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getDb, COLLECTIONS } from '@/lib/firestore';
+import { logger } from '@/lib/logger';
 
 /**
  * Badge API - Generate SVG badges for README embeds
@@ -26,8 +28,7 @@ export async function GET(
   const scoreOverride = searchParams.get('score');
   const gradeOverride = searchParams.get('grade');
 
-  // TODO: Fetch actual score from database
-  // For now, use demo data or query params
+  // Fetch actual score from database (or use override for testing)
   const score = scoreOverride ? parseInt(scoreOverride) : await getRepoScore(owner, repo);
   const grade = gradeOverride || scoreToGrade(score);
 
@@ -43,20 +44,34 @@ export async function GET(
 }
 
 async function getRepoScore(owner: string, repo: string): Promise<number> {
-  // TODO: Implement actual database lookup
-  // For demo, return a score based on repo name hash
-  const hash = simpleHash(`${owner}/${repo}`);
-  return 60 + (hash % 40); // Score between 60-99
-}
-
-function simpleHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
+  const db = getDb();
+  if (!db) {
+    logger.warn('Firestore not available for badge lookup');
+    return 0; // Return 0 to indicate no data
   }
-  return Math.abs(hash);
+
+  try {
+    // Look for the most recent completed scan for this repo
+    const repoUrl = `https://github.com/${owner}/${repo}`;
+    const snapshot = await db
+      .collection(COLLECTIONS.SCANS)
+      .where('source.repoUrl', '==', repoUrl)
+      .where('status', '==', 'completed')
+      .orderBy('completedAt', 'desc')
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      // No scan found - return 0 to show "no score" badge
+      return 0;
+    }
+
+    const scanData = snapshot.docs[0].data();
+    return scanData?.vibeScore || scanData?.summary?.vibeScore || 0;
+  } catch (error) {
+    logger.error('Error fetching repo score', { owner, repo, error });
+    return 0;
+  }
 }
 
 function scoreToGrade(score: number): string {

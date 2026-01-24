@@ -179,20 +179,22 @@ export async function getProject(id: string): Promise<Project | null> {
 }
 
 export async function getProjectsByOrganization(
-  organizationId: string
+  organizationId: string,
+  limit: number = 100
 ): Promise<Project[]> {
   const db = getDb();
 
   if (!db) {
-    return Array.from(projectStore.values()).filter(
-      (p) => p.organizationId === organizationId
-    );
+    return Array.from(projectStore.values())
+      .filter((p) => p.organizationId === organizationId)
+      .slice(0, limit);
   }
 
   const snapshot = await db
     .collection(COLLECTIONS.PROJECTS)
     .where('organizationId', '==', organizationId)
     .orderBy('createdAt', 'desc')
+    .limit(limit)
     .get();
 
   return snapshot.docs.map((doc) => {
@@ -460,16 +462,19 @@ export async function getTestCase(id: string): Promise<ScanTestCase | null> {
   };
 }
 
-export async function getTestCasesByScan(scanId: string): Promise<ScanTestCase[]> {
+export async function getTestCasesByScan(scanId: string, limit: number = 500): Promise<ScanTestCase[]> {
   const db = getDb();
 
   if (!db) {
-    return Array.from(testCaseStore.values()).filter((t) => t.scanId === scanId);
+    return Array.from(testCaseStore.values())
+      .filter((t) => t.scanId === scanId)
+      .slice(0, limit);
   }
 
   const snapshot = await db
     .collection(COLLECTIONS.SCAN_TEST_CASES)
     .where('scanId', '==', scanId)
+    .limit(limit)
     .get();
 
   return snapshot.docs.map((doc) => {

@@ -13,6 +13,7 @@ import {
   TRANSACTIONAL_EVENTS,
   type NotificationEventType,
 } from '@/lib/notifications/preferences';
+import { logger } from '@/lib/logger';
 
 async function getUserFromSession(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -44,7 +45,7 @@ export async function GET() {
       events: preferences.events,
     });
   } catch (error) {
-    console.error('Error fetching notification preferences:', error);
+    logger.error('Error fetching notification preferences', { error });
     return NextResponse.json(
       { error: 'Failed to fetch notification preferences' },
       { status: 500 }
@@ -188,7 +189,7 @@ export async function PATCH(request: NextRequest) {
       events: updatedPreferences.events,
     });
   } catch (error) {
-    console.error('Error updating notification preferences:', error);
+    logger.error('Error updating notification preferences', { error });
     return NextResponse.json(
       { error: 'Failed to update notification preferences' },
       { status: 500 }

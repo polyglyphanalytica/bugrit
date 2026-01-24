@@ -233,7 +233,7 @@ export default function HomePage() {
               You build with Cursor, Copilot, and vibes. <strong className="text-foreground">We make sure it&apos;s actually secure.</strong>
             </p>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 sm:mb-12 animate-fade-up delay-300 fill-both px-4">
-              One click runs <strong className="text-foreground">{TOOL_REGISTRY.length}+ automated checks</strong> for security holes, leaked secrets, and bugs. Get AI-ready fix prompts you can paste right back into your editor.
+              One click runs <strong className="text-foreground">5,000+ automated security checks</strong> for vulnerabilities, leaked secrets, and bugs. Get AI-ready fix prompts you can paste right back into your editor.
             </p>
 
             {/* CTA Buttons */}
@@ -260,8 +260,8 @@ export default function HomePage() {
             {/* Value Stats - Positive framing */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 animate-fade-up delay-500 fill-both">
               <div className="p-4 rounded-xl bg-primary/10 border-2 border-primary/30 backdrop-blur-sm">
-                <span className="text-3xl font-bold text-primary">{TOOL_REGISTRY.length}+</span>
-                <p className="text-sm text-muted-foreground mt-1">security & quality tools in one scan</p>
+                <span className="text-3xl font-bold text-primary">5,000+</span>
+                <p className="text-sm text-muted-foreground mt-1">security & quality checks in one scan</p>
               </div>
               <div className="p-4 rounded-xl bg-green-500/10 border-2 border-green-500/30 backdrop-blur-sm">
                 <span className="text-3xl font-bold text-green-500">&lt;2min</span>
@@ -765,7 +765,7 @@ export default function HomePage() {
           {/* Total tools callout */}
           <div className="mt-12 text-center">
             <p className="text-muted-foreground">
-              <strong className="text-foreground">{TOOL_REGISTRY.length} tools total</strong> — the same tools trusted by companies like Google, Microsoft, and Meta. We made them easy to use.
+              <strong className="text-foreground">{TOOL_REGISTRY.length} tools running 5,000+ individual checks</strong> — the same tools trusted by companies like Google, Microsoft, and Meta. We made them easy to use.
             </p>
           </div>
         </div>
@@ -796,7 +796,7 @@ export default function HomePage() {
               {
                 step: '02',
                 title: 'We Check Everything',
-                description: `${TOOL_REGISTRY.length}+ tools scan for security holes, leaked secrets, buggy packages, accessibility issues, and more. Takes under 2 minutes.`,
+                description: `5,000+ individual checks scan for security holes, leaked secrets, buggy packages, accessibility issues, and more. Takes under 2 minutes.`,
                 icon: (
                   <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -983,7 +983,7 @@ export default function HomePage() {
               </Link>
             </div>
             <p className="text-sm text-muted-foreground mt-4">
-              5 free scans included. {TOOL_REGISTRY.length}+ tools check everything for you.
+              5 free scans included. 5,000+ security checks powered by {TOOL_REGISTRY.length}+ industry-leading tools.
             </p>
           </GlassCard>
 
@@ -998,7 +998,7 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             <Logo href="/" />
             <p className="text-muted-foreground text-sm">
-              Expert security tools made easy. {TOOL_REGISTRY.length} tools. Built by security experts worldwide.
+              Expert security tools made easy. {TOOL_REGISTRY.length} tools running 5,000+ checks. Built by security experts worldwide.
             </p>
             <div className="flex items-center gap-6">
               <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">

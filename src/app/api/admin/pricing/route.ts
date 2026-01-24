@@ -6,6 +6,7 @@ import {
   initializeDefaultPricing,
 } from '@/lib/admin/service';
 import { PricingConfig } from '@/lib/admin/types';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/pricing
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ tiers });
   } catch (error) {
-    console.error('Failed to get pricing:', error);
+    logger.error('Failed to get pricing', { error });
     return NextResponse.json({ error: 'Failed to get pricing' }, { status: 500 });
   }
 }
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, tier: tierConfig }, { status: 201 });
   } catch (error) {
-    console.error('Failed to create pricing tier:', error);
+    logger.error('Failed to create pricing tier', { error });
     return NextResponse.json({ error: 'Failed to create pricing tier' }, { status: 500 });
   }
 }

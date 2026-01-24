@@ -6,6 +6,7 @@ import {
   isApplicationOwner,
 } from '@/lib/db/applications';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ application });
   } catch (error) {
-    console.error('Error fetching application:', error);
+    logger.error('Error fetching application', { error });
     return NextResponse.json(
       { error: 'Failed to fetch application' },
       { status: 500 }
@@ -82,7 +83,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       application,
     });
   } catch (error) {
-    console.error('Error updating application:', error);
+    logger.error('Error updating application', { error });
     return NextResponse.json(
       { error: 'Failed to update application' },
       { status: 500 }
@@ -122,7 +123,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       message: 'Application deleted successfully',
     });
   } catch (error) {
-    console.error('Error deleting application:', error);
+    logger.error('Error deleting application', { error });
     return NextResponse.json(
       { error: 'Failed to delete application' },
       { status: 500 }

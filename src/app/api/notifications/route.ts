@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getDb, toDate, toTimestamp } from '@/lib/firestore';
+import { logger } from '@/lib/logger';
 
 const COLLECTION = 'notifications';
 
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
       unreadCount,
     });
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    logger.error('Error fetching notifications', { error });
     return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 });
   }
 }
@@ -124,26 +125,33 @@ export async function POST(request: NextRequest) {
     }
 
     if (notificationIds && Array.isArray(notificationIds)) {
-      // Mark specific notifications as read
+      // Mark specific notifications as read - fetch all at once to avoid N+1 queries
       const batch = db.batch();
 
-      for (const id of notificationIds) {
-        const ref = db.collection(COLLECTION).doc(id);
-        // Verify ownership
-        const doc = await ref.get();
+      // Limit batch size to prevent abuse
+      const idsToProcess = notificationIds.slice(0, 100);
+
+      // Fetch all documents in a single batch read
+      const refs = idsToProcess.map(id => db.collection(COLLECTION).doc(id));
+      const docs = await db.getAll(...refs);
+
+      let markedCount = 0;
+      for (const doc of docs) {
+        // Verify ownership before updating
         if (doc.exists && doc.data()?.userId === userId) {
-          batch.update(ref, { read: true });
+          batch.update(doc.ref, { read: true });
+          markedCount++;
         }
       }
 
       await batch.commit();
 
-      return NextResponse.json({ success: true, marked: notificationIds.length });
+      return NextResponse.json({ success: true, marked: markedCount });
     }
 
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   } catch (error) {
-    console.error('Error marking notifications:', error);
+    logger.error('Error marking notifications', { error });
     return NextResponse.json({ error: 'Failed to mark notifications' }, { status: 500 });
   }
 }
@@ -184,7 +192,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ deleted: snapshot.docs.length });
   } catch (error) {
-    console.error('Error cleaning notifications:', error);
+    logger.error('Error cleaning notifications', { error });
     return NextResponse.json({ error: 'Failed to clean notifications' }, { status: 500 });
   }
 }

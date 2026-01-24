@@ -6,6 +6,7 @@ import {
   cleanupOrganizationData,
 } from '@/lib/maintenance';
 import { SubscriptionTier } from '@/lib/billing';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/maintenance
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
       message: 'This is a dry-run preview. Use POST to execute cleanup.',
     });
   } catch (error) {
-    console.error('Failed to preview data retention:', error);
+    logger.error('Failed to preview data retention', { error });
     return NextResponse.json(
       { error: 'Failed to preview data retention' },
       { status: 500 }
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('Maintenance action failed:', error);
+    logger.error('Maintenance action failed', { error });
     return NextResponse.json(
       { error: 'Maintenance action failed' },
       { status: 500 }

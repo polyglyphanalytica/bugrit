@@ -73,6 +73,61 @@ import {
   LitmusChaosIntegration,
 } from './chaos';
 
+// Import Complexity tools
+import {
+  KnipIntegration,
+  LizardIntegration,
+  TsPruneIntegration,
+} from './complexity';
+
+// Import Documentation tools
+import {
+  ValeIntegration,
+  AlexIntegration,
+  CspellIntegration,
+  WriteGoodIntegration,
+} from './documentation';
+
+// Import Database tools
+import {
+  SQLFluffIntegration,
+  PgFormatterIntegration,
+  SchemaSpyIntegration,
+} from './database';
+
+// Import License tools
+import {
+  LicenseCheckerIntegration,
+  ScanCodeIntegration,
+} from './license';
+
+// Import Secret Scanning tools
+import {
+  GitleaksIntegration,
+  TrufflehogIntegration,
+  GitSecretsIntegration,
+} from './secret-scanning';
+
+// Import IaC Security tools
+import {
+  CheckovIntegration,
+  TfsecIntegration,
+  KubesecIntegration,
+  KubeBenchIntegration,
+  GrypeIntegration,
+  DockleIntegration,
+  HadolintIntegration,
+} from './iac-security';
+
+// Import API Schema tools
+import {
+  SpectralIntegration,
+  OpenAPIDiffIntegration,
+} from './api-schema';
+
+// Import Nuclei from security (not in main security export)
+import { NucleiIntegration } from './security';
+
 // Import Cloud Build integrations (Docker-based tools)
 import { CLOUD_BUILD_INTEGRATIONS } from './cloud-build';
 
@@ -137,12 +192,53 @@ const ALL_INTEGRATIONS: ToolIntegration[] = [
   // Chaos
   new LitmusChaosIntegration(),
 
-  // Cloud Build integrations (46 Docker-based tools)
-  // Security: OWASP ZAP, Semgrep, Trivy, Grype, Gitleaks, Nuclei, Checkov, Bandit, Gosec, etc.
-  // Mobile: MobSF, APKLeaks, SwiftLint
-  // API: Spectral, Schemathesis, GraphQL Cop
-  // Cloud Native: Kubesec, Kube-bench, Polaris, Terrascan, Kube-hunter
-  // AI/ML: Garak (LLM security), ModelScan
+  // Complexity Analysis (3 tools)
+  new KnipIntegration(),
+  new LizardIntegration(),
+  new TsPruneIntegration(),
+
+  // Documentation Quality (4 tools)
+  new ValeIntegration(),
+  new AlexIntegration(),
+  new CspellIntegration(),
+  new WriteGoodIntegration(),
+
+  // Database Tools (3 tools)
+  new SQLFluffIntegration(),
+  new PgFormatterIntegration(),
+  new SchemaSpyIntegration(),
+
+  // License Scanning (2 tools)
+  new LicenseCheckerIntegration(),
+  new ScanCodeIntegration(),
+
+  // Secret Scanning (3 tools)
+  new GitleaksIntegration(),
+  new TrufflehogIntegration(),
+  new GitSecretsIntegration(),
+
+  // IaC Security (7 tools)
+  new CheckovIntegration(),
+  new TfsecIntegration(),
+  new KubesecIntegration(),
+  new KubeBenchIntegration(),
+  new GrypeIntegration(),
+  new DockleIntegration(),
+  new HadolintIntegration(),
+
+  // API Schema Validation (2 tools)
+  new SpectralIntegration(),
+  new OpenAPIDiffIntegration(),
+
+  // Additional Security (1 tool)
+  new NucleiIntegration(),
+
+  // Cloud Build integrations (78 Docker-based tools)
+  // Wave 1 (6): Core security & performance - OWASP ZAP, Dependency Check, Sitespeed, CodeClimate, Trivy, Grype
+  // Wave 2 (10): Advanced security - Semgrep, Nuclei, Checkov, Syft, Dockle, ShellCheck, tfsec, Gitleaks, Bandit, gosec
+  // Wave 3 (8): Language-specific - PHPStan, Psalm, Brakeman, RuboCop, SpotBugs, PMD, Checkstyle, Detekt
+  // Wave 4 (20): Dependencies, API, Mobile, Cloud Native, AI/ML - OSV Scanner, pip-audit, cargo-audit, Spectral, MobSF, Kubesec, Garak, etc.
+  // Wave 5-8 (34): Extended language support, Cloud compliance, Supply chain - SwiftLint, Cppcheck, Clippy, Ruff, mypy, Prowler, Cosign, etc.
   ...CLOUD_BUILD_INTEGRATIONS,
 ];
 
@@ -234,7 +330,20 @@ export class AuditOrchestrator {
    */
   async runAudit(target: AuditTarget, config: OrchestratorConfig = {}): Promise<AuditReport> {
     const startTime = Date.now();
-    const reportId = `audit-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    // Generate cryptographically secure random ID
+    const randomBytes = new Uint8Array(5);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      crypto.getRandomValues(randomBytes);
+    } else {
+      const nodeCrypto = require('crypto');
+      const nodeRandom = nodeCrypto.randomBytes(5);
+      randomBytes.set(nodeRandom);
+    }
+    const random = Array.from(randomBytes)
+      .map(b => b.toString(36).padStart(2, '0'))
+      .join('')
+      .substring(0, 9);
+    const reportId = `audit-${Date.now()}-${random}`;
 
     // Select tools to run
     let toolsToRun = this.selectTools(config);
@@ -488,4 +597,45 @@ export {
 
   // Chaos
   LitmusChaosIntegration,
+
+  // Complexity
+  KnipIntegration,
+  LizardIntegration,
+  TsPruneIntegration,
+
+  // Documentation
+  ValeIntegration,
+  AlexIntegration,
+  CspellIntegration,
+  WriteGoodIntegration,
+
+  // Database
+  SQLFluffIntegration,
+  PgFormatterIntegration,
+  SchemaSpyIntegration,
+
+  // License
+  LicenseCheckerIntegration,
+  ScanCodeIntegration,
+
+  // Secret Scanning
+  GitleaksIntegration,
+  TrufflehogIntegration,
+  GitSecretsIntegration,
+
+  // IaC Security
+  CheckovIntegration,
+  TfsecIntegration,
+  KubesecIntegration,
+  KubeBenchIntegration,
+  GrypeIntegration,
+  DockleIntegration,
+  HadolintIntegration,
+
+  // API Schema
+  SpectralIntegration,
+  OpenAPIDiffIntegration,
+
+  // Additional Security
+  NucleiIntegration,
 };

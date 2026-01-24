@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminPermission } from '@/lib/admin/middleware';
 import { getAllFeatureFlags, createFeatureFlag } from '@/lib/admin/service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/features
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     const flags = await getAllFeatureFlags();
     return NextResponse.json({ flags });
   } catch (error) {
-    console.error('Failed to get feature flags:', error);
+    logger.error('Failed to get feature flags', { error });
     return NextResponse.json({ error: 'Failed to get feature flags' }, { status: 500 });
   }
 }
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, flag }, { status: 201 });
   } catch (error) {
-    console.error('Failed to create feature flag:', error);
+    logger.error('Failed to create feature flag', { error });
     return NextResponse.json({ error: 'Failed to create feature flag' }, { status: 500 });
   }
 }

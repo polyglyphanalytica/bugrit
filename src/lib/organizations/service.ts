@@ -344,8 +344,13 @@ export async function updateMemberRole(
 /**
  * Get user's organizations
  */
-export async function getUserOrganizations(userId: string) {
-  const snapshot = await db.collection('users').doc(userId).collection('organizations').get();
+export async function getUserOrganizations(userId: string, limit: number = 50) {
+  const snapshot = await db
+    .collection('users')
+    .doc(userId)
+    .collection('organizations')
+    .limit(limit)
+    .get();
 
   return snapshot.docs.map((doc) => doc.data());
 }
@@ -353,24 +358,32 @@ export async function getUserOrganizations(userId: string) {
 /**
  * Get pending invites for an organization
  */
-export async function getPendingInvites(orgId: string): Promise<PendingInvite[]> {
+export async function getPendingInvites(orgId: string, limit: number = 100): Promise<PendingInvite[]> {
   const snapshot = await db
     .collection('organizations')
     .doc(orgId)
     .collection('invites')
+    .limit(limit)
     .get();
 
   const now = new Date();
   const invites: PendingInvite[] = [];
+  const expiredDocs: FirebaseFirestore.DocumentSnapshot[] = [];
 
   for (const doc of snapshot.docs) {
     const invite = doc.data() as PendingInvite;
     if (invite.expiresAt > now) {
       invites.push(invite);
     } else {
-      // Clean up expired invite
-      await doc.ref.delete();
+      expiredDocs.push(doc);
     }
+  }
+
+  // Batch delete expired invites for efficiency
+  if (expiredDocs.length > 0) {
+    const batch = db.batch();
+    expiredDocs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
   }
 
   return invites;

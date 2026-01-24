@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySuperadmin } from '@/lib/admin/middleware';
 import { getAllPlatformAdmins, addPlatformAdmin, removePlatformAdmin } from '@/lib/admin/service';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/admin/admins
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     const admins = await getAllPlatformAdmins();
     return NextResponse.json({ admins });
   } catch (error) {
-    console.error('Failed to get admins:', error);
+    logger.error('Failed to get admins', { error });
     return NextResponse.json({ error: 'Failed to get admins' }, { status: 500 });
   }
 }
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, admin }, { status: 201 });
   } catch (error) {
-    console.error('Failed to add admin:', error);
+    logger.error('Failed to add admin', { error });
     return NextResponse.json({ error: 'Failed to add admin' }, { status: 500 });
   }
 }
@@ -82,7 +83,7 @@ export async function DELETE(request: NextRequest) {
     if (error instanceof Error && error.message.includes('last superadmin')) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    console.error('Failed to remove admin:', error);
+    logger.error('Failed to remove admin', { error });
     return NextResponse.json({ error: 'Failed to remove admin' }, { status: 500 });
   }
 }

@@ -25,7 +25,9 @@ export async function GET(request: NextRequest) {
     const userId = context.apiKey.ownerId;
 
     const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '20', 10);
+    const limitParam = parseInt(url.searchParams.get('limit') || '20', 10);
+    // Validate and clamp limit to reasonable bounds
+    const limit = Math.max(1, Math.min(100, isNaN(limitParam) ? 20 : limitParam));
 
     const sessions = await sessionReportStore.getUserSessions(userId, limit);
 
@@ -91,7 +93,23 @@ export async function POST(request: NextRequest) {
     ];
 
     // Generate scan ID
-    const generatedScanId = scanId || `scan-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    // Generate cryptographically secure scan ID if not provided
+    let generatedScanId = scanId;
+    if (!generatedScanId) {
+      const randomBytes = new Uint8Array(5);
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        crypto.getRandomValues(randomBytes);
+      } else {
+        const nodeCrypto = require('crypto');
+        const nodeRandom = nodeCrypto.randomBytes(5);
+        randomBytes.set(nodeRandom);
+      }
+      const random = Array.from(randomBytes)
+        .map(b => b.toString(36).padStart(2, '0'))
+        .join('')
+        .substring(0, 9);
+      generatedScanId = `scan-${Date.now()}-${random}`;
+    }
 
     // Start streaming audit
     const config: StreamingOrchestratorConfig = {

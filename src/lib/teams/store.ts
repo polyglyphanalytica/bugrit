@@ -246,7 +246,19 @@ export async function deleteTeam(teamId: string): Promise<void> {
 // ═══════════════════════════════════════════════════════════════
 
 function generateTeamId(): string {
-  return `team_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const randomBytes = new Uint8Array(5);
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(randomBytes);
+  } else {
+    const nodeCrypto = require('crypto');
+    const nodeRandom = nodeCrypto.randomBytes(5);
+    randomBytes.set(nodeRandom);
+  }
+  const random = Array.from(randomBytes)
+    .map(b => b.toString(36).padStart(2, '0'))
+    .join('')
+    .substring(0, 9);
+  return `team_${Date.now()}_${random}`;
 }
 
 function slugify(name: string): string {

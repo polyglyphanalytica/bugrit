@@ -18,9 +18,42 @@ import {
   getGitHubConnectionByUser,
   deleteGitHubConnection,
 } from '@/lib/github/connections';
+import { logger } from '@/lib/logger';
 
 // State expires after 10 minutes
 const STATE_MAX_AGE_MS = 10 * 60 * 1000;
+
+// Validate return URL to prevent open redirect attacks
+// Only allow relative paths or paths to our app
+function getSafeReturnUrl(returnUrl: string | undefined, baseUrl: string): string {
+  const defaultPath = '/settings/integrations';
+
+  if (!returnUrl) return defaultPath;
+
+  try {
+    // If it's a relative path starting with /, it's safe
+    if (returnUrl.startsWith('/') && !returnUrl.startsWith('//')) {
+      // Ensure it doesn't contain protocol-relative tricks
+      const cleaned = returnUrl.replace(/[\\]/g, '/');
+      if (cleaned.startsWith('/') && !cleaned.startsWith('//')) {
+        return cleaned;
+      }
+    }
+
+    // If it's an absolute URL, verify it's for our domain
+    const url = new URL(returnUrl, baseUrl);
+    const baseUrlParsed = new URL(baseUrl);
+
+    if (url.host === baseUrlParsed.host) {
+      return url.pathname + url.search;
+    }
+
+    // Not safe, return default
+    return defaultPath;
+  } catch {
+    return defaultPath;
+  }
+}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -34,7 +67,7 @@ export async function GET(request: NextRequest) {
 
   // Handle GitHub error response
   if (error) {
-    console.error('GitHub OAuth error:', error, errorDescription);
+    logger.error('GitHub OAuth error', { error, errorDescription });
     const redirectUrl = new URL('/settings/integrations', baseUrl);
     redirectUrl.searchParams.set('error', error);
     redirectUrl.searchParams.set('error_description', errorDescription || 'Authorization failed');
@@ -108,14 +141,15 @@ export async function GET(request: NextRequest) {
       expiresAt: tokenData.expiresAt,
     });
 
-    // Redirect to success page
-    const redirectUrl = new URL(stateData.returnUrl || '/settings/integrations', baseUrl);
+    // Redirect to success page with validated return URL
+    const safeReturnPath = getSafeReturnUrl(stateData.returnUrl, baseUrl);
+    const redirectUrl = new URL(safeReturnPath, baseUrl);
     redirectUrl.searchParams.set('success', 'github_connected');
     redirectUrl.searchParams.set('username', githubUser.login);
 
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
-    console.error('GitHub OAuth callback error:', error);
+    logger.error('GitHub OAuth callback error', { error });
     const redirectUrl = new URL('/settings/integrations', baseUrl);
     redirectUrl.searchParams.set('error', 'exchange_failed');
     redirectUrl.searchParams.set('error_description', error instanceof Error ? error.message : 'Failed to complete authorization');

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { store } from '@/lib/store';
 import { requirePermission } from '@/lib/api-auth';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(script);
   } catch (error) {
-    console.error('Error fetching script:', error);
+    logger.error('Error fetching script', { error });
     return NextResponse.json(
       { error: 'Failed to fetch script' },
       { status: 500 }
@@ -44,7 +45,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ message: 'Script deleted successfully' });
   } catch (error) {
-    console.error('Error deleting script:', error);
+    logger.error('Error deleting script', { error });
     return NextResponse.json(
       { error: 'Failed to delete script' },
       { status: 500 }

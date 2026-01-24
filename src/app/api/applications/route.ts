@@ -6,6 +6,7 @@ import {
 } from '@/lib/db/applications';
 import { CreateApplicationRequest } from '@/lib/types';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
+import { logger } from '@/lib/logger';
 
 // GET /api/applications - Get all applications for the current user
 export async function GET(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
       count: applications.length,
     });
   } catch (error) {
-    console.error('Error fetching applications:', error);
+    logger.error('Error fetching applications', { error });
     return NextResponse.json(
       { error: 'Failed to fetch applications' },
       { status: 500 }
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error creating application:', error);
+    logger.error('Error creating application', { error });
     return NextResponse.json(
       { error: 'Failed to create application' },
       { status: 500 }
