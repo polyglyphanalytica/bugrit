@@ -226,7 +226,7 @@ function detectLanguage(filePath: string): string {
  * This prompt guides an AI coding agent (Claude, Cursor, Copilot, etc.)
  * to verify the fix branch, confirm it resolves the issues, and merge it.
  */
-export function generateReviewMergePrompt(options: {
+export async function generateReviewMergePrompt(options: {
   repoUrl: string;
   baseBranch: string;
   fixBranch: string;
@@ -366,7 +366,7 @@ If you encounter issues:
 /**
  * Generate a shorter AI agent prompt for quick review
  */
-export function generateQuickReviewPrompt(options: {
+export async function generateQuickReviewPrompt(options: {
   repoUrl: string;
   baseBranch: string;
   fixBranch: string;
@@ -408,7 +408,7 @@ Verify each fix addresses the actual issue before merging. Do not merge if tests
 /**
  * Generate a combined fix prompt for copying to AI assistants
  */
-export function generateCopyablePrompt(
+export async function generateCopyablePrompt(
   findings: GenerateFixInput['finding'][],
   groupByFile: boolean = true
 ): string {
