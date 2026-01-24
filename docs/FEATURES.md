@@ -821,322 +821,1006 @@ Manage preferences at: **Settings → Notifications**
 
 ## 12. Build Your Own Dashboard
 
-Complete AI prompt for building a custom dashboard using Bugrit's API suite.
+Complete AI prompt for building a **fully functional Bugrit dashboard** inside your own application. This covers the entire feature set including billing, credits, tests, scans, and notifications.
 
 ### Overview
 
-This section provides a comprehensive prompt you can give to your AI coding assistant (Claude, Cursor, etc.) to build a dashboard that integrates with Bugrit's APIs. Copy the entire prompt below.
+Copy this comprehensive prompt to your AI coding assistant (Claude, Cursor, GitHub Copilot, etc.) to build a complete Bugrit-integrated dashboard. The only feature that requires redirect to Bugrit is Stripe payment processing.
 
 ### Full Integration Prompt
 
 ````markdown
-# Build a Bugrit-Integrated Dashboard
+# Build a Complete Bugrit-Integrated Dashboard
 
-Create a dashboard application that integrates with the Bugrit API to display code quality metrics, security scans, and notifications. Use the following API reference and requirements.
+Create a fully functional dashboard that integrates with the Bugrit API. This dashboard should replicate the complete Bugrit experience including billing, credits, scans, tests, fixes, and notifications.
 
-## Authentication
+## Environment Setup
 
-All API calls require an API key in the Authorization header:
-```
-Authorization: Bearer YOUR_BUGRIT_API_KEY
-```
-
-Store the API key in environment variables:
-```
+```env
 BUGRIT_API_KEY=your_api_key_here
-BUGRIT_API_URL=https://bugrit.dev/api/v1
+BUGRIT_API_URL=https://bugrit.dev/api
+BUGRIT_APP_URL=https://bugrit.dev
 ```
 
-## Core Features to Implement
-
-### 1. Scan Management
-
-**Start a new scan:**
+All API calls require the API key in the Authorization header:
 ```typescript
-POST /scans
+const headers = {
+  'Authorization': `Bearer ${process.env.BUGRIT_API_KEY}`,
+  'Content-Type': 'application/json'
+};
+```
+
+---
+
+## 1. BILLING & CREDITS SYSTEM
+
+Credits are the currency for running scans. Always check credits before starting scans.
+
+### Get Billing Status
+
+```typescript
+GET /api/billing/status
+
+// Response:
 {
-  "repoUrl": "https://github.com/user/repo",
-  "mode": "standard" // quick | standard | deep | paranoid
-}
-// Returns: { scanId: "scan_abc123", status: "queued" }
-```
-
-**Get scan status and results:**
-```typescript
-GET /scans/{scanId}
-// Returns scan details with findings when complete
-```
-
-**List recent scans:**
-```typescript
-GET /scans?limit=20
-// Returns array of scan summaries
-```
-
-### 2. Vibe Score Display
-
-**Get Vibe Score for a scan:**
-```typescript
-GET /scans/{scanId}/vibe-score
-// Returns:
-{
-  "score": 87,
-  "grade": "B+",
-  "components": {
-    "security": { "score": 92, "weight": 0.30 },
-    "codeQuality": { "score": 85, "weight": 0.25 },
-    "accessibility": { "score": 88, "weight": 0.15 },
-    "performance": { "score": 82, "weight": 0.15 },
-    "dependencies": { "score": 90, "weight": 0.10 },
-    "documentation": { "score": 75, "weight": 0.05 }
+  "tier": "pro",                    // free | starter | pro | business | enterprise
+  "tierName": "Pro",
+  "credits": {
+    "remaining": 4250,              // Available credits
+    "included": 5000,               // Monthly allocation
+    "used": 750,                    // Used this period
+    "rollover": 0,                  // Rolled over from last month
+    "percentUsed": 15               // Usage percentage
   },
-  "achievements": ["Secret Keeper", "Lint Free"],
-  "trend": "improving"
+  "subscription": {
+    "status": "active",             // active | canceled | past_due | none
+    "renewsAt": "2024-02-01T00:00:00Z",
+    "cancelAtPeriodEnd": false
+  },
+  "limits": {
+    "maxProjects": 25,
+    "maxRepoSize": 500000,          // Lines of code
+    "aiFeatures": ["summary", "fix_suggestions", "priority_scoring"]
+  },
+  "canScan": true,                  // Has credits or overage enabled
+  "needsUpgrade": false,            // Low credits, no overage
+  "overageEnabled": true            // Can exceed credits (billed extra)
 }
 ```
 
-**Display requirements:**
-- Large circular score gauge (0-100)
-- Letter grade badge (A+ through F)
-- Breakdown chart showing 6 components
-- Achievement badges with tooltips
-- Trend indicator (improving/declining/stable)
+**UI Requirements:**
+- Display credit balance prominently in header/sidebar
+- Show progress bar of credits used vs included
+- Warning banner when credits < 10% remaining
+- "Upgrade" button when needsUpgrade is true
 
-### 3. Findings List
+### Estimate Scan Cost (REQUIRED before running scans)
 
-**Get findings for a scan:**
 ```typescript
-GET /scans/{scanId}/findings?severity=critical,high&limit=50
-// Returns array of findings with:
-// - id, title, description, severity, file, line
-// - category (security, quality, a11y, perf, deps, docs)
-// - fixAvailable (boolean)
+POST /api/billing/estimate
+{
+  "repoUrl": "https://github.com/user/repo",       // Optional if projectId provided
+  "projectId": "proj_abc123",                      // Optional
+  "estimatedLines": 50000,                         // Optional - auto-estimated if omitted
+  "config": {
+    "categories": ["security", "linting", "accessibility"],
+    "aiFeatures": {
+      "summary": true,
+      "fixSuggestions": true
+    }
+  }
+}
+
+// Response:
+{
+  "estimate": {
+    "total": 125,                   // Total credits needed
+    "breakdown": {
+      "base": 50,                   // Base scan cost
+      "tools": {
+        "security": 30,
+        "linting": 20,
+        "accessibility": 15
+      },
+      "ai": {
+        "summary": 5,
+        "fix_suggestions": 5
+      }
+    },
+    "warnings": []
+  },
+  "canAfford": true,                // User has enough credits
+  "currentBalance": 4250,
+  "overageAmount": 0,               // Credits that would be overage
+  "overageCost": 0,                 // Cost in dollars if overage
+  "warnings": ["Repo size unknown. Estimate assumes small repo."]
+}
 ```
 
-**Display requirements:**
-- Filterable by severity (critical/high/medium/low)
-- Filterable by category
-- Sortable by severity, file, or date
-- Click to expand for full details
-- "Generate Fix" button for fixable issues
+**UI Requirements:**
+- Show estimate breakdown before confirming scan
+- Display warning if canAfford is false
+- Show overage cost if applicable
+- Allow user to adjust categories to reduce cost
 
-### 4. One-Click Fixes
+### Get Usage History
 
-**Generate a fix:**
 ```typescript
-POST /fixes/generate
+GET /api/billing/usage?period=current&include=both&limit=50
+
+// Response:
 {
-  "findingId": "finding_123",
-  "scanId": "scan_456"
+  "period": {
+    "start": "2024-01-01T00:00:00Z",
+    "end": "2024-01-31T23:59:59Z"
+  },
+  "summary": {
+    "totalScans": 23,
+    "totalCreditsUsed": 750,
+    "totalLinesScanned": 1250000,
+    "totalIssuesFound": 142,
+    "byCategory": {
+      "security": { "scans": 23, "credits": 300, "issues": 45 },
+      "linting": { "scans": 20, "credits": 200, "issues": 67 },
+      "accessibility": { "scans": 15, "credits": 150, "issues": 30 }
+    },
+    "byAIFeature": {
+      "summary": { "uses": 23, "credits": 50 },
+      "fix_suggestions": { "uses": 45, "credits": 50 }
+    },
+    "topProjects": [
+      { "projectId": "proj_1", "projectName": "my-app", "scans": 10, "credits": 350 }
+    ]
+  },
+  "transactions": [
+    {
+      "id": "txn_abc",
+      "timestamp": "2024-01-15T10:30:00Z",
+      "type": "scan",               // scan | purchase | refund | bonus
+      "amount": -45,                // Negative = debit, positive = credit
+      "balanceAfter": 4250,
+      "details": { "scanId": "scan_123" }
+    }
+  ]
 }
-// Returns:
+```
+
+**UI Requirements:**
+- Usage dashboard with charts (by category, over time)
+- Transaction history table with filters
+- Top projects by credit consumption
+- Export to CSV option
+
+### Purchase Credits / Upgrade (Redirect to Bugrit)
+
+```typescript
+// For purchasing credits or upgrading subscription, redirect to Bugrit
+const purchaseUrl = `${BUGRIT_APP_URL}/settings/billing?action=purchase&returnUrl=${encodeURIComponent(window.location.href)}`;
+window.location.href = purchaseUrl;
+
+// For specific tier upgrade:
+const upgradeUrl = `${BUGRIT_APP_URL}/settings/billing?action=upgrade&tier=pro&returnUrl=${encodeURIComponent(window.location.href)}`;
+window.location.href = upgradeUrl;
+```
+
+**UI Requirements:**
+- "Buy Credits" button opens Bugrit billing page
+- "Upgrade Plan" button with tier selection
+- Return URL brings user back after purchase
+
+---
+
+## 2. PROJECT MANAGEMENT
+
+### List Projects
+
+```typescript
+GET /api/v1/projects?page=1&per_page=20
+
+// Response:
 {
-  "canFix": true,
-  "confidence": "high",
-  "fix": {
-    "description": "Sanitize user input",
-    "diff": "--- a/file.ts\n+++ b/file.ts\n...",
-    "beforeCode": "...",
-    "afterCode": "...",
-    "explanation": "..."
+  "data": [
+    {
+      "id": "proj_abc123",
+      "name": "my-awesome-app",
+      "repositoryUrl": "https://github.com/user/my-awesome-app",
+      "platform": "web",            // web | ios | android | desktop
+      "lastScanAt": "2024-01-15T10:30:00Z",
+      "lastScore": 87,
+      "totalScans": 23,
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": { "page": 1, "perPage": 20, "total": 5 }
+}
+```
+
+### Create Project
+
+```typescript
+POST /api/v1/projects
+{
+  "name": "my-new-project",
+  "repositoryUrl": "https://github.com/user/repo",
+  "platform": "web",
+  "description": "My awesome project"
+}
+
+// Response:
+{
+  "data": {
+    "id": "proj_new123",
+    "name": "my-new-project",
+    ...
   }
 }
 ```
 
-**Apply fixes to branch:**
+**UI Requirements:**
+- Project list with search/filter
+- Project cards showing last score, scan count
+- "New Project" modal with repo URL input
+- Click project to see scan history
+
+---
+
+## 3. SCAN MANAGEMENT
+
+### Start a Scan (with credit check)
+
 ```typescript
-POST /fixes/apply
-{
-  "scanId": "scan_456",
-  "findingIds": ["finding_1", "finding_2"],
-  "branchName": "bugrit/fixes-abc123"
+// STEP 1: Estimate cost first
+const estimate = await fetch('/api/billing/estimate', {
+  method: 'POST',
+  headers,
+  body: JSON.stringify({
+    projectId: 'proj_abc123',
+    config: {
+      categories: ['security', 'linting', 'accessibility'],
+      mode: 'standard',             // quick | standard | deep | paranoid
+      aiFeatures: { summary: true, fixSuggestions: true }
+    }
+  })
+});
+
+// STEP 2: If can afford, start scan
+if (estimate.canAfford) {
+  const scan = await fetch('/api/v1/scans', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      projectId: 'proj_abc123',
+      platform: 'web',
+      branch: 'main',               // Optional
+      commitSha: 'abc123',          // Optional
+      config: {
+        mode: 'standard',
+        categories: ['security', 'linting', 'accessibility', 'performance'],
+        aiFeatures: {
+          summary: true,
+          fixSuggestions: true,
+          priorityScoring: true
+        }
+      }
+    })
+  });
 }
-// Returns: { branchUrl: "...", prUrl: "..." }
+
+// Response:
+{
+  "data": {
+    "id": "scan_xyz789",
+    "status": "queued",             // queued | running | completed | failed
+    "projectId": "proj_abc123",
+    "creditsReserved": 125,
+    "estimatedDuration": 180,       // Seconds
+    "createdAt": "2024-01-15T10:30:00Z"
+  }
+}
 ```
 
-**Display requirements:**
-- Show diff with syntax highlighting
-- Before/after code comparison
-- Confidence indicator
-- Batch selection for multiple fixes
-- "Apply Selected" button
+### Scan Modes
 
-### 5. Notifications Center
+| Mode | Duration | Categories | AI Features | Credits |
+|------|----------|------------|-------------|---------|
+| quick | ~30s | Security only | None | ~20 |
+| standard | ~3min | Security, Linting, Deps | Summary | ~50-100 |
+| deep | ~10min | All 11 categories | All | ~150-300 |
+| paranoid | ~30min | All + manual suggestions | All + explanations | ~300-500 |
 
-**Get notifications:**
+### Scan Categories
+
 ```typescript
-GET /notifications
-// Returns:
+const CATEGORIES = [
+  'security',       // OWASP, secrets, vulnerabilities
+  'linting',        // ESLint, code style
+  'dependencies',   // Outdated packages, CVEs
+  'accessibility',  // WCAG compliance
+  'performance',    // Bundle size, Core Web Vitals
+  'quality',        // Complexity, duplication
+  'documentation',  // README, inline docs
+  'git',            // Commit hygiene, branch protection
+  'mobile',         // iOS/Android specific
+  'api-security',   // API endpoint security
+  'cloud-native'    // Container, K8s security
+];
+```
+
+### Poll Scan Status
+
+```typescript
+GET /api/v1/scans/{scanId}
+
+// Response when running:
+{
+  "data": {
+    "id": "scan_xyz789",
+    "status": "running",
+    "progress": 45,                 // Percentage
+    "currentStep": "Running security scanners...",
+    "startedAt": "2024-01-15T10:30:05Z"
+  }
+}
+
+// Response when completed:
+{
+  "data": {
+    "id": "scan_xyz789",
+    "status": "completed",
+    "vibeScore": 87,
+    "grade": "B+",
+    "summary": {
+      "totalFindings": 23,
+      "critical": 0,
+      "high": 3,
+      "medium": 12,
+      "low": 8
+    },
+    "creditsCharged": 118,
+    "duration": 165,
+    "completedAt": "2024-01-15T10:32:50Z"
+  }
+}
+```
+
+**Polling implementation:**
+```typescript
+async function pollScan(scanId: string, onUpdate: (scan) => void) {
+  const poll = async () => {
+    const res = await fetch(`/api/v1/scans/${scanId}`, { headers });
+    const { data: scan } = await res.json();
+    onUpdate(scan);
+
+    if (scan.status === 'running' || scan.status === 'queued') {
+      setTimeout(poll, 3000); // Poll every 3 seconds
+    }
+  };
+  poll();
+}
+```
+
+### List Scans
+
+```typescript
+GET /api/v1/scans?project_id=proj_abc&status=completed&page=1&per_page=20
+
+// Response:
+{
+  "data": [
+    {
+      "id": "scan_xyz789",
+      "projectId": "proj_abc123",
+      "status": "completed",
+      "vibeScore": 87,
+      "grade": "B+",
+      "findingsCount": 23,
+      "createdAt": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "pagination": { "page": 1, "perPage": 20, "total": 23 }
+}
+```
+
+---
+
+## 4. VIBE SCORE & FINDINGS
+
+### Get Vibe Score
+
+```typescript
+GET /api/v1/scans/{scanId}/vibe-score
+
+// Response:
+{
+  "score": 87,
+  "grade": "B+",
+  "components": {
+    "security": { "score": 92, "weight": 0.30, "findings": 3 },
+    "codeQuality": { "score": 85, "weight": 0.25, "findings": 8 },
+    "accessibility": { "score": 88, "weight": 0.15, "findings": 4 },
+    "performance": { "score": 82, "weight": 0.15, "findings": 5 },
+    "dependencies": { "score": 90, "weight": 0.10, "findings": 2 },
+    "documentation": { "score": 75, "weight": 0.05, "findings": 1 }
+  },
+  "achievements": ["Secret Keeper", "Lint Free", "Fresh Dependencies"],
+  "trend": "improving",             // improving | declining | stable
+  "previousScore": 82
+}
+```
+
+**UI Requirements:**
+- Large circular gauge (0-100) with animated fill
+- Letter grade badge with color coding
+- Radar/spider chart for 6 components
+- Achievement badges with tooltips
+- Trend arrow with previous score
+
+### Get Findings
+
+```typescript
+GET /api/v1/scans/{scanId}/findings?severity=critical,high&category=security&page=1&per_page=50
+
+// Response:
+{
+  "data": [
+    {
+      "id": "finding_abc123",
+      "title": "SQL Injection Vulnerability",
+      "description": "User input is concatenated directly into SQL query without sanitization.",
+      "severity": "critical",       // critical | high | medium | low
+      "category": "security",
+      "file": "src/api/users.ts",
+      "line": 42,
+      "column": 15,
+      "codeSnippet": "const query = `SELECT * FROM users WHERE id = ${userId}`;",
+      "fixAvailable": true,
+      "learnMoreUrl": "/learning/sql-injection",
+      "cweId": "CWE-89",
+      "effort": "low",              // low | medium | high
+      "metadata": {
+        "tool": "semgrep",
+        "rule": "javascript.sql-injection"
+      }
+    }
+  ],
+  "pagination": { "page": 1, "perPage": 50, "total": 23 },
+  "facets": {
+    "severity": { "critical": 0, "high": 3, "medium": 12, "low": 8 },
+    "category": { "security": 5, "linting": 10, "accessibility": 8 }
+  }
+}
+```
+
+**UI Requirements:**
+- Findings table with sortable columns
+- Severity filter chips (with counts)
+- Category filter dropdown
+- Click row to expand details
+- Code snippet with syntax highlighting
+- "Generate Fix" button for fixable issues
+
+---
+
+## 5. ONE-CLICK FIXES
+
+### Generate Fix
+
+```typescript
+POST /api/v1/fixes/generate
+{
+  "findingId": "finding_abc123",
+  "scanId": "scan_xyz789"
+}
+
+// Response:
+{
+  "canFix": true,
+  "confidence": "high",             // high | medium | low
+  "creditsRequired": 2,
+  "fix": {
+    "description": "Use parameterized queries to prevent SQL injection",
+    "diff": "--- a/src/api/users.ts\n+++ b/src/api/users.ts\n@@ -42,1 +42,1 @@\n-const query = `SELECT * FROM users WHERE id = ${userId}`;\n+const query = 'SELECT * FROM users WHERE id = ?';",
+    "beforeCode": "const query = `SELECT * FROM users WHERE id = ${userId}`;",
+    "afterCode": "const query = 'SELECT * FROM users WHERE id = ?';",
+    "explanation": "Parameterized queries separate SQL code from data, preventing attackers from injecting malicious SQL. The ? placeholder is safely escaped by the database driver.",
+    "additionalChanges": [
+      { "file": "src/api/users.ts", "line": 43, "change": "Add userId to query parameters array" }
+    ]
+  }
+}
+```
+
+### Apply Fixes (Batch)
+
+```typescript
+POST /api/v1/fixes/apply
+{
+  "scanId": "scan_xyz789",
+  "findingIds": ["finding_abc123", "finding_def456", "finding_ghi789"],
+  "branchName": "bugrit/fixes-xyz789",  // Optional, auto-generated if omitted
+  "commitMessage": "fix: Apply Bugrit security fixes",  // Optional
+  "createPR": true                      // Create pull request
+}
+
+// Response:
+{
+  "success": true,
+  "branch": "bugrit/fixes-xyz789",
+  "branchUrl": "https://github.com/user/repo/tree/bugrit/fixes-xyz789",
+  "pullRequest": {
+    "number": 42,
+    "url": "https://github.com/user/repo/pull/42",
+    "title": "fix: Apply Bugrit security fixes (3 issues)"
+  },
+  "appliedFixes": 3,
+  "skippedFixes": 0,
+  "creditsCharged": 6
+}
+```
+
+**UI Requirements:**
+- Fix preview modal with diff viewer
+- Before/after code comparison
+- Confidence badge
+- Batch selection checkboxes
+- "Apply Selected" button with count
+- Progress indicator during apply
+
+---
+
+## 6. TEST MANAGEMENT
+
+### List Test Cases
+
+```typescript
+GET /api/v1/tests?scanId=scan_xyz789&page=1&per_page=50
+
+// Response:
+{
+  "data": [
+    {
+      "id": "tc_abc123",
+      "name": "User Login Flow",
+      "suite": "Authentication",
+      "status": "passed",           // passed | failed | skipped | error
+      "duration": 2340,             // Milliseconds
+      "platform": "web",
+      "steps": [
+        "Navigate to login page",
+        "Enter credentials",
+        "Click submit",
+        "Verify dashboard loads"
+      ],
+      "lastRunAt": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "pagination": { "page": 1, "perPage": 50, "total": 45 }
+}
+```
+
+### Run Tests
+
+```typescript
+POST /api/test-runs
+{
+  "testCaseId": "tc_abc123",
+  "testCaseName": "User Login Flow",
+  "runnerType": "playwright",       // playwright | appium | tauri-driver
+  "config": {
+    "browser": "chromium",
+    "headless": true,
+    "viewport": { "width": 1280, "height": 720 }
+  },
+  "code": "// Optional: custom test code override"
+}
+
+// Response:
+{
+  "id": "run_xyz789",
+  "status": "running",
+  "testCaseId": "tc_abc123",
+  "testCaseName": "User Login Flow",
+  "startedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+### Get Test Run Results
+
+```typescript
+GET /api/test-runs/{runId}
+
+// Response:
+{
+  "id": "run_xyz789",
+  "status": "passed",               // running | passed | failed | error
+  "testCaseId": "tc_abc123",
+  "testCaseName": "User Login Flow",
+  "duration": 4523,                 // Milliseconds
+  "startedAt": "2024-01-15T10:30:00Z",
+  "completedAt": "2024-01-15T10:30:04Z",
+  "logs": [
+    "✓ Navigated to login page",
+    "✓ Entered credentials",
+    "✓ Clicked submit",
+    "✓ Dashboard loaded successfully"
+  ],
+  "screenshots": [
+    { "step": "login_page", "url": "https://storage.bugrit.dev/screenshots/..." },
+    { "step": "dashboard", "url": "https://storage.bugrit.dev/screenshots/..." }
+  ],
+  "error": null                     // Error message if failed
+}
+```
+
+### Submit Test Results (from CI/CD)
+
+```typescript
+POST /api/v1/tests
+{
+  "projectId": "proj_abc123",
+  "platform": "web",
+  "branch": "main",
+  "commitSha": "abc123def",
+  "testCases": [
+    {
+      "name": "User Login",
+      "suite": "Auth",
+      "status": "passed",
+      "duration": 1234
+    },
+    {
+      "name": "Password Reset",
+      "suite": "Auth",
+      "status": "failed",
+      "duration": 2345,
+      "error": "Timeout waiting for email"
+    }
+  ]
+}
+
+// Response:
+{
+  "scanId": "scan_tests_xyz",
+  "status": "completed",
+  "summary": {
+    "total": 2,
+    "passed": 1,
+    "failed": 1,
+    "skipped": 0
+  }
+}
+```
+
+**UI Requirements:**
+- Test suite tree view (collapsible)
+- Test case list with status badges
+- "Run" button for individual tests
+- "Run All" button for suite
+- Real-time log streaming during run
+- Screenshot gallery for visual tests
+
+---
+
+## 7. NOTIFICATIONS
+
+### Get Notifications
+
+```typescript
+GET /api/notifications
+
+// Response:
 {
   "notifications": [
     {
       "id": "notif_abc",
       "type": "scan_completed",
-      "title": "Scan completed",
-      "message": "Found 5 issues",
-      "severity": "success",
-      "actionUrl": "/scans/scan_123",
+      "title": "Scan completed - 3 critical issues",
+      "message": "Your scan of my-app found 3 critical and 5 high severity issues.",
+      "severity": "warning",        // info | success | warning | error
+      "actionUrl": "/scans/scan_xyz789",
+      "actionLabel": "View Report",
       "read": false,
-      "createdAt": "2024-01-15T10:30:00Z"
+      "createdAt": "2024-01-15T10:32:50Z"
     }
   ],
   "unreadCount": 3
 }
 ```
 
-**Mark as read:**
+### Mark as Read
+
 ```typescript
-POST /notifications
-{ "action": "markRead", "notificationId": "notif_abc" }
+POST /api/notifications
+{
+  "action": "markRead",
+  "notificationId": "notif_abc"
+}
 
 // Or mark all:
-POST /notifications
-{ "action": "markAllRead" }
+POST /api/notifications
+{
+  "action": "markAllRead"
+}
 ```
 
-**Get/update preferences:**
+### Get/Update Preferences
+
 ```typescript
-GET /notifications/preferences
-PATCH /notifications/preferences
+GET /api/notifications/preferences
+
+PATCH /api/notifications/preferences
 {
+  "globalEnabled": true,
+  "quietHoursEnabled": true,
+  "quietHoursStart": "22:00",
+  "quietHoursEnd": "08:00",
   "channels": {
     "email": { "enabled": true, "digestMode": "daily" },
-    "inApp": { "enabled": true },
-    "push": { "enabled": false }
+    "inApp": { "enabled": true, "showBadge": true },
+    "push": { "enabled": true }
   },
   "events": {
-    "scan_completed": { "enabled": true, "channels": ["email", "in_app"] }
+    "scan_completed": { "enabled": true, "channels": ["in_app"] },
+    "scan_failed": { "enabled": true, "channels": ["email", "in_app"] },
+    "security_alert": { "enabled": true, "channels": ["email", "in_app", "push"] },
+    "credit_low": { "enabled": true, "channels": ["email", "in_app"] }
   }
 }
 ```
 
-**Display requirements:**
-- Bell icon with unread count badge
-- Dropdown/panel showing recent notifications
-- Click to navigate to related item
-- Mark as read on click
-- Link to full settings page
+**UI Requirements:**
+- Bell icon in header with unread badge
+- Dropdown panel showing recent notifications
+- Click to navigate, mark as read
+- Settings page for preferences
+- Poll every 30 seconds for updates
 
-### 6. Test Runs (Optional)
+---
 
-**Run a test:**
+## 8. TEAM MANAGEMENT
+
+### Get Team Dashboard
+
 ```typescript
-POST /test-runs
+GET /api/v1/teams/{teamId}/dashboard
+
+// Response:
 {
-  "testCaseId": "tc_123",
-  "testCaseName": "Login Flow",
-  "runnerType": "playwright"
-}
-```
-
-**Get test results:**
-```typescript
-GET /test-runs/{testRunId}
-// Returns status, duration, logs, screenshots
-```
-
-### 7. Team Dashboard (Optional)
-
-**Get team stats:**
-```typescript
-GET /teams/{teamId}/dashboard
-// Returns:
-{
+  "team": {
+    "id": "team_abc",
+    "name": "Engineering",
+    "memberCount": 8
+  },
   "stats": {
     "totalScans": 150,
     "averageScore": 82,
     "issuesFixed": 423,
+    "creditsUsed": 2340,
     "trend": "+5%"
   },
   "recentScans": [...],
-  "topIssues": [...]
+  "topIssues": [
+    { "type": "sql-injection", "count": 12 },
+    { "type": "xss", "count": 8 }
+  ],
+  "memberActivity": [
+    { "userId": "user_1", "name": "Alice", "scansThisWeek": 5 }
+  ]
 }
 ```
 
-## UI Components to Build
+### Invite Team Member
 
-1. **Dashboard Home**
-   - Summary cards (total scans, avg score, issues fixed)
-   - Recent scans list with status badges
-   - Quick scan button
-
-2. **Scan Detail Page**
-   - Vibe Score gauge
-   - Findings table with filters
-   - Fix generation panel
-   - Scan metadata (repo, branch, date, duration)
-
-3. **Notification Bell**
-   - Icon in header/nav
-   - Badge with unread count
-   - Dropdown with notification list
-   - Settings link
-
-4. **Settings Pages**
-   - API key management
-   - Notification preferences
-   - Team settings (if applicable)
-
-## Polling & Real-time Updates
-
-For scan status, poll every 5 seconds while status is "running":
 ```typescript
-const pollScan = async (scanId: string) => {
-  const scan = await fetch(`/scans/${scanId}`);
-  if (scan.status === 'running') {
-    setTimeout(() => pollScan(scanId), 5000);
+POST /api/v1/teams/{teamId}/invites
+{
+  "email": "newdev@company.com",
+  "role": "member"                  // owner | admin | member | viewer
+}
+```
+
+---
+
+## UI COMPONENTS TO BUILD
+
+### 1. Dashboard Home
+- Credit balance card with usage bar
+- Quick scan button with cost estimate
+- Recent scans list with scores
+- Team activity feed (if team)
+- Notification bell
+
+### 2. Projects Page
+- Project grid/list view
+- Search and filter
+- New project modal
+- Project cards with last score
+
+### 3. Scan Page
+- Scan configuration wizard:
+  1. Select project/enter URL
+  2. Choose categories (with credit cost)
+  3. Select AI features (with credit cost)
+  4. Review total cost
+  5. Confirm and start
+- Progress indicator during scan
+- Results page with Vibe Score
+
+### 4. Findings Page
+- Severity filter pills
+- Category dropdown
+- Searchable table
+- Fix preview modal
+- Batch fix selection
+
+### 5. Tests Page
+- Test suite tree
+- Run controls
+- Live log viewer
+- Screenshot viewer
+
+### 6. Billing Page
+- Credit balance
+- Usage charts
+- Transaction history
+- Upgrade/purchase buttons (redirect to Bugrit)
+
+### 7. Settings Page
+- Notification preferences
+- API key display
+- Team management
+
+---
+
+## POLLING & REAL-TIME
+
+```typescript
+// Scan status polling
+function useScanPolling(scanId: string) {
+  const [scan, setScan] = useState(null);
+
+  useEffect(() => {
+    if (!scanId) return;
+
+    const poll = async () => {
+      const res = await fetch(`/api/v1/scans/${scanId}`, { headers });
+      const data = await res.json();
+      setScan(data.data);
+
+      if (data.data.status === 'running' || data.data.status === 'queued') {
+        setTimeout(poll, 3000);
+      }
+    };
+    poll();
+  }, [scanId]);
+
+  return scan;
+}
+
+// Notifications polling
+function useNotifications() {
+  const [notifications, setNotifications] = useState({ items: [], unread: 0 });
+
+  useEffect(() => {
+    const poll = async () => {
+      const res = await fetch('/api/notifications', { headers });
+      const data = await res.json();
+      setNotifications({ items: data.notifications, unread: data.unreadCount });
+    };
+
+    poll();
+    const interval = setInterval(poll, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return notifications;
+}
+
+// Credit balance polling (less frequent)
+function useCreditBalance() {
+  const [balance, setBalance] = useState(null);
+
+  useEffect(() => {
+    const poll = async () => {
+      const res = await fetch('/api/billing/status', { headers });
+      setBalance(await res.json());
+    };
+
+    poll();
+    const interval = setInterval(poll, 60000); // Every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  return balance;
+}
+```
+
+---
+
+## ERROR HANDLING
+
+```typescript
+async function apiCall(url: string, options?: RequestInit) {
+  const res = await fetch(url, { ...options, headers });
+
+  if (!res.ok) {
+    const error = await res.json();
+
+    switch (res.status) {
+      case 401:
+        // Redirect to API key setup or login
+        window.location.href = '/settings/api-key';
+        break;
+      case 402:
+        // Insufficient credits - show upgrade modal
+        showUpgradeModal(error.message);
+        break;
+      case 403:
+        toast.error('Access denied');
+        break;
+      case 404:
+        toast.error('Resource not found');
+        break;
+      case 429:
+        toast.error('Rate limited. Please wait and try again.');
+        break;
+      default:
+        toast.error(error.message || 'An error occurred');
+    }
+
+    throw new Error(error.message);
   }
-};
+
+  return res.json();
+}
 ```
 
-For notifications, poll every 30 seconds:
-```typescript
-setInterval(async () => {
-  const { unreadCount } = await fetch('/notifications');
-  updateBadge(unreadCount);
-}, 30000);
-```
+---
 
-## Error Handling
+## STYLING GUIDE
 
-Handle these HTTP status codes:
-- 401: Redirect to login / show "API key invalid"
-- 403: Show "Insufficient permissions"
-- 404: Show "Resource not found"
-- 429: Show "Rate limited, try again later"
-- 500: Show "Server error, please retry"
+- **Severity colors:**
+  - Critical: red-600 (#dc2626)
+  - High: orange-500 (#f97316)
+  - Medium: yellow-500 (#eab308)
+  - Low: blue-500 (#3b82f6)
 
-## Styling Recommendations
+- **Status colors:**
+  - Success/Passed: green-500 (#22c55e)
+  - Failed/Error: red-500 (#ef4444)
+  - Running: blue-500 (#3b82f6)
+  - Queued: gray-400 (#9ca3af)
 
-- Use color coding for severity: red (critical), orange (high), yellow (medium), blue (low)
-- Use green for passing/success, red for failing/error
-- Show loading skeletons during API calls
-- Toast notifications for actions (fix applied, settings saved)
+- **Grade colors:**
+  - A+/A/A-: green-500
+  - B+/B/B-: lime-500
+  - C+/C/C-: yellow-500
+  - D/F: red-500
+
+- Use loading skeletons during API calls
+- Toast notifications for actions
+- Confirm dialogs for destructive actions
 ````
 
 ### Quick Start Prompt
 
-For a simpler starting point, use this condensed version:
+For a minimal implementation, use this condensed version:
 
 ```
-Build a React dashboard that:
+Build a React/Next.js dashboard for Bugrit API integration with these features:
 
-1. Connects to Bugrit API (https://bugrit.dev/api/v1) with API key auth
-2. Shows a list of scans with their Vibe Scores
-3. Displays findings for each scan, filterable by severity
-4. Has a notification bell showing unread count
-5. Allows starting new scans via URL input
+1. **Credit Balance** - GET /api/billing/status, show remaining credits in header
+2. **Scan Cost Estimate** - POST /api/billing/estimate before running scans
+3. **Project List** - GET /api/v1/projects, display as cards with last score
+4. **Start Scan** - POST /api/v1/scans with category/mode selection
+5. **Scan Results** - GET /api/v1/scans/{id} with polling, show Vibe Score gauge
+6. **Findings Table** - GET /api/v1/scans/{id}/findings, filter by severity
+7. **Generate Fix** - POST /api/v1/fixes/generate, show diff preview
+8. **Notifications** - GET /api/notifications, bell icon with badge
 
-API endpoints needed:
-- GET /scans - list scans
-- POST /scans - start scan
-- GET /scans/{id} - scan details
-- GET /scans/{id}/vibe-score - get score
-- GET /scans/{id}/findings - get findings
-- GET /notifications - get notifications
-- POST /notifications - mark as read
+For payments, redirect to: https://bugrit.dev/settings/billing?returnUrl={currentUrl}
 
-Use Tailwind CSS and shadcn/ui components.
+Use Tailwind CSS and shadcn/ui. Show credit cost before every scan.
 ```
 
 ---
