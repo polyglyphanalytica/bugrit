@@ -14,6 +14,7 @@ import {
   releaseReservation,
 } from '@/lib/billing';
 import { ToolCategory, TOOL_COUNT } from '@/lib/tools/registry';
+import { getAccessTokenForUser } from '@/lib/github/connections';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -151,6 +152,21 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields: applicationId, sourceType' },
         { status: 400 }
       );
+    }
+
+    // Auto-inject GitHub access token if user has connected their account
+    // This enables scanning private repos without manually providing tokens
+    if ((sourceType === 'github' || sourceType === 'gitlab') && !accessToken) {
+      try {
+        const storedToken = await getAccessTokenForUser(userId);
+        if (storedToken) {
+          accessToken = storedToken;
+          logger.info('Using stored GitHub token for scan', { userId, sourceType });
+        }
+      } catch (error) {
+        logger.warn('Failed to retrieve stored GitHub token', { userId, error });
+        // Continue without token - scan may still work for public repos
+      }
     }
 
     // Validate based on source type
