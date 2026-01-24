@@ -16,6 +16,7 @@ Complete documentation for all Bugrit features, including API access and AI agen
 8. [Team Features](#8-team-features)
 9. [Explain My Codebase](#9-explain-my-codebase)
 10. [Trust Badge System](#10-trust-badge-system)
+11. [Notifications](#11-notifications)
 
 ---
 
@@ -639,6 +640,181 @@ Add this script just before </body>:
 
 The badge cannot be faked - it fetches the real score from Bugrit's API.
 ```
+
+---
+
+## 11. Notifications
+
+Multi-channel notification system for staying informed about scan results, security alerts, and more.
+
+### Notification Channels
+
+| Channel | Description | Default |
+|---------|-------------|---------|
+| **Email** | Delivered via Resend API | On |
+| **In-App** | Bell icon in dashboard nav | On |
+| **Push** | Mobile/desktop via FCM | Off (opt-in) |
+
+### Notification Event Types
+
+| Event | Description | Transactional |
+|-------|-------------|---------------|
+| `scan_completed` | Scan finished with results | No |
+| `scan_failed` | Scan encountered an error | No |
+| `test_completed` | Test run finished | No |
+| `test_failed` | Test execution failed | No |
+| `fix_branch_ready` | AI-generated fixes are ready | No |
+| `weekly_summary` | Weekly activity digest | No |
+| `security_alert` | Critical/high severity findings | Yes |
+| `credit_low` | Credits running low | Yes |
+| `subscription_update` | Billing/plan changes | Yes |
+| `team_invite` | Invited to join a team | Yes |
+
+**Transactional notifications** always include email and cannot be fully disabled.
+
+### API Access
+
+```bash
+# Get user notifications
+GET /api/notifications
+
+# Response
+{
+  "notifications": [
+    {
+      "id": "notif_abc123",
+      "type": "scan_completed",
+      "title": "Scan completed - 5 findings",
+      "message": "Your scan of my-app found 5 issues...",
+      "severity": "success",
+      "actionUrl": "/scans/scan_123",
+      "read": false,
+      "createdAt": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "unreadCount": 3
+}
+
+# Mark notification as read
+POST /api/notifications
+Content-Type: application/json
+
+{
+  "action": "markRead",
+  "notificationId": "notif_abc123"
+}
+
+# Mark all as read
+POST /api/notifications
+Content-Type: application/json
+
+{
+  "action": "markAllRead"
+}
+
+# Delete old notifications (used by cron)
+DELETE /api/notifications?olderThanDays=30
+```
+
+### Notification Preferences API
+
+```bash
+# Get notification preferences
+GET /api/notifications/preferences
+
+# Response
+{
+  "globalEnabled": true,
+  "quietHoursEnabled": false,
+  "quietHoursStart": "22:00",
+  "quietHoursEnd": "08:00",
+  "timezone": "America/New_York",
+  "channels": {
+    "email": {
+      "enabled": true,
+      "digestMode": "immediate"
+    },
+    "inApp": {
+      "enabled": true,
+      "showBadge": true,
+      "playSound": false
+    },
+    "push": {
+      "enabled": false,
+      "deviceTokens": []
+    }
+  },
+  "events": {
+    "scan_completed": {
+      "enabled": true,
+      "channels": ["email", "in_app"]
+    },
+    "security_alert": {
+      "enabled": true,
+      "channels": ["email", "in_app", "push"]
+    }
+  }
+}
+
+# Update notification preferences
+PATCH /api/notifications/preferences
+Content-Type: application/json
+
+{
+  "globalEnabled": true,
+  "quietHoursEnabled": true,
+  "quietHoursStart": "22:00",
+  "quietHoursEnd": "08:00",
+  "channels": {
+    "email": {
+      "enabled": true,
+      "digestMode": "daily"
+    }
+  },
+  "events": {
+    "weekly_summary": {
+      "enabled": false,
+      "channels": []
+    }
+  }
+}
+
+# Initialize preferences during signup
+POST /api/notifications/preferences/init
+Authorization: Bearer {firebase_id_token}
+Content-Type: application/json
+
+{
+  "emailEnabled": true,
+  "pushEnabled": false
+}
+```
+
+### Quiet Hours
+
+Configure times when non-urgent notifications are held:
+
+- Transactional notifications (security alerts, billing) bypass quiet hours
+- In-app notifications are always delivered (just stored)
+- Held notifications are delivered when quiet hours end
+
+### Email Digest Modes
+
+| Mode | Description |
+|------|-------------|
+| `immediate` | Send each notification as it happens |
+| `daily` | Bundle into daily digest at 9am |
+| `weekly` | Bundle into weekly digest on Mondays |
+
+### Settings UI
+
+Manage preferences at: **Settings → Notifications**
+
+- Toggle global notifications on/off
+- Configure quiet hours with timezone
+- Enable/disable individual channels
+- Customize per-event notification preferences
+- Register devices for push notifications
 
 ---
 
