@@ -17,6 +17,7 @@ Complete documentation for all Bugrit features, including API access and AI agen
 9. [Explain My Codebase](#9-explain-my-codebase)
 10. [Trust Badge System](#10-trust-badge-system)
 11. [Notifications](#11-notifications)
+12. [Build Your Own Dashboard](#12-build-your-own-dashboard)
 
 ---
 
@@ -815,6 +816,328 @@ Manage preferences at: **Settings → Notifications**
 - Enable/disable individual channels
 - Customize per-event notification preferences
 - Register devices for push notifications
+
+---
+
+## 12. Build Your Own Dashboard
+
+Complete AI prompt for building a custom dashboard using Bugrit's API suite.
+
+### Overview
+
+This section provides a comprehensive prompt you can give to your AI coding assistant (Claude, Cursor, etc.) to build a dashboard that integrates with Bugrit's APIs. Copy the entire prompt below.
+
+### Full Integration Prompt
+
+````markdown
+# Build a Bugrit-Integrated Dashboard
+
+Create a dashboard application that integrates with the Bugrit API to display code quality metrics, security scans, and notifications. Use the following API reference and requirements.
+
+## Authentication
+
+All API calls require an API key in the Authorization header:
+```
+Authorization: Bearer YOUR_BUGRIT_API_KEY
+```
+
+Store the API key in environment variables:
+```
+BUGRIT_API_KEY=your_api_key_here
+BUGRIT_API_URL=https://bugrit.dev/api/v1
+```
+
+## Core Features to Implement
+
+### 1. Scan Management
+
+**Start a new scan:**
+```typescript
+POST /scans
+{
+  "repoUrl": "https://github.com/user/repo",
+  "mode": "standard" // quick | standard | deep | paranoid
+}
+// Returns: { scanId: "scan_abc123", status: "queued" }
+```
+
+**Get scan status and results:**
+```typescript
+GET /scans/{scanId}
+// Returns scan details with findings when complete
+```
+
+**List recent scans:**
+```typescript
+GET /scans?limit=20
+// Returns array of scan summaries
+```
+
+### 2. Vibe Score Display
+
+**Get Vibe Score for a scan:**
+```typescript
+GET /scans/{scanId}/vibe-score
+// Returns:
+{
+  "score": 87,
+  "grade": "B+",
+  "components": {
+    "security": { "score": 92, "weight": 0.30 },
+    "codeQuality": { "score": 85, "weight": 0.25 },
+    "accessibility": { "score": 88, "weight": 0.15 },
+    "performance": { "score": 82, "weight": 0.15 },
+    "dependencies": { "score": 90, "weight": 0.10 },
+    "documentation": { "score": 75, "weight": 0.05 }
+  },
+  "achievements": ["Secret Keeper", "Lint Free"],
+  "trend": "improving"
+}
+```
+
+**Display requirements:**
+- Large circular score gauge (0-100)
+- Letter grade badge (A+ through F)
+- Breakdown chart showing 6 components
+- Achievement badges with tooltips
+- Trend indicator (improving/declining/stable)
+
+### 3. Findings List
+
+**Get findings for a scan:**
+```typescript
+GET /scans/{scanId}/findings?severity=critical,high&limit=50
+// Returns array of findings with:
+// - id, title, description, severity, file, line
+// - category (security, quality, a11y, perf, deps, docs)
+// - fixAvailable (boolean)
+```
+
+**Display requirements:**
+- Filterable by severity (critical/high/medium/low)
+- Filterable by category
+- Sortable by severity, file, or date
+- Click to expand for full details
+- "Generate Fix" button for fixable issues
+
+### 4. One-Click Fixes
+
+**Generate a fix:**
+```typescript
+POST /fixes/generate
+{
+  "findingId": "finding_123",
+  "scanId": "scan_456"
+}
+// Returns:
+{
+  "canFix": true,
+  "confidence": "high",
+  "fix": {
+    "description": "Sanitize user input",
+    "diff": "--- a/file.ts\n+++ b/file.ts\n...",
+    "beforeCode": "...",
+    "afterCode": "...",
+    "explanation": "..."
+  }
+}
+```
+
+**Apply fixes to branch:**
+```typescript
+POST /fixes/apply
+{
+  "scanId": "scan_456",
+  "findingIds": ["finding_1", "finding_2"],
+  "branchName": "bugrit/fixes-abc123"
+}
+// Returns: { branchUrl: "...", prUrl: "..." }
+```
+
+**Display requirements:**
+- Show diff with syntax highlighting
+- Before/after code comparison
+- Confidence indicator
+- Batch selection for multiple fixes
+- "Apply Selected" button
+
+### 5. Notifications Center
+
+**Get notifications:**
+```typescript
+GET /notifications
+// Returns:
+{
+  "notifications": [
+    {
+      "id": "notif_abc",
+      "type": "scan_completed",
+      "title": "Scan completed",
+      "message": "Found 5 issues",
+      "severity": "success",
+      "actionUrl": "/scans/scan_123",
+      "read": false,
+      "createdAt": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "unreadCount": 3
+}
+```
+
+**Mark as read:**
+```typescript
+POST /notifications
+{ "action": "markRead", "notificationId": "notif_abc" }
+
+// Or mark all:
+POST /notifications
+{ "action": "markAllRead" }
+```
+
+**Get/update preferences:**
+```typescript
+GET /notifications/preferences
+PATCH /notifications/preferences
+{
+  "channels": {
+    "email": { "enabled": true, "digestMode": "daily" },
+    "inApp": { "enabled": true },
+    "push": { "enabled": false }
+  },
+  "events": {
+    "scan_completed": { "enabled": true, "channels": ["email", "in_app"] }
+  }
+}
+```
+
+**Display requirements:**
+- Bell icon with unread count badge
+- Dropdown/panel showing recent notifications
+- Click to navigate to related item
+- Mark as read on click
+- Link to full settings page
+
+### 6. Test Runs (Optional)
+
+**Run a test:**
+```typescript
+POST /test-runs
+{
+  "testCaseId": "tc_123",
+  "testCaseName": "Login Flow",
+  "runnerType": "playwright"
+}
+```
+
+**Get test results:**
+```typescript
+GET /test-runs/{testRunId}
+// Returns status, duration, logs, screenshots
+```
+
+### 7. Team Dashboard (Optional)
+
+**Get team stats:**
+```typescript
+GET /teams/{teamId}/dashboard
+// Returns:
+{
+  "stats": {
+    "totalScans": 150,
+    "averageScore": 82,
+    "issuesFixed": 423,
+    "trend": "+5%"
+  },
+  "recentScans": [...],
+  "topIssues": [...]
+}
+```
+
+## UI Components to Build
+
+1. **Dashboard Home**
+   - Summary cards (total scans, avg score, issues fixed)
+   - Recent scans list with status badges
+   - Quick scan button
+
+2. **Scan Detail Page**
+   - Vibe Score gauge
+   - Findings table with filters
+   - Fix generation panel
+   - Scan metadata (repo, branch, date, duration)
+
+3. **Notification Bell**
+   - Icon in header/nav
+   - Badge with unread count
+   - Dropdown with notification list
+   - Settings link
+
+4. **Settings Pages**
+   - API key management
+   - Notification preferences
+   - Team settings (if applicable)
+
+## Polling & Real-time Updates
+
+For scan status, poll every 5 seconds while status is "running":
+```typescript
+const pollScan = async (scanId: string) => {
+  const scan = await fetch(`/scans/${scanId}`);
+  if (scan.status === 'running') {
+    setTimeout(() => pollScan(scanId), 5000);
+  }
+};
+```
+
+For notifications, poll every 30 seconds:
+```typescript
+setInterval(async () => {
+  const { unreadCount } = await fetch('/notifications');
+  updateBadge(unreadCount);
+}, 30000);
+```
+
+## Error Handling
+
+Handle these HTTP status codes:
+- 401: Redirect to login / show "API key invalid"
+- 403: Show "Insufficient permissions"
+- 404: Show "Resource not found"
+- 429: Show "Rate limited, try again later"
+- 500: Show "Server error, please retry"
+
+## Styling Recommendations
+
+- Use color coding for severity: red (critical), orange (high), yellow (medium), blue (low)
+- Use green for passing/success, red for failing/error
+- Show loading skeletons during API calls
+- Toast notifications for actions (fix applied, settings saved)
+````
+
+### Quick Start Prompt
+
+For a simpler starting point, use this condensed version:
+
+```
+Build a React dashboard that:
+
+1. Connects to Bugrit API (https://bugrit.dev/api/v1) with API key auth
+2. Shows a list of scans with their Vibe Scores
+3. Displays findings for each scan, filterable by severity
+4. Has a notification bell showing unread count
+5. Allows starting new scans via URL input
+
+API endpoints needed:
+- GET /scans - list scans
+- POST /scans - start scan
+- GET /scans/{id} - scan details
+- GET /scans/{id}/vibe-score - get score
+- GET /scans/{id}/findings - get findings
+- GET /notifications - get notifications
+- POST /notifications - mark as read
+
+Use Tailwind CSS and shadcn/ui components.
+```
 
 ---
 
