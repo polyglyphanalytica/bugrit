@@ -125,21 +125,28 @@ export async function POST(request: NextRequest) {
     }
 
     if (notificationIds && Array.isArray(notificationIds)) {
-      // Mark specific notifications as read
+      // Mark specific notifications as read - fetch all at once to avoid N+1 queries
       const batch = db.batch();
 
-      for (const id of notificationIds) {
-        const ref = db.collection(COLLECTION).doc(id);
-        // Verify ownership
-        const doc = await ref.get();
+      // Limit batch size to prevent abuse
+      const idsToProcess = notificationIds.slice(0, 100);
+
+      // Fetch all documents in a single batch read
+      const refs = idsToProcess.map(id => db.collection(COLLECTION).doc(id));
+      const docs = await db.getAll(...refs);
+
+      let markedCount = 0;
+      for (const doc of docs) {
+        // Verify ownership before updating
         if (doc.exists && doc.data()?.userId === userId) {
-          batch.update(ref, { read: true });
+          batch.update(doc.ref, { read: true });
+          markedCount++;
         }
       }
 
       await batch.commit();
 
-      return NextResponse.json({ success: true, marked: notificationIds.length });
+      return NextResponse.json({ success: true, marked: markedCount });
     }
 
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });

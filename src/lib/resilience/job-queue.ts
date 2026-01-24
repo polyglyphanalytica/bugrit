@@ -124,7 +124,20 @@ export class JobQueue {
     priority?: JobPriority;
     maxAttempts?: number;
   }): Promise<ScanJob> {
-    const jobId = `job-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    // Generate cryptographically secure random ID
+    const randomBytes = new Uint8Array(5);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      crypto.getRandomValues(randomBytes);
+    } else {
+      const nodeCrypto = require('crypto');
+      const nodeRandom = nodeCrypto.randomBytes(5);
+      randomBytes.set(nodeRandom);
+    }
+    const random = Array.from(randomBytes)
+      .map(b => b.toString(36).padStart(2, '0'))
+      .join('')
+      .substring(0, 9);
+    const jobId = `job-${Date.now()}-${random}`;
 
     const job: ScanJob = {
       id: jobId,
@@ -333,7 +346,20 @@ export class JobQueue {
     error: Error,
     lastErrorEntry: { attempt: number; error: string; timestamp: Date }
   ): Promise<void> {
-    const dlqId = `dlq-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    // Generate cryptographically secure random ID
+    const dlqRandomBytes = new Uint8Array(5);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      crypto.getRandomValues(dlqRandomBytes);
+    } else {
+      const nodeCrypto = require('crypto');
+      const nodeRandom = nodeCrypto.randomBytes(5);
+      dlqRandomBytes.set(nodeRandom);
+    }
+    const dlqRandom = Array.from(dlqRandomBytes)
+      .map(b => b.toString(36).padStart(2, '0'))
+      .join('')
+      .substring(0, 9);
+    const dlqId = `dlq-${Date.now()}-${dlqRandom}`;
 
     const dlqJob: DeadLetterJob = {
       id: dlqId,

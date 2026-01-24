@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getApps, initializeApp, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { isPlatformAdminByEmail } from '@/lib/admin/service';
+import { logger } from '@/lib/logger';
 
 // Initialize Firebase Admin if not already initialized
 function getFirebaseAuth() {
@@ -75,11 +76,11 @@ export async function GET(request: NextRequest) {
       // SECURITY: Don't return email to prevent email enumeration
       return NextResponse.json({ isAdmin });
     } catch (error) {
-      console.error('Token verification failed:', error);
+      logger.error('Token verification failed', { error });
       return NextResponse.json({ isAdmin: false, error: 'Invalid token' }, { status: 401 });
     }
   } catch (error) {
-    console.error('Admin check failed:', error);
+    logger.error('Admin check failed', { error });
     return NextResponse.json({ isAdmin: false, error: 'Internal error' }, { status: 500 });
   }
 }

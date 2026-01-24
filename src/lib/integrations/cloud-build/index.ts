@@ -561,7 +561,20 @@ abstract class CloudBuildIntegration implements ToolIntegration {
         return this.errorResult(`No valid target for ${this.name}`, startTime);
       }
 
-      const scanId = `scan-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      // Generate cryptographically secure scan ID
+      const randomBytes = new Uint8Array(5);
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        crypto.getRandomValues(randomBytes);
+      } else {
+        const nodeCrypto = require('crypto');
+        const nodeRandom = nodeCrypto.randomBytes(5);
+        randomBytes.set(nodeRandom);
+      }
+      const random = Array.from(randomBytes)
+        .map(b => b.toString(36).padStart(2, '0'))
+        .join('')
+        .substring(0, 9);
+      const scanId = `scan-${Date.now()}-${random}`;
 
       // For source-based tools, upload source first
       let finalTarget = targetValue;
@@ -648,8 +661,21 @@ abstract class CloudBuildIntegration implements ToolIntegration {
   }
 
   protected createFinding(params: Partial<AuditFinding> & { title: string; description: string }): AuditFinding {
+    // Generate cryptographically secure random ID
+    const findingRandomBytes = new Uint8Array(5);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      crypto.getRandomValues(findingRandomBytes);
+    } else {
+      const nodeCrypto = require('crypto');
+      const nodeRandom = nodeCrypto.randomBytes(5);
+      findingRandomBytes.set(nodeRandom);
+    }
+    const findingRandom = Array.from(findingRandomBytes)
+      .map(b => b.toString(36).padStart(2, '0'))
+      .join('')
+      .substring(0, 9);
     return {
-      id: `${this.toolId}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      id: `${this.toolId}-${Date.now()}-${findingRandom}`,
       tool: this.name,
       category: this.category,
       severity: params.severity || 'medium',

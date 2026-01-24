@@ -344,9 +344,23 @@ export class HealthMonitor {
    * Raise an alert
    */
   raiseAlert(params: Omit<Alert, 'id' | 'timestamp'>): void {
+    // Generate cryptographically secure random ID
+    const randomBytes = new Uint8Array(4);
+    if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+      crypto.getRandomValues(randomBytes);
+    } else {
+      const nodeCrypto = require('crypto');
+      const nodeRandom = nodeCrypto.randomBytes(4);
+      randomBytes.set(nodeRandom);
+    }
+    const random = Array.from(randomBytes)
+      .map(b => b.toString(36).padStart(2, '0'))
+      .join('')
+      .substring(0, 5);
+
     const alert: Alert = {
       ...params,
-      id: `alert-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      id: `alert-${Date.now()}-${random}`,
       timestamp: new Date(),
     };
 

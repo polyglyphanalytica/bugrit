@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
 import { verifySession } from '@/lib/auth/session';
 import { getGracePeriodInfo } from '@/lib/billing/dunning';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/subscription
@@ -62,7 +63,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Failed to get subscription:', error);
+    logger.error('Failed to get subscription', { error });
     return NextResponse.json(
       { error: 'Failed to get subscription' },
       { status: 500 }

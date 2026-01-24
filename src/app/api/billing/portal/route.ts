@@ -11,6 +11,37 @@ import { db } from '@/lib/firebase/admin';
 import { getStripeSecretKey } from '@/lib/admin/service';
 import { logger } from '@/lib/logger';
 
+// Validate and get safe return URL to prevent open redirect attacks
+function getSafeReturnUrl(origin: string | null): string | null {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) return null;
+
+  // If no origin provided, use configured app URL
+  if (!origin) return appUrl;
+
+  try {
+    const originUrl = new URL(origin);
+    const appUrlParsed = new URL(appUrl);
+
+    // Only allow the exact configured domain or localhost for development
+    const allowedHosts = [
+      appUrlParsed.host,
+      'localhost:3000',
+      '127.0.0.1:3000',
+    ];
+
+    if (allowedHosts.includes(originUrl.host)) {
+      return origin;
+    }
+
+    // Origin not in whitelist, use configured app URL
+    return appUrl;
+  } catch {
+    // Invalid URL, use configured app URL
+    return appUrl;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Authenticate user
@@ -57,19 +88,16 @@ export async function POST(req: NextRequest) {
       apiVersion: '2025-12-15.clover',
     });
 
-    // Create portal session
-    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL;
+    // Create portal session with validated return URL
+    const safeOrigin = getSafeReturnUrl(req.headers.get('origin'));
 
-    if (!origin) {
-      if (process.env.NODE_ENV === 'production') {
-        return errorResponse('NEXT_PUBLIC_APP_URL environment variable is required in production', 500);
-      }
-      return errorResponse('Missing origin header and NEXT_PUBLIC_APP_URL environment variable', 400);
+    if (!safeOrigin) {
+      return errorResponse('NEXT_PUBLIC_APP_URL environment variable is required', 500);
     }
 
     const session = await stripe.billingPortal.sessions.create({
       customer: stripeCustomerId,
-      return_url: `${origin}/settings/subscription`,
+      return_url: `${safeOrigin}/settings/subscription`,
     });
 
     return NextResponse.json({

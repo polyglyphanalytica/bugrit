@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { generateFix, generateBatchFixes, GenerateFixInput } from '@/ai/flows/generate-fix';
 import { getDb, COLLECTIONS } from '@/lib/firestore';
 import { logger } from '@/lib/logger';
+import { authenticateRequest, getRateLimitHeaders } from '@/lib/api/auth';
+import { successResponse, handleError, Errors } from '@/lib/api/errors';
 
 // Maximum batch size to prevent abuse
 const MAX_BATCH_SIZE = 50;
@@ -10,56 +12,54 @@ const MAX_BATCH_SIZE = 50;
  * POST /api/v1/fixes
  *
  * Generate a fix for a specific finding or batch of findings.
+ * Requires authentication with 'scans:read' permission.
  */
 export async function POST(request: NextRequest) {
   try {
+    const context = await authenticateRequest(request, 'scans:read');
     const body = await request.json();
 
     // Check if batch request
     if (body.findingIds && Array.isArray(body.findingIds)) {
       // Validate batch size
       if (body.findingIds.length > MAX_BATCH_SIZE) {
-        return NextResponse.json(
-          { error: `Batch size exceeds maximum of ${MAX_BATCH_SIZE}` },
-          { status: 400 }
-        );
+        return Errors.validationError(`Batch size exceeds maximum of ${MAX_BATCH_SIZE}`);
       }
-      return handleBatchFixes(body);
+      return handleBatchFixes(body, context);
     }
 
     // Single fix request
-    return handleSingleFix(body);
+    return handleSingleFix(body, context);
   } catch (error) {
-    logger.error('Error generating fix', { error });
-    return NextResponse.json(
-      { error: 'Failed to generate fix' },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 
-async function handleSingleFix(body: {
-  findingId: string;
-  scanId: string;
-  context?: GenerateFixInput['context'];
-}) {
+async function handleSingleFix(
+  body: {
+    findingId: string;
+    scanId: string;
+    context?: GenerateFixInput['context'];
+  },
+  authContext: { organizationId: string }
+) {
   const { findingId, scanId, context } = body;
 
   if (!findingId || !scanId) {
-    return NextResponse.json(
-      { error: 'findingId and scanId are required' },
-      { status: 400 }
-    );
+    return Errors.validationError('findingId and scanId are required');
+  }
+
+  // Verify scan belongs to organization
+  const scanAccess = await verifyScanAccess(scanId, authContext.organizationId);
+  if (!scanAccess) {
+    return Errors.forbidden('No access to this scan');
   }
 
   // Get finding details from database
   const finding = await getFindingDetails(scanId, findingId);
 
   if (!finding) {
-    return NextResponse.json(
-      { error: 'Finding not found' },
-      { status: 404 }
-    );
+    return Errors.notFound('Finding');
   }
 
   // Get file content if available
@@ -75,7 +75,7 @@ async function handleSingleFix(body: {
     context,
   });
 
-  return NextResponse.json({
+  return successResponse({
     findingId,
     scanId,
     ...fix,
@@ -83,18 +83,24 @@ async function handleSingleFix(body: {
   });
 }
 
-async function handleBatchFixes(body: {
-  scanId: string;
-  findingIds: string[];
-  context?: GenerateFixInput['context'];
-}) {
+async function handleBatchFixes(
+  body: {
+    scanId: string;
+    findingIds: string[];
+    context?: GenerateFixInput['context'];
+  },
+  authContext: { organizationId: string }
+) {
   const { scanId, findingIds, context } = body;
 
   if (!scanId || !findingIds.length) {
-    return NextResponse.json(
-      { error: 'scanId and findingIds are required' },
-      { status: 400 }
-    );
+    return Errors.validationError('scanId and findingIds are required');
+  }
+
+  // Verify scan belongs to organization
+  const scanAccess = await verifyScanAccess(scanId, authContext.organizationId);
+  if (!scanAccess) {
+    return Errors.forbidden('No access to this scan');
   }
 
   // Get all findings
@@ -115,10 +121,7 @@ async function handleBatchFixes(body: {
   }
 
   if (findings.length === 0) {
-    return NextResponse.json(
-      { error: 'No valid findings found' },
-      { status: 404 }
-    );
+    return Errors.notFound('Findings');
   }
 
   // Generate batch fixes
@@ -130,13 +133,29 @@ async function handleBatchFixes(body: {
     fixResults[id] = fix;
   }
 
-  return NextResponse.json({
+  return successResponse({
     scanId,
     requested: findingIds.length,
     processed: findings.length,
     fixes: fixResults,
     generatedAt: new Date().toISOString(),
   });
+}
+
+async function verifyScanAccess(scanId: string, organizationId: string): Promise<boolean> {
+  const db = getDb();
+  if (!db) return false;
+
+  try {
+    const scanDoc = await db.collection(COLLECTIONS.SCANS).doc(scanId).get();
+    if (!scanDoc.exists) return false;
+
+    const scanData = scanDoc.data();
+    return scanData?.organizationId === organizationId;
+  } catch (error) {
+    logger.error('Error verifying scan access', { scanId, error });
+    return false;
+  }
 }
 
 async function getFindingDetails(scanId: string, findingId: string) {
