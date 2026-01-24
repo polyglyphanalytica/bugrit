@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createOrganization, getUserOrganizations } from '@/lib/organizations';
 import { verifySession } from '@/lib/auth/session';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/organizations
@@ -18,7 +19,7 @@ export async function GET() {
 
     return NextResponse.json({ organizations });
   } catch (error) {
-    console.error('Failed to fetch organizations:', error);
+    logger.error('Failed to fetch organizations', { error });
     return NextResponse.json(
       { error: 'Failed to fetch organizations' },
       { status: 500 }
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ organization }, { status: 201 });
   } catch (error) {
-    console.error('Failed to create organization:', error);
+    logger.error('Failed to create organization', { error });
     return NextResponse.json(
       { error: 'Failed to create organization' },
       { status: 500 }

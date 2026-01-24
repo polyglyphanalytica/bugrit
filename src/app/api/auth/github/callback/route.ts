@@ -18,6 +18,7 @@ import {
   getGitHubConnectionByUser,
   deleteGitHubConnection,
 } from '@/lib/github/connections';
+import { logger } from '@/lib/logger';
 
 // State expires after 10 minutes
 const STATE_MAX_AGE_MS = 10 * 60 * 1000;
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
 
   // Handle GitHub error response
   if (error) {
-    console.error('GitHub OAuth error:', error, errorDescription);
+    logger.error('GitHub OAuth error', { error, errorDescription });
     const redirectUrl = new URL('/settings/integrations', baseUrl);
     redirectUrl.searchParams.set('error', error);
     redirectUrl.searchParams.set('error_description', errorDescription || 'Authorization failed');
@@ -115,7 +116,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
-    console.error('GitHub OAuth callback error:', error);
+    logger.error('GitHub OAuth callback error', { error });
     const redirectUrl = new URL('/settings/integrations', baseUrl);
     redirectUrl.searchParams.set('error', 'exchange_failed');
     redirectUrl.searchParams.set('error_description', error instanceof Error ? error.message : 'Failed to complete authorization');

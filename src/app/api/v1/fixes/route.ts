@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateFix, generateBatchFixes, GenerateFixInput } from '@/ai/flows/generate-fix';
+import { getDb, COLLECTIONS } from '@/lib/firestore';
+import { logger } from '@/lib/logger';
+
+// Maximum batch size to prevent abuse
+const MAX_BATCH_SIZE = 50;
 
 /**
  * POST /api/v1/fixes
@@ -12,13 +17,20 @@ export async function POST(request: NextRequest) {
 
     // Check if batch request
     if (body.findingIds && Array.isArray(body.findingIds)) {
+      // Validate batch size
+      if (body.findingIds.length > MAX_BATCH_SIZE) {
+        return NextResponse.json(
+          { error: `Batch size exceeds maximum of ${MAX_BATCH_SIZE}` },
+          { status: 400 }
+        );
+      }
       return handleBatchFixes(body);
     }
 
     // Single fix request
     return handleSingleFix(body);
   } catch (error) {
-    console.error('Error generating fix:', error);
+    logger.error('Error generating fix', { error });
     return NextResponse.json(
       { error: 'Failed to generate fix' },
       { status: 500 }
@@ -127,24 +139,53 @@ async function handleBatchFixes(body: {
   });
 }
 
-// Mock functions - replace with actual implementations
 async function getFindingDetails(scanId: string, findingId: string) {
-  // TODO: Fetch from Firestore
-  return {
-    id: findingId,
-    tool: 'eslint-security',
-    severity: 'high' as const,
-    title: 'Potential XSS vulnerability',
-    description: 'User input is rendered without sanitization',
-    file: 'src/components/Comment.tsx',
-    line: 42,
-    codeSnippet: 'dangerouslySetInnerHTML={{ __html: userInput }}',
-    recommendation: 'Use DOMPurify to sanitize HTML',
-  };
+  const db = getDb();
+  if (!db) {
+    logger.warn('Firestore not available for finding lookup');
+    return null;
+  }
+
+  try {
+    // First get the scan to access its findings
+    const scanDoc = await db.collection(COLLECTIONS.SCANS).doc(scanId).get();
+    if (!scanDoc.exists) {
+      return null;
+    }
+
+    const scanData = scanDoc.data();
+    const results = scanData?.results || [];
+
+    // Search through tool results to find the specific finding
+    for (const toolResult of results) {
+      const findings = toolResult?.findings || [];
+      const finding = findings.find((f: { id: string }) => f.id === findingId);
+      if (finding) {
+        return {
+          id: finding.id,
+          tool: toolResult.tool || 'unknown',
+          severity: finding.severity || 'medium',
+          title: finding.title || finding.message || 'Finding',
+          description: finding.description || finding.message || '',
+          file: finding.file || finding.location?.file,
+          line: finding.line || finding.location?.line,
+          codeSnippet: finding.codeSnippet || finding.snippet,
+          recommendation: finding.recommendation || finding.fix,
+        };
+      }
+    }
+
+    return null;
+  } catch (error) {
+    logger.error('Error fetching finding details', { scanId, findingId, error });
+    return null;
+  }
 }
 
 async function getFileContent(scanId: string, filePath: string) {
-  // TODO: Fetch from Cloud Storage or repo
+  // File content is stored in scan artifacts in Cloud Storage
+  // For now, return null - file content is optional for fix generation
+  // TODO: Implement Cloud Storage file retrieval when needed
   return null;
 }
 

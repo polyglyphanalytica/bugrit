@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { store } from '@/lib/store';
 import { requirePermission } from '@/lib/api-auth';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
-    console.error('Error fetching execution:', error);
+    logger.error('Error fetching execution', { error });
     return NextResponse.json(
       { error: 'Failed to fetch execution' },
       { status: 500 }

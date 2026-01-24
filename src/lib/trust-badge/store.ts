@@ -215,23 +215,109 @@ export async function trackVerificationPageView(siteId: string): Promise<void> {
 }
 
 /**
- * Verify domain ownership (e.g., via DNS TXT record or meta tag)
+ * Generate a verification token for a site
  */
-export async function verifyDomain(siteId: string): Promise<boolean> {
-  if (!db) return false;
+export function generateVerificationToken(siteId: string): string {
+  // Generate a deterministic but unpredictable token based on siteId
+  const encoder = new TextEncoder();
+  const data = encoder.encode(siteId + process.env.ADMIN_ENCRYPTION_KEY || 'bugrit-verify');
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    hash = ((hash << 5) - hash) + data[i];
+    hash = hash & hash;
+  }
+  return `bugrit-verify-${Math.abs(hash).toString(36)}`;
+}
 
-  // TODO: Implement actual domain verification
-  // Options:
-  // 1. DNS TXT record
-  // 2. Meta tag on homepage
-  // 3. File upload (.well-known/bugrit-verification.txt)
+/**
+ * Verify domain ownership via file-based verification
+ * User must place a file at /.well-known/bugrit-verification.txt
+ * containing the verification token
+ */
+export async function verifyDomain(siteId: string): Promise<{ success: boolean; error?: string }> {
+  if (!db) return { success: false, error: 'Database not available' };
 
-  await updateDoc(doc(db, SITES_COLLECTION, siteId), {
-    verifiedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  });
+  const site = await getSiteById(siteId);
+  if (!site) return { success: false, error: 'Site not found' };
 
-  return true;
+  const expectedToken = generateVerificationToken(siteId);
+  const verificationUrl = `https://${site.domain}/.well-known/bugrit-verification.txt`;
+
+  try {
+    // Fetch the verification file from the domain
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    const response = await fetch(verificationUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Bugrit-Domain-Verifier/1.0',
+      },
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: `Could not access verification file (HTTP ${response.status}). Please ensure ${verificationUrl} exists and is publicly accessible.`,
+      };
+    }
+
+    const content = await response.text();
+    const actualToken = content.trim();
+
+    if (actualToken !== expectedToken) {
+      return {
+        success: false,
+        error: `Verification token mismatch. Expected: ${expectedToken}`,
+      };
+    }
+
+    // Verification successful - update the site
+    await updateDoc(doc(db, SITES_COLLECTION, siteId), {
+      verifiedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return { success: false, error: 'Verification request timed out' };
+    }
+    return {
+      success: false,
+      error: `Failed to verify domain: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
+  }
+}
+
+/**
+ * Get verification instructions for a site
+ */
+export function getVerificationInstructions(siteId: string, domain: string): {
+  token: string;
+  filePath: string;
+  fullUrl: string;
+  instructions: string;
+} {
+  const token = generateVerificationToken(siteId);
+  const filePath = '/.well-known/bugrit-verification.txt';
+  const fullUrl = `https://${domain}${filePath}`;
+
+  return {
+    token,
+    filePath,
+    fullUrl,
+    instructions: `To verify ownership of ${domain}:
+
+1. Create a file at ${filePath} on your website
+2. Add this exact content to the file: ${token}
+3. Ensure the file is publicly accessible at ${fullUrl}
+4. Click "Verify" to complete domain verification
+
+The verification file should return the token as plain text.`,
+  };
 }
 
 /**

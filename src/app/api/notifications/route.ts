@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getDb, toDate, toTimestamp } from '@/lib/firestore';
+import { logger } from '@/lib/logger';
 
 const COLLECTION = 'notifications';
 
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
       unreadCount,
     });
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    logger.error('Error fetching notifications', { error });
     return NextResponse.json({ error: 'Failed to fetch notifications' }, { status: 500 });
   }
 }
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   } catch (error) {
-    console.error('Error marking notifications:', error);
+    logger.error('Error marking notifications', { error });
     return NextResponse.json({ error: 'Failed to mark notifications' }, { status: 500 });
   }
 }
@@ -184,7 +185,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ deleted: snapshot.docs.length });
   } catch (error) {
-    console.error('Error cleaning notifications:', error);
+    logger.error('Error cleaning notifications', { error });
     return NextResponse.json({ error: 'Failed to clean notifications' }, { status: 500 });
   }
 }

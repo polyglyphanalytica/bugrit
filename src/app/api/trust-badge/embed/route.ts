@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getSiteById } from '@/lib/trust-badge/store';
+import { logger } from '@/lib/logger';
 
 /**
  * Trust Badge Embed API
@@ -91,7 +93,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const baseUrl = 'https://bugrit.dev';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bugrit.dev';
 
     // Generate embed script
     const script = `<!-- Bugrit Trust Badge -->
@@ -133,7 +135,7 @@ ${scriptMinified}`;
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('[TrustBadge] Embed API error:', error);
+    logger.error('[TrustBadge] Embed API error', { siteId, error });
     return NextResponse.json(
       { success: false, error: 'Internal error' },
       { status: 500 }
@@ -156,19 +158,25 @@ interface Site {
 }
 
 async function getRegisteredSite(siteId: string): Promise<Site | null> {
-  // TODO: Implement Firestore lookup
-  if (siteId.startsWith('site_')) {
+  try {
+    const site = await getSiteById(siteId);
+    if (!site) return null;
+
     return {
-      id: siteId,
-      domain: 'example.com',
-      latestScan: {
-        vibeScore: 87,
-        grade: 'B+',
-        scannedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      },
+      id: site.id,
+      domain: site.domain,
+      latestScan: site.latestScan
+        ? {
+            vibeScore: site.latestScan.vibeScore,
+            grade: site.latestScan.grade,
+            scannedAt: site.latestScan.scannedAt,
+          }
+        : null,
     };
+  } catch (error) {
+    logger.error('Error fetching registered site', { siteId, error });
+    return null;
   }
-  return null;
 }
 
 function generateAIPrompt(

@@ -25,7 +25,9 @@ export async function GET(request: NextRequest) {
     const userId = context.apiKey.ownerId;
 
     const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '20', 10);
+    const limitParam = parseInt(url.searchParams.get('limit') || '20', 10);
+    // Validate and clamp limit to reasonable bounds
+    const limit = Math.max(1, Math.min(100, isNaN(limitParam) ? 20 : limitParam));
 
     const sessions = await sessionReportStore.getUserSessions(userId, limit);
 

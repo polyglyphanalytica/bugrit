@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { explainCodebase } from '@/ai/flows/explain-codebase';
+import { getDb, COLLECTIONS } from '@/lib/firestore';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/v1/explain
@@ -25,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     if (!codebaseData) {
       return NextResponse.json(
-        { error: 'Could not retrieve codebase data' },
+        { error: 'Could not retrieve codebase data. Ensure the scan exists and has completed.' },
         { status: 404 }
       );
     }
@@ -45,7 +47,7 @@ export async function POST(request: NextRequest) {
       generatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error explaining codebase:', error);
+    logger.error('Error explaining codebase', { error });
     return NextResponse.json(
       { error: 'Failed to generate codebase explanation' },
       { status: 500 }
@@ -53,23 +55,40 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Mock functions - replace with actual implementations
 async function getCodebaseFromScan(scanId: string) {
-  // TODO: Fetch from Firestore
-  return {
-    repoUrl: 'https://github.com/example/repo',
-    files: [
-      { path: 'src/index.ts', content: '// entry point' },
-      { path: 'src/components/App.tsx', content: '// main component' },
-    ],
-    packageJson: {
-      name: 'example',
-      dependencies: { react: '^18.0.0', next: '^14.0.0' },
-    },
-  };
+  const db = getDb();
+  if (!db) {
+    logger.warn('Firestore not available for scan lookup');
+    return null;
+  }
+
+  try {
+    const scanDoc = await db.collection(COLLECTIONS.SCANS).doc(scanId).get();
+    if (!scanDoc.exists) {
+      return null;
+    }
+
+    const scanData = scanDoc.data();
+    if (scanData?.status !== 'completed') {
+      logger.info('Scan not yet completed', { scanId, status: scanData?.status });
+      return null;
+    }
+
+    // Get codebase data from scan metadata
+    return {
+      repoUrl: scanData?.source?.repoUrl || scanData?.source?.url || '',
+      files: scanData?.codebaseSnapshot?.files || [],
+      packageJson: scanData?.codebaseSnapshot?.packageJson || null,
+    };
+  } catch (error) {
+    logger.error('Error fetching scan for explain', { scanId, error });
+    return null;
+  }
 }
 
 async function fetchCodebaseFromRepo(repoUrl: string) {
-  // TODO: Clone and analyze repo
+  // Fetching from a repo URL requires cloning - this is handled by the scan flow
+  // For direct repo explanation, the user should first run a scan
+  logger.info('Direct repo fetch not yet supported', { repoUrl });
   return null;
 }

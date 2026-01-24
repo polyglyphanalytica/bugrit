@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateVibeScore } from '@/lib/vibe-score/calculator';
+import { getDb, COLLECTIONS } from '@/lib/firestore';
+import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ scanId: string }>;
@@ -14,7 +16,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const { scanId } = await params;
 
   try {
-    // TODO: Replace with actual database query
     const scan = await getScanData(scanId);
 
     if (!scan) {
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       calculatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Error calculating Vibe Score:', error);
+    logger.error('Error calculating Vibe Score', { scanId, error });
     return NextResponse.json(
       { error: 'Failed to calculate Vibe Score' },
       { status: 500 }
@@ -82,19 +83,34 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// Mock function - replace with actual database query
 async function getScanData(scanId: string) {
-  // TODO: Replace with Firestore query
-  return {
-    id: scanId,
-    status: 'completed',
-    results: {
-      security: { score: 92, issues: 2 },
-      linting: { score: 85, issues: 15 },
-      accessibility: { score: 88, issues: 5 },
-      performance: { score: 82, metrics: { lcp: 2.1, fid: 50, cls: 0.05 } },
-      dependencies: { score: 90, outdated: 3, vulnerabilities: 0 },
-      documentation: { score: 75 },
-    },
-  };
+  const db = getDb();
+  if (!db) {
+    logger.warn('Firestore not available for vibe score lookup');
+    return null;
+  }
+
+  try {
+    const doc = await db.collection(COLLECTIONS.SCANS).doc(scanId).get();
+    if (!doc.exists) {
+      return null;
+    }
+
+    const data = doc.data();
+    return {
+      id: doc.id,
+      status: data?.status,
+      results: data?.results || {
+        security: { score: 0, issues: 0 },
+        linting: { score: 0, issues: 0 },
+        accessibility: { score: 0, issues: 0 },
+        performance: { score: 0, metrics: {} },
+        dependencies: { score: 0, outdated: 0, vulnerabilities: 0 },
+        documentation: { score: 0 },
+      },
+    };
+  } catch (error) {
+    logger.error('Error fetching scan data', { scanId, error });
+    return null;
+  }
 }
