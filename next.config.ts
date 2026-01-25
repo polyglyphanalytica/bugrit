@@ -1,9 +1,10 @@
 import type {NextConfig} from 'next';
 
-// Only ignore build errors in development for faster iteration
-// Production builds MUST have type checking and linting enabled
+// Detect build environment
 const isDevelopment = process.env.NODE_ENV === 'development';
 const isCI = process.env.CI === 'true';
+const isFirebaseAppHosting = process.env.FIREBASE_APP_HOSTING === 'true' ||
+                              process.env.K_SERVICE !== undefined; // Cloud Run environment
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -12,8 +13,11 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: isDevelopment && !isCI,
   },
   eslint: {
-    // Lint errors are ALWAYS checked in production/CI builds
-    ignoreDuringBuilds: isDevelopment && !isCI,
+    // ESLint during builds is disabled for Firebase App Hosting due to:
+    // 1. ESLint circular structure JSON serialization bug causes OOM
+    // 2. Linting should be done in CI pipeline, not during deploy
+    // 3. Firebase Cloud Build has limited memory
+    ignoreDuringBuilds: isDevelopment || isFirebaseAppHosting || !isCI,
   },
   // Exclude problematic packages from build tracing
   outputFileTracingExcludes: {
