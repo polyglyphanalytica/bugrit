@@ -69,8 +69,7 @@ function getGCPBillingConfig() {
  */
 async function getBigQueryClient() {
   try {
-    // Use require to avoid webpack bundling issues
-    // BigQuery is only needed server-side for admin billing queries
+    // Use require() instead of import() to avoid webpack bundling issues
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { BigQuery } = require('@google-cloud/bigquery');
     return new BigQuery();

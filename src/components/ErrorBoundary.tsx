@@ -73,7 +73,9 @@ function logErrorToService(errorData: ErrorLogData): void {
   //         },
   //       });
   //     })
-  //     .catch(() => {});
+  //     .catch(() => {
+  //       // Sentry not available, fail silently
+  //     });
   // }
 
   // In production, send to logging endpoint
