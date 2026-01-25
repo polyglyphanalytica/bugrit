@@ -75,15 +75,17 @@ env:
     value: bugrit-prod
   - variable: SCAN_OUTPUT_BUCKET
     value: bugrit-prod-bugrit-scans
-  - variable: GCP_BILLING_DATASET_ID
-    secret: GCP_BILLING_DATASET_ID
+  # GCP_BILLING_DATASET_ID is optional (only needed if using billing Cloud Function)
+  # - variable: GCP_BILLING_DATASET_ID
+  #   secret: GCP_BILLING_DATASET_ID
   - variable: GCP_PROJECT_ID
     value: bugrit-prod
 
   # ============================================================
-  # GCP Billing Cloud Function (for BigQuery billing data)
+  # GCP Billing Cloud Function (optional - mock data used if not set)
+  # Deploy the Cloud Function in functions/billing/ first, then uncomment:
   # ============================================================
-  - variable: GCP_BILLING_FUNCTION_URL
-    secret: GCP_BILLING_FUNCTION_URL
-  - variable: GCP_BILLING_API_KEY
-    secret: GCP_BILLING_API_KEY
+  # - variable: GCP_BILLING_FUNCTION_URL
+  #   secret: GCP_BILLING_FUNCTION_URL
+  # - variable: GCP_BILLING_API_KEY
+  #   secret: GCP_BILLING_API_KEY
