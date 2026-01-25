@@ -6,7 +6,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import {
   getUserNotificationPreferences,
   updateUserNotificationPreferences,
@@ -14,11 +13,11 @@ import {
   type NotificationEventType,
 } from '@/lib/notifications/preferences';
 import { logger } from '@/lib/logger';
+import { verifySession } from '@/lib/auth/session';
 
 async function getUserFromSession(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('session');
-  return sessionCookie?.value || null;
+  const session = await verifySession();
+  return session?.uid || null;
 }
 
 /**

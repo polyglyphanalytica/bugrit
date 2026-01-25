@@ -8,7 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { updateProfile, updateEmail, updatePassword } from 'firebase/auth';
+import {
+  updateProfile,
+  updatePassword,
+  sendEmailVerification,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+} from 'firebase/auth';
 
 export default function ProfileSettingsPage() {
   const { user } = useAuth();
@@ -20,6 +26,8 @@ export default function ProfileSettingsPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [sendingVerification, setSendingVerification] = useState(false);
+  const [reauthenticating, setReauthenticating] = useState(false);
 
   const handleUpdateProfile = async () => {
     if (!user) return;
@@ -43,8 +51,43 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  const handleUpdatePassword = async () => {
+  const handleSendVerificationEmail = async () => {
     if (!user) return;
+
+    setSendingVerification(true);
+    try {
+      // Cast to any since our User type is compatible at runtime but has different TS types
+      await sendEmailVerification(user as any);
+      toast({
+        title: 'Verification email sent',
+        description: 'Please check your inbox and click the verification link.',
+      });
+    } catch (error: any) {
+      let message = 'Failed to send verification email.';
+      if (error.code === 'auth/too-many-requests') {
+        message = 'Too many requests. Please try again later.';
+      }
+      toast({
+        title: 'Error',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setSendingVerification(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!user || !user.email) return;
+
+    if (!currentPassword) {
+      toast({
+        title: 'Error',
+        description: 'Please enter your current password to verify your identity',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     if (newPassword !== confirmPassword) {
       toast({
@@ -65,8 +108,13 @@ export default function ProfileSettingsPage() {
     }
 
     setLoading(true);
+    setReauthenticating(true);
     try {
-      // Cast to any since our User type is compatible at runtime but has different TS types
+      // First, reauthenticate the user with their current password
+      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      await reauthenticateWithCredential(user as any, credential);
+
+      // Now update the password
       await updatePassword(user as any, newPassword);
       toast({
         title: 'Password updated',
@@ -76,13 +124,22 @@ export default function ProfileSettingsPage() {
       setNewPassword('');
       setConfirmPassword('');
     } catch (error: any) {
+      let message = 'Failed to update password.';
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        message = 'Current password is incorrect.';
+      } else if (error.code === 'auth/too-many-requests') {
+        message = 'Too many attempts. Please try again later.';
+      } else if (error.code === 'auth/requires-recent-login') {
+        message = 'Session expired. Please log out and log back in.';
+      }
       toast({
         title: 'Error',
-        description: error.message || 'Failed to update password. You may need to re-authenticate.',
+        description: message,
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
+      setReauthenticating(false);
     }
   };
 
@@ -158,9 +215,23 @@ export default function ProfileSettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Change Password</CardTitle>
-          <CardDescription>Update your password to keep your account secure.</CardDescription>
+          <CardDescription>Update your password to keep your account secure. You must verify your current password first.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="currentPassword">Current Password</Label>
+            <Input
+              id="currentPassword"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Enter your current password"
+            />
+            <p className="text-xs text-muted-foreground">
+              Required to verify your identity before changing password.
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="newPassword">New Password</Label>
             <Input
@@ -185,9 +256,9 @@ export default function ProfileSettingsPage() {
 
           <Button
             onClick={handleUpdatePassword}
-            disabled={loading || !newPassword || !confirmPassword}
+            disabled={loading || !currentPassword || !newPassword || !confirmPassword}
           >
-            {loading ? 'Updating...' : 'Update Password'}
+            {reauthenticating ? 'Verifying...' : loading ? 'Updating...' : 'Update Password'}
           </Button>
         </CardContent>
       </Card>
@@ -201,16 +272,26 @@ export default function ProfileSettingsPage() {
         <CardContent>
           <dl className="space-y-4">
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">User ID</dt>
-              <dd className="font-mono text-sm">{user.uid}</dd>
+              <dt className="text-muted-foreground">Username</dt>
+              <dd className="font-medium">{user.displayName || user.email || 'Not set'}</dd>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <dt className="text-muted-foreground">Email Verified</dt>
-              <dd>
+              <dd className="flex items-center gap-2">
                 {user.emailVerified ? (
                   <span className="text-green-600">Verified</span>
                 ) : (
-                  <span className="text-yellow-600">Not verified</span>
+                  <>
+                    <span className="text-yellow-600">Not verified</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSendVerificationEmail}
+                      disabled={sendingVerification}
+                    >
+                      {sendingVerification ? 'Sending...' : 'Send Verification Email'}
+                    </Button>
+                  </>
                 )}
               </dd>
             </div>
