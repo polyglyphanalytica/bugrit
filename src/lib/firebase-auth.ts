@@ -56,6 +56,26 @@ function convertUser(firebaseUser: FirebaseUser | null): User | null {
 }
 
 /**
+ * Create server-side session from Firebase ID token
+ */
+async function createServerSession(user: User): Promise<void> {
+  try {
+    const idToken = await user.getIdToken();
+    const response = await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+
+    if (!response.ok) {
+      console.warn('Failed to create server session:', await response.text());
+    }
+  } catch (error) {
+    console.warn('Failed to create server session:', error);
+  }
+}
+
+/**
  * Login with email and password
  * Requires Firebase to be configured
  */
@@ -75,6 +95,10 @@ export async function loginWithEmailPassword(
     );
     const user = convertUser(userCredential.user);
     if (!user) throw new Error('Failed to get user after login');
+
+    // Create server-side session cookie
+    await createServerSession(user);
+
     return user;
   } catch (error: unknown) {
     const firebaseError = error as { code?: string; message?: string };
@@ -98,9 +122,23 @@ export async function loginWithEmailPassword(
 }
 
 /**
+ * Clear server-side session
+ */
+async function clearServerSession(): Promise<void> {
+  try {
+    await fetch('/api/auth/session', { method: 'DELETE' });
+  } catch (error) {
+    console.warn('Failed to clear server session:', error);
+  }
+}
+
+/**
  * Logout the current user
  */
 export async function logout(): Promise<void> {
+  // Always try to clear the server session
+  await clearServerSession();
+
   if (!isAuthConfigured()) {
     // In demo mode, this will be a no-op client-side
     return;
@@ -118,6 +156,8 @@ export async function logout(): Promise<void> {
 /**
  * Subscribe to auth state changes
  * Returns unsubscribe function
+ *
+ * Also ensures server-side session is created when user is authenticated
  */
 export function onAuthChange(
   callback: (user: User | null) => void
@@ -129,8 +169,15 @@ export function onAuthChange(
     return () => {};
   }
 
-  return onAuthStateChanged(auth, (firebaseUser) => {
-    callback(convertUser(firebaseUser));
+  return onAuthStateChanged(auth, async (firebaseUser) => {
+    const user = convertUser(firebaseUser);
+
+    // If user is logged in, ensure they have a server session
+    if (user) {
+      await createServerSession(user);
+    }
+
+    callback(user);
   });
 }
 
@@ -182,6 +229,9 @@ export async function registerWithEmailPassword(
     if (displayName) {
       user.displayName = displayName;
     }
+
+    // Create server-side session cookie
+    await createServerSession(user);
 
     return user;
   } catch (error: unknown) {
