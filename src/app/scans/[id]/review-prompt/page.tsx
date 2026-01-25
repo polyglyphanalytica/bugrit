@@ -3,11 +3,11 @@ import { notFound } from 'next/navigation';
 import { ReviewMergePrompt } from '@/components/fixes/review-merge-prompt';
 
 interface PageProps {
-  params: Promise<{ scanId: string }>;
+  params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { scanId } = await params;
+  const { id: scanId } = await params;
   return {
     title: `Review Fixes - ${scanId} - Bugrit`,
     description: 'AI agent prompt to review and merge automated fixes',
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function ReviewPromptPage({ params }: PageProps) {
-  const { scanId } = await params;
+  const { id: scanId } = await params;
 
   // Fetch scan data
   const scanData = await getScanWithFixes(scanId);

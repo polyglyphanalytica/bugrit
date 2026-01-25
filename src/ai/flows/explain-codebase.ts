@@ -180,51 +180,53 @@ Keep your answer concise but thorough. Use bullet points and structure for reada
 /**
  * Pre-defined questions for common queries
  */
-export const SUGGESTED_QUESTIONS = [
-  {
-    category: 'security',
-    questions: [
-      'What are the main security risks in my repo?',
-      'Are there any exposed secrets or credentials?',
-      'Do I have any SQL injection or XSS vulnerabilities?',
-      'How secure are my dependencies?',
-    ],
-  },
-  {
-    category: 'quality',
-    questions: [
-      'Where is the most technical debt in my codebase?',
-      'What files should I refactor first?',
-      'Are there any code duplication issues?',
-      'How is my test coverage?',
-    ],
-  },
-  {
-    category: 'accessibility',
-    questions: [
-      'Is my app accessible to screen reader users?',
-      'What WCAG guidelines am I failing?',
-      'How can I improve keyboard navigation?',
-    ],
-  },
-  {
-    category: 'performance',
-    questions: [
-      'What is slowing down my app?',
-      'How can I reduce my bundle size?',
-      'Are there any performance bottlenecks?',
-    ],
-  },
-  {
-    category: 'general',
-    questions: [
-      'Give me an executive summary of my codebase health',
-      'What should I fix first?',
-      'How does my code compare to best practices?',
-      'What would it take to get to a 90+ vibe score?',
-    ],
-  },
-];
+export async function getSuggestedQuestions() {
+  return [
+    {
+      category: 'security',
+      questions: [
+        'What are the main security risks in my repo?',
+        'Are there any exposed secrets or credentials?',
+        'Do I have any SQL injection or XSS vulnerabilities?',
+        'How secure are my dependencies?',
+      ],
+    },
+    {
+      category: 'quality',
+      questions: [
+        'Where is the most technical debt in my codebase?',
+        'What files should I refactor first?',
+        'Are there any code duplication issues?',
+        'How is my test coverage?',
+      ],
+    },
+    {
+      category: 'accessibility',
+      questions: [
+        'Is my app accessible to screen reader users?',
+        'What WCAG guidelines am I failing?',
+        'How can I improve keyboard navigation?',
+      ],
+    },
+    {
+      category: 'performance',
+      questions: [
+        'What is slowing down my app?',
+        'How can I reduce my bundle size?',
+        'Are there any performance bottlenecks?',
+      ],
+    },
+    {
+      category: 'general',
+      questions: [
+        'Give me an executive summary of my codebase health',
+        'What should I fix first?',
+        'How does my code compare to best practices?',
+        'What would it take to get to a 90+ vibe score?',
+      ],
+    },
+  ];
+}
 
 /**
  * Quick insights without requiring a question

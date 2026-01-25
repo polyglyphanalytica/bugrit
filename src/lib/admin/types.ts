@@ -43,14 +43,29 @@ export interface PricingLimits {
 }
 
 export interface PricingFeatures {
+  // Core AI Features
   aiSummary: boolean;
   aiExplanations: boolean;
   aiFixSuggestions: boolean;
   aiPrioritization: boolean;
+  // Integrations
   githubIntegration: boolean;
+  githubAction: boolean;
   slackIntegration: boolean;
   webhooks: boolean;
   apiAccess: boolean;
+  // Vibe Coder Features
+  vibeScore: boolean;
+  vibeScoreBadge: boolean;
+  oneClickFixes: boolean;
+  aiReviewMerge: boolean;
+  shipItMode: boolean;
+  learningMode: boolean;
+  repoHealthProfile: boolean;
+  explainCodebase: boolean;
+  trustBadge: boolean;
+  teamDashboard: boolean;
+  // Support
   prioritySupport: boolean;
 }
 

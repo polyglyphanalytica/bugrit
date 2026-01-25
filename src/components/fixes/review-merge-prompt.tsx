@@ -75,130 +75,123 @@ export function ReviewMergePrompt({
             <div className="flex rounded-lg bg-slate-900 p-1">
               <button
                 onClick={() => setFormat('full')}
-                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
                   format === 'full'
                     ? 'bg-purple-600 text-white'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Full
+                Full Review
               </button>
               <button
                 onClick={() => setFormat('quick')}
-                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
                   format === 'quick'
                     ? 'bg-purple-600 text-white'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Quick
+                Quick Review
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Summary */}
-      <div className="px-4 py-3 border-b border-slate-700 bg-slate-800/30">
-        <div className="flex flex-wrap gap-4 text-sm">
-          <div>
-            <span className="text-slate-400">Branch:</span>{' '}
-            <code className="text-purple-400">{fixBranch}</code>
-            <span className="text-slate-500 mx-2">→</span>
-            <code className="text-green-400">{baseBranch}</code>
-          </div>
-          <div>
-            <span className="text-slate-400">Fixes:</span>{' '}
-            <span className="text-white">{findings.length} issues</span>
-            {criticalCount > 0 && (
-              <span className="ml-2 text-red-400">({criticalCount} critical)</span>
-            )}
-            {highCount > 0 && criticalCount === 0 && (
-              <span className="ml-2 text-orange-400">({highCount} high)</span>
-            )}
-          </div>
-        </div>
+      {/* Stats bar */}
+      <div className="px-4 py-2 border-b border-slate-700 bg-slate-800/50 flex items-center gap-4 text-sm">
+        <span className="text-slate-400">
+          {findings.length} findings
+        </span>
+        {criticalCount > 0 && (
+          <span className="text-red-400 flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+            {criticalCount} critical
+          </span>
+        )}
+        {highCount > 0 && (
+          <span className="text-orange-400 flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+            {highCount} high
+          </span>
+        )}
       </div>
 
       {/* Prompt content */}
       <div className="relative">
-        <pre className="p-4 text-sm text-slate-300 overflow-x-auto max-h-96 overflow-y-auto font-mono">
+        <pre className="p-4 text-sm text-slate-300 whitespace-pre-wrap font-mono bg-slate-900 max-h-96 overflow-y-auto">
           {prompt}
         </pre>
 
-        {/* Copy button */}
-        <button
-          onClick={handleCopy}
-          className={`absolute top-3 right-3 px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-            copied
-              ? 'bg-green-600 text-white'
-              : 'bg-purple-600 text-white hover:bg-purple-500'
-          }`}
-        >
-          {copied ? '✓ Copied!' : 'Copy Prompt'}
-        </button>
+        {/* Copy button overlay */}
+        <div className="absolute top-2 right-2">
+          <button
+            onClick={handleCopy}
+            className={`px-3 py-1.5 text-sm rounded-md transition-all ${
+              copied
+                ? 'bg-green-600 text-white'
+                : 'bg-purple-600 text-white hover:bg-purple-500'
+            }`}
+          >
+            {copied ? '✓ Copied!' : 'Copy Prompt'}
+          </button>
+        </div>
       </div>
 
-      {/* Footer with API info */}
-      <div className="px-4 py-3 border-t border-slate-700 bg-slate-800/30">
-        <details className="text-sm">
-          <summary className="text-slate-400 cursor-pointer hover:text-slate-300">
-            API Access
-          </summary>
-          <div className="mt-2 p-3 rounded bg-slate-900 font-mono text-xs">
-            <p className="text-slate-500 mb-2"># Get prompt via API (for automation)</p>
-            <p className="text-green-400">
-              curl "https://bugrit.dev/api/fixes/review-prompt?scanId={scanId}&format={format}"
-            </p>
+      {/* Footer */}
+      <div className="px-4 py-3 border-t border-slate-700 bg-slate-800/50">
+        <div className="flex items-center justify-between text-sm">
+          <div className="text-slate-400">
+            <span className="text-slate-500">Branch:</span>{' '}
+            <code className="px-1.5 py-0.5 bg-slate-900 rounded text-purple-300">
+              {fixBranch}
+            </code>{' '}
+            → {' '}
+            <code className="px-1.5 py-0.5 bg-slate-900 rounded text-slate-300">
+              {baseBranch}
+            </code>
           </div>
+          {prUrl && (
+            <a
+              href={prUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple-400 hover:text-purple-300"
+            >
+              View Pull Request →
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Usage instructions */}
+      <div className="px-4 py-3 border-t border-slate-700 bg-slate-800">
+        <details className="group">
+          <summary className="cursor-pointer text-sm text-slate-400 hover:text-white flex items-center gap-2">
+            <span className="group-open:rotate-90 transition-transform">▶</span>
+            How to use this prompt
+          </summary>
+          <ol className="mt-3 ml-6 text-sm text-slate-400 space-y-2 list-decimal">
+            <li>Click &quot;Copy Prompt&quot; above</li>
+            <li>Open your AI coding assistant (Claude, Cursor, Copilot, etc.)</li>
+            <li>Paste the prompt and let the AI review the changes</li>
+            <li>The AI will verify tests pass and merge if everything looks good</li>
+          </ol>
         </details>
       </div>
-    </div>
-  );
-}
 
-/**
- * Compact version for embedding in scan results
- */
-export function ReviewMergePromptCompact({
-  scanId,
-  fixBranch,
-  findingCount,
-}: {
-  scanId: string;
-  fixBranch: string;
-  findingCount: number;
-}) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopyApiUrl = async () => {
-    const url = `https://bugrit.dev/api/fixes/review-prompt?scanId=${scanId}`;
-    await navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-800 border border-slate-700">
-      <span className="text-2xl">🤖</span>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-white truncate">
-          Review & Merge: <code className="text-purple-400">{fixBranch}</code>
-        </p>
-        <p className="text-xs text-slate-400">
-          {findingCount} fixes ready for AI agent review
-        </p>
-      </div>
-      <div className="flex gap-2">
-        <a
-          href={`/scans/${scanId}/review-prompt`}
-          className="px-3 py-1.5 text-sm bg-slate-700 text-white rounded hover:bg-slate-600 transition-colors"
-        >
-          View
-        </a>
+      {/* Share section */}
+      <div className="px-4 py-3 border-t border-slate-700 bg-slate-800/50 flex items-center justify-between">
+        <span className="text-sm text-slate-400">
+          Share this review prompt:
+        </span>
         <button
-          onClick={handleCopyApiUrl}
-          className={`px-3 py-1.5 text-sm rounded transition-colors ${
+          onClick={() => {
+            navigator.clipboard.writeText(window.location.href);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }}
+          className={`px-3 py-1.5 text-sm rounded-md transition-all ${
             copied
               ? 'bg-green-600 text-white'
               : 'bg-purple-600 text-white hover:bg-purple-500'
