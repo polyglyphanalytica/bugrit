@@ -55,12 +55,32 @@ function convertUser(firebaseUser: FirebaseUser | null): User | null {
   };
 }
 
+// Track if we've already created a session to avoid duplicate calls
+let sessionCreationInProgress = false;
+let lastSessionCreation = 0;
+const SESSION_CREATION_DEBOUNCE_MS = 5000; // 5 seconds
+
 /**
  * Create server-side session from Firebase ID token
+ *
+ * IMPORTANT: createSessionCookie requires a fresh ID token (issued within last 5 minutes).
+ * We force refresh the token to ensure it meets this requirement.
  */
 async function createServerSession(user: User): Promise<void> {
+  // Debounce session creation to avoid bombarding the endpoint
+  const now = Date.now();
+  if (sessionCreationInProgress || (now - lastSessionCreation) < SESSION_CREATION_DEBOUNCE_MS) {
+    return;
+  }
+
+  sessionCreationInProgress = true;
+  lastSessionCreation = now;
+
   try {
-    const idToken = await user.getIdToken();
+    // CRITICAL: Force refresh the token to ensure it's fresh enough for createSessionCookie
+    // createSessionCookie requires the token to have been issued within the last 5 minutes
+    const idToken = await user.getIdToken(true);
+
     const response = await fetch('/api/auth/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -68,10 +88,13 @@ async function createServerSession(user: User): Promise<void> {
     });
 
     if (!response.ok) {
-      console.warn('Failed to create server session:', await response.text());
+      const errorText = await response.text();
+      console.warn('Failed to create server session:', response.status, errorText);
     }
   } catch (error) {
     console.warn('Failed to create server session:', error);
+  } finally {
+    sessionCreationInProgress = false;
   }
 }
 

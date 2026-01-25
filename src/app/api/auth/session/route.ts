@@ -7,49 +7,28 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getAuth } from 'firebase-admin/auth';
-import { getApps, initializeApp, cert } from 'firebase-admin/app';
+import { getAdminAuth, getInitializationError } from '@/lib/firebase-admin';
 
 // Session duration: 5 days
 const SESSION_DURATION_MS = 5 * 24 * 60 * 60 * 1000;
-
-// Ensure Firebase Admin is initialized
-function ensureFirebaseAdmin(): boolean {
-  if (getApps().length === 0) {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
-
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      try {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-        initializeApp({
-          credential: cert(serviceAccount),
-          projectId,
-        });
-        return true;
-      } catch (error) {
-        console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', error);
-        return false;
-      }
-    } else if (projectId) {
-      try {
-        initializeApp({ projectId });
-        return true;
-      } catch (error) {
-        console.error('Failed to initialize Firebase Admin:', error);
-        return false;
-      }
-    }
-    return false;
-  }
-  return true;
-}
 
 /**
  * Create session cookie from Firebase ID token
  */
 export async function POST(request: NextRequest) {
   try {
-    const { idToken } = await request.json();
+    // Parse request body
+    let idToken: string;
+    try {
+      const body = await request.json();
+      idToken = body.idToken;
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
 
     if (!idToken) {
       return NextResponse.json(
@@ -58,22 +37,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!ensureFirebaseAdmin()) {
+    // Get Firebase Admin Auth
+    const auth = getAdminAuth();
+    if (!auth) {
+      const initError = getInitializationError();
+      console.error('Firebase Admin not configured:', initError?.message);
       return NextResponse.json(
-        { error: 'Firebase Admin not configured' },
+        { error: 'Firebase Admin not configured', details: initError?.message },
         { status: 503 }
       );
     }
 
-    const auth = getAuth();
-
     // Verify the ID token first
-    const decodedToken = await auth.verifyIdToken(idToken);
+    let decodedToken;
+    try {
+      decodedToken = await auth.verifyIdToken(idToken);
+    } catch (verifyError) {
+      const errorMessage = verifyError instanceof Error ? verifyError.message : 'Unknown error';
+      console.error('ID token verification failed:', errorMessage);
+      return NextResponse.json(
+        { error: 'Invalid ID token', details: errorMessage },
+        { status: 401 }
+      );
+    }
 
     // Create session cookie
-    const sessionCookie = await auth.createSessionCookie(idToken, {
-      expiresIn: SESSION_DURATION_MS,
-    });
+    // Note: createSessionCookie requires a fresh ID token (issued within last 5 minutes)
+    let sessionCookie: string;
+    try {
+      sessionCookie = await auth.createSessionCookie(idToken, {
+        expiresIn: SESSION_DURATION_MS,
+      });
+    } catch (cookieError) {
+      const errorMessage = cookieError instanceof Error ? cookieError.message : 'Unknown error';
+      console.error('Session cookie creation failed:', errorMessage);
+
+      // Check if it's a token-too-old error
+      if (errorMessage.includes('recent') || errorMessage.includes('expired')) {
+        return NextResponse.json(
+          { error: 'Token too old. Please refresh and try again.' },
+          { status: 401 }
+        );
+      }
+
+      return NextResponse.json(
+        { error: 'Failed to create session cookie', details: errorMessage },
+        { status: 500 }
+      );
+    }
 
     // Set the session cookie
     const cookieStore = await cookies();
@@ -93,10 +104,12 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Session creation failed:', error);
+    // Catch-all for unexpected errors
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Unexpected error in session creation:', errorMessage);
     return NextResponse.json(
-      { error: 'Failed to create session' },
-      { status: 401 }
+      { error: 'Internal server error', details: errorMessage },
+      { status: 500 }
     );
   }
 }
