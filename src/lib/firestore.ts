@@ -1,17 +1,15 @@
 // Firestore database service
 // Provides all database operations for the application
 
-import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import {
-  getFirestore,
-  Firestore,
   Timestamp,
   FieldValue,
   DocumentReference,
   CollectionReference,
-  Query,
   DocumentData,
+  Firestore,
 } from 'firebase-admin/firestore';
+import { getAdminFirestore, isAdminConfigured } from './firebase-admin';
 
 // Collection names
 export const COLLECTIONS = {
@@ -33,72 +31,26 @@ export const COLLECTIONS = {
   USERS: 'users',
 } as const;
 
-// Singleton instance
-let firestore: Firestore | null = null;
-let app: App | null = null;
-
 /**
  * Check if Firestore is configured
  */
 export function isFirestoreConfigured(): boolean {
-  return !!(
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
-    process.env.FIREBASE_PROJECT_ID ||
-    process.env.GOOGLE_CLOUD_PROJECT
-  );
+  return isAdminConfigured();
 }
 
 /**
  * Initialize Firebase Admin and Firestore
+ * @deprecated Use getDb() instead - initialization is automatic
  */
 export function initializeFirestore(): Firestore | null {
-  if (firestore) return firestore;
-
-  if (!isFirestoreConfigured()) {
-    console.warn('Firestore not configured - using in-memory fallback');
-    return null;
-  }
-
-  try {
-    // Check if already initialized
-    if (getApps().length === 0) {
-      // Try to initialize with service account or default credentials
-      const projectId =
-        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
-        process.env.FIREBASE_PROJECT_ID ||
-        process.env.GOOGLE_CLOUD_PROJECT;
-
-      if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-        // Use service account JSON
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-        app = initializeApp({
-          credential: cert(serviceAccount),
-          projectId,
-        });
-      } else {
-        // Use Application Default Credentials (works in Cloud environments)
-        app = initializeApp({
-          projectId,
-        });
-      }
-    } else {
-      app = getApps()[0];
-    }
-
-    firestore = getFirestore(app);
-    console.log('Firestore initialized successfully');
-    return firestore;
-  } catch (error) {
-    console.error('Failed to initialize Firestore:', error);
-    return null;
-  }
+  return getAdminFirestore();
 }
 
 /**
  * Get Firestore instance
  */
 export function getDb(): Firestore | null {
-  return firestore || initializeFirestore();
+  return getAdminFirestore();
 }
 
 /**

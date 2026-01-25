@@ -1,6 +1,5 @@
 import { db } from '@/lib/firebase/admin';
-import { getAuth } from 'firebase-admin/auth';
-import { getApps } from 'firebase-admin/app';
+import { getAdminAuth, isAdminReady } from '@/lib/firebase-admin';
 import {
   PlatformAdmin,
   StripeConfig,
@@ -143,9 +142,9 @@ export async function getPlatformAdmin(userId: string): Promise<PlatformAdmin | 
 
   // If not found, check if this user's email is the SUPERADMIN_EMAIL
   // This handles the case where the superadmin hasn't been added to the database yet
-  if (getApps().length > 0 && DEFAULT_SUPERADMIN_EMAIL) {
+  const auth = getAdminAuth();
+  if (auth && DEFAULT_SUPERADMIN_EMAIL) {
     try {
-      const auth = getAuth();
       const userRecord = await auth.getUser(userId);
 
       if (userRecord.email?.toLowerCase() === DEFAULT_SUPERADMIN_EMAIL.toLowerCase()) {
