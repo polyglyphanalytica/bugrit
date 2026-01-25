@@ -1,4 +1,6 @@
 import { db } from '@/lib/firebase/admin';
+import { getAuth } from 'firebase-admin/auth';
+import { getApps } from 'firebase-admin/app';
 import {
   PlatformAdmin,
   StripeConfig,
@@ -133,9 +135,41 @@ export async function getPlatformAdminByEmail(email: string): Promise<PlatformAd
 }
 
 export async function getPlatformAdmin(userId: string): Promise<PlatformAdmin | null> {
+  // First check by userId in database
   const doc = await db.collection('platform_admins').doc(userId).get();
-  if (!doc.exists) return null;
-  return doc.data() as PlatformAdmin;
+  if (doc.exists) {
+    return doc.data() as PlatformAdmin;
+  }
+
+  // If not found, check if this user's email is the SUPERADMIN_EMAIL
+  // This handles the case where the superadmin hasn't been added to the database yet
+  if (getApps().length > 0 && DEFAULT_SUPERADMIN_EMAIL) {
+    try {
+      const auth = getAuth();
+      const userRecord = await auth.getUser(userId);
+
+      if (userRecord.email?.toLowerCase() === DEFAULT_SUPERADMIN_EMAIL.toLowerCase()) {
+        // Auto-create the superadmin record in the database
+        const admin: PlatformAdmin = {
+          userId,
+          email: userRecord.email,
+          displayName: userRecord.displayName || 'Platform Owner',
+          role: 'superadmin',
+          createdAt: new Date(),
+          createdBy: 'system',
+        };
+
+        // Save to database for future lookups
+        await db.collection('platform_admins').doc(userId).set(admin);
+
+        return admin;
+      }
+    } catch (error) {
+      console.error('Error checking user email for admin:', error);
+    }
+  }
+
+  return null;
 }
 
 export async function getAllPlatformAdmins(): Promise<PlatformAdmin[]> {

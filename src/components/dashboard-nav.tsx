@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
@@ -21,7 +21,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { Menu, X, LayoutDashboard, AppWindow, Scan, FileText, Settings, Key, LogOut } from 'lucide-react';
+import { Menu, X, LayoutDashboard, AppWindow, Scan, FileText, Settings, Key, LogOut, Shield } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 
 interface NavItem {
@@ -41,6 +41,29 @@ export function DashboardNav() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is an admin
+  useEffect(() => {
+    async function checkAdminStatus() {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/check-admin');
+        if (response.ok) {
+          const data = await response.json();
+          setIsAdmin(data.isAdmin === true);
+        }
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+
+    checkAdminStatus();
+  }, [user]);
 
   const handleLogout = async () => {
     await logout();
@@ -105,6 +128,24 @@ export function DashboardNav() {
                   <Key className="w-5 h-5" />
                   API Keys
                 </Link>
+                {isAdmin && (
+                  <>
+                    <div className="my-2 border-t" />
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors',
+                        pathname.startsWith('/admin')
+                          ? 'bg-amber-500/10 text-amber-600'
+                          : 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950'
+                      )}
+                    >
+                      <Shield className="w-5 h-5" />
+                      Admin Panel
+                    </Link>
+                  </>
+                )}
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
@@ -184,6 +225,17 @@ export function DashboardNav() {
                 Documentation
               </Link>
             </DropdownMenuItem>
+            {isAdmin && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/admin" className="cursor-pointer text-amber-600 focus:text-amber-600">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin Panel
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-600">
               <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
