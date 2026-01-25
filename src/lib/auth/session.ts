@@ -9,20 +9,35 @@ import { getAuth } from 'firebase-admin/auth';
 import { getApps, initializeApp, cert } from 'firebase-admin/app';
 
 // Ensure Firebase Admin is initialized
-function ensureFirebaseAdmin() {
+function ensureFirebaseAdmin(): boolean {
   if (getApps().length === 0) {
     const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
 
     if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-      initializeApp({
-        credential: cert(serviceAccount),
-        projectId,
-      });
+      try {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+        initializeApp({
+          credential: cert(serviceAccount),
+          projectId,
+        });
+        return true;
+      } catch (error) {
+        console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY:', error);
+        return false;
+      }
     } else if (projectId) {
-      initializeApp({ projectId });
+      // Initialize without service account (will use Application Default Credentials)
+      try {
+        initializeApp({ projectId });
+        return true;
+      } catch (error) {
+        console.error('Failed to initialize Firebase Admin:', error);
+        return false;
+      }
     }
+    return false;
   }
+  return true;
 }
 
 export interface SessionUser {
@@ -43,9 +58,8 @@ export async function verifySession(): Promise<SessionUser | null> {
       return null;
     }
 
-    ensureFirebaseAdmin();
-
-    if (getApps().length === 0) {
+    const initialized = ensureFirebaseAdmin();
+    if (!initialized || getApps().length === 0) {
       console.warn('Firebase Admin not configured, cannot verify session');
       return null;
     }
