@@ -52,206 +52,40 @@ export interface CostTrend {
 }
 
 /**
- * Get GCP billing configuration from environment
+ * NOTE: BigQuery is not available in Firebase App Hosting.
+ * All billing functions return mock data for demonstration purposes.
+ *
+ * For production billing integration, consider:
+ * 1. Using a Cloud Function to query BigQuery
+ * 2. Setting up a separate backend service
+ * 3. Using the Cloud Billing API directly
  */
-function getGCPBillingConfig() {
-  return {
-    billingAccountId: process.env.GCP_BILLING_ACCOUNT_ID,
-    projectId: process.env.GCP_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT,
-    datasetId: process.env.GCP_BILLING_DATASET_ID || 'billing_export',
-    tableId: process.env.GCP_BILLING_TABLE_ID || 'gcp_billing_export_v1',
-  };
-}
 
 /**
- * Initialize BigQuery client for billing data queries
- * GCP billing data is exported to BigQuery for analysis
- */
-async function getBigQueryClient() {
-  try {
-    // Use require() instead of import() to avoid webpack bundling issues
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { BigQuery } = require('@google-cloud/bigquery');
-    return new BigQuery();
-  } catch (error) {
-    logger.warn('BigQuery client not available - using mock data', { error });
-    return null;
-  }
-}
-
-/**
- * Fetch cost summary for a given period using BigQuery
- * GCP billing data is typically exported to BigQuery for analysis
+ * Fetch cost summary for a given period
+ * NOTE: In Firebase App Hosting, BigQuery is not available.
+ * Returns mock data for demonstration purposes.
  */
 export async function fetchGCPCosts(
   startDate: Date,
   endDate: Date
 ): Promise<GCPCostSummary | null> {
-  const config = getGCPBillingConfig();
-
-  if (!config.projectId) {
-    logger.warn('GCP billing not configured: missing project ID');
-    return null;
-  }
-
-  const bigquery = await getBigQueryClient();
-  if (!bigquery) {
-    return null;
-  }
-
-  try {
-    const query = `
-      SELECT
-        service.description as service_name,
-        sku.description as sku_description,
-        SUM(cost) as total_cost,
-        currency,
-        SUM(usage.amount) as usage_amount,
-        usage.unit as usage_unit,
-        SUM(IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0)) as total_credits
-      FROM \`${config.projectId}.${config.datasetId}.${config.tableId}\`
-      WHERE
-        DATE(usage_start_time) >= @startDate
-        AND DATE(usage_end_time) <= @endDate
-        AND project.id = @projectId
-      GROUP BY
-        service.description,
-        sku.description,
-        currency,
-        usage.unit
-      ORDER BY
-        total_cost DESC
-    `;
-
-    const options = {
-      query,
-      params: {
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-        projectId: config.projectId,
-      },
-    };
-
-    const [rows] = await bigquery.query(options);
-
-    const items: GCPCostItem[] = rows.map((row: Record<string, unknown>) => ({
-      service: row.service_name as string,
-      description: row.sku_description as string,
-      cost: Number(row.total_cost) || 0,
-      currency: row.currency as string || 'USD',
-      usageAmount: Number(row.usage_amount) || 0,
-      usageUnit: row.usage_unit as string || '',
-      credits: Number(row.total_credits) || 0,
-      netCost: (Number(row.total_cost) || 0) + (Number(row.total_credits) || 0),
-    }));
-
-    const byService: Record<string, number> = {};
-    let totalCost = 0;
-    let totalCredits = 0;
-
-    for (const item of items) {
-      totalCost += item.cost;
-      totalCredits += item.credits;
-      byService[item.service] = (byService[item.service] || 0) + item.netCost;
-    }
-
-    return {
-      totalCost,
-      totalCredits,
-      netCost: totalCost + totalCredits, // credits are negative
-      currency: items[0]?.currency || 'USD',
-      period: { start: startDate, end: endDate },
-      byService,
-      items,
-    };
-  } catch (error) {
-    logger.error('Failed to fetch GCP costs from BigQuery', { error });
-    return null;
-  }
+  // Use mock data in Firebase App Hosting environment
+  const mockData = generateMockCostData(
+    Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+  );
+  return mockData.summary;
 }
 
 /**
  * Fetch daily costs for trend analysis
+ * NOTE: In Firebase App Hosting, BigQuery is not available.
+ * Returns mock data for demonstration purposes.
  */
 export async function fetchGCPCostTrend(days: number = 30): Promise<CostTrend | null> {
-  const config = getGCPBillingConfig();
-
-  if (!config.projectId) {
-    return null;
-  }
-
-  const bigquery = await getBigQueryClient();
-  if (!bigquery) {
-    return null;
-  }
-
-  try {
-    const query = `
-      SELECT
-        DATE(usage_start_time) as date,
-        SUM(cost) as daily_cost,
-        SUM(IFNULL((SELECT SUM(c.amount) FROM UNNEST(credits) c), 0)) as daily_credits
-      FROM \`${config.projectId}.${config.datasetId}.${config.tableId}\`
-      WHERE
-        DATE(usage_start_time) >= DATE_SUB(CURRENT_DATE(), INTERVAL @days DAY)
-        AND project.id = @projectId
-      GROUP BY
-        DATE(usage_start_time)
-      ORDER BY
-        date ASC
-    `;
-
-    const options = {
-      query,
-      params: {
-        days,
-        projectId: config.projectId,
-      },
-    };
-
-    const [rows] = await bigquery.query(options);
-
-    const daily: DailyCost[] = rows.map((row: Record<string, unknown>) => {
-      const dateValue = row.date as { value?: string } | string | undefined;
-      return {
-        date: typeof dateValue === 'object' && dateValue?.value ? dateValue.value : String(dateValue || ''),
-        cost: Number(row.daily_cost) || 0,
-        credits: Number(row.daily_credits) || 0,
-        netCost: (Number(row.daily_cost) || 0) + (Number(row.daily_credits) || 0),
-      };
-    });
-
-    // Calculate averages and projections
-    const recentDays = daily.slice(-7);
-    const weeklyAverage = recentDays.reduce((sum, d) => sum + d.netCost, 0) / (recentDays.length || 1);
-    const monthlyProjection = weeklyAverage * 30;
-
-    // Get previous month total for comparison
-    const previousMonthStart = new Date();
-    previousMonthStart.setMonth(previousMonthStart.getMonth() - 1);
-    previousMonthStart.setDate(1);
-    const previousMonthEnd = new Date();
-    previousMonthEnd.setDate(0); // Last day of previous month
-
-    const previousMonth = await fetchGCPCosts(previousMonthStart, previousMonthEnd);
-    const previousMonthTotal = previousMonth?.netCost || 0;
-
-    const currentMonthTotal = daily.reduce((sum, d) => sum + d.netCost, 0);
-    const percentChange = previousMonthTotal > 0
-      ? ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100
-      : 0;
-
-    return {
-      daily,
-      weeklyAverage,
-      monthlyProjection,
-      previousMonthTotal,
-      percentChange,
-    };
-  } catch (error) {
-    logger.error('Failed to fetch GCP cost trend', { error });
-    return null;
-  }
+  // Use mock data in Firebase App Hosting environment
+  const mockData = generateMockCostData(days);
+  return mockData.trend;
 }
 
 /**
