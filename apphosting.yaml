@@ -11,6 +11,12 @@ runConfig:
 
 # Environment variables
 env:
+  # Build configuration - increase Node.js memory for Next.js build
+  - variable: NODE_OPTIONS
+    value: "--max-old-space-size=4096"
+    availability:
+      - BUILD
+
   # Puppeteer configuration
   - variable: PUPPETEER_SKIP_DOWNLOAD
     value: "true"
