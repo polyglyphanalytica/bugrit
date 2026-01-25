@@ -2,26 +2,28 @@ import type {NextConfig} from 'next';
 
 // Detect build environment
 const isDevelopment = process.env.NODE_ENV === 'development';
-const isCI = process.env.CI === 'true';
-const isFirebaseAppHosting = process.env.FIREBASE_APP_HOSTING === 'true' ||
-                              process.env.K_SERVICE !== undefined; // Cloud Run environment
 
 const nextConfig: NextConfig = {
   /* config options here */
   typescript: {
-    // Type errors are ALWAYS checked in production/CI builds
-    ignoreBuildErrors: isDevelopment && !isCI,
+    // Type errors are checked during builds
+    // Set to true only in development for faster iteration
+    ignoreBuildErrors: isDevelopment,
   },
   eslint: {
-    // ESLint during builds is disabled for Firebase App Hosting due to:
-    // 1. ESLint circular structure JSON serialization bug causes OOM
-    // 2. Linting should be done in CI pipeline, not during deploy
-    // 3. Firebase Cloud Build has limited memory
-    ignoreDuringBuilds: isDevelopment || isFirebaseAppHosting || !isCI,
+    // ALWAYS skip ESLint during Next.js builds
+    // Reasons:
+    // 1. ESLint has a circular structure JSON serialization bug that causes OOM
+    // 2. Linting should be done in a separate CI step, not during deployment
+    // 3. Firebase App Hosting Cloud Build has limited memory (2GB)
+    // 4. The eslint-plugin-react circular reference crashes the build
+    // Run `npm run lint` separately in your CI pipeline
+    ignoreDuringBuilds: true,
   },
-  // Exclude problematic packages from build tracing
+  // Exclude problematic packages and directories from build tracing
   outputFileTracingExcludes: {
     '*': [
+      'functions/**',
       'node_modules/knip/**',
       'node_modules/madge/**',
       'node_modules/dependency-cruiser/**',
