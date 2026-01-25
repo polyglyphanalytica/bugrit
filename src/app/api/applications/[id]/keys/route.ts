@@ -18,7 +18,7 @@ interface RouteParams {
 // GET /api/applications/[id]/keys - Get all API keys for an application
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const authResult = requireAuthenticatedUser(request);
+    const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // POST /api/applications/[id]/keys - Create a new API key
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const authResult = requireAuthenticatedUser(request);
+    const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/applications/[id]/keys - Delete or revoke an API key
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const authResult = requireAuthenticatedUser(request);
+    const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }

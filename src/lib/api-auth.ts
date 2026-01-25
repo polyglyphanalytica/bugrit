@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
 import { store } from './store';
 import { ApiKey, ApiKeyPermission } from './types';
+import { verifySession } from './auth/session';
 
 /**
  * Constant-time string comparison to prevent timing attacks
@@ -275,16 +276,29 @@ export function getAuthenticatedUserId(request: NextRequest): string | null {
 /**
  * Require authentication and return user ID
  * Returns NextResponse error if not authenticated, otherwise returns user ID
+ *
+ * Supports both API key authentication and Firebase session cookies.
+ * This is an async function to support session cookie verification.
  */
-export function requireAuthenticatedUser(request: NextRequest): NextResponse | string {
+export async function requireAuthenticatedUser(request: NextRequest): Promise<NextResponse | string> {
+  // Try API key first (for programmatic access)
   const userId = getAuthenticatedUserId(request);
-
-  if (!userId) {
-    return NextResponse.json(
-      { error: 'Authentication required. Provide API key via x-api-key header or login.' },
-      { status: 401 }
-    );
+  if (userId) {
+    return userId;
   }
 
-  return userId;
+  // Try Firebase session cookie (for browser-based access)
+  try {
+    const session = await verifySession();
+    if (session?.uid) {
+      return session.uid;
+    }
+  } catch (error) {
+    // Session verification failed, continue to error response
+  }
+
+  return NextResponse.json(
+    { error: 'Authentication required. Provide API key via x-api-key header or login.' },
+    { status: 401 }
+  );
 }

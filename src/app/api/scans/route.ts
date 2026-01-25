@@ -118,7 +118,7 @@ async function getUserEmail(userId: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
-    const authResult = requireAuthenticatedUser(request);
+    const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -305,7 +305,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const authResult = requireAuthenticatedUser(request);
+    const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -733,7 +733,7 @@ async function downloadNpmPackage(packageName: string, version: string, targetDi
 // Cancel a running scan
 export async function DELETE(request: NextRequest) {
   // Authenticate user
-  const authResult = requireAuthenticatedUser(request);
+  const authResult = await requireAuthenticatedUser(request);
   if (authResult instanceof NextResponse) {
     return authResult;
   }

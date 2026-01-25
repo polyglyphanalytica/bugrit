@@ -26,7 +26,7 @@ async function getUserEmail(userId: string): Promise<string> {
 // GET /api/test-runs - Get all test runs
 export async function GET(request: NextRequest) {
   try {
-    const authResult = requireAuthenticatedUser(request);
+    const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 // POST /api/test-runs - Create a new test run
 export async function POST(request: NextRequest) {
   try {
-    const authResult = requireAuthenticatedUser(request);
+    const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
