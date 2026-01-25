@@ -94,8 +94,9 @@ export class AlexIntegration implements ToolIntegration {
         } catch (error) {
           // Alex exits with code 1 when it finds issues
           if (error instanceof Error && 'stdout' in error) {
-            const stdout = (error as { stdout: string }).stdout || '';
-            const stderr = (error as { stderr: string }).stderr || '';
+            const execError = error as unknown as { stdout?: string; stderr?: string };
+            const stdout = execError.stdout || '';
+            const stderr = execError.stderr || '';
             const output = stdout + stderr;
             if (output) {
               const messages = this.parseTextOutput(output, file);

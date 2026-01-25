@@ -2,20 +2,10 @@
  * Trust Badge Site Store
  *
  * Manages registered sites for trust badge functionality.
+ * Uses Firebase Admin SDK for server-side operations.
  */
 
-import { db } from '@/lib/firestore';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  updateDoc,
-  query,
-  where,
-  increment,
-} from 'firebase/firestore';
+import { getDb, FieldValue } from '@/lib/firestore';
 import type { RegisteredSite, SiteCategory } from './types';
 
 const SITES_COLLECTION = 'trustBadgeSites';
@@ -34,6 +24,9 @@ export async function registerSite(
     privacyPolicyUrl?: string;
   }
 ): Promise<RegisteredSite> {
+  const db = getDb();
+  if (!db) throw new Error('Database not available');
+
   const siteId = generateSiteId();
   const normalizedDomain = normalizeDomain(domain);
 
@@ -71,9 +64,7 @@ export async function registerSite(
     updatedAt: new Date(),
   };
 
-  if (db) {
-    await setDoc(doc(db, SITES_COLLECTION, siteId), serializeSite(site));
-  }
+  await db.collection(SITES_COLLECTION).doc(siteId).set(serializeSite(site));
 
   return site;
 }
@@ -82,47 +73,48 @@ export async function registerSite(
  * Get a site by ID
  */
 export async function getSiteById(siteId: string): Promise<RegisteredSite | null> {
+  const db = getDb();
   if (!db) return null;
 
-  const docRef = doc(db, SITES_COLLECTION, siteId);
-  const docSnap = await getDoc(docRef);
+  const docSnap = await db.collection(SITES_COLLECTION).doc(siteId).get();
 
-  if (!docSnap.exists()) return null;
+  if (!docSnap.exists) return null;
 
-  return deserializeSite(docSnap.data());
+  return deserializeSite(docSnap.data() as Record<string, unknown>);
 }
 
 /**
  * Get a site by domain
  */
 export async function getSiteByDomain(domain: string): Promise<RegisteredSite | null> {
+  const db = getDb();
   if (!db) return null;
 
   const normalizedDomain = normalizeDomain(domain);
-  const q = query(
-    collection(db, SITES_COLLECTION),
-    where('domain', '==', normalizedDomain)
-  );
+  const snapshot = await db
+    .collection(SITES_COLLECTION)
+    .where('domain', '==', normalizedDomain)
+    .limit(1)
+    .get();
 
-  const snapshot = await getDocs(q);
   if (snapshot.empty) return null;
 
-  return deserializeSite(snapshot.docs[0].data());
+  return deserializeSite(snapshot.docs[0].data() as Record<string, unknown>);
 }
 
 /**
  * Get all sites for a user
  */
 export async function getSitesByOwner(ownerId: string): Promise<RegisteredSite[]> {
+  const db = getDb();
   if (!db) return [];
 
-  const q = query(
-    collection(db, SITES_COLLECTION),
-    where('ownerId', '==', ownerId)
-  );
+  const snapshot = await db
+    .collection(SITES_COLLECTION)
+    .where('ownerId', '==', ownerId)
+    .get();
 
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => deserializeSite(doc.data()));
+  return snapshot.docs.map((doc) => deserializeSite(doc.data() as Record<string, unknown>));
 }
 
 /**
@@ -132,12 +124,13 @@ export async function updateSiteMetadata(
   siteId: string,
   metadata: Partial<RegisteredSite['metadata']>
 ): Promise<void> {
+  const db = getDb();
   if (!db) return;
 
   const site = await getSiteById(siteId);
   if (!site) throw new Error('Site not found');
 
-  await updateDoc(doc(db, SITES_COLLECTION, siteId), {
+  await db.collection(SITES_COLLECTION).doc(siteId).update({
     metadata: { ...site.metadata, ...metadata },
     updatedAt: new Date().toISOString(),
   });
@@ -150,12 +143,13 @@ export async function updateBadgeConfig(
   siteId: string,
   config: Partial<RegisteredSite['badgeConfig']>
 ): Promise<void> {
+  const db = getDb();
   if (!db) return;
 
   const site = await getSiteById(siteId);
   if (!site) throw new Error('Site not found');
 
-  await updateDoc(doc(db, SITES_COLLECTION, siteId), {
+  await db.collection(SITES_COLLECTION).doc(siteId).update({
     badgeConfig: { ...site.badgeConfig, ...config },
     updatedAt: new Date().toISOString(),
   });
@@ -168,9 +162,10 @@ export async function updateSiteScanData(
   siteId: string,
   scanData: RegisteredSite['latestScan']
 ): Promise<void> {
+  const db = getDb();
   if (!db) return;
 
-  await updateDoc(doc(db, SITES_COLLECTION, siteId), {
+  await db.collection(SITES_COLLECTION).doc(siteId).update({
     latestScan: scanData
       ? {
           ...scanData,
@@ -185,10 +180,11 @@ export async function updateSiteScanData(
  * Track badge view
  */
 export async function trackBadgeView(siteId: string): Promise<void> {
+  const db = getDb();
   if (!db) return;
 
-  await updateDoc(doc(db, SITES_COLLECTION, siteId), {
-    'stats.badgeViews': increment(1),
+  await db.collection(SITES_COLLECTION).doc(siteId).update({
+    'stats.badgeViews': FieldValue.increment(1),
   });
 }
 
@@ -196,10 +192,11 @@ export async function trackBadgeView(siteId: string): Promise<void> {
  * Track badge click
  */
 export async function trackBadgeClick(siteId: string): Promise<void> {
+  const db = getDb();
   if (!db) return;
 
-  await updateDoc(doc(db, SITES_COLLECTION, siteId), {
-    'stats.badgeClicks': increment(1),
+  await db.collection(SITES_COLLECTION).doc(siteId).update({
+    'stats.badgeClicks': FieldValue.increment(1),
   });
 }
 
@@ -207,10 +204,11 @@ export async function trackBadgeClick(siteId: string): Promise<void> {
  * Track verification page view
  */
 export async function trackVerificationPageView(siteId: string): Promise<void> {
+  const db = getDb();
   if (!db) return;
 
-  await updateDoc(doc(db, SITES_COLLECTION, siteId), {
-    'stats.verificationPageViews': increment(1),
+  await db.collection(SITES_COLLECTION).doc(siteId).update({
+    'stats.verificationPageViews': FieldValue.increment(1),
   });
 }
 
@@ -235,6 +233,7 @@ export function generateVerificationToken(siteId: string): string {
  * containing the verification token
  */
 export async function verifyDomain(siteId: string): Promise<{ success: boolean; error?: string }> {
+  const db = getDb();
   if (!db) return { success: false, error: 'Database not available' };
 
   const site = await getSiteById(siteId);
@@ -275,7 +274,7 @@ export async function verifyDomain(siteId: string): Promise<{ success: boolean; 
     }
 
     // Verification successful - update the site
-    await updateDoc(doc(db, SITES_COLLECTION, siteId), {
+    await db.collection(SITES_COLLECTION).doc(siteId).update({
       verifiedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -327,6 +326,7 @@ export async function addAllowedDomain(
   siteId: string,
   domain: string
 ): Promise<void> {
+  const db = getDb();
   if (!db) return;
 
   const site = await getSiteById(siteId);
@@ -335,11 +335,8 @@ export async function addAllowedDomain(
   const normalizedDomain = normalizeDomain(domain);
 
   if (!site.badgeConfig.allowedDomains.includes(normalizedDomain)) {
-    await updateDoc(doc(db, SITES_COLLECTION, siteId), {
-      'badgeConfig.allowedDomains': [
-        ...site.badgeConfig.allowedDomains,
-        normalizedDomain,
-      ],
+    await db.collection(SITES_COLLECTION).doc(siteId).update({
+      'badgeConfig.allowedDomains': FieldValue.arrayUnion(normalizedDomain),
       updatedAt: new Date().toISOString(),
     });
   }
@@ -357,6 +354,7 @@ function generateSiteId(): string {
     crypto.getRandomValues(randomBytes);
   } else {
     // Fallback for Node.js environments
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const nodeCrypto = require('crypto');
     const nodeRandom = nodeCrypto.randomBytes(5);
     randomBytes.set(nodeRandom);

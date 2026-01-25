@@ -17,19 +17,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { formatDistanceToNow } from 'date-fns';
-import { ScanProgress, PrioritizedResults, NoIssuesFound, Finding } from '@/components/scan';
+import { ScanProgress, PrioritizedResults, NoIssuesFound, type Finding } from '@/components/scan';
 import { PlainEnglishProvider } from '@/contexts/plain-english-context';
-
-interface Finding {
-  id: string;
-  severity: 'error' | 'warning' | 'info';
-  message: string;
-  file?: string;
-  line?: number;
-  column?: number;
-  rule?: string;
-  suggestion?: string;
-}
 
 interface ToolResult {
   toolId: string;

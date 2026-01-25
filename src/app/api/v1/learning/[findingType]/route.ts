@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { LEARNING_CONTENT, LearningTopic } from '@/lib/learning/content';
+import { LEARNING_CONTENT } from '@/lib/learning/content';
 
 interface RouteParams {
   params: Promise<{ findingType: string }>;

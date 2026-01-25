@@ -295,7 +295,7 @@ export function calculateBadges(
   }
 
   // Quality badges
-  const lintingFindings = findings.filter(f => f.category === 'linting');
+  const lintingFindings = findings.filter(f => f.category === 'code-quality');
   const typeErrors = findings.filter(f => f.tool === 'typescript');
 
   if (lintingFindings.length === 0) {

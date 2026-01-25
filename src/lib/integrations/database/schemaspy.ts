@@ -228,7 +228,7 @@ export class SchemaSpyIntegration implements ToolIntegration {
   private analyzeSqlSchema(content: string, analysis: SchemaAnalysis): void {
     // Parse CREATE TABLE statements
     const tableRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?["'`]?(\w+)["'`]?\s*\(([^;]+)\)/gi;
-    let match;
+    let match: RegExpExecArray | null;
 
     while ((match = tableRegex.exec(content)) !== null) {
       const tableName = match[1];
@@ -255,7 +255,7 @@ export class SchemaSpyIntegration implements ToolIntegration {
 
       // Parse foreign key relationships
       const fkRegex = /FOREIGN\s+KEY\s*\(["'`]?(\w+)["'`]?\)\s*REFERENCES\s+["'`]?(\w+)["'`]?\s*\(["'`]?(\w+)["'`]?\)/gi;
-      let fkMatch;
+      let fkMatch: RegExpExecArray | null;
 
       while ((fkMatch = fkRegex.exec(body)) !== null) {
         analysis.relationships.push({
@@ -270,8 +270,10 @@ export class SchemaSpyIntegration implements ToolIntegration {
 
     // Parse CREATE INDEX statements
     const indexRegex = /CREATE\s+(?:UNIQUE\s+)?INDEX\s+\w+\s+ON\s+["'`]?(\w+)["'`]?/gi;
-    while ((match = indexRegex.exec(content)) !== null) {
-      const table = analysis.tables.find(t => t.name === match[1]);
+    let indexMatch: RegExpExecArray | null;
+    while ((indexMatch = indexRegex.exec(content)) !== null) {
+      const tableName = indexMatch[1];
+      const table = analysis.tables.find(t => t.name === tableName);
       if (table) {
         table.indexes++;
       }
@@ -281,7 +283,7 @@ export class SchemaSpyIntegration implements ToolIntegration {
   private analyzeRailsSchema(content: string, analysis: SchemaAnalysis): void {
     // Parse Rails schema.rb
     const tableRegex = /create_table\s+["':]+(\w+)["']?[^do]*do\s*\|t\|([^end]+)end/gi;
-    let match;
+    let match: RegExpExecArray | null;
 
     while ((match = tableRegex.exec(content)) !== null) {
       const tableName = match[1];

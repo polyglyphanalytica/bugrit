@@ -239,7 +239,7 @@ export async function generateReviewMergePrompt(options: {
     line?: number;
   }>;
   prUrl?: string;
-}): string {
+}): Promise<string> {
   const { repoUrl, baseBranch, fixBranch, scanId, findings, prUrl } = options;
 
   const criticalCount = findings.filter(f => f.severity === 'critical').length;
@@ -373,7 +373,7 @@ export async function generateQuickReviewPrompt(options: {
   findingCount: number;
   criticalCount: number;
   highCount: number;
-}): string {
+}): Promise<string> {
   const { repoUrl, baseBranch, fixBranch, findingCount, criticalCount, highCount } = options;
 
   return `# Quick Review: Bugrit Fix Branch
@@ -411,7 +411,7 @@ Verify each fix addresses the actual issue before merging. Do not merge if tests
 export async function generateCopyablePrompt(
   findings: GenerateFixInput['finding'][],
   groupByFile: boolean = true
-): string {
+): Promise<string> {
   if (groupByFile) {
     // Group findings by file
     const byFile = new Map<string, GenerateFixInput['finding'][]>();
