@@ -11,6 +11,12 @@ runConfig:
 
 # Environment variables
 env:
+  # Build configuration - increase Node.js memory for Next.js build
+  - variable: NODE_OPTIONS
+    value: "--max-old-space-size=4096"
+    availability:
+      - BUILD
+
   # Puppeteer configuration
   - variable: PUPPETEER_SKIP_DOWNLOAD
     value: "true"
@@ -24,11 +30,11 @@ env:
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     secret: FIREBASE_API_KEY
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    value: YOUR_PROJECT_ID.firebaseapp.com # Replace with your project
+    value: bugrit-prod.firebaseapp.com
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
-    value: YOUR_PROJECT_ID # Replace with your project
+    value: bugrit-prod
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-    value: YOUR_PROJECT_ID.appspot.com # Replace with your project
+    value: bugrit-prod.appspot.com
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
     secret: FIREBASE_MESSAGING_SENDER_ID
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
@@ -38,7 +44,7 @@ env:
   # Firebase Admin SDK (server-side only)
   # ============================================================
   - variable: FIREBASE_PROJECT_ID
-    value: YOUR_PROJECT_ID # Replace with your project
+    value: bugrit-prod
   - variable: FIREBASE_SERVICE_ACCOUNT_KEY
     secret: FIREBASE_SERVICE_ACCOUNT_KEY
 
@@ -46,11 +52,11 @@ env:
   # Application Configuration
   # ============================================================
   - variable: NEXT_PUBLIC_APP_URL
-    value: https://YOUR_DOMAIN.web.app # Replace with your domain
+    value: https://bugrit-prod.web.app
   - variable: ADMIN_ENCRYPTION_KEY
     secret: ADMIN_ENCRYPTION_KEY
   - variable: SUPERADMIN_EMAIL
-    value: admin@yourdomain.com # Replace with your admin email
+    value: polyglyph.analytica@gmail.com
 
   # ============================================================
   # Stripe Billing (if using payments)
@@ -66,10 +72,18 @@ env:
   # Google Cloud (for Docker-based scanning tools)
   # ============================================================
   - variable: GOOGLE_CLOUD_PROJECT
-    value: YOUR_PROJECT_ID # Replace with your project
+    value: bugrit-prod
   - variable: SCAN_OUTPUT_BUCKET
-    value: YOUR_PROJECT_ID-bugrit-scans # Replace with your bucket
+    value: bugrit-prod-bugrit-scans
   - variable: GCP_BILLING_DATASET_ID
     secret: GCP_BILLING_DATASET_ID
   - variable: GCP_PROJECT_ID
-    secret: GCP_PROJECT_ID
+    value: bugrit-prod
+
+  # ============================================================
+  # GCP Billing Cloud Function (for BigQuery billing data)
+  # ============================================================
+  - variable: GCP_BILLING_FUNCTION_URL
+    secret: GCP_BILLING_FUNCTION_URL
+  - variable: GCP_BILLING_API_KEY
+    secret: GCP_BILLING_API_KEY
