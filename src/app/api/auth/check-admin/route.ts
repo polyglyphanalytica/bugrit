@@ -1,29 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getApps, initializeApp, cert } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
+import { getAdminAuth } from '@/lib/firebase-admin';
 import { isPlatformAdminByEmail } from '@/lib/admin/service';
 import { logger } from '@/lib/logger';
-
-// Initialize Firebase Admin if not already initialized
-function getFirebaseAuth() {
-  if (getApps().length === 0) {
-    const projectId =
-      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
-      process.env.FIREBASE_PROJECT_ID ||
-      process.env.GOOGLE_CLOUD_PROJECT;
-
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-      initializeApp({
-        credential: cert(serviceAccount),
-        projectId,
-      });
-    } else {
-      initializeApp({ projectId });
-    }
-  }
-  return getAuth();
-}
 
 /**
  * GET /api/auth/check-admin
@@ -44,7 +22,11 @@ export async function GET(request: NextRequest) {
 
       // For cookie-based auth, we'll verify via Firebase Admin
       try {
-        const auth = getFirebaseAuth();
+        const auth = getAdminAuth();
+        if (!auth) {
+          logger.error('Firebase Admin not initialized');
+          return NextResponse.json({ isAdmin: false, error: 'Server error' }, { status: 500 });
+        }
         const decodedToken = await auth.verifySessionCookie(sessionCookie);
         const email = decodedToken.email;
 
@@ -64,7 +46,11 @@ export async function GET(request: NextRequest) {
     const idToken = authHeader.substring(7);
 
     try {
-      const auth = getFirebaseAuth();
+      const auth = getAdminAuth();
+      if (!auth) {
+        logger.error('Firebase Admin not initialized');
+        return NextResponse.json({ isAdmin: false, error: 'Server error' }, { status: 500 });
+      }
       const decodedToken = await auth.verifyIdToken(idToken);
       const email = decodedToken.email;
 

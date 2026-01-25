@@ -5,7 +5,7 @@
  * All server-side Firebase operations should use this module.
  */
 
-import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
+import { initializeApp, getApps, cert, App, applicationDefault } from 'firebase-admin/app';
 import { getAuth, Auth } from 'firebase-admin/auth';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
@@ -80,21 +80,29 @@ export function initializeAdmin(): boolean {
   }
 
   // Try Application Default Credentials (for Cloud Run, App Hosting, etc.)
-  if (projectId) {
+  // In Google Cloud environments, ADC is automatically available
+  try {
+    // First try with explicit ADC credential
+    adminApp = initializeApp({
+      credential: applicationDefault(),
+      projectId,
+    });
+    console.log('Firebase Admin: Initialized with Application Default Credentials');
+    return true;
+  } catch (adcError) {
+    console.warn('Firebase Admin: ADC initialization failed, trying without credential:', adcError);
+
+    // Fallback: try without any options (works in some environments)
     try {
-      adminApp = initializeApp({ projectId });
-      console.log('Firebase Admin: Initialized with ADC for project:', projectId);
+      adminApp = initializeApp();
+      console.log('Firebase Admin: Initialized with auto-detection');
       return true;
-    } catch (error) {
-      console.error('Firebase Admin: Failed to initialize with ADC:', error);
-      initializationError = error as Error;
+    } catch (autoError) {
+      console.error('Firebase Admin: All initialization methods failed:', autoError);
+      initializationError = autoError as Error;
       return false;
     }
   }
-
-  console.warn('Firebase Admin: No configuration found');
-  initializationError = new Error('No Firebase configuration found');
-  return false;
 }
 
 /**

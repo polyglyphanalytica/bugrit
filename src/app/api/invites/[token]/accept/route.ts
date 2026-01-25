@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { acceptInvite } from '@/lib/organizations';
 import { verifySession } from '@/lib/auth/session';
-import { getAuth } from 'firebase-admin/auth';
-import { getApps } from 'firebase-admin/app';
+import { getAdminAuth } from '@/lib/firebase-admin';
 import { logger } from '@/lib/logger';
 
 interface RouteParams {
@@ -25,9 +24,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Get display name from Firebase Auth
     let displayName = user.email?.split('@')[0] || 'User';
-    if (getApps().length > 0) {
+    const auth = getAdminAuth();
+    if (auth) {
       try {
-        const firebaseUser = await getAuth().getUser(user.uid);
+        const firebaseUser = await auth.getUser(user.uid);
         displayName = firebaseUser.displayName || displayName;
       } catch {
         // Use fallback display name
