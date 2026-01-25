@@ -37,7 +37,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({
       scanId,
-      score: vibeScore.score,
+      score: vibeScore.overall,
       grade: vibeScore.grade,
       components: {
         security: {
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           issues: scan.results.security?.issues || 0,
         },
         codeQuality: {
-          score: vibeScore.components.codeQuality,
+          score: vibeScore.components.quality,
           weight: 0.25,
           issues: scan.results.linting?.issues || 0,
         },
@@ -70,8 +70,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           weight: 0.05,
         },
       },
-      achievements: vibeScore.achievements,
       trend: vibeScore.trend,
+      percentile: vibeScore.percentile,
       calculatedAt: new Date().toISOString(),
     });
   } catch (error) {

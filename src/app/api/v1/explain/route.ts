@@ -8,48 +8,53 @@ import { successResponse, handleError, Errors } from '@/lib/api/errors';
 /**
  * POST /api/v1/explain
  *
- * Generate an AI explanation of a codebase.
+ * Generate an AI explanation of a codebase based on scan findings.
  * Requires authentication with 'scans:read' permission.
+ *
+ * Body:
+ * - scanId: string (required) - The scan ID to explain
+ * - question: string (required) - The question to answer about the codebase
  */
 export async function POST(request: NextRequest) {
   try {
     const context = await authenticateRequest(request, 'scans:read');
     const body = await request.json();
-    const { repoUrl, scanId, focus = 'all' } = body;
+    const { scanId, question } = body;
 
-    if (!repoUrl && !scanId) {
-      return Errors.validationError('Either repoUrl or scanId is required');
+    if (!scanId) {
+      return Errors.validationError('scanId is required');
     }
 
-    // Verify scan belongs to organization if scanId provided
-    if (scanId) {
-      const scanAccess = await verifyScanAccess(scanId, context.organizationId);
-      if (!scanAccess) {
-        return Errors.forbidden('No access to this scan');
-      }
+    if (!question) {
+      return Errors.validationError('question is required');
     }
 
-    // Get codebase data from scan or fetch from repo
-    const codebaseData = scanId
-      ? await getCodebaseFromScan(scanId)
-      : await fetchCodebaseFromRepo(repoUrl);
+    // Verify scan belongs to organization
+    const scanData = await getScanWithFindings(scanId, context.organizationId);
+    if (!scanData) {
+      return Errors.notFound('Scan');
+    }
 
-    if (!codebaseData) {
-      return Errors.notFound('Codebase data');
+    if (!scanData.hasAccess) {
+      return Errors.forbidden('No access to this scan');
     }
 
     // Generate explanation using AI
     const explanation = await explainCodebase({
-      files: codebaseData.files,
-      packageJson: codebaseData.packageJson,
-      focus: focus as 'architecture' | 'security' | 'performance' | 'all',
+      question,
+      findings: scanData.findings,
+      vibeScore: scanData.vibeScore,
+      repoInfo: scanData.repoInfo,
     });
 
     const response = successResponse({
-      repoUrl: repoUrl || codebaseData.repoUrl,
       scanId,
-      focus,
-      explanation,
+      question,
+      answer: explanation.answer,
+      insights: explanation.insights,
+      followUpQuestions: explanation.followUpQuestions,
+      canOfferFix: explanation.canOfferFix,
+      fixSuggestion: explanation.fixSuggestion,
       generatedAt: new Date().toISOString(),
     });
 
@@ -64,23 +69,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function verifyScanAccess(scanId: string, organizationId: string): Promise<boolean> {
-  const db = getDb();
-  if (!db) return false;
-
-  try {
-    const scanDoc = await db.collection(COLLECTIONS.SCANS).doc(scanId).get();
-    if (!scanDoc.exists) return false;
-
-    const scanData = scanDoc.data();
-    return scanData?.organizationId === organizationId;
-  } catch (error) {
-    logger.error('Error verifying scan access', { scanId, error });
-    return false;
-  }
-}
-
-async function getCodebaseFromScan(scanId: string) {
+async function getScanWithFindings(scanId: string, organizationId: string) {
   const db = getDb();
   if (!db) {
     logger.warn('Firestore not available for scan lookup');
@@ -94,26 +83,62 @@ async function getCodebaseFromScan(scanId: string) {
     }
 
     const scanData = scanDoc.data();
-    if (scanData?.status !== 'completed') {
-      logger.info('Scan not yet completed', { scanId, status: scanData?.status });
-      return null;
+    const hasAccess = scanData?.organizationId === organizationId;
+
+    if (!hasAccess) {
+      return { hasAccess: false, findings: [], vibeScore: undefined, repoInfo: undefined };
     }
 
-    // Get codebase data from scan metadata
+    // Get findings from subcollection
+    const findingsSnapshot = await db
+      .collection(COLLECTIONS.SCANS)
+      .doc(scanId)
+      .collection('findings')
+      .get();
+
+    const findings = findingsSnapshot.docs.map(findingDoc => {
+      const data = findingDoc.data();
+      return {
+        tool: data.tool || 'unknown',
+        severity: data.severity || 'medium',
+        title: data.title || data.message || 'Unknown finding',
+        description: data.description || '',
+        file: data.file || data.location?.file,
+        line: data.line || data.location?.line,
+        category: data.category || 'code-quality',
+      };
+    });
+
+    // Build vibe score if available
+    const vibeScore = scanData?.vibeScore ? {
+      overall: scanData.vibeScore.overall || 0,
+      components: {
+        security: scanData.vibeScore.components?.security || 0,
+        quality: scanData.vibeScore.components?.quality || 0,
+        accessibility: scanData.vibeScore.components?.accessibility || 0,
+        performance: scanData.vibeScore.components?.performance || 0,
+        dependencies: scanData.vibeScore.components?.dependencies || 0,
+        documentation: scanData.vibeScore.components?.documentation || 0,
+      },
+    } : undefined;
+
+    // Build repo info
+    const repoInfo = {
+      name: scanData?.source?.repoUrl || scanData?.source?.url || 'Unknown',
+      language: scanData?.metadata?.primaryLanguage,
+      framework: scanData?.metadata?.framework,
+      linesOfCode: scanData?.metadata?.linesOfCode,
+      fileCount: scanData?.metadata?.fileCount,
+    };
+
     return {
-      repoUrl: scanData?.source?.repoUrl || scanData?.source?.url || '',
-      files: scanData?.codebaseSnapshot?.files || [],
-      packageJson: scanData?.codebaseSnapshot?.packageJson || null,
+      hasAccess: true,
+      findings,
+      vibeScore,
+      repoInfo,
     };
   } catch (error) {
     logger.error('Error fetching scan for explain', { scanId, error });
     return null;
   }
-}
-
-async function fetchCodebaseFromRepo(repoUrl: string) {
-  // Fetching from a repo URL requires cloning - this is handled by the scan flow
-  // For direct repo explanation, the user should first run a scan
-  logger.info('Direct repo fetch not yet supported', { repoUrl });
-  return null;
 }

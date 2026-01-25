@@ -64,7 +64,7 @@ async function handleSingleFix(
 
   // Get file content if available
   const fileContent = finding.file
-    ? await getFileContent(scanId, finding.file)
+    ? (await getFileContent(scanId, finding.file)) ?? undefined
     : undefined;
 
   // Generate fix

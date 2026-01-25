@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { generateReviewMergePrompt, generateQuickReviewPrompt } from '@/ai/flows/generate-fix';
 
 interface ReviewMergePromptProps {
@@ -28,17 +28,24 @@ export function ReviewMergePrompt({
 }: ReviewMergePromptProps) {
   const [format, setFormat] = useState<'full' | 'quick'>('full');
   const [copied, setCopied] = useState(false);
+  const [prompt, setPrompt] = useState<string>('Loading...');
 
-  const prompt = format === 'full'
-    ? generateReviewMergePrompt({ repoUrl, baseBranch, fixBranch, scanId, findings, prUrl })
-    : generateQuickReviewPrompt({
-        repoUrl,
-        baseBranch,
-        fixBranch,
-        findingCount: findings.length,
-        criticalCount: findings.filter(f => f.severity === 'critical').length,
-        highCount: findings.filter(f => f.severity === 'high').length,
-      });
+  useEffect(() => {
+    async function loadPrompt() {
+      const result = format === 'full'
+        ? await generateReviewMergePrompt({ repoUrl, baseBranch, fixBranch, scanId, findings, prUrl })
+        : await generateQuickReviewPrompt({
+            repoUrl,
+            baseBranch,
+            fixBranch,
+            findingCount: findings.length,
+            criticalCount: findings.filter(f => f.severity === 'critical').length,
+            highCount: findings.filter(f => f.severity === 'high').length,
+          });
+      setPrompt(result);
+    }
+    loadPrompt();
+  }, [format, repoUrl, baseBranch, fixBranch, scanId, findings, prUrl]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(prompt);

@@ -104,7 +104,8 @@ export class GitSecretsIntegration implements ToolIntegration {
         } catch (error) {
           // git-secrets exits with code 1 when it finds secrets
           if (error instanceof Error && 'stdout' in error) {
-            const output = (error as { stdout: string }).stdout || (error as { stderr: string }).stderr || '';
+            const execError = error as unknown as { stdout?: string; stderr?: string };
+            const output = execError.stdout || execError.stderr || '';
             gitSecretsFindings = this.parseGitSecretsOutput(output);
           }
         }

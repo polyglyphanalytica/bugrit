@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     let prompt: string;
 
     if (format === 'quick') {
-      prompt = generateQuickReviewPrompt({
+      prompt = await generateQuickReviewPrompt({
         repoUrl: scanData.repoUrl,
         baseBranch: scanData.baseBranch,
         fixBranch: scanData.fixBranch,
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
         highCount: scanData.findings.filter(f => f.severity === 'high').length,
       });
     } else {
-      prompt = generateReviewMergePrompt({
+      prompt = await generateReviewMergePrompt({
         repoUrl: scanData.repoUrl,
         baseBranch: scanData.baseBranch,
         fixBranch: scanData.fixBranch,

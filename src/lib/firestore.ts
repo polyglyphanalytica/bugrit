@@ -30,6 +30,8 @@ export const COLLECTIONS = {
   SCAN_ISSUES: 'scanIssues',
   REPORTS: 'reports',
   ORGANIZATIONS: 'organizations',
+  // User collections
+  USERS: 'users',
 } as const;
 
 // Singleton instance

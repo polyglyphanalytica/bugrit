@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { LEARNING_CONTENT, LearningTopic } from '@/lib/learning/content';
+import { LEARNING_CONTENT } from '@/lib/learning/content';
 
 /**
  * GET /api/v1/learning
@@ -9,15 +9,14 @@ import { LEARNING_CONTENT, LearningTopic } from '@/lib/learning/content';
 export async function GET() {
   const topics = Object.entries(LEARNING_CONTENT).map(([key, content]) => ({
     type: key,
-    title: content.title,
-    severity: content.severity,
-    category: content.category,
-    summary: content.whatItIs.substring(0, 200) + '...',
+    findingType: content.findingType,
+    summary: content.whyItMatters.substring(0, 200) + '...',
+    hasQuiz: !!content.quiz,
+    resourceCount: content.resources?.length || 0,
   }));
 
   return NextResponse.json({
     count: topics.length,
     topics,
-    categories: [...new Set(topics.map(t => t.category))],
   });
 }

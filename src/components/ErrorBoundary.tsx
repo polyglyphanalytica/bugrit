@@ -57,23 +57,24 @@ function logErrorToService(errorData: ErrorLogData): void {
     console.groupEnd();
   }
 
-  // Send to Sentry if configured
-  // Uses dynamic import to avoid bundling Sentry if not configured
-  if (process.env.NEXT_PUBLIC_SENTRY_DSN && typeof window !== 'undefined') {
-    import('@sentry/nextjs')
-      .then((Sentry) => {
-        Sentry.captureException(new Error(errorData.message), {
-          extra: {
-            componentStack: errorData.componentStack,
-            url: errorData.url,
-            stack: errorData.stack,
-          },
-        });
-      })
-      .catch(() => {
-        // Sentry not available, fail silently
-      });
-  }
+  // Sentry integration is optional - to enable:
+  // 1. Install @sentry/nextjs: npm install @sentry/nextjs
+  // 2. Set NEXT_PUBLIC_SENTRY_DSN environment variable
+  // 3. Uncomment the code below
+  //
+  // if (process.env.NEXT_PUBLIC_SENTRY_DSN && typeof window !== 'undefined') {
+  //   import('@sentry/nextjs')
+  //     .then((Sentry) => {
+  //       Sentry.captureException(new Error(errorData.message), {
+  //         extra: {
+  //           componentStack: errorData.componentStack,
+  //           url: errorData.url,
+  //           stack: errorData.stack,
+  //         },
+  //       });
+  //     })
+  //     .catch(() => {});
+  // }
 
   // In production, send to logging endpoint
   if (process.env.NODE_ENV === 'production') {

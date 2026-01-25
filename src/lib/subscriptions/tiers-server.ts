@@ -53,7 +53,32 @@ export async function loadTiersFromDatabase(): Promise<TierDefinition[]> {
         historyDays: config.limits.historyDays,
         apiRequestsPerMinute: config.limits.apiRequestsPerMinute,
         platforms: config.limits.platforms,
-        features: config.features,
+        features: {
+          // Core AI Features from config
+          aiSummary: config.features.aiSummary,
+          aiExplanations: config.features.aiExplanations,
+          aiFixSuggestions: config.features.aiFixSuggestions,
+          aiPrioritization: config.features.aiPrioritization,
+          // Integrations
+          githubIntegration: config.features.githubIntegration,
+          githubAction: config.features.githubIntegration, // Same as github integration
+          slackIntegration: config.features.slackIntegration,
+          webhooks: config.features.webhooks,
+          apiAccess: config.features.apiAccess,
+          // Vibe Coder Features - derive from tier
+          vibeScore: config.features.aiSummary, // Available if AI is enabled
+          vibeScoreBadge: config.features.apiAccess,
+          oneClickFixes: config.features.aiFixSuggestions,
+          aiReviewMerge: config.features.aiFixSuggestions,
+          shipItMode: config.features.aiFixSuggestions && config.features.githubIntegration,
+          learningMode: true, // Available to all
+          repoHealthProfile: config.features.aiSummary,
+          explainCodebase: config.features.aiExplanations,
+          trustBadge: config.features.apiAccess,
+          teamDashboard: config.limits.teamMembers > 1,
+          // Support
+          prioritySupport: config.features.prioritySupport,
+        },
       },
     }));
 

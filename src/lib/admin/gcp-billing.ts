@@ -69,10 +69,13 @@ function getGCPBillingConfig() {
  */
 async function getBigQueryClient() {
   try {
-    const { BigQuery } = await import('@google-cloud/bigquery');
+    // Use require to avoid webpack bundling issues
+    // BigQuery is only needed server-side for admin billing queries
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { BigQuery } = require('@google-cloud/bigquery');
     return new BigQuery();
   } catch (error) {
-    logger.error('Failed to initialize BigQuery client', { error });
+    logger.warn('BigQuery client not available - using mock data', { error });
     return null;
   }
 }
