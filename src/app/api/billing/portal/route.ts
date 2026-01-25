@@ -45,7 +45,7 @@ function getSafeReturnUrl(origin: string | null): string | null {
 export async function POST(req: NextRequest) {
   try {
     // Authenticate user
-    const authResult = requireAuthenticatedUser(req);
+    const authResult = await requireAuthenticatedUser(req);
     if (authResult instanceof NextResponse) {
       return authResult;
     }

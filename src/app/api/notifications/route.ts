@@ -6,16 +6,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { getDb, toDate, toTimestamp } from '@/lib/firestore';
 import { logger } from '@/lib/logger';
+import { verifySession } from '@/lib/auth/session';
 
 const COLLECTION = 'notifications';
 
 async function getUserFromSession(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('session');
-  return sessionCookie?.value || null;
+  const session = await verifySession();
+  return session?.uid || null;
 }
 
 /**

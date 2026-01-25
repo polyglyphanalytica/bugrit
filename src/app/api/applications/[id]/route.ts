@@ -15,7 +15,7 @@ interface RouteParams {
 // GET /api/applications/[id] - Get a specific application
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const authResult = requireAuthenticatedUser(request);
+    const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PATCH /api/applications/[id] - Update an application
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
-    const authResult = requireAuthenticatedUser(request);
+    const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -94,7 +94,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/applications/[id] - Delete an application
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const authResult = requireAuthenticatedUser(request);
+    const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }

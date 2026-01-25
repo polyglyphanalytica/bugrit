@@ -18,7 +18,7 @@ import { logger } from '@/lib/logger';
 // GET - List user's registered sites
 export async function GET(request: NextRequest) {
   // Authenticate user
-  const authResult = requireAuthenticatedUser(request);
+  const authResult = await requireAuthenticatedUser(request);
   if (authResult instanceof NextResponse) {
     return authResult;
   }
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 // POST - Register a new site
 export async function POST(request: NextRequest) {
   // Authenticate user
-  const authResult = requireAuthenticatedUser(request);
+  const authResult = await requireAuthenticatedUser(request);
   if (authResult instanceof NextResponse) {
     return authResult;
   }

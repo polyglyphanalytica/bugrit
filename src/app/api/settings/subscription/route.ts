@@ -13,7 +13,7 @@ import { logger } from '@/lib/logger';
 export async function GET(req: NextRequest) {
   try {
     // Authenticate user
-    const authResult = requireAuthenticatedUser(req);
+    const authResult = await requireAuthenticatedUser(req);
     if (authResult instanceof NextResponse) {
       return authResult;
     }

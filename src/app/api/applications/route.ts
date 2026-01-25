@@ -11,7 +11,7 @@ import { logger } from '@/lib/logger';
 // GET /api/applications - Get all applications for the current user
 export async function GET(request: NextRequest) {
   try {
-    const authResult = requireAuthenticatedUser(request);
+    const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 // POST /api/applications - Create a new application
 export async function POST(request: NextRequest) {
   try {
-    const authResult = requireAuthenticatedUser(request);
+    const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
