@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getAuth } from 'firebase-admin/auth';
-import { getApps } from 'firebase-admin/app';
+import { getAdminAuth } from '@/lib/firebase-admin';
 import { getPlatformAdmin, hasAdminPermission, updateAdminLastLogin } from './service';
 import { AdminPermission, PlatformAdmin } from './types';
 
@@ -14,14 +13,13 @@ export interface AdminContext {
  * Verify Firebase session cookie and extract user ID
  */
 async function verifySessionCookie(sessionCookie: string): Promise<string | null> {
-  // Check if Firebase Admin is initialized
-  if (getApps().length === 0) {
+  const auth = getAdminAuth();
+  if (!auth) {
     console.error('Firebase Admin not initialized');
     return null;
   }
 
   try {
-    const auth = getAuth();
     // Verify the session cookie and check if it's been revoked
     const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
     return decodedClaims.uid;

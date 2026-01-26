@@ -45,6 +45,7 @@ const nextConfig: NextConfig = {
   },
   // Exclude packages with native bindings from webpack bundling
   serverExternalPackages: [
+    'firebase-admin',
     'knip',
     'madge',
     'dependency-cruiser',

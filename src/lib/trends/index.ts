@@ -448,11 +448,12 @@ export class TrendStorage {
 
   private async getDb(): Promise<FirebaseFirestore.Firestore> {
     if (!this.db) {
-      const admin = await import('firebase-admin');
-      if (!admin.apps.length) {
-        admin.initializeApp();
+      const { getAdminFirestore } = await import('@/lib/firebase-admin');
+      const firestore = getAdminFirestore();
+      if (!firestore) {
+        throw new Error('Firestore not initialized');
       }
-      this.db = admin.firestore();
+      this.db = firestore;
     }
     return this.db;
   }

@@ -18,8 +18,7 @@ import { TIER_RATE_LIMITS } from '../db/v1-api';
 import { TierName } from '../subscriptions/tiers';
 import { ApiException, ErrorCodes } from './errors';
 import { getDb } from '../firestore';
-import { getAuth } from 'firebase-admin/auth';
-import { getApps, initializeApp, cert } from 'firebase-admin/app';
+import { getAdminAuth } from '../firebase-admin';
 
 // Extended key data with organization context
 export interface ApiKeyContext {
@@ -130,44 +129,17 @@ async function getOrgTier(db: FirebaseFirestore.Firestore, orgId: string): Promi
 }
 
 /**
- * Ensure Firebase Admin is initialized for token verification
- */
-function ensureFirebaseAdmin(): boolean {
-  if (getApps().length === 0) {
-    const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID;
-
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-      try {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-        initializeApp({
-          credential: cert(serviceAccount),
-          projectId,
-        });
-        return true;
-      } catch (error) {
-        console.error('Failed to initialize Firebase Admin:', error);
-        return false;
-      }
-    } else if (projectId) {
-      initializeApp({ projectId });
-      return true;
-    }
-    return false;
-  }
-  return true;
-}
-
-/**
  * Verify Firebase ID token and return user info
  * Used for browser-based authentication
  */
 async function verifyFirebaseIdToken(idToken: string): Promise<{ uid: string; email?: string } | null> {
-  if (!ensureFirebaseAdmin()) {
+  const auth = getAdminAuth();
+  if (!auth) {
+    console.error('Firebase Admin not initialized');
     return null;
   }
 
   try {
-    const auth = getAuth();
     const decodedToken = await auth.verifyIdToken(idToken);
     return {
       uid: decodedToken.uid,
