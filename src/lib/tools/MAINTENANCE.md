@@ -1,6 +1,6 @@
 # Tool Maintenance Guide
 
-This document describes how to keep the 115 external scanning tools updated and protected from deprecated versions.
+This document describes how to keep the 150 external scanning modules updated and protected from deprecated versions.
 
 ## Overview
 

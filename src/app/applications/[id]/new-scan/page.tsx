@@ -193,7 +193,7 @@ export default function NewScanPage() {
         const data = await res.json();
         toast({
           title: 'Scan Started',
-          description: '115 tools are now analyzing your application. This typically takes under 60 seconds.',
+          description: '150 modules are now analyzing your application. This typically takes under 60 seconds.',
         });
         router.push(`/applications/${appId}/scans/${data.scan.id}`);
       } else {

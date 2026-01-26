@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Bugrit is a powerful 115-tool code security and quality scanner. The technology is solid, but the **current UX speaks to security professionals, not vibe coders**. The app assumes users know what SQL injection is, what linting means, and why they should care about "hardcoded secrets."
+Bugrit is a powerful 150-module code security and quality scanner. The technology is solid, but the **current UX speaks to security professionals, not vibe coders**. The app assumes users know what SQL injection is, what linting means, and why they should care about "hardcoded secrets."
 
 **The core problem:** Bugrit tells vibe coders they might get hacked, but doesn't help them understand what that means or what to do about it.
 
@@ -18,7 +18,7 @@ Bugrit is a powerful 115-tool code security and quality scanner. The technology 
 
 ### How It's Currently Positioned
 - **Fear-driven**: "Vibe coding is fun. Until you get hacked."
-- **Metric-heavy**: "115 tools", "10M+ developers", "67% of npm packages"
+- **Metric-heavy**: "150 modules", "10M+ developers", "67% of npm packages"
 - **Jargon-loaded**: SQL injection, XSS, RCE, WCAG 2.1, GPL violations
 
 ### The Disconnect
@@ -62,7 +62,7 @@ A vibe coder asks:
 - "What's the difference between these options?"
 
 ### Problem 3: Results Are Overwhelming
-A first scan returns 50+ findings across 115 tools. Users see:
+A first scan returns 50+ findings across 150 modules. Users see:
 - Tool names like `eslint`, `secretlint`, `typescript`, `axe-core`
 - Rule names like `@typescript-eslint/no-explicit-any`
 - Severity labels (Error, Warning, Info) without clear meaning
@@ -204,7 +204,7 @@ This usually takes about 2 minutes.
 
 **Current categories:**
 - Security, Dependencies, Quality, Linting, Accessibility, etc.
-- 115 tools shown individually
+- 150 modules shown individually
 
 **Proposed categories (plain English):**
 
@@ -440,7 +440,7 @@ Bugrit has the technical foundation to be the security tool vibe coders actually
 
 **The core shift needed:**
 - From "you might get hacked" → "here's how to ship safely"
-- From "115 tools" → "we check everything"
+- From "150 modules" → "we check everything"
 - From "findings by severity" → "fix this first, then this, then this"
 - From technical jargon → plain English with optional detail
 

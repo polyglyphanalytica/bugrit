@@ -1,4 +1,4 @@
-# Dependabot configuration for keeping ALL 115 tools up to date
+# Dependabot configuration for keeping ALL 150 modules up to date
 # This file manages the 37 NPM-based tools + 3 browser testing platforms
 # Docker-based tools (78) are updated via Cloud Build - see infra/update-tools.yaml
 

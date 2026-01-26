@@ -1,13 +1,13 @@
 /**
  * Comprehensive Tool Registry
  *
- * 115 security, quality, and compliance tools supporting multiple languages.
+ * 115 registry entries (150 total modules with integrations + AI) for security, quality, and compliance.
  *
  * Deployment types:
  * - Native JS (37 tools): Run via npm packages on Node.js
  * - Docker (78 tools): Run via Google Cloud Build containers
  *
- * Total: 115 tools across 11 categories
+ * Total: 115 registry tools across 11 categories (150 modules including integrations + AI)
  */
 
 export interface ToolDefinition {
@@ -1205,7 +1205,7 @@ export function getTotalCredits(toolIds: string[]): number {
   }, 0);
 }
 
-export const TOOL_COUNT = TOOL_REGISTRY.length;  // 115 tools (37 npm + 78 docker)
+export const TOOL_COUNT = TOOL_REGISTRY.length;  // 115 registry tools (37 npm + 78 docker); 150 total modules with integrations + AI
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   linting: 'Linting & Formatting',

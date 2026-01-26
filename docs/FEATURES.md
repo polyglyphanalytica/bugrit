@@ -243,7 +243,7 @@ Tiered scanning for different time constraints.
 |------|----------|----------------|
 | **Quick Check** | ~30s | Critical security only (SQLi, XSS, secrets) |
 | **Standard** | ~3min | Security + linting + dependencies |
-| **Deep Dive** | ~10min | Full 118-tool scan |
+| **Deep Dive** | ~10min | Full 150-module scan |
 | **Paranoid** | ~30min | Everything + manual review suggestions |
 
 ### API Access

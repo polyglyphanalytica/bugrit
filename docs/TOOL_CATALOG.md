@@ -1,10 +1,10 @@
 # Bugrit Tool Catalog
 
-Complete reference for all 142 integrated security, quality, and testing tools.
+Complete reference for all 150 integrated security, quality, and testing modules.
 
 ## Overview
 
-Bugrit integrates **142 tools** across 17 categories:
+Bugrit integrates **150 modules** (145 + 5 AI) across 17 categories:
 
 | Category | Direct Tools | Cloud Build | Total | Description |
 |----------|-------------|-------------|-------|-------------|
@@ -24,7 +24,7 @@ Bugrit integrates **142 tools** across 17 categories:
 | Visual | 3 | 0 | 3 | Visual regression, screenshots |
 | Observability | 2 | 0 | 2 | Monitoring integration |
 | Chaos | 1 | 0 | 1 | Chaos engineering |
-| **Total** | **64** | **78** | **142** | |
+| **Total** | **66** | **79** | **145** | (+5 AI modules = **150**) |
 
 ---
 
@@ -336,7 +336,7 @@ These tools run in Docker containers via Google Cloud Build for isolated, scalab
 | **Quick** | Linting, basic security | ~2 credits | Pre-commit checks |
 | **Standard** | All local tools | ~10 credits | CI/CD pipelines |
 | **Deep** | + Cloud Build tools | ~25 credits | Pre-release scans |
-| **Paranoid** | All 142 tools | ~50 credits | Security audits |
+| **Paranoid** | All 150 modules | ~50 credits | Security audits |
 
 ---
 

@@ -10,7 +10,7 @@ export default function ScansApiPage() {
       <div>
         <h1 className="text-4xl font-bold mb-4">Scans API</h1>
         <p className="text-lg text-muted-foreground">
-          Trigger scans to run 115 analysis tools on your code and retrieve reports.
+          Trigger scans to run 150 analysis modules on your code and retrieve reports.
         </p>
       </div>
 
@@ -43,7 +43,7 @@ export default function ScansApiPage() {
           <span>⚡</span> NEW: Real-Time Session Polling
         </h2>
         <p className="text-muted-foreground mb-4">
-          Watch your scan results <strong>stream in live</strong> as each tool completes. No more waiting for all 115 tools to finish before seeing results!
+          Watch your scan results <strong>stream in live</strong> as each module completes. No more waiting for all 150 modules to finish before seeing results!
         </p>
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div className="p-3 bg-background/80 rounded-lg">
@@ -368,7 +368,7 @@ My stack: [YOUR_STACK]`)}
           <div className="p-4 bg-slate-950">
             <h3 className="text-white font-semibold mb-2">Trigger a New Scan</h3>
             <p className="text-slate-400 text-sm mb-3">
-              Submit your code or URL for analysis with 115 security and quality tools.
+              Submit your code or URL for analysis with 150 security and quality modules.
             </p>
             <div className="bg-slate-900 p-4 rounded-lg">
               <pre className="text-slate-300 text-sm whitespace-pre-wrap">{`Read the Bugrit Scans API at https://bugrit.com/docs/api-reference/scans
@@ -421,7 +421,7 @@ My stack: [YOUR_STACK]`)}
                   <code className="text-sm">/api/v1/scans</code>
                 </div>
                 <p className="text-muted-foreground text-sm mb-4">
-                  Submit your code for analysis. Bugrit runs 115 tools and generates a unified report.
+                  Submit your code for analysis. Bugrit runs 150 modules and generates a unified report.
                 </p>
               </div>
 
@@ -694,7 +694,7 @@ My stack: [YOUR_STACK]`)}
             </tr>
             <tr className="border-b">
               <td className="py-2 px-2"><code>running</code></td>
-              <td className="py-2 px-2 text-muted-foreground">115 tools currently analyzing your code</td>
+              <td className="py-2 px-2 text-muted-foreground">150 modules currently analyzing your code</td>
             </tr>
             <tr className="border-b">
               <td className="py-2 px-2"><code>completed</code></td>

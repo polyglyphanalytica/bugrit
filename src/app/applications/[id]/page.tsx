@@ -73,6 +73,25 @@ export default function ApplicationDetailPage({
     expiresInDays: 90,
   });
 
+  // Notification settings local state
+  const [notifSettings, setNotifSettings] = useState({
+    emailEnabled: false,
+    emailRecipients: '',
+    slackEnabled: false,
+    slackWebhookUrl: '',
+    slackChannel: '',
+  });
+  const [savingNotif, setSavingNotif] = useState(false);
+
+  // Scheduling settings local state
+  const [schedSettings, setSchedSettings] = useState({
+    enableUptimeMonitoring: false,
+    enableDailySmoke: false,
+    enableWeeklyRegression: false,
+    runOnDeployment: false,
+  });
+  const [savingSched, setSavingSched] = useState(false);
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
@@ -84,6 +103,25 @@ export default function ApplicationDetailPage({
       fetchApiKeys();
     }
   }, [user, authLoading, router, resolvedParams.id]);
+
+  // Sync local settings state when application data loads
+  useEffect(() => {
+    if (application?.settings) {
+      setNotifSettings({
+        emailEnabled: application.settings.emailEnabled ?? false,
+        emailRecipients: application.settings.emailRecipients?.join(', ') ?? '',
+        slackEnabled: application.settings.slackEnabled ?? false,
+        slackWebhookUrl: application.settings.slackWebhookUrl ?? '',
+        slackChannel: application.settings.slackChannel ?? '',
+      });
+      setSchedSettings({
+        enableUptimeMonitoring: application.settings.scheduling?.enableUptimeMonitoring ?? false,
+        enableDailySmoke: application.settings.scheduling?.enableDailySmoke ?? false,
+        enableWeeklyRegression: application.settings.scheduling?.enableWeeklyRegression ?? false,
+        runOnDeployment: application.settings.scheduling?.runOnDeployment ?? false,
+      });
+    }
+  }, [application]);
 
   const fetchApplication = async () => {
     try {
@@ -108,6 +146,57 @@ export default function ApplicationDetailPage({
       }
     } catch (error) {
       console.error('Failed to fetch API keys:', error);
+    }
+  };
+
+  const handleSaveNotifications = async () => {
+    if (!user) return;
+    setSavingNotif(true);
+    try {
+      const res = await apiClient.patch(user, `/api/applications/${resolvedParams.id}`, {
+        settings: {
+          emailEnabled: notifSettings.emailEnabled,
+          emailRecipients: notifSettings.emailRecipients.split(',').map(e => e.trim()).filter(Boolean),
+          slackEnabled: notifSettings.slackEnabled,
+          slackWebhookUrl: notifSettings.slackWebhookUrl,
+          slackChannel: notifSettings.slackChannel,
+        },
+      });
+      if (res.ok) {
+        toast({ title: 'Saved', description: 'Notification settings updated.' });
+      } else {
+        toast({ title: 'Error', description: 'Failed to save notification settings.', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Error', description: 'Failed to save notification settings.', variant: 'destructive' });
+    } finally {
+      setSavingNotif(false);
+    }
+  };
+
+  const handleSaveScheduling = async () => {
+    if (!user) return;
+    setSavingSched(true);
+    try {
+      const res = await apiClient.patch(user, `/api/applications/${resolvedParams.id}`, {
+        settings: {
+          scheduling: {
+            enableUptimeMonitoring: schedSettings.enableUptimeMonitoring,
+            enableDailySmoke: schedSettings.enableDailySmoke,
+            enableWeeklyRegression: schedSettings.enableWeeklyRegression,
+            runOnDeployment: schedSettings.runOnDeployment,
+          },
+        },
+      });
+      if (res.ok) {
+        toast({ title: 'Saved', description: 'Scheduling settings updated.' });
+      } else {
+        toast({ title: 'Error', description: 'Failed to save scheduling settings.', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Error', description: 'Failed to save scheduling settings.', variant: 'destructive' });
+    } finally {
+      setSavingSched(false);
     }
   };
 
@@ -362,7 +451,7 @@ export default function ApplicationDetailPage({
                   <div className="text-4xl mb-4">🔍</div>
                   <h3 className="text-lg font-semibold mb-2">No Scans Yet</h3>
                   <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                    Start your first scan to analyze your application with 115 tools
+                    Start your first scan to analyze your application with 150 modules
                     and get a unified, prioritized report.
                   </p>
                   <Button asChild>
@@ -577,13 +666,17 @@ export default function ApplicationDetailPage({
                         Send scan results via email
                       </p>
                     </div>
-                    <Switch checked={application.settings?.emailEnabled} />
+                    <Switch
+                      checked={notifSettings.emailEnabled}
+                      onCheckedChange={(checked) => setNotifSettings(s => ({ ...s, emailEnabled: checked }))}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Email Recipients</Label>
                     <Input
                       placeholder="email@example.com, another@example.com"
-                      defaultValue={application.settings?.emailRecipients?.join(', ')}
+                      value={notifSettings.emailRecipients}
+                      onChange={(e) => setNotifSettings(s => ({ ...s, emailRecipients: e.target.value }))}
                     />
                   </div>
                 </div>
@@ -597,26 +690,33 @@ export default function ApplicationDetailPage({
                         Send scan results to Slack
                       </p>
                     </div>
-                    <Switch checked={application.settings?.slackEnabled} />
+                    <Switch
+                      checked={notifSettings.slackEnabled}
+                      onCheckedChange={(checked) => setNotifSettings(s => ({ ...s, slackEnabled: checked }))}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Webhook URL</Label>
                     <Input
                       type="url"
                       placeholder="https://hooks.slack.com/services/..."
-                      defaultValue={application.settings?.slackWebhookUrl}
+                      value={notifSettings.slackWebhookUrl}
+                      onChange={(e) => setNotifSettings(s => ({ ...s, slackWebhookUrl: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Channel</Label>
                     <Input
                       placeholder="#testing"
-                      defaultValue={application.settings?.slackChannel}
+                      value={notifSettings.slackChannel}
+                      onChange={(e) => setNotifSettings(s => ({ ...s, slackChannel: e.target.value }))}
                     />
                   </div>
                 </div>
 
-                <Button>Save Notification Settings</Button>
+                <Button onClick={handleSaveNotifications} disabled={savingNotif}>
+                  {savingNotif ? 'Saving...' : 'Save Notification Settings'}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
@@ -640,7 +740,8 @@ export default function ApplicationDetailPage({
                       </p>
                     </div>
                     <Switch
-                      checked={application.settings?.scheduling?.enableUptimeMonitoring}
+                      checked={schedSettings.enableUptimeMonitoring}
+                      onCheckedChange={(checked) => setSchedSettings(s => ({ ...s, enableUptimeMonitoring: checked }))}
                     />
                   </div>
                 </div>
@@ -655,7 +756,8 @@ export default function ApplicationDetailPage({
                       </p>
                     </div>
                     <Switch
-                      checked={application.settings?.scheduling?.enableDailySmoke}
+                      checked={schedSettings.enableDailySmoke}
+                      onCheckedChange={(checked) => setSchedSettings(s => ({ ...s, enableDailySmoke: checked }))}
                     />
                   </div>
                 </div>
@@ -670,7 +772,8 @@ export default function ApplicationDetailPage({
                       </p>
                     </div>
                     <Switch
-                      checked={application.settings?.scheduling?.enableWeeklyRegression}
+                      checked={schedSettings.enableWeeklyRegression}
+                      onCheckedChange={(checked) => setSchedSettings(s => ({ ...s, enableWeeklyRegression: checked }))}
                     />
                   </div>
                 </div>
@@ -685,12 +788,15 @@ export default function ApplicationDetailPage({
                       </p>
                     </div>
                     <Switch
-                      checked={application.settings?.scheduling?.runOnDeployment}
+                      checked={schedSettings.runOnDeployment}
+                      onCheckedChange={(checked) => setSchedSettings(s => ({ ...s, runOnDeployment: checked }))}
                     />
                   </div>
                 </div>
 
-                <Button>Save Scheduling Settings</Button>
+                <Button onClick={handleSaveScheduling} disabled={savingSched}>
+                  {savingSched ? 'Saving...' : 'Save Scheduling Settings'}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>

@@ -9,7 +9,7 @@ export default function PlaywrightIntegrationPage() {
         <h1 className="text-4xl font-bold mb-4">Playwright E2E Tests</h1>
         <p className="text-lg text-muted-foreground">
           Include your Playwright tests with your code. Bugrit runs them alongside
-          140+ analysis tools and includes results in your unified report.
+          150 analysis modules and includes results in your unified report.
         </p>
       </div>
 
