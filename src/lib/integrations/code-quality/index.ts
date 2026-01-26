@@ -9,3 +9,4 @@ export { MarkdownlintIntegration } from './markdownlint';
 export { CommitlintIntegration } from './commitlint';
 export { SonarQubeIntegration } from './sonarqube';
 export { CodeClimateIntegration } from './codeclimate';
+export { ReleaseRiskAnalyzerIntegration } from './release-risk-analyzer';

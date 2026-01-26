@@ -1,13 +1,14 @@
 /**
  * Comprehensive Tool Registry
  *
- * 115 registry entries (150 total modules with integrations + AI) for security, quality, and compliance.
+ * 117 registry entries (150 total modules with integrations + AI) for security, quality, and compliance.
  *
  * Deployment types:
- * - Native JS (37 tools): Run via npm packages on Node.js
+ * - Native JS (38 tools): Run via npm packages on Node.js
  * - Docker (78 tools): Run via Google Cloud Build containers
+ * - Git-based (1 tool): Uses git CLI for analysis
  *
- * Total: 115 registry tools across 11 categories (150 modules including integrations + AI)
+ * Total: 117 registry tools across 11 categories (150 modules including integrations + AI)
  */
 
 export interface ToolDefinition {
@@ -1165,6 +1166,27 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     filePatterns: ['**/*.sql'],
     credits: 0,
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // SBOM & Release Analysis (2 tools)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'sbom-generator',
+    name: 'SBOM Generator',
+    description: 'Generate CycloneDX Software Bill of Materials and analyze components for license compliance, missing metadata, and supply chain risks',
+    category: 'dependencies',
+    npm: '@cyclonedx/cdxgen',
+    filePatterns: ['**/package.json', '**/package-lock.json', '**/yarn.lock', '**/requirements*.txt', '**/go.mod', '**/Cargo.toml', '**/pom.xml'],
+    credits: 2,
+  },
+  {
+    id: 'release-risk-analyzer',
+    name: 'Release Risk Analyzer',
+    description: 'Analyze git changes between releases to identify high-risk patterns including auth modifications, test deletions, large diffs, and infrastructure changes',
+    category: 'quality',
+    languages: ['javascript', 'typescript', 'python', 'go', 'java', 'ruby', 'php', 'rust'],
+    credits: 1,
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -1205,7 +1227,7 @@ export function getTotalCredits(toolIds: string[]): number {
   }, 0);
 }
 
-export const TOOL_COUNT = TOOL_REGISTRY.length;  // 115 registry tools (37 npm + 78 docker); 150 total modules with integrations + AI
+export const TOOL_COUNT = TOOL_REGISTRY.length;  // 117 registry tools (38 npm + 78 docker + 1 git); 150 total modules with integrations + AI
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   linting: 'Linting & Formatting',

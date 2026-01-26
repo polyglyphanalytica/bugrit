@@ -4,7 +4,7 @@ A unified checklist for launching Bugrit to production. Complete all sections be
 
 **Last Updated:** January 2026
 **Estimated Time:** 4-6 hours (excluding DNS propagation)
-**Module Count:** 150 modules (145+5 AI) running 5,000+ scans
+**Module Count:** 150 modules (147 tools + 3 AI) running 5,000+ scans
 
 ---
 
