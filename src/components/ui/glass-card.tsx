@@ -15,25 +15,24 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
       <div
         ref={ref}
         className={cn(
-          // Base glass effect
-          'relative rounded-3xl',
-          'bg-white/80 dark:bg-slate-900/80',
-          'backdrop-blur-xl',
-          'border border-gray-200 dark:border-slate-700',
-          'shadow-lg dark:shadow-2xl',
+          // Clean white card
+          'relative rounded-2xl',
+          'bg-white dark:bg-gray-900',
+          'border border-gray-100 dark:border-gray-800',
+          'shadow-card',
           'transition-all duration-300',
 
           // Hover effect
           hover && [
             'hover:-translate-y-1',
-            'hover:shadow-xl dark:hover:shadow-2xl',
-            'hover:border-gray-300 dark:hover:border-slate-600',
+            'hover:shadow-card-hover',
+            'hover:border-gray-200 dark:hover:border-gray-700',
           ],
 
           // Gradient border
           gradient && [
             'before:absolute before:-inset-[1px] before:rounded-[inherit]',
-            'before:bg-gradient-to-br before:from-primary/20 before:via-transparent before:to-accent/20',
+            'before:bg-gradient-to-br before:from-orange-200/40 before:via-transparent before:to-orange-100/30',
             'before:-z-10',
           ],
 

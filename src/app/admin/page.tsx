@@ -78,16 +78,16 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<TabType>('stripe');
 
   return (
-    <div className="min-h-screen mesh-gradient">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="glass border-b border-white/10 sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-50">
         <div className="container-wide flex items-center justify-between h-16">
           <div className="flex items-center gap-4">
             <Logo href="/" showText={false} />
             <div className="h-6 w-px bg-border" />
             <div>
               <h1 className="font-semibold">Platform Admin</h1>
-              <p className="text-xs text-muted-foreground">Manage your platform</p>
+              <p className="text-xs text-gray-500">Manage your platform</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                       activeTab === tab.id
                         ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                   >
                     {tab.icon}
@@ -240,7 +240,7 @@ function StripeConfigPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Stripe Configuration</h2>
-          <p className="text-muted-foreground">Manage your payment integration</p>
+          <p className="text-gray-500">Manage your payment integration</p>
         </div>
         <StatusBadge connected={connection?.success ?? false} mode={connection?.mode} />
       </div>
@@ -296,7 +296,7 @@ function StripeConfigPanel() {
           </svg>
           Sync with Stripe
         </h3>
-        <p className="text-sm text-muted-foreground mb-6">
+        <p className="text-sm text-gray-500 mb-6">
           Sync pricing tiers with Stripe products and prices.
           {config?.lastSyncAt && (
             <span className="ml-2">Last sync: {new Date(config.lastSyncAt).toLocaleString()}</span>
@@ -495,7 +495,7 @@ function PricingPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Pricing Tiers</h2>
-          <p className="text-muted-foreground">Manage subscription plans and limits</p>
+          <p className="text-gray-500">Manage subscription plans and limits</p>
         </div>
         <div className="flex gap-3">
           <GradientButton variant="outline" onClick={() => setShowPromoSection(!showPromoSection)}>
@@ -620,25 +620,25 @@ function PricingPanel() {
             </div>
           ) : promoCodes.length > 0 && (
             <div className="mt-6 pt-6 border-t border-border">
-              <h4 className="text-sm font-semibold mb-3 text-muted-foreground">Active Promo Codes ({promoCodes.filter(p => p.active).length})</h4>
+              <h4 className="text-sm font-semibold mb-3 text-gray-500">Active Promo Codes ({promoCodes.filter(p => p.active).length})</h4>
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {promoCodes.filter(p => p.active).map((promo) => (
                   <div
                     key={promo.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center gap-4">
                       <span className="font-mono font-bold">{promo.code}</span>
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-gray-500">
                         {promo.percentOff > 0 ? `${promo.percentOff}% off` : `$${promo.amountOff} off`}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-gray-500">
                         {promo.duration === 'once' && 'First payment'}
                         {promo.duration === 'repeating' && `${promo.durationInMonths}mo`}
                         {promo.duration === 'forever' && 'Forever'}
                       </span>
                       {promo.timesRedeemed > 0 && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-gray-500">
                           {promo.timesRedeemed} used
                         </span>
                       )}
@@ -667,7 +667,7 @@ function PricingPanel() {
                     </span>
                   )}
                   {!tier.isActive && (
-                    <span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">Inactive</span>
+                    <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">Inactive</span>
                   )}
                   {tier.stripeProductId && (
                     <span className="px-2 py-0.5 rounded text-xs bg-green-500/10 text-green-600 border border-green-500/20">
@@ -675,14 +675,14 @@ function PricingPanel() {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">{tier.description}</p>
+                <p className="text-sm text-gray-500">{tier.description}</p>
               </div>
               <div className="text-right">
                 <div className="text-3xl font-bold">
                   ${tier.priceMonthly}
-                  <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                  <span className="text-sm font-normal text-gray-500">/mo</span>
                 </div>
-                <div className="text-sm text-muted-foreground">${tier.priceYearly}/year</div>
+                <div className="text-sm text-gray-500">${tier.priceYearly}/year</div>
               </div>
             </div>
 
@@ -705,26 +705,26 @@ function PricingPanel() {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6 text-sm">
                   <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Overage Rate:</span>
+                    <span className="text-gray-500">Overage Rate:</span>
                     <span className="font-medium">
                       {tier.limits?.overageRate != null ? `$${tier.limits.overageRate}/credit` : 'Not allowed'}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">API Rate:</span>
+                    <span className="text-gray-500">API Rate:</span>
                     <span className="font-medium">{tier.limits?.apiRequestsPerMinute || 0} req/min</span>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="text-sm text-muted-foreground mr-2">Platforms:</span>
+                  <span className="text-sm text-gray-500 mr-2">Platforms:</span>
                   {tier.limits?.platforms?.web && <FeaturePill>Web</FeaturePill>}
                   {tier.limits?.platforms?.mobile && <FeaturePill>Mobile</FeaturePill>}
                   {tier.limits?.platforms?.desktop && <FeaturePill>Desktop</FeaturePill>}
                 </div>
 
                 <div className="flex flex-wrap gap-2 mb-6">
-                  <span className="text-sm text-muted-foreground mr-2">Features:</span>
+                  <span className="text-sm text-gray-500 mr-2">Features:</span>
                   {tier.features?.aiSummary && <FeaturePill variant="secondary">AI Summary</FeaturePill>}
                   {tier.features?.aiExplanations && <FeaturePill variant="secondary">AI Explanations</FeaturePill>}
                   {tier.features?.aiFixSuggestions && <FeaturePill variant="secondary">AI Fix Suggestions</FeaturePill>}
@@ -749,9 +749,9 @@ function PricingPanel() {
 
 function StatBox({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="p-4 rounded-xl bg-muted/50">
+    <div className="p-4 rounded-xl bg-gray-100">
       <div className="text-2xl font-bold">{value}</div>
-      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-xs text-gray-500">{label}</div>
     </div>
   );
 }
@@ -762,7 +762,7 @@ function FeaturePill({ children, variant = 'primary' }: { children: React.ReactN
       className={`px-3 py-1 rounded-full text-xs font-medium ${
         variant === 'primary'
           ? 'bg-primary/10 text-primary border border-primary/20'
-          : 'bg-muted text-muted-foreground'
+          : 'bg-gray-100 text-gray-500'
       }`}
     >
       {children}
@@ -963,7 +963,7 @@ function TierEditor({ tier, onSave, onCancel }: { tier: any; onSave: (updates: a
               className="input-modern"
               placeholder="-1 for unlimited"
             />
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               {form.limits.maxRepoSize >= 1000 ? `${(form.limits.maxRepoSize / 1000).toFixed(0)}K lines` : `${form.limits.maxRepoSize} lines`}
             </p>
           </div>
@@ -1153,7 +1153,7 @@ function CreditPackagesPanel() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Credit Packages</h2>
-          <p className="text-muted-foreground">Manage credit top-up packages for users</p>
+          <p className="text-gray-500">Manage credit top-up packages for users</p>
         </div>
         <GradientButton onClick={() => setShowCreate(true)}>
           + New Package
@@ -1229,10 +1229,10 @@ function CreditPackagesPanel() {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h3 className="text-lg font-bold">{pkg.name}</h3>
-                <p className="text-sm text-muted-foreground">{pkg.description}</p>
+                <p className="text-sm text-gray-500">{pkg.description}</p>
               </div>
               {!pkg.isActive && (
-                <span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">Inactive</span>
+                <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">Inactive</span>
               )}
             </div>
 
@@ -1246,11 +1246,11 @@ function CreditPackagesPanel() {
               <>
                 <div className="mb-4">
                   <div className="text-3xl font-bold text-primary">{pkg.credits}</div>
-                  <div className="text-sm text-muted-foreground">credits</div>
+                  <div className="text-sm text-gray-500">credits</div>
                 </div>
                 <div className="mb-4">
                   <div className="text-xl font-semibold">${pkg.price}</div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-gray-500">
                     ${(pkg.price / pkg.credits).toFixed(3)} per credit
                   </div>
                 </div>
@@ -1451,7 +1451,7 @@ function PromoCodesPanel() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Promo Codes</h2>
-        <p className="text-muted-foreground">Create and manage discount codes for subscriptions</p>
+        <p className="text-gray-500">Create and manage discount codes for subscriptions</p>
       </div>
 
       <GlassCard className="p-6">
@@ -1545,13 +1545,13 @@ function PromoCodesPanel() {
       <GlassCard className="p-6">
         <h3 className="text-lg font-semibold mb-4">Active Promo Codes</h3>
         {promoCodes.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No promo codes yet. Create one above!</p>
+          <p className="text-gray-500 text-center py-8">No promo codes yet. Create one above!</p>
         ) : (
           <div className="space-y-3">
             {promoCodes.map((promo) => (
               <div
                 key={promo.id}
-                className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-1">
@@ -1561,12 +1561,12 @@ function PromoCodesPanel() {
                         Active
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">
+                      <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-500">
                         Inactive
                       </span>
                     )}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-gray-500">
                     {promo.percentOff > 0 ? `${promo.percentOff}% off` : `$${promo.amountOff} off`}
                     <span className="mx-2">•</span>
                     {promo.duration === 'once' && 'First payment'}
@@ -1674,7 +1674,7 @@ function FeaturesPanel() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Feature Flags</h2>
-        <p className="text-muted-foreground">Control feature availability across the platform</p>
+        <p className="text-gray-500">Control feature availability across the platform</p>
       </div>
 
       <GlassCard className="p-6">
@@ -1699,23 +1699,23 @@ function FeaturesPanel() {
       <GlassCard className="p-6">
         <h3 className="text-lg font-semibold mb-4">Active Flags</h3>
         {flags.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No feature flags configured</p>
+          <p className="text-gray-500 text-center py-8">No feature flags configured</p>
         ) : (
           <div className="space-y-3">
             {flags.map((flag) => (
               <div
                 key={flag.id}
-                className="flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
               >
                 <div>
                   <div className="font-medium">{flag.name}</div>
-                  <div className="text-sm text-muted-foreground">{flag.description}</div>
+                  <div className="text-sm text-gray-500">{flag.description}</div>
                 </div>
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => handleToggle(flag.id, !flag.isEnabled)}
                     className={`relative w-12 h-6 rounded-full transition-colors ${
-                      flag.isEnabled ? 'bg-primary' : 'bg-muted'
+                      flag.isEnabled ? 'bg-orange-500' : 'bg-gray-200'
                     }`}
                   >
                     <span
@@ -1801,7 +1801,7 @@ function AdminsPanel() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Platform Admins</h2>
-        <p className="text-muted-foreground">Manage who can access the admin dashboard</p>
+        <p className="text-gray-500">Manage who can access the admin dashboard</p>
       </div>
 
       <GlassCard className="p-6">
@@ -1837,7 +1837,7 @@ function AdminsPanel() {
           {admins.map((admin) => (
             <div
               key={admin.userId}
-              className="flex items-center justify-between p-4 rounded-xl bg-muted/30"
+              className="flex items-center justify-between p-4 rounded-xl bg-gray-50"
             >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-medium">
@@ -1845,7 +1845,7 @@ function AdminsPanel() {
                 </div>
                 <div>
                   <div className="font-medium">{admin.email}</div>
-                  <div className="text-sm text-muted-foreground">ID: {admin.userId}</div>
+                  <div className="text-sm text-gray-500">ID: {admin.userId}</div>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -1904,26 +1904,26 @@ function AuditPanel() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Audit Logs</h2>
-        <p className="text-muted-foreground">Track all administrative actions</p>
+        <p className="text-gray-500">Track all administrative actions</p>
       </div>
 
       <GlassCard className="p-6">
         {logs.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">No audit logs yet</p>
+          <p className="text-gray-500 text-center py-8">No audit logs yet</p>
         ) : (
           <div className="space-y-3">
             {logs.map((log) => (
               <div
                 key={log.id}
-                className="p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
+                className="p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-primary">{log.action}</span>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-gray-500">
                     {new Date(log.timestamp).toLocaleString()}
                   </span>
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-gray-500">
                   <span className="font-medium">{log.adminEmail}</span>
                   <span className="mx-2">•</span>
                   <span>{log.resource}</span>

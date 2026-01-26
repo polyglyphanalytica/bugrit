@@ -19,8 +19,8 @@ function BugritIcon({ className, id = 'logo' }: { className?: string; id?: strin
     >
       <defs>
         <linearGradient id={`${id}-bg`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#ef4444" />
-          <stop offset="100%" stopColor="#f97316" />
+          <stop offset="0%" stopColor="#f97316" />
+          <stop offset="100%" stopColor="#fb923c" />
         </linearGradient>
       </defs>
       {/* Background rounded square */}
@@ -79,7 +79,7 @@ export function Logo({ showText = true, size = 'md', className, href = '/' }: Lo
       {showText && (
         <span
           className={cn(
-            'font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent',
+            'font-bold bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent',
             sizeConfig.text
           )}
         >

@@ -6,125 +6,116 @@
 
 @layer base {
   :root {
-    /* Modern color palette - Light mode */
+    /* Clean modern palette — Orange primary, warm neutrals */
     --background: 0 0% 100%;
-    --foreground: 224 71% 4%;
+    --foreground: 220 20% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
+    --card-foreground: 220 20% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
+    --popover-foreground: 220 20% 14%;
 
-    /* Vibrant primary - Electric indigo */
-    --primary: 239 84% 67%;
+    /* Primary — Warm orange */
+    --primary: 24 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    /* Cool secondary */
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 224 71% 4%;
+    /* Secondary — Light warm gray */
+    --secondary: 30 10% 96%;
+    --secondary-foreground: 220 20% 14%;
 
-    /* Muted tones */
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
+    /* Muted */
+    --muted: 30 10% 96%;
+    --muted-foreground: 220 10% 46%;
 
-    /* Accent - Vibrant violet */
-    --accent: 262 83% 58%;
+    /* Accent — Complementary teal-blue */
+    --accent: 195 80% 40%;
     --accent-foreground: 0 0% 100%;
 
     /* Status colors */
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 76% 36%;
+    --success: 152 69% 40%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
     /* Borders & inputs */
-    --border: 240 6% 85%;
-    --input: 240 6% 85%;
-    --ring: 239 84% 67%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 24 95% 53%;
 
-    /* Charts */
-    --chart-1: 239 84% 67%;
-    --chart-2: 262 83% 58%;
-    --chart-3: 142 76% 36%;
+    /* Charts — orange-based palette */
+    --chart-1: 24 95% 53%;
+    --chart-2: 195 80% 40%;
+    --chart-3: 152 69% 40%;
     --chart-4: 38 92% 50%;
-    --chart-5: 0 84% 60%;
+    --chart-5: 0 72% 51%;
 
     --radius: 0.75rem;
 
     /* Sidebar */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5% 26%;
-    --sidebar-primary: 239 84% 67%;
+    --sidebar-background: 0 0% 99%;
+    --sidebar-foreground: 220 10% 30%;
+    --sidebar-primary: 24 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 5% 96%;
-    --sidebar-accent-foreground: 240 6% 10%;
-    --sidebar-border: 240 6% 90%;
-    --sidebar-ring: 239 84% 67%;
+    --sidebar-accent: 30 10% 96%;
+    --sidebar-accent-foreground: 220 20% 14%;
+    --sidebar-border: 220 13% 93%;
+    --sidebar-ring: 24 95% 53%;
   }
 
   .dark {
-    /* Modern dark palette */
-    --background: 224 71% 4%;
-    --foreground: 213 31% 91%;
+    --background: 220 20% 7%;
+    --foreground: 220 10% 90%;
 
-    --card: 224 50% 8%;
-    --card-foreground: 213 31% 91%;
+    --card: 220 18% 10%;
+    --card-foreground: 220 10% 90%;
 
-    --popover: 224 71% 4%;
-    --popover-foreground: 213 31% 91%;
+    --popover: 220 20% 7%;
+    --popover-foreground: 220 10% 90%;
 
-    /* Electric indigo in dark */
-    --primary: 239 84% 67%;
+    --primary: 24 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    /* Dark secondary */
-    --secondary: 215 28% 17%;
-    --secondary-foreground: 213 31% 91%;
+    --secondary: 220 15% 15%;
+    --secondary-foreground: 220 10% 90%;
 
-    /* Dark muted */
-    --muted: 215 28% 17%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 220 15% 15%;
+    --muted-foreground: 220 10% 55%;
 
-    /* Accent */
-    --accent: 262 83% 58%;
+    --accent: 195 80% 40%;
     --accent-foreground: 0 0% 100%;
 
-    /* Status colors */
     --destructive: 0 63% 31%;
-    --destructive-foreground: 213 31% 91%;
+    --destructive-foreground: 220 10% 90%;
 
-    --success: 142 76% 36%;
+    --success: 152 69% 40%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 0%;
 
-    /* Borders */
-    --border: 215 28% 25%;
-    --input: 215 28% 25%;
-    --ring: 239 84% 67%;
+    --border: 220 15% 20%;
+    --input: 220 15% 20%;
+    --ring: 24 95% 53%;
 
-    /* Charts */
-    --chart-1: 239 84% 67%;
-    --chart-2: 262 83% 58%;
-    --chart-3: 142 76% 36%;
+    --chart-1: 24 95% 53%;
+    --chart-2: 195 80% 40%;
+    --chart-3: 152 69% 40%;
     --chart-4: 38 92% 50%;
-    --chart-5: 0 84% 60%;
+    --chart-5: 0 72% 51%;
 
-    /* Sidebar */
-    --sidebar-background: 224 71% 4%;
-    --sidebar-foreground: 213 31% 91%;
-    --sidebar-primary: 239 84% 67%;
+    --sidebar-background: 220 20% 7%;
+    --sidebar-foreground: 220 10% 90%;
+    --sidebar-primary: 24 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 28% 17%;
-    --sidebar-accent-foreground: 213 31% 91%;
-    --sidebar-border: 215 28% 17%;
-    --sidebar-ring: 239 84% 67%;
+    --sidebar-accent: 220 15% 15%;
+    --sidebar-accent-foreground: 220 10% 90%;
+    --sidebar-border: 220 15% 15%;
+    --sidebar-ring: 24 95% 53%;
   }
 }
 
@@ -152,39 +143,36 @@
 @layer components {
   /* Glass morphism effect */
   .glass {
-    @apply bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10;
+    @apply bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-gray-200/60 dark:border-white/10;
   }
 
   .glass-card {
-    @apply bg-white/80 dark:bg-white/5 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-soft;
+    @apply bg-white/90 dark:bg-white/5 backdrop-blur-xl border border-gray-200/60 dark:border-white/10 shadow-soft;
   }
 
-  /* Gradient text */
+  /* Gradient text — orange to warm tones */
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-orange-400;
     background-size: 200% auto;
   }
 
   /* Beautiful gradient backgrounds */
   .gradient-bg {
-    @apply bg-gradient-to-br from-primary/10 via-background to-accent/10;
+    @apply bg-gradient-to-br from-primary/5 via-background to-accent/5;
   }
 
   .gradient-bg-vibrant {
-    @apply bg-gradient-to-br from-primary via-accent to-primary;
+    @apply bg-gradient-to-br from-primary via-orange-400 to-primary;
     background-size: 200% 200%;
   }
 
-  /* Mesh gradient background */
+  /* Subtle warm mesh gradient */
   .mesh-gradient {
     background-color: hsl(var(--background));
     background-image:
-      radial-gradient(at 40% 20%, hsl(var(--primary) / 0.15) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, hsl(var(--accent) / 0.1) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, hsl(var(--primary) / 0.1) 0px, transparent 50%),
-      radial-gradient(at 80% 50%, hsl(var(--accent) / 0.08) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsl(var(--primary) / 0.1) 0px, transparent 50%),
-      radial-gradient(at 80% 100%, hsl(var(--accent) / 0.15) 0px, transparent 50%);
+      radial-gradient(at 20% 0%, hsl(24 95% 53% / 0.06) 0px, transparent 50%),
+      radial-gradient(at 80% 10%, hsl(30 90% 60% / 0.04) 0px, transparent 50%),
+      radial-gradient(at 50% 90%, hsl(195 80% 40% / 0.03) 0px, transparent 50%);
   }
 
   /* Glow button */
@@ -194,7 +182,7 @@
 
   .btn-glow::before {
     content: '';
-    @apply absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 transition-opacity duration-300;
+    @apply absolute inset-0 bg-gradient-to-r from-primary to-orange-400 opacity-0 transition-opacity duration-300;
   }
 
   .btn-glow:hover::before {
@@ -234,7 +222,7 @@
 
   .border-gradient::before {
     content: '';
-    @apply absolute -inset-[1px] rounded-[inherit] bg-gradient-to-r from-primary via-accent to-primary -z-10;
+    @apply absolute -inset-[1px] rounded-[inherit] bg-gradient-to-r from-primary via-orange-400 to-primary -z-10;
     background-size: 200% auto;
     animation: gradient-shift 3s linear infinite;
   }
@@ -284,7 +272,7 @@
   /* Badge */
   .badge-gradient {
     @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
-           bg-gradient-to-r from-primary/10 to-accent/10 text-primary border border-primary/20;
+           bg-primary/10 text-primary border border-primary/20;
   }
 
   /* Navigation */

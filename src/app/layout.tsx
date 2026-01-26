@@ -7,7 +7,7 @@ import { ProductionConsoleGuard } from "@/components/ProductionConsoleGuard";
 
 export const metadata: Metadata = {
   title: 'Bugrit - Code Security & Quality Scanner',
-  description: 'Automated E2E Testing Dashboard',
+  description: 'One-click security and quality scanning for your codebase. Built for developers who move fast.',
 };
 
 export default function RootLayout({
@@ -20,9 +20,9 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased">
+      <body className="font-sans antialiased bg-white">
         <ProductionConsoleGuard />
         <ErrorBoundary>
           <AuthProvider>

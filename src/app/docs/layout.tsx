@@ -75,14 +75,14 @@ export default function DocsLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 w-full border-b bg-white/80 backdrop-blur-lg border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex h-14 items-center">
           <div className="mr-4 flex items-center">
             {/* Mobile menu button */}
             <button
-              className="md:hidden mr-3 p-2 -ml-2 rounded-md hover:bg-muted"
+              className="md:hidden mr-3 p-2 -ml-2 rounded-md hover:bg-gray-50"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -110,20 +110,20 @@ export default function DocsLayout({
               </svg>
             </button>
             <Logo href="/" size="sm" />
-            <span className="ml-4 text-sm font-medium text-muted-foreground hidden sm:inline">
+            <span className="ml-4 text-sm font-medium text-gray-400 hidden sm:inline">
               Documentation
             </span>
           </div>
           <nav className="flex flex-1 items-center justify-end space-x-2 sm:space-x-4">
             <Link
               href="/dashboard"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
             >
               Dashboard
             </Link>
             <Link
               href="/settings/api-keys"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors hidden sm:inline"
+              className="text-sm text-gray-500 hover:text-gray-900 transition-colors hidden sm:inline"
             >
               API Keys
             </Link>
@@ -142,7 +142,7 @@ export default function DocsLayout({
       {/* Mobile sidebar */}
       <aside
         className={cn(
-          'fixed top-14 left-0 z-40 h-[calc(100vh-3.5rem)] w-72 bg-background border-r transform transition-transform md:hidden overflow-y-auto',
+          'fixed top-14 left-0 z-40 h-[calc(100vh-3.5rem)] w-72 bg-white border-r transform transition-transform md:hidden overflow-y-auto',
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
@@ -159,8 +159,8 @@ export default function DocsLayout({
                       className={cn(
                         'block text-sm py-2 px-3 rounded-md transition-colors',
                         pathname === item.href
-                          ? 'bg-primary/10 text-primary font-medium'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          ? 'bg-orange-50 text-orange-600 font-medium'
+                          : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                       )}
                     >
                       {item.label}
@@ -190,8 +190,8 @@ export default function DocsLayout({
                           className={cn(
                             'block text-sm py-1.5 px-2 rounded-md transition-colors',
                             pathname === item.href
-                              ? 'bg-primary/10 text-primary font-medium'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                              ? 'bg-orange-50 text-orange-600 font-medium'
+                              : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                           )}
                         >
                           {item.label}
@@ -212,21 +212,21 @@ export default function DocsLayout({
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-8">
+      <footer className="border-t border-gray-100 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <Logo href="/" size="sm" />
-            <p className="text-muted-foreground text-sm text-center md:text-left">
+            <p className="text-gray-400 text-sm text-center md:text-left">
               A vibe coder&apos;s best friend. 150 modules. 3 test frameworks. Zero judgment.
             </p>
             <div className="flex items-center gap-6">
-              <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/privacy" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
                 Privacy
               </Link>
-              <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/terms" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
                 Terms
               </Link>
-              <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
                 Home
               </Link>
             </div>
