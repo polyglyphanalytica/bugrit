@@ -1,13 +1,19 @@
 /**
- * Firebase Admin SDK Initialization
+ * Firebase Admin SDK Initialization (Resilient Loading)
  *
  * This is the SINGLE source of truth for Firebase Admin initialization.
  * All server-side Firebase operations should use this module.
+ *
+ * IMPORTANT: This module uses lazy loading (require() inside try/catch)
+ * instead of top-level imports to prevent module-level failures.
+ * If firebase-admin can't be loaded, functions return null gracefully
+ * instead of crashing the entire module tree with 500 errors.
  */
 
-import { initializeApp, getApps, cert, App, applicationDefault } from 'firebase-admin/app';
-import { getAuth, Auth } from 'firebase-admin/auth';
-import { getFirestore, Firestore } from 'firebase-admin/firestore';
+// Type-only imports - these are erased at compile time, no runtime effect
+import type { App } from 'firebase-admin/app';
+import type { Auth } from 'firebase-admin/auth';
+import type { Firestore } from 'firebase-admin/firestore';
 
 // Singleton instances
 let adminApp: App | null = null;
@@ -16,6 +22,12 @@ let adminFirestore: Firestore | null = null;
 let initializationAttempted = false;
 let initializationError: Error | null = null;
 let initMethod = 'none';
+let moduleLoadError: string | null = null;
+
+// Cached module references (loaded lazily)
+let _appModule: typeof import('firebase-admin/app') | null = null;
+let _authModule: typeof import('firebase-admin/auth') | null = null;
+let _firestoreModule: typeof import('firebase-admin/firestore') | null = null;
 
 /**
  * Get project ID from environment
@@ -36,6 +48,57 @@ export function isAdminConfigured(): boolean {
 }
 
 /**
+ * Load the firebase-admin/app module (cached)
+ */
+function loadAppModule(): typeof import('firebase-admin/app') | null {
+  if (_appModule) return _appModule;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    _appModule = require('firebase-admin/app');
+    return _appModule;
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[firebase-admin] Failed to load firebase-admin/app:', msg);
+    moduleLoadError = msg;
+    return null;
+  }
+}
+
+/**
+ * Load the firebase-admin/auth module (cached)
+ */
+function loadAuthModule(): typeof import('firebase-admin/auth') | null {
+  if (_authModule) return _authModule;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    _authModule = require('firebase-admin/auth');
+    return _authModule;
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[firebase-admin] Failed to load firebase-admin/auth:', msg);
+    moduleLoadError = msg;
+    return null;
+  }
+}
+
+/**
+ * Load the firebase-admin/firestore module (cached)
+ */
+function loadFirestoreModule(): typeof import('firebase-admin/firestore') | null {
+  if (_firestoreModule) return _firestoreModule;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    _firestoreModule = require('firebase-admin/firestore');
+    return _firestoreModule;
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[firebase-admin] Failed to load firebase-admin/firestore:', msg);
+    moduleLoadError = msg;
+    return null;
+  }
+}
+
+/**
  * Initialize Firebase Admin SDK
  * Returns true if initialization succeeded, false otherwise.
  * Safe to call multiple times - will only initialize once.
@@ -53,13 +116,26 @@ export function initializeAdmin(): boolean {
 
   initializationAttempted = true;
 
+  // Load firebase-admin/app module lazily
+  const appModule = loadAppModule();
+  if (!appModule) {
+    initializationError = new Error(`Cannot load firebase-admin/app: ${moduleLoadError}`);
+    return false;
+  }
+
+  const { initializeApp, getApps, cert, applicationDefault } = appModule;
+
   // Check if already initialized by another module
-  const existingApps = getApps();
-  if (existingApps.length > 0) {
-    adminApp = existingApps[0];
-    initMethod = 'existing-app';
-    console.log('Firebase Admin: Using existing app instance');
-    return true;
+  try {
+    const existingApps = getApps();
+    if (existingApps.length > 0) {
+      adminApp = existingApps[0];
+      initMethod = 'existing-app';
+      console.log('[firebase-admin] Using existing app instance');
+      return true;
+    }
+  } catch (error) {
+    console.warn('[firebase-admin] getApps() failed:', error);
   }
 
   const projectId = getProjectId();
@@ -74,12 +150,12 @@ export function initializeAdmin(): boolean {
         projectId: projectId || serviceAccount.project_id,
       });
       initMethod = 'service-account';
-      console.log('Firebase Admin: Initialized with service account');
+      console.log('[firebase-admin] Initialized with service account');
       return true;
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       errors.push(`Service account: ${msg}`);
-      console.warn('Firebase Admin: Service account failed, trying ADC...', msg);
+      console.warn('[firebase-admin] Service account failed, trying ADC...', msg);
       // DO NOT return early - fall through to try ADC
     }
   }
@@ -91,24 +167,24 @@ export function initializeAdmin(): boolean {
       projectId,
     });
     initMethod = 'adc';
-    console.log('Firebase Admin: Initialized with Application Default Credentials');
+    console.log('[firebase-admin] Initialized with Application Default Credentials');
     return true;
   } catch (adcError) {
     const msg = adcError instanceof Error ? adcError.message : String(adcError);
     errors.push(`ADC: ${msg}`);
-    console.warn('Firebase Admin: ADC failed, trying auto-detection...', msg);
+    console.warn('[firebase-admin] ADC failed, trying auto-detection...', msg);
   }
 
   // Method 3: Try without any options (auto-detection)
   try {
     adminApp = initializeApp();
     initMethod = 'auto';
-    console.log('Firebase Admin: Initialized with auto-detection');
+    console.log('[firebase-admin] Initialized with auto-detection');
     return true;
   } catch (autoError) {
     const msg = autoError instanceof Error ? autoError.message : String(autoError);
     errors.push(`Auto: ${msg}`);
-    console.error('Firebase Admin: All initialization methods failed:', errors.join(' | '));
+    console.error('[firebase-admin] All initialization methods failed:', errors.join(' | '));
     initializationError = new Error(`All init methods failed: ${errors.join(' | ')}`);
     return false;
   }
@@ -116,7 +192,7 @@ export function initializeAdmin(): boolean {
 
 /**
  * Get Firebase Admin Auth instance
- * Returns null if not initialized
+ * Returns null if not initialized or module not available
  */
 export function getAdminAuth(): Auth | null {
   if (!initializeAdmin()) {
@@ -124,7 +200,9 @@ export function getAdminAuth(): Auth | null {
   }
 
   if (!adminAuth) {
-    adminAuth = getAuth();
+    const authModule = loadAuthModule();
+    if (!authModule) return null;
+    adminAuth = authModule.getAuth();
   }
 
   return adminAuth;
@@ -132,7 +210,7 @@ export function getAdminAuth(): Auth | null {
 
 /**
  * Get Firebase Admin Firestore instance
- * Returns null if not initialized
+ * Returns null if not initialized or module not available
  */
 export function getAdminFirestore(): Firestore | null {
   if (!initializeAdmin()) {
@@ -140,7 +218,9 @@ export function getAdminFirestore(): Firestore | null {
   }
 
   if (!adminFirestore) {
-    adminFirestore = getFirestore();
+    const fsModule = loadFirestoreModule();
+    if (!fsModule) return null;
+    adminFirestore = fsModule.getFirestore();
   }
 
   return adminFirestore;
@@ -170,6 +250,7 @@ export function getDiagnostics(): Record<string, unknown> {
     initAttempted: initializationAttempted,
     hasError: initializationError !== null,
     errorMessage: initializationError?.message || null,
+    moduleLoadError: moduleLoadError || null,
     projectId: getProjectId() || null,
     hasServiceAccountKey: !!process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
     serviceAccountKeyLength: process.env.FIREBASE_SERVICE_ACCOUNT_KEY?.length || 0,

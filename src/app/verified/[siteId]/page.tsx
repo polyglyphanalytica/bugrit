@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: `${site.metadata.siteName} has been scanned for security and quality. Vibe Score: ${site.latestScan?.vibeScore || 'N/A'}/100`,
     openGraph: {
       title: `${site.metadata.siteName} is Verified by Bugrit`,
-      description: `This website has been scanned with 118 security and quality tools. Current Vibe Score: ${site.latestScan?.vibeScore || 'N/A'}/100`,
+      description: `This website has been scanned with 150 security and quality modules. Current Vibe Score: ${site.latestScan?.vibeScore || 'N/A'}/100`,
       images: [`https://bugrit.dev/api/og/verified/${siteId}`],
     },
   };
@@ -200,7 +200,7 @@ export default async function VerifiedSitePage({ params }: PageProps) {
           </h2>
           <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
             Show your visitors you take security and quality seriously.
-            Bugrit scans your codebase with <strong>118 security and quality tools</strong>,
+            Bugrit scans your codebase with <strong>150 security and quality modules</strong>,
             gives you a Vibe Score, and provides a trust badge you can display.
           </p>
 

@@ -15,7 +15,13 @@ import {
   CommitlintIntegration,
   SonarQubeIntegration,
   CodeClimateIntegration,
+  ReleaseRiskAnalyzerIntegration,
 } from './code-quality';
+
+// Import Dependencies & Supply Chain tools
+import {
+  SBOMGeneratorIntegration,
+} from './dependencies';
 
 import {
   SemgrepIntegration,
@@ -232,6 +238,12 @@ const ALL_INTEGRATIONS: ToolIntegration[] = [
 
   // Additional Security (1 tool)
   new NucleiIntegration(),
+
+  // Dependencies & Supply Chain (1 tool)
+  new SBOMGeneratorIntegration(),
+
+  // Release Risk Analysis (1 tool)
+  new ReleaseRiskAnalyzerIntegration(),
 
   // Cloud Build integrations (78 Docker-based tools)
   // Wave 1 (6): Core security & performance - OWASP ZAP, Dependency Check, Sitespeed, CodeClimate, Trivy, Grype
@@ -638,4 +650,10 @@ export {
 
   // Additional Security
   NucleiIntegration,
+
+  // Dependencies & Supply Chain
+  SBOMGeneratorIntegration,
+
+  // Release Risk Analysis
+  ReleaseRiskAnalyzerIntegration,
 };

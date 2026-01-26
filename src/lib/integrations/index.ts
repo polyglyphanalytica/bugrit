@@ -16,6 +16,9 @@ export * from './secret-scanning';
 // License Compliance
 export * from './license';
 
+// Dependencies & Supply Chain
+export * from './dependencies';
+
 // Accessibility
 export * from './accessibility';
 

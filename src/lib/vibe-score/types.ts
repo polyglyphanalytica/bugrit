@@ -286,7 +286,7 @@ export const SCAN_MODES: ScanModeConfig[] = [
   {
     id: 'full-audit',
     name: 'Full Audit',
-    description: 'All 118 tools - comprehensive analysis',
+    description: 'All 150 modules - comprehensive analysis',
     icon: '🔍',
     estimatedTime: '10-15 minutes',
     tools: [], // Empty means all tools

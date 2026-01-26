@@ -4,7 +4,7 @@ A comprehensive checklist for deploying new scanning tools to the Bugrit platfor
 All items must be completed for a tool to be production-ready.
 
 **Current Tool Counts:**
-- Total: 142 tools (64 npm/direct + 78 Docker)
+- Total: 150 modules (66 npm/direct + 79 Docker + 5 AI)
 - Last updated: January 2026
 
 ---
@@ -376,7 +376,7 @@ Usage:
 
 ## Compliance Matrix
 
-Use this matrix to verify all 142 tools are properly deployed:
+Use this matrix to verify all 150 modules are properly deployed:
 
 | Tool ID | Registry | API Types | Integration | Wizard | Docs |
 |---------|----------|-----------|-------------|--------|------|

@@ -113,7 +113,7 @@ export default async function RepoHealthPage({ params }: PageProps) {
         <footer className="text-center text-slate-500 text-sm">
           <p>
             Powered by <a href="https://bugrit.dev" className="text-purple-400 hover:underline">Bugrit</a>
-            {' '}- 118 tools for code health
+            {' '}- 150 modules for code health
           </p>
         </footer>
       </div>

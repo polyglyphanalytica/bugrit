@@ -8,11 +8,10 @@
  * users/{userId}/sessions/{sessionId}/tool_reports/{toolName}
  */
 
-import { getDb, generateId, toTimestamp, Timestamp, COLLECTIONS } from '@/lib/firestore';
+import { getDb, generateId, toTimestamp, Timestamp, FieldValue, COLLECTIONS } from '@/lib/firestore';
 import { AuditResult, AuditTarget, ToolCategory } from '@/lib/integrations/types';
 import { IntelligenceReport } from '@/lib/integrations/ai';
 import { logger } from '@/lib/logger';
-import { FieldValue } from 'firebase-admin/firestore';
 
 export interface SessionConfig {
   userId: string;

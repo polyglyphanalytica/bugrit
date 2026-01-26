@@ -1,5 +1,5 @@
 # Auto-merge Dependabot PRs for tool updates
-# This enables fully automated weekly updates for all 118 tools
+# This enables fully automated weekly updates for all 150 modules
 
 name: Auto-merge Dependabot
 

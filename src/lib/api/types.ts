@@ -362,7 +362,7 @@ export const AVAILABLE_TOOLS = [
   // Cloud Native (9)
   'kubesec', 'kube-bench', 'polaris', 'terrascan', 'kube-hunter',
   'kics', 'cfn-lint', 'prowler', 'steampipe',
-] as const;  // Total: 115 tools
+] as const;  // Total: 115 registry tools (150 modules with integrations + AI)
 
 export type ToolName = (typeof AVAILABLE_TOOLS)[number];
 

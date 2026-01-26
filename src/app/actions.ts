@@ -2,8 +2,7 @@
 
 import { generateContentFromTopic } from "@/ai/flows/generate-content-from-topic";
 import { z } from "zod";
-import { db } from "@/lib/firebase/admin";
-import { FieldValue } from "firebase-admin/firestore";
+import { db, FieldValue } from "@/lib/firebase/admin";
 
 const formSchema = z.object({
   topic: z.string().min(2, "Topic must be at least 2 characters long."),

@@ -24,7 +24,7 @@ export default function GettingStartedPage() {
 2. Then register my app and run a scan. Here's what I want:
    - Repository: [MY_GITHUB_REPO_URL]
    - Branch: main
-   - Run all 140+ security and quality tools
+   - Run all 150 security and quality modules
 
 3. Use this API call:
    POST https://bugrit.com/api/v1/scans
@@ -85,7 +85,7 @@ Help me set this up and run the tests.`,
    - Repository: [MY_GITHUB_REPO_URL]
    - Staging URL: [MY_STAGING_URL]
    - Run Playwright on all browsers
-   - Run all 140+ security/quality tools
+   - Run all 150 security/quality modules
 
 3. Use this combined API call:
    POST https://bugrit.com/api/v1/scans
@@ -168,7 +168,7 @@ Help me set this up for my mobile app.`,
           </li>
           <li className="flex items-start gap-2">
             <span className="text-primary">→</span>
-            <span><strong>One report, 140+ tools:</strong> Instead of setting up ESLint, Prettier, audit-ci, and 22 other tools separately, get everything in one scan</span>
+            <span><strong>One report, 150 modules:</strong> Instead of setting up ESLint, Prettier, audit-ci, and 22 other modules separately, get everything in one scan</span>
           </li>
         </ul>
       </div>
@@ -187,7 +187,7 @@ Help me set this up for my mobile app.`,
               <span>⚡</span> NEW: Real-Time Results
             </h2>
             <p className="text-muted-foreground mb-4">
-              Watch your scan results <strong>stream in live</strong> as each tool completes. No more waiting for all 140+ tools to finish!
+              Watch your scan results <strong>stream in live</strong> as each module completes. No more waiting for all 150 modules to finish!
             </p>
             <div className="grid md:grid-cols-2 gap-4 mb-4">
               <div className="p-3 bg-background/80 rounded-lg text-sm">
@@ -237,7 +237,7 @@ Help me set this up for my mobile app.`,
               <span>🔍</span> 3. Scan Code
             </h2>
             <p className="text-muted-foreground mb-4">
-              Submit your code for analysis with 140+ tools covering security, quality, dependencies, and more.
+              Submit your code for analysis with 150 modules covering security, quality, dependencies, and more.
             </p>
 
             <h4 className="font-semibold mb-2">Option A: Scan a GitHub Repository</h4>
@@ -293,8 +293,8 @@ Help me set this up for my mobile app.`,
     "id": "scn-xyz789",
     "status": "completed",
     "scanning": {
-      "toolsTotal": 140+,
-      "toolsCompleted": 140+,
+      "toolsTotal": 150,
+      "toolsCompleted": 150,
       "summary": {
         "critical": 2,
         "high": 5,
@@ -326,7 +326,7 @@ Help me set this up for my mobile app.`,
               The unified report includes:
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 mt-2">
-              <li>Deduplicated findings from all 140+ scanning tools</li>
+              <li>Deduplicated findings from all 150 scanning modules</li>
               <li>AI-generated plain English explanations</li>
               <li>Prioritized issues by severity</li>
               <li>Step-by-step remediation guidance</li>

@@ -1,20 +1,21 @@
 # Bugrit Tool Catalog
 
-Complete reference for all 142 integrated security, quality, and testing tools.
+Complete reference for all 150 integrated security, quality, and testing modules.
 
 ## Overview
 
-Bugrit integrates **142 tools** across 17 categories:
+Bugrit integrates **150 modules** (147 tools + 3 AI) across 18 categories:
 
 | Category | Direct Tools | Cloud Build | Total | Description |
 |----------|-------------|-------------|-------|-------------|
 | Security | 11 | 44 | 55 | SAST, DAST, vulnerability scanning |
-| Code Quality | 9 | 25 | 34 | Linting, formatting, static analysis |
+| Code Quality | 10 | 25 | 35 | Linting, formatting, static analysis, release risk |
 | IaC Security | 7 | 0 | 7 | Infrastructure as Code security |
 | Performance | 6 | 1 | 7 | Load testing, web performance |
 | Accessibility | 3 | 0 | 3 | WCAG compliance, a11y testing |
 | API Testing | 4 | 0 | 4 | REST, GraphQL, contract testing |
 | API Schema | 2 | 0 | 2 | OpenAPI validation, diff detection |
+| Dependencies | 1 | 0 | 1 | SBOM generation, supply chain analysis |
 | Documentation | 4 | 0 | 4 | Prose linting, spell checking |
 | Complexity | 3 | 0 | 3 | Code complexity metrics |
 | Coverage | 3 | 0 | 3 | Test coverage, mutation testing |
@@ -24,7 +25,7 @@ Bugrit integrates **142 tools** across 17 categories:
 | Visual | 3 | 0 | 3 | Visual regression, screenshots |
 | Observability | 2 | 0 | 2 | Monitoring integration |
 | Chaos | 1 | 0 | 1 | Chaos engineering |
-| **Total** | **64** | **78** | **142** | |
+| **Total** | **68** | **79** | **147** | (+3 AI modules = **150**) |
 
 ---
 
@@ -49,7 +50,7 @@ Bugrit integrates **142 tools** across 17 categories:
 
 ---
 
-## Direct Integrations (64 Tools)
+## Direct Integrations (68 Tools)
 
 ### Security (11 tools)
 
@@ -67,7 +68,7 @@ Bugrit integrates **142 tools** across 17 categories:
 | **Brakeman** | Ruby on Rails security scanner | Ruby | [brakemanscanner.org](https://brakemanscanner.org) |
 | **Nuclei** | Template-based vulnerability scanner | Web | [nuclei.projectdiscovery.io](https://nuclei.projectdiscovery.io) |
 
-### Code Quality (9 tools)
+### Code Quality (10 tools)
 
 | Tool | Description | Languages | Website |
 |------|-------------|-----------|---------|
@@ -80,6 +81,7 @@ Bugrit integrates **142 tools** across 17 categories:
 | **commitlint** | Git commit message linter | Git | [commitlint.js.org](https://commitlint.js.org) |
 | **SonarQube** | Continuous code quality | All | [sonarqube.org](https://www.sonarqube.org) |
 | **CodeClimate** | Automated code review | All | [codeclimate.com](https://codeclimate.com) |
+| **Release Risk Analyzer** | Git-based release change risk assessment | All | [bugrit.dev](https://bugrit.dev) |
 
 ### Accessibility (3 tools)
 
@@ -169,6 +171,12 @@ Bugrit integrates **142 tools** across 17 categories:
 | **SQLFluff** | SQL linter and formatter | All SQL | [sqlfluff.com](https://sqlfluff.com) |
 | **pgFormatter** | PostgreSQL formatter | PostgreSQL | [github.com/darold/pgFormatter](https://github.com/darold/pgFormatter) |
 | **SchemaSpy** | Database schema analyzer | All | [schemaspy.org](https://schemaspy.org) |
+
+### Dependencies & Supply Chain (1 tool)
+
+| Tool | Description | Output | Website |
+|------|-------------|--------|---------|
+| **SBOM Generator** | CycloneDX SBOM generation with license compliance, vulnerability, and supply chain analysis | CycloneDX JSON | [github.com/CycloneDX/cdxgen](https://github.com/CycloneDX/cdxgen) |
 
 ### License Scanning (2 tools)
 
@@ -336,7 +344,7 @@ These tools run in Docker containers via Google Cloud Build for isolated, scalab
 | **Quick** | Linting, basic security | ~2 credits | Pre-commit checks |
 | **Standard** | All local tools | ~10 credits | CI/CD pipelines |
 | **Deep** | + Cloud Build tools | ~25 credits | Pre-release scans |
-| **Paranoid** | All 142 tools | ~50 credits | Security audits |
+| **Paranoid** | All 150 modules | ~50 credits | Security audits |
 
 ---
 

@@ -4,7 +4,7 @@ A unified checklist for launching Bugrit to production. Complete all sections be
 
 **Last Updated:** January 2026
 **Estimated Time:** 4-6 hours (excluding DNS propagation)
-**Tool Count:** 142 tools running 5,000+ security checks
+**Module Count:** 150 modules (147 tools + 3 AI) running 5,000+ scans
 
 ---
 
@@ -556,7 +556,7 @@ Verify credit costs match:
 
 - [ ] API documentation available
 - [ ] User guide / help center
-- [ ] Pricing page accurate (142 tools, 5,000+ checks)
+- [ ] Pricing page accurate (150 modules, 5,000+ scans)
 - [ ] FAQ section complete
 - [ ] Contact/support method available
 

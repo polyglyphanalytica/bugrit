@@ -23,7 +23,7 @@ export default function CleverAutomationPage() {
 I want a GitHub Actions workflow that:
 1. Triggers on push to main and develop branches
 2. Triggers on pull requests to main
-3. Scans my code with Bugrit's 140+ security tools (5,000+ checks)
+3. Scans my code with Bugrit's 150 security modules (5,000+ scans)
 4. Fails the build if critical vulnerabilities are found
 5. Posts results as a PR comment
 
@@ -66,7 +66,7 @@ Please create the complete GitLab CI configuration.`,
 
 I want:
 1. Nightly security scan at 2 AM UTC
-2. Full deep scan (all 140+ tools, 5,000+ checks)
+2. Full deep scan (all 150 modules, 5,000+ scans)
 3. Email notification if critical issues found
 4. Can also be triggered manually
 

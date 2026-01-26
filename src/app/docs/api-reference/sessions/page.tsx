@@ -20,7 +20,7 @@ export default function SessionsApiPage() {
           <span>⚡</span> Watch Results Stream In Live
         </h2>
         <p className="text-muted-foreground mb-4">
-          The Sessions API is our <strong>new streaming experience</strong>. Instead of waiting 2-5 minutes for all 140+ tools to finish,
+          The Sessions API is our <strong>new streaming experience</strong>. Instead of waiting 2-5 minutes for all 150 modules to finish,
           you see each tool&apos;s results <strong>the moment it completes</strong>.
         </p>
         <div className="grid md:grid-cols-2 gap-4 mb-4">
@@ -36,7 +36,7 @@ export default function SessionsApiPage() {
             <div className="text-green-500 font-semibold mb-2">✓ New Way (Sessions API)</div>
             <ul className="text-sm text-muted-foreground space-y-1">
               <li>• Results appear immediately as tools finish</li>
-              <li>• Real-time progress (23/140+ tools done)</li>
+              <li>• Real-time progress (23/150 modules done)</li>
               <li>• Automatic credit refunds for failed tools</li>
             </ul>
           </div>
@@ -90,7 +90,7 @@ Build a live scan progress dashboard:
 1. Start session: POST /api/sessions with target
 2. Show session status and live progress bar
 3. Poll /api/sessions/{sessionId}?progress=true every 2 seconds
-4. Display: "23/140+ tools complete (32%)"
+4. Display: "23/150 tools complete (32%)"
 5. As tools complete, add their results to a live list:
    - Tool name, duration, issue count
    - Color-code by severity (red=critical, orange=high, etc.)
@@ -109,7 +109,7 @@ Build a live scan progress dashboard:
 1. Start session: POST /api/sessions with target
 2. Show session status and live progress bar
 3. Poll /api/sessions/{sessionId}?progress=true every 2 seconds
-4. Display: "23/140+ tools complete (32%)"
+4. Display: "23/150 tools complete (32%)"
 5. As tools complete, add their results to a live list:
    - Tool name, duration, issue count
    - Color-code by severity (red=critical, orange=high, etc.)
@@ -261,8 +261,8 @@ Create a CI/CD script with live console output:
 2. Print "[SCAN] Starting security scan..."
 3. Poll every 5 seconds
 4. As each tool completes, print:
-   "[45/140+] ✓ eslint-security: 3 findings (0.8s)"
-   "[45/140+] ✓ semgrep: 1 critical, 2 high (2.3s)"
+   "[45/150] ✓ eslint-security: 3 findings (0.8s)"
+   "[45/150] ✓ semgrep: 1 critical, 2 high (2.3s)"
 5. If a tool fails, print warning but continue
 6. When done, print summary table:
    - Total findings by severity
@@ -282,8 +282,8 @@ Create a CI/CD script with live console output:
 2. Print "[SCAN] Starting security scan..."
 3. Poll every 5 seconds
 4. As each tool completes, print:
-   "[45/140+] ✓ eslint-security: 3 findings (0.8s)"
-   "[45/140+] ✓ semgrep: 1 critical, 2 high (2.3s)"
+   "[45/150] ✓ eslint-security: 3 findings (0.8s)"
+   "[45/150] ✓ semgrep: 1 critical, 2 high (2.3s)"
 5. If a tool fails, print warning but continue
 6. When done, print summary table:
    - Total findings by severity
@@ -698,7 +698,7 @@ My stack: [YOUR_STACK]`)}
   "userId": "user-123",
   "status": "running",
   "progress": {
-    "total": 140+,
+    "total": 150,
     "completed": 23,
     "failed": 1,
     "skipped": 2,
@@ -754,7 +754,7 @@ My stack: [YOUR_STACK]`)}
   "sessionId": "sess-abc123xyz",
   "status": "running",
   "progress": {
-    "total": 140+,
+    "total": 150,
     "completed": 23,
     "failed": 1,
     "skipped": 2,
@@ -812,7 +812,7 @@ Create a session history component:
 2. Display as table:
    - Created date
    - Status badge (running=blue, completed=green, failed=red)
-   - Progress (45/140+ tools)
+   - Progress (45/150 tools)
    - Issue summary (2 critical, 5 high)
 3. Click row to view full session
 4. Running sessions: show progress bar + live badge
@@ -829,7 +829,7 @@ Create a session history component:
 2. Display as table:
    - Created date
    - Status badge (running=blue, completed=green, failed=red)
-   - Progress (45/140+ tools)
+   - Progress (45/150 tools)
    - Issue summary (2 critical, 5 high)
 3. Click row to view full session
 4. Running sessions: show progress bar + live badge
@@ -877,7 +877,7 @@ My stack: [YOUR_STACK]`)}
     {
       "sessionId": "sess-abc123xyz",
       "status": "completed",
-      "progress": { "total": 140+, "completed": 140+, "percentage": 100 },
+      "progress": { "total": 150, "completed": 150, "percentage": 100 },
       "createdAt": "2026-01-22T10:25:00Z",
       "completedAt": "2026-01-22T10:30:47Z"
     }
