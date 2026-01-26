@@ -5,8 +5,7 @@
  * Integrates with auto top-up for seamless API usage.
  */
 
-import { db } from '@/lib/firebase/admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { db, FieldValue } from '@/lib/firebase/admin';
 import { calculateCredits, canAffordScan, SUBSCRIPTION_TIERS, SubscriptionTier, ScanConfig, CreditEstimate } from './credits';
 import { deductCreditsWithAutoTopup } from './auto-topup';
 import { logger } from '@/lib/logger';

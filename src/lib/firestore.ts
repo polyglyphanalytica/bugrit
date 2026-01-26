@@ -1,15 +1,36 @@
 // Firestore database service
 // Provides all database operations for the application
+//
+// IMPORTANT: Uses lazy loading for firebase-admin/firestore to prevent
+// module-level failures. See firebase-admin.ts for details.
 
-import {
-  Timestamp,
-  FieldValue,
+// Type-only imports (erased at compile time)
+import type {
   DocumentReference,
   CollectionReference,
   DocumentData,
   Firestore,
+  Timestamp as TimestampType,
 } from 'firebase-admin/firestore';
 import { getAdminFirestore, isAdminConfigured } from './firebase-admin';
+
+// Lazy-loaded firebase-admin/firestore module
+let _firestoreModule: typeof import('firebase-admin/firestore') | null = null;
+let _moduleLoadAttempted = false;
+
+function getFirestoreModule(): typeof import('firebase-admin/firestore') | null {
+  if (_firestoreModule) return _firestoreModule;
+  if (_moduleLoadAttempted) return null;
+  _moduleLoadAttempted = true;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    _firestoreModule = require('firebase-admin/firestore');
+    return _firestoreModule;
+  } catch (error) {
+    console.warn('[firestore] firebase-admin/firestore not available:', error);
+    return null;
+  }
+}
 
 // Collection names
 export const COLLECTIONS = {
@@ -54,19 +75,43 @@ export function getDb(): Firestore | null {
 }
 
 /**
+ * Get the Timestamp class from firebase-admin/firestore
+ * Returns null if the module isn't available
+ */
+export function getTimestampClass() {
+  return getFirestoreModule()?.Timestamp ?? null;
+}
+
+/**
+ * Get the FieldValue class from firebase-admin/firestore
+ * Returns null if the module isn't available
+ */
+export function getFieldValueClass() {
+  return getFirestoreModule()?.FieldValue ?? null;
+}
+
+/**
  * Convert Firestore timestamp to Date
  */
-export function toDate(timestamp: Timestamp | Date | undefined): Date {
+export function toDate(timestamp: TimestampType | Date | undefined): Date {
   if (!timestamp) return new Date();
   if (timestamp instanceof Date) return timestamp;
-  return timestamp.toDate();
+  if (typeof (timestamp as any).toDate === 'function') {
+    return (timestamp as any).toDate();
+  }
+  return new Date();
 }
 
 /**
  * Convert Date to Firestore timestamp
  */
-export function toTimestamp(date: Date | undefined): Timestamp {
-  return Timestamp.fromDate(date || new Date());
+export function toTimestamp(date: Date | undefined): TimestampType {
+  const mod = getFirestoreModule();
+  if (mod?.Timestamp) {
+    return mod.Timestamp.fromDate(date || new Date());
+  }
+  // Fallback: return the date itself (will work for comparisons)
+  return (date || new Date()) as any;
 }
 
 /**
@@ -80,6 +125,7 @@ export function generateId(prefix: string = ''): string {
     crypto.getRandomValues(randomBytes);
   } else {
     // Fallback for Node.js environments
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const nodeCrypto = require('crypto');
     const nodeRandom = nodeCrypto.randomBytes(5);
     randomBytes.set(nodeRandom);
@@ -154,5 +200,33 @@ export async function batchWrite(
   }
 }
 
-// Re-export useful Firestore utilities
-export { Timestamp, FieldValue };
+// Re-export Timestamp and FieldValue via lazy getters
+// These are loaded lazily to prevent module-level failures
+export const Timestamp = new Proxy({} as typeof import('firebase-admin/firestore').Timestamp, {
+  get(_target, prop) {
+    const mod = getFirestoreModule();
+    if (mod?.Timestamp) {
+      return (mod.Timestamp as any)[prop];
+    }
+    console.warn(`[firestore] Timestamp.${String(prop)} called but firebase-admin/firestore not loaded`);
+    return undefined;
+  },
+  construct(_target, args) {
+    const mod = getFirestoreModule();
+    if (mod?.Timestamp) {
+      return new (mod.Timestamp as any)(...args);
+    }
+    throw new Error('firebase-admin/firestore not available');
+  },
+});
+
+export const FieldValue = new Proxy({} as typeof import('firebase-admin/firestore').FieldValue, {
+  get(_target, prop) {
+    const mod = getFirestoreModule();
+    if (mod?.FieldValue) {
+      return (mod.FieldValue as any)[prop];
+    }
+    console.warn(`[firestore] FieldValue.${String(prop)} called but firebase-admin/firestore not loaded`);
+    return undefined;
+  },
+});

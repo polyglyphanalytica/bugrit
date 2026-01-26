@@ -5,8 +5,7 @@
  * Tokens are stored securely and associated with user accounts.
  */
 
-import { getDb, toDate, toTimestamp, generateId } from '../firestore';
-import { Timestamp } from 'firebase-admin/firestore';
+import { getDb, toDate, toTimestamp, generateId, Timestamp } from '../firestore';
 import { logger } from '../logger';
 
 const COLLECTION = 'githubConnections';

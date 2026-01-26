@@ -17,8 +17,7 @@
  * 4. Grace expires → processExpiredGracePeriods() with transaction protection
  */
 
-import { db } from '@/lib/firebase/admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { db, FieldValue } from '@/lib/firebase/admin';
 import {
   DunningState,
   GRACE_PERIOD_DAYS,

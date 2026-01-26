@@ -5,9 +5,9 @@
  * Failed jobs are moved to a dead letter queue for investigation.
  */
 
-import { db } from '@/lib/firebase/admin';
+import { db, FieldValue, Timestamp } from '@/lib/firebase/admin';
+import type { Timestamp as TimestampType } from 'firebase-admin/firestore';
 import { logger } from '@/lib/logger';
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 export type JobStatus = 'pending' | 'running' | 'completed' | 'failed' | 'dead';
 export type JobPriority = 'low' | 'normal' | 'high' | 'critical';
@@ -510,7 +510,7 @@ export class JobQueue {
       ...doc.data(),
       id: doc.id,
       movedAt: doc.data().movedAt?.toDate() || new Date(),
-      errorHistory: (doc.data().errorHistory || []).map((e: { timestamp: Timestamp; attempt: number; error: string }) => ({
+      errorHistory: (doc.data().errorHistory || []).map((e: { timestamp: TimestampType; attempt: number; error: string }) => ({
         ...e,
         timestamp: e.timestamp?.toDate() || new Date(),
       })),
@@ -605,13 +605,13 @@ export class JobQueue {
   private deserializeJob(data: Record<string, unknown>): ScanJob {
     return {
       ...data,
-      createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
-      startedAt: (data.startedAt as Timestamp)?.toDate(),
-      completedAt: (data.completedAt as Timestamp)?.toDate(),
-      nextRetryAt: (data.nextRetryAt as Timestamp)?.toDate(),
-      lockedAt: (data.lockedAt as Timestamp)?.toDate(),
-      lockExpiresAt: (data.lockExpiresAt as Timestamp)?.toDate(),
-      errorHistory: ((data.errorHistory as Array<{ timestamp: Timestamp; attempt: number; error: string }>) || []).map(e => ({
+      createdAt: (data.createdAt as TimestampType)?.toDate() || new Date(),
+      startedAt: (data.startedAt as TimestampType)?.toDate(),
+      completedAt: (data.completedAt as TimestampType)?.toDate(),
+      nextRetryAt: (data.nextRetryAt as TimestampType)?.toDate(),
+      lockedAt: (data.lockedAt as TimestampType)?.toDate(),
+      lockExpiresAt: (data.lockExpiresAt as TimestampType)?.toDate(),
+      errorHistory: ((data.errorHistory as Array<{ timestamp: TimestampType; attempt: number; error: string }>) || []).map(e => ({
         ...e,
         timestamp: e.timestamp?.toDate() || new Date(),
       })),
