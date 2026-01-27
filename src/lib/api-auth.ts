@@ -6,6 +6,7 @@ import { timingSafeEqual } from 'crypto';
 import { store } from './store';
 import { ApiKey, ApiKeyPermission } from './types';
 import { verifySession } from './auth/session';
+import { verifyIdToken } from './auth';
 
 /**
  * Constant-time string comparison to prevent timing attacks
@@ -277,23 +278,41 @@ export function getAuthenticatedUserId(request: NextRequest): string | null {
  * Require authentication and return user ID
  * Returns NextResponse error if not authenticated, otherwise returns user ID
  *
- * Supports both API key authentication and Firebase session cookies.
- * This is an async function to support session cookie verification.
+ * Supports three authentication methods (tried in order):
+ * 1. API key (x-api-key header) - For programmatic access
+ * 2. Firebase ID token (Authorization: Bearer <token>) - For client-side API calls
+ * 3. Firebase session cookie - For browser-based SSR access
  */
 export async function requireAuthenticatedUser(request: NextRequest): Promise<NextResponse | string> {
-  // Try API key first (for programmatic access)
+  // 1. Try API key first (for programmatic access)
   const userId = getAuthenticatedUserId(request);
   if (userId) {
     return userId;
   }
 
-  // Try Firebase session cookie (for browser-based access)
+  // 2. Try Firebase ID token from Authorization header (for client-side fetch calls)
+  const authHeader = request.headers.get('authorization');
+  if (authHeader) {
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
+    if (token && !token.startsWith('bg_')) {
+      try {
+        const decoded = await verifyIdToken(token);
+        if (decoded?.uid) {
+          return decoded.uid;
+        }
+      } catch {
+        // Token verification failed, continue to next method
+      }
+    }
+  }
+
+  // 3. Try Firebase session cookie (for browser-based SSR access)
   try {
     const session = await verifySession();
     if (session?.uid) {
       return session.uid;
     }
-  } catch (error) {
+  } catch {
     // Session verification failed, continue to error response
   }
 
