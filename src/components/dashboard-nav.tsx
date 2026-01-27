@@ -71,7 +71,7 @@ export function DashboardNav() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white/80 backdrop-blur-lg">
       <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-8 flex h-14 items-center justify-between">
         {/* Left: Mobile Menu + Logo + Nav */}
         <div className="flex items-center gap-4 md:gap-8">
@@ -98,23 +98,23 @@ export function DashboardNav() {
                     className={cn(
                       'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors',
                       pathname === item.href
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        ? 'bg-orange-50 text-orange-600'
+                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                     )}
                   >
                     {item.icon}
                     {item.label}
                   </Link>
                 ))}
-                <div className="my-2 border-t" />
+                <div className="my-2 border-t border-gray-100" />
                 <Link
                   href="/settings"
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
                     'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors',
                     pathname.startsWith('/settings')
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      ? 'bg-orange-50 text-orange-600'
+                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                   )}
                 >
                   <Settings className="w-5 h-5" />
@@ -123,7 +123,7 @@ export function DashboardNav() {
                 <Link
                   href="/settings/api-keys"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                 >
                   <Key className="w-5 h-5" />
                   API Keys
@@ -137,8 +137,8 @@ export function DashboardNav() {
                       className={cn(
                         'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors',
                         pathname.startsWith('/admin')
-                          ? 'bg-amber-500/10 text-amber-600'
-                          : 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950'
+                          ? 'bg-orange-50 text-orange-600'
+                          : 'text-orange-600 hover:bg-orange-50'
                       )}
                     >
                       <Shield className="w-5 h-5" />
@@ -151,16 +151,16 @@ export function DashboardNav() {
                     setMobileMenuOpen(false);
                     handleLogout();
                   }}
-                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950 w-full text-left"
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 w-full text-left"
                 >
                   <LogOut className="w-5 h-5" />
                   Log out
                 </button>
               </nav>
               {/* User info at bottom */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-muted/50">
-                <p className="text-sm font-medium truncate">{user?.email}</p>
-                <p className="text-xs text-muted-foreground">Signed in</p>
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-gray-50">
+                <p className="text-sm font-medium truncate text-gray-900">{user?.email}</p>
+                <p className="text-xs text-gray-400">Signed in</p>
               </div>
             </SheetContent>
           </Sheet>
@@ -172,10 +172,10 @@ export function DashboardNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'text-sm font-medium transition-colors hover:text-primary',
+                  'text-sm font-medium transition-colors',
                   pathname === item.href
-                    ? 'text-foreground'
-                    : 'text-muted-foreground'
+                    ? 'text-gray-900'
+                    : 'text-gray-400 hover:text-gray-900'
                 )}
               >
                 {item.label}
@@ -190,15 +190,15 @@ export function DashboardNav() {
           <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2">
-              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-xs font-medium text-primary">
+              <div className="w-6 h-6 rounded-full bg-orange-50 flex items-center justify-center">
+                <span className="text-xs font-medium text-orange-600">
                   {user?.email?.[0]?.toUpperCase() || 'U'}
                 </span>
               </div>
-              <span className="hidden sm:inline text-sm font-normal text-muted-foreground max-w-[150px] truncate">
+              <span className="hidden sm:inline text-sm font-normal text-gray-500 max-w-[150px] truncate">
                 {user?.email || 'Account'}
               </span>
-              <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </Button>
@@ -206,7 +206,7 @@ export function DashboardNav() {
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-2 py-1.5">
               <p className="text-sm font-medium">{user?.email}</p>
-              <p className="text-xs text-muted-foreground">Manage your account</p>
+              <p className="text-xs text-gray-400">Manage your account</p>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -229,7 +229,7 @@ export function DashboardNav() {
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/admin" className="cursor-pointer text-amber-600 focus:text-amber-600">
+                  <Link href="/admin" className="cursor-pointer text-orange-600 focus:text-orange-600">
                     <Shield className="w-4 h-4 mr-2" />
                     Admin Panel
                   </Link>
@@ -237,7 +237,7 @@ export function DashboardNav() {
               </>
             )}
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-600">
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 focus:text-red-500">
               <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>

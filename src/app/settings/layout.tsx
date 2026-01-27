@@ -27,14 +27,14 @@ export default function SettingsLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <DashboardNav />
       <main className="flex-1 mx-auto w-full px-4 md:px-6 lg:px-8 py-6 max-w-7xl">
         <div className="flex items-center gap-2 mb-6">
@@ -45,7 +45,7 @@ export default function SettingsLayout({
         <div className="flex flex-col md:flex-row gap-6">
           {/* Sidebar Navigation */}
           <aside className="w-full md:w-64 flex-shrink-0">
-            <nav className="space-y-1 p-2 rounded-lg bg-muted/30">
+            <nav className="space-y-1 p-2 rounded-lg bg-gray-50">
               {settingsNavItems.map((item) => {
                 const isActive = pathname === item.href ||
                   (item.href !== '/settings' && pathname.startsWith(item.href));
@@ -56,8 +56,8 @@ export default function SettingsLayout({
                     href={item.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                       isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                        ? 'bg-orange-500 text-white'
+                        : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                     }`}
                   >
                     <Icon className="h-4 w-4" />

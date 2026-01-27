@@ -114,13 +114,13 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center p-4 bg-muted/40">
-      <Card className="w-full max-w-md shadow-xl">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center p-4 bg-white">
+      <Card className="w-full max-w-md shadow-card border border-gray-100">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
             <Logo href="/" size="lg" />
           </div>
-          <CardDescription>E2E Testing Dashboard</CardDescription>
+          <CardDescription>Security scanning for modern codebases</CardDescription>
         </CardHeader>
         <CardContent>
           {mode !== 'reset' ? (

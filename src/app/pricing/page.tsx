@@ -93,7 +93,7 @@ export default function PricingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-background to-muted/30">
+    <main className="min-h-screen bg-white">
       <Suspense fallback={null}>
         <CheckoutParamsHandler />
       </Suspense>
@@ -101,17 +101,17 @@ export default function PricingPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Pay For What You Use</h1>
-          <p className="text-xl text-muted-foreground mb-8">
+          <p className="text-xl text-gray-500 mb-8">
             Credit-based pricing that scales with your codebase. See costs before every scan.
           </p>
 
           {/* Annual toggle */}
           <div className="flex items-center justify-center gap-4">
-            <span className={!annual ? 'font-medium' : 'text-muted-foreground'}>
+            <span className={!annual ? 'font-medium' : 'text-gray-400'}>
               Monthly
             </span>
             <Switch checked={annual} onCheckedChange={setAnnual} />
-            <span className={annual ? 'font-medium' : 'text-muted-foreground'}>
+            <span className={annual ? 'font-medium' : 'text-gray-400'}>
               Annual
               <Badge variant="secondary" className="ml-2">
                 2 months free
@@ -126,23 +126,23 @@ export default function PricingPage() {
           <div className="grid md:grid-cols-4 gap-4">
             <GlassCard className="p-4 text-center">
               <div className="text-2xl font-bold mb-1">1</div>
-              <div className="text-sm text-muted-foreground">credit base cost</div>
+              <div className="text-sm text-gray-400">credit base cost</div>
             </GlassCard>
             <GlassCard className="p-4 text-center">
               <div className="text-2xl font-bold mb-1">+1</div>
-              <div className="text-sm text-muted-foreground">per 10K lines</div>
+              <div className="text-sm text-gray-400">per 10K lines</div>
             </GlassCard>
             <GlassCard className="p-4 text-center">
               <div className="text-2xl font-bold mb-1">+1-5</div>
-              <div className="text-sm text-muted-foreground">for premium tools</div>
+              <div className="text-sm text-gray-400">for premium tools</div>
             </GlassCard>
             <GlassCard className="p-4 text-center">
               <div className="text-2xl font-bold mb-1">per issue</div>
-              <div className="text-sm text-muted-foreground">for AI features</div>
+              <div className="text-sm text-gray-400">for AI features</div>
             </GlassCard>
           </div>
-          <p className="text-center text-muted-foreground mt-4 text-sm">
-            Example: 50K line repo with security + AI summary = ~8 credits. <Link href="/docs/pricing" className="text-primary hover:underline">See full pricing details →</Link>
+          <p className="text-center text-gray-500 mt-4 text-sm">
+            Example: 50K line repo with security + AI summary = ~8 credits. <Link href="/docs/pricing" className="text-orange-500 hover:underline">See full pricing details →</Link>
           </p>
         </div>
 
@@ -156,7 +156,7 @@ export default function PricingPage() {
                 key={tier.name}
                 className={`relative ${
                   tier.highlighted
-                    ? 'border-2 border-primary shadow-lg'
+                    ? 'ring-2 ring-orange-400 shadow-glow'
                     : 'border'
                 }`}
               >
@@ -168,7 +168,7 @@ export default function PricingPage() {
 
                 <CardHeader className="text-center pb-2">
                   <CardTitle className="text-xl">{tier.displayName}</CardTitle>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-gray-400">
                     {tier.description}
                   </p>
                 </CardHeader>
@@ -179,13 +179,13 @@ export default function PricingPage() {
                     <div className="text-3xl font-bold">
                       {formatPrice(price)}
                       {tier.priceMonthly > 0 && (
-                        <span className="text-sm font-normal text-muted-foreground">
+                        <span className="text-sm font-normal text-gray-400">
                           /mo
                         </span>
                       )}
                     </div>
                     {annual && tier.priceMonthly > 0 && (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-gray-400">
                         ${tier.priceYearly} billed annually
                       </p>
                     )}
@@ -283,7 +283,7 @@ export default function PricingPage() {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>📝 Linting & Formatting</span>
-                  <span className="text-green-500">Free</span>
+                  <span className="text-orange-400">Free</span>
                 </div>
                 <div className="flex justify-between">
                   <span>📦 Dependencies</span>
@@ -295,7 +295,7 @@ export default function PricingPage() {
                 </div>
                 <div className="flex justify-between">
                   <span>📚 Documentation</span>
-                  <span className="text-green-500">Free</span>
+                  <span className="text-orange-400">Free</span>
                 </div>
                 <div className="flex justify-between">
                   <span>🔒 Security (15 tools)</span>
@@ -347,7 +347,7 @@ export default function PricingPage() {
 
               <div className="mt-6 pt-4 border-t">
                 <h4 className="font-semibold mb-2">Example Scan</h4>
-                <div className="text-sm text-muted-foreground space-y-1">
+                <div className="text-sm text-gray-400 space-y-1">
                   <div className="flex justify-between">
                     <span>Base</span>
                     <span>1</span>
@@ -373,8 +373,8 @@ export default function PricingPage() {
             </GlassCard>
           </div>
 
-          <p className="text-center text-muted-foreground mt-6 text-sm">
-            <Link href="/docs/pricing" className="text-primary hover:underline">Read the complete pricing documentation →</Link>
+          <p className="text-center text-gray-500 mt-6 text-sm">
+            <Link href="/docs/pricing" className="text-orange-500 hover:underline">Read the complete pricing documentation →</Link>
           </p>
         </div>
 
@@ -384,29 +384,29 @@ export default function PricingPage() {
           <div className="space-y-6">
             <div>
               <h3 className="font-semibold mb-2">What happens if I run out of credits?</h3>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-gray-500 text-sm">
                 Paid plans have overage pricing so you can keep scanning. You&apos;ll see the cost before
                 every scan and can set spending limits in your account settings.
               </p>
             </div>
             <div>
               <h3 className="font-semibold mb-2">Do unused credits roll over?</h3>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-gray-500 text-sm">
                 Scale and Business plans include credit rollover (up to 100 and 250 respectively).
                 Rolled-over credits are used after your monthly allocation.
               </p>
             </div>
             <div>
               <h3 className="font-semibold mb-2">Can I see costs before scanning?</h3>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-gray-500 text-sm">
                 Yes! Before every scan, you&apos;ll see exactly how many credits it will cost based on
                 your repo size and selected tools. You can toggle features to adjust the cost.
               </p>
             </div>
             <div>
               <h3 className="font-semibold mb-2">How do I integrate with my app?</h3>
-              <p className="text-muted-foreground text-sm">
-                Use our <Link href="/docs/api-reference/billing" className="text-primary hover:underline">Billing API</Link> to
+              <p className="text-gray-500 text-sm">
+                Use our <Link href="/docs/api-reference/billing" className="text-orange-500 hover:underline">Billing API</Link> to
                 get quotes and check balances programmatically. Perfect for embedding in your own dashboard.
               </p>
             </div>
@@ -421,11 +421,11 @@ function FeatureItem({ included, text }: { included: boolean; text: string }) {
   return (
     <div className="flex items-center gap-2 text-sm">
       {included ? (
-        <span className="text-green-500">✓</span>
+        <span className="text-orange-400">✓</span>
       ) : (
-        <span className="text-muted-foreground">–</span>
+        <span className="text-gray-400">–</span>
       )}
-      <span className={included ? '' : 'text-muted-foreground'}>{text}</span>
+      <span className={included ? '' : 'text-gray-400'}>{text}</span>
     </div>
   );
 }

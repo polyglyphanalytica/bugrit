@@ -149,7 +149,7 @@ export default function DashboardPage() {
       case 'low':
         return 'text-blue-600';
       default:
-        return 'text-muted-foreground';
+        return 'text-gray-500';
     }
   };
 
@@ -170,11 +170,11 @@ export default function DashboardPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-white">
         <DashboardNav />
         <main className="container mx-auto px-4 md:px-6 lg:px-8 py-6 max-w-7xl">
           <div className="flex items-center justify-center h-64">
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-gray-400">Loading...</p>
           </div>
         </main>
       </div>
@@ -182,7 +182,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <Suspense fallback={null}>
         <SubscriptionParamsHandler />
       </Suspense>
@@ -197,7 +197,7 @@ export default function DashboardPage() {
 
         {/* Two Pillars Quick Actions */}
         <div className="grid gap-4 md:grid-cols-2 mb-8">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/20 border-2 border-primary/40">
+          <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <span className="text-xl">🧪</span>
@@ -219,7 +219,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-accent/10 to-accent/20 border-2 border-accent/40">
+          <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <span className="text-xl">🔍</span>
@@ -245,27 +245,27 @@ export default function DashboardPage() {
 
         {/* Overall Statistics Cards */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5 mb-8">
-          <Card>
+          <Card className="border border-gray-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Applications</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{applications.length}</div>
-              <p className="text-xs text-muted-foreground">registered apps</p>
+              <p className="text-xs text-gray-400">registered apps</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-gray-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Scans</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats?.totalScans || 0}</div>
-              <p className="text-xs text-muted-foreground">all time</p>
+              <p className="text-xs text-gray-400">all time</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-gray-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Critical</CardTitle>
             </CardHeader>
@@ -273,13 +273,13 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold text-red-600">
                 {stats?.criticalFindings || 0}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-400">
                 open findings
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-gray-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">High</CardTitle>
             </CardHeader>
@@ -287,13 +287,13 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold text-orange-600">
                 {stats?.highFindings || 0}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-400">
                 open findings
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-gray-100">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Medium</CardTitle>
             </CardHeader>
@@ -301,7 +301,7 @@ export default function DashboardPage() {
               <div className="text-2xl font-bold text-yellow-600">
                 {stats?.mediumFindings || 0}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-400">
                 open findings
               </p>
             </CardContent>
@@ -310,7 +310,7 @@ export default function DashboardPage() {
 
         {/* Applications List */}
         {applications.length > 0 ? (
-          <Card className="mb-8">
+          <Card className="mb-8 border border-gray-100">
             <CardHeader>
               <CardTitle>Your Applications</CardTitle>
               <CardDescription>
@@ -321,13 +321,13 @@ export default function DashboardPage() {
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {applications.slice(0, 6).map((app) => (
                   <Link key={app.id} href={`/applications/${app.id}`}>
-                    <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+                    <Card className="border border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{getAppTypeIcon(app.type)}</span>
                           <div>
                             <p className="font-medium">{app.name}</p>
-                            <p className="text-xs text-muted-foreground capitalize">{app.type}</p>
+                            <p className="text-xs text-gray-400 capitalize">{app.type}</p>
                           </div>
                         </div>
                       </CardContent>
@@ -345,35 +345,35 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="mb-8 border-2 border-dashed">
+          <Card className="mb-8 border border-dashed border-orange-200 bg-orange-50/30">
             <CardContent className="py-12 text-center">
               <div className="text-5xl mb-4">👋</div>
               <h3 className="text-2xl font-bold mb-2">Welcome to Bugrit!</h3>
-              <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
+              <p className="text-gray-500 mb-6 max-w-lg mx-auto">
                 Let&apos;s scan your first project. Just create an app and paste your GitHub URL.
                 We&apos;ll check for security issues, bugs, and more in under 2 minutes.
               </p>
 
               <div className="max-w-md mx-auto mb-8">
                 <div className="flex items-start gap-4 text-left mb-4">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">1</div>
+                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-orange-600">1</div>
                   <div>
                     <p className="font-medium">Create an application</p>
-                    <p className="text-sm text-muted-foreground">Give it a name and select the type (web, mobile, etc.)</p>
+                    <p className="text-sm text-gray-500">Give it a name and select the type (web, mobile, etc.)</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4 text-left mb-4">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">2</div>
+                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-orange-600">2</div>
                   <div>
                     <p className="font-medium">Paste your GitHub URL</p>
-                    <p className="text-sm text-muted-foreground">Or upload a ZIP file if you prefer</p>
+                    <p className="text-sm text-gray-500">Or upload a ZIP file if you prefer</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4 text-left">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">3</div>
+                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-orange-600">3</div>
                   <div>
                     <p className="font-medium">Get your results</p>
-                    <p className="text-sm text-muted-foreground">See what to fix with copy-paste AI prompts for each issue</p>
+                    <p className="text-sm text-gray-500">See what to fix with copy-paste AI prompts for each issue</p>
                   </div>
                 </div>
               </div>
@@ -386,7 +386,7 @@ export default function DashboardPage() {
         )}
 
         {/* Recent Scans */}
-        <Card>
+        <Card className="border border-gray-100">
           <CardHeader>
             <CardTitle>Recent Scans</CardTitle>
             <CardDescription>Latest scans across all applications</CardDescription>
@@ -396,7 +396,7 @@ export default function DashboardPage() {
               <div className="text-center py-8">
                 <div className="text-3xl mb-3">🔍</div>
                 <p className="font-medium mb-1">No scans yet</p>
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="text-sm text-gray-500 mb-4">
                   Your scan history will appear here after you run your first scan.
                 </p>
                 {applications.length > 0 && (
@@ -413,11 +413,11 @@ export default function DashboardPage() {
                 <div className="space-y-3 md:hidden">
                   {recentScans.map((scan) => (
                     <Link key={scan.id} href={`/scans/${scan.id}`} className="block">
-                      <div className="p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+                      <div className="p-4 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div>
                             <p className="font-medium">{scan.applicationName || 'Unknown'}</p>
-                            <p className="text-xs text-muted-foreground">{scan.sourceType}</p>
+                            <p className="text-xs text-gray-400">{scan.sourceType}</p>
                           </div>
                           <Badge variant={getStatusBadgeVariant(scan.status)}>
                             {scan.status}
@@ -451,9 +451,9 @@ export default function DashboardPage() {
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-muted-foreground">-</span>
+                            <span className="text-xs text-gray-400">-</span>
                           )}
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-gray-400">
                             {formatDistanceToNow(new Date(scan.createdAt), {
                               addSuffix: true,
                             })}
@@ -483,7 +483,7 @@ export default function DashboardPage() {
                             {scan.applicationName || 'Unknown'}
                           </TableCell>
                           <TableCell>
-                            <span className="text-muted-foreground">
+                            <span className="text-gray-500">
                               {scan.sourceType}
                             </span>
                           </TableCell>
@@ -520,10 +520,10 @@ export default function DashboardPage() {
                                 )}
                               </div>
                             ) : (
-                              <span className="text-muted-foreground">-</span>
+                              <span className="text-gray-500">-</span>
                             )}
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
+                          <TableCell className="text-gray-500">
                             {formatDistanceToNow(new Date(scan.createdAt), {
                               addSuffix: true,
                             })}

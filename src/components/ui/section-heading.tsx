@@ -29,15 +29,15 @@ export function SectionHeading({
       )}
     >
       {badge && (
-        <div className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary border border-primary/20 mb-6 animate-fade-up">
+        <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-600 border border-orange-200 mb-6 animate-fade-up">
           {badge}
         </div>
       )}
-      <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 animate-fade-up delay-100 fill-both">
+      <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4 animate-fade-up delay-100 fill-both text-foreground">
         {titleGradient ? (
           <>
             {title.split(titleGradient)[0]}
-            <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
               {titleGradient}
             </span>
             {title.split(titleGradient)[1]}
@@ -47,7 +47,7 @@ export function SectionHeading({
         )}
       </h2>
       {description && (
-        <p className="text-lg md:text-xl text-muted-foreground leading-relaxed animate-fade-up delay-200 fill-both">
+        <p className="text-base md:text-lg text-muted-foreground leading-relaxed animate-fade-up delay-200 fill-both">
           {description}
         </p>
       )}
