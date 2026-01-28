@@ -383,7 +383,7 @@ function validateSourceType(
       }
       break;
     case 'docker':
-      return 'Docker scanning is coming soon';
+      return 'Docker image scanning is not yet supported';
   }
   return null;
 }

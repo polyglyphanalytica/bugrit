@@ -101,7 +101,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
-    // In production, send email with invite link
+    // TODO: Send email with invite link via notification system
     const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${result.token}`;
 
     return NextResponse.json({

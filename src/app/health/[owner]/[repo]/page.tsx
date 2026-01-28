@@ -4,6 +4,7 @@ import { VibeScoreCard } from '@/components/vibe-score/score-card';
 import { BadgeShowcase } from '@/components/vibe-score/badge-showcase';
 import { ScoreHistory } from '@/components/vibe-score/score-history';
 import { EmbedCode } from '@/components/vibe-score/embed-code';
+import { getDb } from '@/lib/firestore';
 
 /**
  * Public Repo Health Profile Page
@@ -24,10 +25,10 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { owner, repo } = await params;
+  const profile = await getRepoProfile(owner, repo);
 
-  // TODO: Fetch actual score for dynamic OG image
-  const score = 85;
-  const grade = 'B+';
+  const score = profile?.vibeScore?.overall ?? 0;
+  const grade = profile?.vibeScore?.grade ?? 'N/A';
 
   return {
     title: `${owner}/${repo} - Vibe Score | Bugrit`,
@@ -121,77 +122,55 @@ export default async function RepoHealthPage({ params }: PageProps) {
   );
 }
 
-// Demo data - replace with actual API call
 async function getRepoProfile(owner: string, repo: string) {
-  // TODO: Fetch from Firestore
-  return {
-    repoUrl: `https://github.com/${owner}/${repo}`,
-    repoName: repo,
-    owner,
-    vibeScore: {
-      overall: 85,
-      grade: 'B+' as const,
-      components: {
-        security: 92,
-        quality: 78,
-        accessibility: 85,
-        performance: 88,
-        dependencies: 81,
-        documentation: 75,
+  const db = getDb();
+  if (!db) return null;
+
+  try {
+    // Look up by owner/repo combination
+    const snapshot = await db.collection('projects')
+      .where('owner', '==', owner)
+      .where('repo', '==', repo)
+      .where('isPublic', '==', true)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) return null;
+
+    const doc = snapshot.docs[0];
+    const data = doc.data();
+
+    return {
+      repoUrl: data.repoUrl || `https://github.com/${owner}/${repo}`,
+      repoName: repo,
+      owner,
+      vibeScore: data.vibeScore || {
+        overall: 0,
+        grade: 'N/A',
+        components: { security: 0, quality: 0, accessibility: 0, performance: 0, dependencies: 0, documentation: 0 },
+        trend: { direction: 'stable', delta: 0, previousScore: null },
+        percentile: 0,
+        breakdown: { deductions: [], bonuses: [], maxScore: 100, rawScore: 0 },
       },
-      trend: {
-        direction: 'up' as const,
-        delta: 5,
-        previousScore: 80,
-      },
-      percentile: 72,
-      breakdown: {
-        deductions: [],
-        bonuses: [],
-        maxScore: 100,
-        rawScore: 85,
-      },
-    },
-    lastScanAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    badges: [
-      {
-        id: 'secret-keeper',
-        name: 'Secret Keeper',
-        description: 'No exposed secrets',
-        icon: '🔐',
-        category: 'security' as const,
-        tier: 'gold' as const,
-        earnedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-      },
-      {
-        id: 'lint-free',
-        name: 'Lint Free',
-        description: 'Zero linting errors',
-        icon: '✨',
-        category: 'quality' as const,
-        tier: 'silver' as const,
-        earnedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      },
-      {
-        id: 'first-scan',
-        name: 'First Scan',
-        description: 'Completed first scan',
-        icon: '🎯',
-        category: 'milestone' as const,
-        tier: 'bronze' as const,
-        earnedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
-      },
-    ],
-    scoreHistory: Array.from({ length: 30 }, (_, i) => ({
-      date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000),
-      score: 70 + Math.floor(Math.random() * 20) + Math.floor(i / 3),
-    })),
-    isPublic: true,
-    showBadges: true,
-    showScore: true,
-    showTrend: true,
-    badgeUrl: `https://bugrit.dev/api/badge/${owner}/${repo}`,
-  };
+      lastScanAt: data.lastScanAt?.toDate?.() || new Date(data.lastScanAt || Date.now()),
+      badges: (data.badges || []).map((b: any) => ({
+        ...b,
+        earnedAt: b.earnedAt?.toDate?.() || new Date(b.earnedAt || Date.now()),
+      })),
+      scoreHistory: (data.scoreHistory || []).map((h: any) => ({
+        date: h.date?.toDate?.() || new Date(h.date || Date.now()),
+        score: h.score || 0,
+      })),
+      isPublic: data.isPublic ?? true,
+      showBadges: data.showBadges ?? true,
+      showScore: data.showScore ?? true,
+      showTrend: data.showTrend ?? true,
+      badgeUrl: `https://bugrit.dev/api/badge/${owner}/${repo}`,
+    };
+  } catch (error) {
+    console.error('Failed to fetch repo profile:', error);
+    return null;
+  }
 }
 
 function formatRelativeTime(date: Date): string {

@@ -13,7 +13,7 @@ export default function RoadmapPage() {
         <div className="space-y-4">
           <div className="p-4 border rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">Q1 2024</span>
+              <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">Q1 2026</span>
               <h4 className="font-semibold">CLI Tool</h4>
             </div>
             <p className="text-muted-foreground text-sm">
@@ -24,7 +24,7 @@ export default function RoadmapPage() {
 
           <div className="p-4 border rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">Q1 2024</span>
+              <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded">Q1 2026</span>
               <h4 className="font-semibold">JavaScript/TypeScript SDK</h4>
             </div>
             <p className="text-muted-foreground text-sm">
@@ -35,7 +35,7 @@ export default function RoadmapPage() {
 
           <div className="p-4 border rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded">Q2 2024</span>
+              <span className="px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded">Q2 2026</span>
               <h4 className="font-semibold">Webhooks</h4>
             </div>
             <p className="text-muted-foreground text-sm">
@@ -46,7 +46,7 @@ export default function RoadmapPage() {
 
           <div className="p-4 border rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded">Q2 2024</span>
+              <span className="px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded">Q2 2026</span>
               <h4 className="font-semibold">Slack Integration</h4>
             </div>
             <p className="text-muted-foreground text-sm">
@@ -57,7 +57,7 @@ export default function RoadmapPage() {
 
           <div className="p-4 border rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">Q3 2024</span>
+              <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">Q3 2026</span>
               <h4 className="font-semibold">Python SDK</h4>
             </div>
             <p className="text-muted-foreground text-sm">
@@ -67,7 +67,7 @@ export default function RoadmapPage() {
 
           <div className="p-4 border rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">Q3 2024</span>
+              <span className="px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded">Q3 2026</span>
               <h4 className="font-semibold">Jira Integration</h4>
             </div>
             <p className="text-muted-foreground text-sm">

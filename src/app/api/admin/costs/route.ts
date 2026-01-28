@@ -17,7 +17,6 @@ import {
   fetchGCPCosts,
   fetchGCPCostTrend,
   fetchServiceCostBreakdown,
-  generateMockCostData,
   GCPCostSummary,
   CostTrend,
   ServiceCostBreakdown,
@@ -352,26 +351,14 @@ async function getPreviousMonthsBudgets(count: number = 3): Promise<MonthlyBudge
     const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
     const year = date.getFullYear();
     const month = date.getMonth();
+    const monthEnd = new Date(year, month + 1, 0);
 
-    // For demo, generate mock data for previous months
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const mockRevenue = 1500 + Math.random() * 500;
-    const mockCosts = mockRevenue * (0.55 + Math.random() * 0.2); // 55-75% utilization
+    // Fetch real GCP costs for this month
+    const gcpSummary = await fetchGCPCosts(date, monthEnd);
+    const gcpCosts = gcpSummary?.netCost || 0;
 
-    budgets.push({
-      month: `${year}-${String(month + 1).padStart(2, '0')}`,
-      prepaidRevenue: Math.round(mockRevenue * 100) / 100,
-      costsIncurred: Math.round(mockCosts * 100) / 100,
-      budgetRemaining: Math.round((mockRevenue - mockCosts) * 100) / 100,
-      budgetUtilization: Math.round((mockCosts / mockRevenue) * 1000) / 10,
-      daysElapsed: daysInMonth,
-      daysRemaining: 0,
-      projectedEndOfMonth: Math.round(mockCosts * 100) / 100,
-      projectedProfit: Math.round((mockRevenue - mockCosts) * 100) / 100,
-      status: 'on_track',
-      dailyBudget: Math.round((mockRevenue / daysInMonth) * 100) / 100,
-      dailyActual: Math.round((mockCosts / daysInMonth) * 100) / 100,
-    });
+    const budget = await calculateMonthlyBudget(year, month, gcpCosts, []);
+    budgets.push(budget);
   }
 
   return budgets;
@@ -451,47 +438,24 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '30');
-    const useMock = searchParams.get('mock') === 'true' || !process.env.GCP_PROJECT_ID;
 
     // Calculate date range
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Fetch GCP costs (or use mock data)
-    let gcpSummary: GCPCostSummary | null = null;
-    let gcpTrend: CostTrend | null = null;
-    let gcpBreakdown: ServiceCostBreakdown | null = null;
-
-    if (useMock) {
-      const mockData = generateMockCostData(days);
-      gcpSummary = mockData.summary;
-      gcpTrend = mockData.trend;
-      gcpBreakdown = mockData.breakdown;
-    } else {
-      [gcpSummary, gcpTrend, gcpBreakdown] = await Promise.all([
-        fetchGCPCosts(startDate, endDate),
-        fetchGCPCostTrend(days),
-        fetchServiceCostBreakdown(startDate, endDate),
-      ]);
-    }
+    // Fetch GCP costs
+    const [gcpSummary, gcpTrend, gcpBreakdown] = await Promise.all([
+      fetchGCPCosts(startDate, endDate),
+      fetchGCPCostTrend(days),
+      fetchServiceCostBreakdown(startDate, endDate),
+    ]);
 
     // Fetch revenue and usage data
     const [revenue, usage] = await Promise.all([
       fetchRevenueData(startDate, endDate),
       fetchUsageStats(startDate, endDate),
     ]);
-
-    // For demo, generate some realistic revenue if none exists
-    if (revenue.totalRevenue === 0 && useMock) {
-      const mockRevenue = (gcpSummary?.netCost || 1000) * 1.45; // 45% margin
-      revenue.totalRevenue = mockRevenue;
-      revenue.subscriptionRevenue = mockRevenue * 0.6;
-      revenue.creditPurchaseRevenue = mockRevenue * 0.3;
-      revenue.autoTopupRevenue = mockRevenue * 0.1;
-      revenue.totalCreditsCharged = Math.round(mockRevenue / 0.15); // ~$0.15 per credit
-      revenue.transactionCount = Math.round(mockRevenue / 5); // ~$5 average transaction
-    }
 
     // Calculate profitability
     const infrastructureCost = gcpSummary?.netCost || 0;
@@ -505,18 +469,6 @@ export async function GET(request: NextRequest) {
       infrastructureCost,
       gcpTrend?.daily || []
     );
-
-    // For demo, set realistic prepaid revenue if zero
-    if (currentMonthBudget.prepaidRevenue === 0 && useMock) {
-      const mockPrepaid = infrastructureCost * 1.45; // 45% margin target
-      currentMonthBudget.prepaidRevenue = Math.round(mockPrepaid * 100) / 100;
-      currentMonthBudget.budgetRemaining = Math.round((mockPrepaid - infrastructureCost) * 100) / 100;
-      currentMonthBudget.budgetUtilization = Math.round((infrastructureCost / mockPrepaid) * 1000) / 10;
-      currentMonthBudget.dailyBudget = Math.round((mockPrepaid / 30) * 100) / 100;
-      currentMonthBudget.projectedEndOfMonth = Math.round(currentMonthBudget.dailyActual * 30 * 100) / 100;
-      currentMonthBudget.projectedProfit = Math.round((mockPrepaid - currentMonthBudget.projectedEndOfMonth) * 100) / 100;
-      currentMonthBudget.status = currentMonthBudget.projectedProfit > 0 ? 'on_track' : 'at_risk';
-    }
 
     // Get previous months for comparison
     const previousMonths = await getPreviousMonthsBudgets(3);
@@ -541,15 +493,6 @@ export async function GET(request: NextRequest) {
       profitability,
       usage,
       alerts,
-      // Indicate when mock/demo data is being shown
-      ...(useMock && {
-        _meta: {
-          usingMockData: true,
-          reason: !process.env.GCP_PROJECT_ID
-            ? 'GCP_PROJECT_ID not configured'
-            : 'Mock data requested via query param',
-        },
-      }),
     };
 
     return NextResponse.json(response);
