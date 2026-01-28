@@ -284,36 +284,26 @@ export function getAuthenticatedUserId(request: NextRequest): string | null {
  * 3. Firebase session cookie - For browser-based SSR access
  */
 export async function requireAuthenticatedUser(request: NextRequest): Promise<NextResponse | string> {
-  // 1. Try API key first (for programmatic access)
+  // 1. API key (for programmatic access)
   const userId = getAuthenticatedUserId(request);
-  if (userId) {
-    return userId;
-  }
+  if (userId) return userId;
 
-  // 2. Try Firebase ID token from Authorization header (for client-side fetch calls)
+  // 2. Bearer token — Firebase ID token from client-side fetch calls
   const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-    if (token && !token.startsWith('bg_')) {
-      try {
-        const decoded = await verifyIdToken(token);
-        if (decoded?.uid) {
-          return decoded.uid;
-        }
-      } catch {
-        // Token verification failed, continue to next method
-      }
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    if (token) {
+      const decoded = await verifyIdToken(token);
+      if (decoded?.uid) return decoded.uid;
     }
   }
 
-  // 3. Try Firebase session cookie (for browser-based SSR access)
+  // 3. Session cookie (for browser-based SSR access)
   try {
     const session = await verifySession();
-    if (session?.uid) {
-      return session.uid;
-    }
+    if (session?.uid) return session.uid;
   } catch {
-    // Session verification failed, continue to error response
+    // Session verification failed
   }
 
   return NextResponse.json(

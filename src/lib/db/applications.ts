@@ -157,6 +157,10 @@ export async function createApplication(
   ownerId: string
 ): Promise<Application> {
   const db = getDb();
+  if (!db) {
+    throw new Error('Database unavailable. Please try again later.');
+  }
+
   const id = generateId('app');
   const now = new Date();
 
@@ -194,11 +198,6 @@ export async function createApplication(
     updatedAt: now,
   };
 
-  if (!db) {
-    console.warn('Firestore not configured - application not persisted');
-    return newApp;
-  }
-
   try {
     await db.collection(APPLICATIONS_COLLECTION).doc(id).set({
       name: newApp.name,
@@ -230,9 +229,8 @@ export async function updateApplication(
   updates: Partial<Omit<Application, 'id' | 'ownerId' | 'createdAt'>>
 ): Promise<Application | null> {
   const db = getDb();
-
   if (!db) {
-    return null;
+    throw new Error('Database unavailable. Please try again later.');
   }
 
   try {
@@ -282,9 +280,8 @@ export async function updateApplicationSettings(
  */
 export async function deleteApplication(id: string): Promise<boolean> {
   const db = getDb();
-
   if (!db) {
-    return false;
+    throw new Error('Database unavailable. Please try again later.');
   }
 
   try {
