@@ -284,6 +284,8 @@ export function getAuthenticatedUserId(request: NextRequest): string | null {
  * 3. Firebase session cookie - For browser-based SSR access
  */
 export async function requireAuthenticatedUser(request: NextRequest): Promise<NextResponse | string> {
+  const url = request.nextUrl.pathname;
+
   // 1. Try API key first (for programmatic access)
   const userId = getAuthenticatedUserId(request);
   if (userId) {
@@ -300,10 +302,15 @@ export async function requireAuthenticatedUser(request: NextRequest): Promise<Ne
         if (decoded?.uid) {
           return decoded.uid;
         }
-      } catch {
-        // Token verification failed, continue to next method
+        console.warn(`[api-auth] Bearer token verification returned null for ${url}`);
+      } catch (error) {
+        console.error(`[api-auth] Bearer token verification threw for ${url}:`, error instanceof Error ? error.message : error);
       }
+    } else {
+      console.warn(`[api-auth] Authorization header present but token empty or is API key format for ${url}`);
     }
+  } else {
+    console.warn(`[api-auth] No Authorization header present for ${url}`);
   }
 
   // 3. Try Firebase session cookie (for browser-based SSR access)
@@ -313,8 +320,10 @@ export async function requireAuthenticatedUser(request: NextRequest): Promise<Ne
       return session.uid;
     }
   } catch {
-    // Session verification failed, continue to error response
+    // Session verification failed
   }
+
+  console.error(`[api-auth] All auth methods failed for ${url}. Has auth header: ${!!authHeader}`);
 
   return NextResponse.json(
     { error: 'Authentication required. Provide API key via x-api-key header or login.' },

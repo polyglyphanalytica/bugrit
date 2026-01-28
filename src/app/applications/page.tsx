@@ -45,7 +45,7 @@ export default function ApplicationsPage() {
   const [newApp, setNewApp] = useState({
     name: '',
     description: '',
-    type: 'web' as 'web' | 'mobile' | 'desktop' | 'hybrid',
+    type: '' as '' | 'web' | 'mobile' | 'desktop' | 'hybrid',
     targetUrl: '',
     packageId: '',
     bundleId: '',
@@ -99,7 +99,7 @@ export default function ApplicationsPage() {
         setNewApp({
           name: '',
           description: '',
-          type: 'web',
+          type: '',
           targetUrl: '',
           packageId: '',
           bundleId: '',
@@ -216,11 +216,11 @@ export default function ApplicationsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="type">Type *</Label>
                   <Select
-                    value={newApp.type}
+                    value={newApp.type || undefined}
                     onValueChange={(v) => setNewApp({ ...newApp, type: v as typeof newApp.type })}
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select application type" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="web">Web Application</SelectItem>
