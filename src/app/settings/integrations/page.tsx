@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useAuth } from '@/contexts/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, CheckCircle2, ExternalLink, Github, Loader2, Unplug } from 'lucide-react';
@@ -23,6 +24,7 @@ interface GitHubStatus {
 
 export default function IntegrationsPage() {
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const [githubStatus, setGithubStatus] = useState<GitHubStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -50,8 +52,12 @@ export default function IntegrationsPage() {
   // Fetch GitHub connection status
   useEffect(() => {
     async function fetchStatus() {
+      if (!user) return;
       try {
-        const res = await fetch('/api/auth/github/status');
+        const idToken = await user.getIdToken();
+        const res = await fetch('/api/auth/github/status', {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
         if (res.ok) {
           const data = await res.json();
           setGithubStatus(data);
@@ -64,7 +70,7 @@ export default function IntegrationsPage() {
     }
 
     fetchStatus();
-  }, []);
+  }, [user]);
 
   const handleConnectGitHub = () => {
     // Redirect to OAuth initiation endpoint
@@ -78,7 +84,11 @@ export default function IntegrationsPage() {
 
     setDisconnecting(true);
     try {
-      const res = await fetch('/api/auth/github/status', { method: 'DELETE' });
+      const idToken = await user!.getIdToken();
+      const res = await fetch('/api/auth/github/status', {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
       if (res.ok) {
         setGithubStatus({ connected: false, oauthConfigured: true });
         setMessage({ type: 'success', text: 'GitHub account disconnected successfully' });

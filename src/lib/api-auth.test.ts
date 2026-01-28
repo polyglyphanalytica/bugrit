@@ -263,7 +263,7 @@ describe('getAuthenticatedUserId', () => {
     expect(result).toBeNull();
   });
 
-  it('should return user ID from session cookie', async () => {
+  it('should return null when no API key is provided (session cookies checked by requireAuthenticatedUser)', async () => {
     setNodeEnv('production');
 
     const { getAuthenticatedUserId } = await import('./api-auth');
@@ -272,16 +272,12 @@ describe('getAuthenticatedUserId', () => {
       headers: {
         get: vi.fn(() => null),
       },
-      cookies: {
-        get: vi.fn((name: string) => {
-          if (name === 'session') return { value: 'user-123' };
-          return null;
-        }),
-      },
     } as unknown as Request;
 
     const result = getAuthenticatedUserId(mockRequest as any);
 
-    expect(result).toBe('user-123');
+    // getAuthenticatedUserId only checks API keys.
+    // Session cookie verification is async and handled by requireAuthenticatedUser.
+    expect(result).toBeNull();
   });
 });

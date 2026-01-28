@@ -64,8 +64,12 @@ export default function ScansPage() {
   }, [user, authLoading, router]);
 
   const fetchScans = async () => {
+    if (!user) return;
     try {
-      const res = await fetch('/api/scans');
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/scans', {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
       if (res.ok) {
         const data = await res.json();
         setScans(data.scans || []);

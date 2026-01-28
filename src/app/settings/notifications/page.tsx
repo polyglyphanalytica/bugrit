@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -100,11 +101,16 @@ export default function NotificationsSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchPreferences() {
+      if (!user) return;
       try {
-        const res = await fetch('/api/notifications/preferences');
+        const idToken = await user.getIdToken();
+        const res = await fetch('/api/notifications/preferences', {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
         if (res.ok) {
           const data = await res.json();
           setPreferences(data);
@@ -118,7 +124,7 @@ export default function NotificationsSettingsPage() {
     }
 
     fetchPreferences();
-  }, []);
+  }, [user]);
 
   const handleSave = async () => {
     if (!preferences) return;
@@ -127,9 +133,10 @@ export default function NotificationsSettingsPage() {
     setMessage(null);
 
     try {
+      const idToken = await user!.getIdToken();
       const res = await fetch('/api/notifications/preferences', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify(preferences),
       });
 

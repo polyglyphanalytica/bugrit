@@ -52,7 +52,10 @@ export function DashboardNav() {
       }
 
       try {
-        const response = await fetch('/api/auth/check-admin');
+        const idToken = await user.getIdToken();
+        const response = await fetch('/api/auth/check-admin', {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
         if (response.ok) {
           const data = await response.json();
           setIsAdmin(data.isAdmin === true);

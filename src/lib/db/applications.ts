@@ -36,15 +36,11 @@ const DEFAULT_SETTINGS: ApplicationSettings = {
 
   // Slack integration
   slackEnabled: false,
-  slackWebhookUrl: undefined,
-  slackChannel: undefined,
   slackNotifyOnFailure: true,
   slackNotifyOnSuccess: false,
 
   // Webhook
   webhookEnabled: false,
-  webhookUrl: undefined,
-  webhookSecret: undefined,
 
   // Scheduling
   scheduling: {

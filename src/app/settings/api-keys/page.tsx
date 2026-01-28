@@ -115,8 +115,12 @@ export default function ApiKeysPage() {
   };
 
   const fetchApiKeys = async () => {
+    if (!user) return;
     try {
-      const res = await fetch('/api/settings/api-keys');
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/settings/api-keys', {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
       if (res.ok) {
         const data = await res.json();
         setApiKeys(data.keys || []);
@@ -140,9 +144,10 @@ export default function ApiKeysPage() {
 
     setCreating(true);
     try {
+      const idToken = await user!.getIdToken();
       const res = await fetch('/api/settings/api-keys', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({
           name: newKeyData.name,
           permissions: newKeyData.permissions,
