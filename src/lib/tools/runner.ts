@@ -51,6 +51,7 @@ export interface RunOptions {
   targetPath: string;
   tools?: string[];  // Specific tools to run, or all if not specified
   targetUrl?: string;  // For accessibility/performance tools
+  dockerImage?: string;  // For container image scanning (e.g. 'nginx:latest')
 }
 
 /**
@@ -819,6 +820,50 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
         }
       } catch {
         // JSON parse error
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Trivy (container image + filesystem vulnerability scanning)
+  // ─────────────────────────────────────────────────────────────
+  trivy: async ({ targetPath, dockerImage }) => {
+    const findings: Finding[] = [];
+
+    // Determine scan mode: image scan if dockerImage provided, otherwise filesystem scan
+    const command = dockerImage
+      ? `trivy image --format json --severity CRITICAL,HIGH,MEDIUM ${dockerImage}`
+      : `trivy fs --format json --severity CRITICAL,HIGH,MEDIUM "${targetPath}"`;
+
+    const output = runCli(command, targetPath, 300000); // 5 min timeout for image pulls
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const result of data.Results || []) {
+          for (const vuln of result.Vulnerabilities || []) {
+            const severity = vuln.Severity === 'CRITICAL' || vuln.Severity === 'HIGH'
+              ? 'error'
+              : vuln.Severity === 'MEDIUM'
+                ? 'warning'
+                : 'info';
+
+            findings.push({
+              id: `trivy-${vuln.VulnerabilityID}-${vuln.PkgName}`,
+              severity,
+              message: `${vuln.VulnerabilityID}: ${vuln.Title || vuln.Description || 'Vulnerability'} in ${vuln.PkgName} (${vuln.InstalledVersion})`,
+              file: result.Target,
+              rule: vuln.VulnerabilityID,
+              suggestion: vuln.FixedVersion
+                ? `Update ${vuln.PkgName} to ${vuln.FixedVersion}`
+                : 'No fix available yet. Monitor for updates.',
+            });
+          }
+        }
+      } catch {
+        // JSON parse error — Trivy may have returned non-JSON on stderr
       }
     }
 

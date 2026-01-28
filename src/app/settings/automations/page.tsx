@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { TOOL_COUNT } from '@/lib/tools/registry';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -631,7 +632,7 @@ export default function AutomationsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Tools (69)</SelectItem>
+                      <SelectItem value="all">All Tools ({TOOL_COUNT})</SelectItem>
                       <SelectItem value="security">Security Only</SelectItem>
                       <SelectItem value="quality">Code Quality Only</SelectItem>
                       <SelectItem value="dependencies">Dependencies Only</SelectItem>

@@ -37,6 +37,8 @@ interface Scan {
     fileName?: string;
     npmPackage?: string;
     npmVersion?: string;
+    dockerImage?: string;
+    dockerTag?: string;
   };
   createdAt: string;
   startedAt?: string;
@@ -135,6 +137,8 @@ export async function POST(request: NextRequest) {
     let npmPackage: string | undefined;
     let npmVersion: string | undefined;
     let mobilePlatform: string | undefined;
+    let dockerImage: string | undefined;
+    let dockerTag: string | undefined;
 
     // Handle FormData
     if (contentType.includes('multipart/form-data')) {
@@ -148,6 +152,8 @@ export async function POST(request: NextRequest) {
       npmPackage = formData.get('npmPackage') as string | undefined;
       npmVersion = formData.get('npmVersion') as string | undefined;
       mobilePlatform = formData.get('platform') as string | undefined;
+      dockerImage = formData.get('dockerImage') as string | undefined;
+      dockerTag = formData.get('dockerTag') as string | undefined;
 
       const file = formData.get('file');
       if (file instanceof File) {
@@ -164,6 +170,8 @@ export async function POST(request: NextRequest) {
       npmPackage = body.npmPackage;
       npmVersion = body.npmVersion;
       mobilePlatform = body.platform;
+      dockerImage = body.dockerImage;
+      dockerTag = body.dockerTag;
     }
 
     // Validate required fields
@@ -196,6 +204,7 @@ export async function POST(request: NextRequest) {
       uploadedFile,
       npmPackage,
       mobilePlatform,
+      dockerImage,
     });
     if (validationError) {
       return NextResponse.json({ error: validationError }, { status: 400 });
@@ -263,6 +272,8 @@ export async function POST(request: NextRequest) {
         fileName: uploadedFile?.name,
         npmPackage,
         npmVersion: npmVersion || 'latest',
+        dockerImage,
+        dockerTag: dockerTag || 'latest',
       },
       createdAt: now,
       toolsCompleted: 0,
@@ -285,6 +296,8 @@ export async function POST(request: NextRequest) {
       npmPackage,
       npmVersion: npmVersion || 'latest',
       mobilePlatform,
+      dockerImage,
+      dockerTag: dockerTag || 'latest',
       userId,
       estimatedCredits: affordCheck.estimate.total,
     });
@@ -345,6 +358,7 @@ function validateSourceType(
     uploadedFile?: File | null;
     npmPackage?: string;
     mobilePlatform?: string;
+    dockerImage?: string;
   }
 ): string | null {
   switch (sourceType) {
@@ -401,6 +415,8 @@ interface ScanOptions {
   npmPackage?: string;
   npmVersion?: string;
   mobilePlatform?: string;
+  dockerImage?: string;
+  dockerTag?: string;
   // Billing
   userId: string;
   estimatedCredits: number;
@@ -462,6 +478,16 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
         }
         break;
 
+      case 'docker':
+        // Docker image scans don't need a temp directory for source code.
+        // Trivy pulls and scans the image directly via its CLI.
+        // We create a minimal project structure for any file-based tools to skip gracefully.
+        await fs.writeFile(
+          path.join(tempDir, 'package.json'),
+          JSON.stringify({ name: 'docker-scan', version: '1.0.0' })
+        );
+        break;
+
       default:
         throw new Error(`Unsupported source type: ${options.sourceType}`);
     }
@@ -477,10 +503,14 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
     }
 
     // Run all tools
-    logger.info('Running scan tools', { scanId, targetPath, targetUrl });
+    const dockerImage = options.dockerImage
+      ? `${options.dockerImage}:${options.dockerTag || 'latest'}`
+      : undefined;
+    logger.info('Running scan tools', { scanId, targetPath, targetUrl, dockerImage });
     const results = await runTools({
       targetPath,
       targetUrl,
+      dockerImage,
     });
 
     // Update scan with results
