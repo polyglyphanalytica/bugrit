@@ -383,7 +383,10 @@ function validateSourceType(
       }
       break;
     case 'docker':
-      return 'Docker image scanning is not yet supported';
+      if (!data.dockerImage?.trim()) {
+        return 'Docker image name is required';
+      }
+      break;
   }
   return null;
 }
