@@ -8,25 +8,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, toDate, toTimestamp } from '@/lib/firestore';
 import { logger } from '@/lib/logger';
-import { verifySession } from '@/lib/auth/session';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 
 const COLLECTION = 'notifications';
-
-async function getUserFromSession(): Promise<string | null> {
-  const session = await verifySession();
-  return session?.uid || null;
-}
 
 /**
  * Get notifications for the current user
  */
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserFromSession();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const { searchParams } = new URL(request.url);
     const unreadOnly = searchParams.get('unread') === 'true';
@@ -91,11 +84,9 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserFromSession();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const body = await request.json();
     const { notificationIds, markAll } = body;
