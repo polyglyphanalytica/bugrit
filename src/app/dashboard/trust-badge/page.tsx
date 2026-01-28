@@ -1,5 +1,7 @@
 import { Metadata } from 'next';
 import { TrustBadgeConfigurator } from '@/components/trust-badge/configurator';
+import { getDb } from '@/lib/firestore';
+import { verifySession } from '@/lib/auth/session';
 
 export const metadata: Metadata = {
   title: 'Trust Badge - Bugrit',
@@ -79,16 +81,33 @@ function NoSitesMessage() {
   );
 }
 
-// Mock data - replace with actual API call
 async function getUserSites() {
-  return [
-    {
-      id: 'site_demo123',
-      domain: 'example.com',
-      siteName: 'My Awesome Site',
-      vibeScore: 87,
-      grade: 'B+',
-      lastScanAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    },
-  ];
+  const session = await verifySession();
+  if (!session?.uid) return [];
+
+  const db = getDb();
+  if (!db) return [];
+
+  try {
+    const snapshot = await db.collection('trustBadgeSites')
+      .where('ownerId', '==', session.uid)
+      .orderBy('lastScanAt', 'desc')
+      .limit(20)
+      .get();
+
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        domain: data.domain || '',
+        siteName: data.siteName || data.domain || '',
+        vibeScore: data.latestScan?.vibeScore || 0,
+        grade: data.latestScan?.grade || 'N/A',
+        lastScanAt: data.lastScanAt?.toDate?.() || new Date(data.lastScanAt || Date.now()),
+      };
+    });
+  } catch (error) {
+    console.error('Failed to fetch user sites:', error);
+    return [];
+  }
 }

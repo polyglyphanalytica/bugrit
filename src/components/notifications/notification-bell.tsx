@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, Check, CheckCheck, ExternalLink, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/auth-context';
 
 interface Notification {
   id: string;
@@ -22,11 +23,16 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   // Fetch notifications
   const fetchNotifications = async () => {
+    if (!user) return;
     try {
-      const res = await fetch('/api/notifications?limit=20');
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/notifications?limit=20', {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
       if (res.ok) {
         const data = await res.json();
         setNotifications(data.notifications);
@@ -39,13 +45,14 @@ export function NotificationBell() {
 
   // Initial fetch and polling
   useEffect(() => {
+    if (!user) return;
     fetchNotifications();
 
     // Poll every 30 seconds for new notifications
     const interval = setInterval(fetchNotifications, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   // Close on click outside
   useEffect(() => {
@@ -61,10 +68,12 @@ export function NotificationBell() {
 
   // Mark single notification as read
   const markAsRead = async (id: string) => {
+    if (!user) return;
     try {
+      const idToken = await user.getIdToken();
       await fetch('/api/notifications', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ notificationIds: [id] }),
       });
 
@@ -79,10 +88,12 @@ export function NotificationBell() {
 
   // Mark all as read
   const markAllAsRead = async () => {
+    if (!user) return;
     try {
+      const idToken = await user.getIdToken();
       await fetch('/api/notifications', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ markAll: true }),
       });
 

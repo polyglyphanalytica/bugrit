@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
+import { TOOL_COUNT } from '@/lib/tools/registry';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { DashboardFooter } from '@/components/dashboard-footer';
 import { Button } from '@/components/ui/button';
@@ -64,8 +65,12 @@ export default function ScansPage() {
   }, [user, authLoading, router]);
 
   const fetchScans = async () => {
+    if (!user) return;
     try {
-      const res = await fetch('/api/scans');
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/scans', {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
       if (res.ok) {
         const data = await res.json();
         setScans(data.scans || []);
@@ -253,7 +258,7 @@ export default function ScansPage() {
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-muted-foreground">
-                          {scan.toolsRun}/69
+                          {scan.toolsRun}/{TOOL_COUNT}
                         </span>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">

@@ -21,8 +21,12 @@ let adminAuth: Auth | null = null;
 let adminFirestore: Firestore | null = null;
 let initializationAttempted = false;
 let initializationError: Error | null = null;
+let lastInitAttemptTime = 0;
 let initMethod = 'none';
 let moduleLoadError: string | null = null;
+
+// Allow retry after 30 seconds if initialization failed
+const INIT_RETRY_INTERVAL_MS = 30_000;
 
 // Cached module references (loaded lazily)
 let _appModule: typeof import('firebase-admin/app') | null = null;
@@ -109,12 +113,18 @@ export function initializeAdmin(): boolean {
     return true;
   }
 
-  // If we already tried and failed, don't retry
+  // If we already tried and failed, allow retry after a cooldown period
   if (initializationAttempted && initializationError) {
-    return false;
+    const elapsed = Date.now() - lastInitAttemptTime;
+    if (elapsed < INIT_RETRY_INTERVAL_MS) {
+      return false;
+    }
+    // Reset for retry
+    initializationError = null;
   }
 
   initializationAttempted = true;
+  lastInitAttemptTime = Date.now();
 
   // Load firebase-admin/app module lazily
   const appModule = loadAppModule();

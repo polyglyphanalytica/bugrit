@@ -439,6 +439,8 @@ export function PlatformLogos() {
             <img src="/deutschebanklogo.png" alt="Deutsche Bank" className="h-6 md:h-8 object-contain opacity-70 hover:opacity-100 transition-opacity duration-300" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/westernunionlogo.png" alt="Western Union" className="h-6 md:h-8 object-contain opacity-70 hover:opacity-100 transition-opacity duration-300" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/remit2india.avif" alt="Remit2India" className="h-6 md:h-8 object-contain opacity-70 hover:opacity-100 transition-opacity duration-300" />
           </div>
         </div>
       </div>

@@ -94,11 +94,14 @@ export default function DashboardPage() {
   }, [user, authLoading, router]);
 
   const fetchDashboardData = async () => {
+    if (!user) return;
     try {
+      const idToken = await user.getIdToken();
+      const authHeaders = { Authorization: `Bearer ${idToken}` };
       const [statsRes, scansRes, appsRes] = await Promise.all([
-        fetch('/api/scans/stats'),
-        fetch('/api/scans?limit=10'),
-        fetch('/api/applications'),
+        fetch('/api/scans/stats', { headers: authHeaders }),
+        fetch('/api/scans?limit=10', { headers: authHeaders }),
+        fetch('/api/applications', { headers: authHeaders }),
       ]);
 
       if (statsRes.ok) {

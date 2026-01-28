@@ -25,6 +25,17 @@ function getProjectId(): string | null {
 }
 
 /**
+ * Decode a base64url string to a UTF-8 string.
+ * Uses standard base64 with manual URL-safe character replacement
+ * for compatibility across all Node.js versions.
+ */
+function decodeBase64Url(str: string): string {
+  // base64url → base64: replace URL-safe chars and add padding
+  const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  return Buffer.from(base64, 'base64').toString('utf8');
+}
+
+/**
  * Decode a Firebase ID token and validate its claims.
  *
  * Firebase ID tokens are standard RS256 JWTs issued by Google.
@@ -35,21 +46,16 @@ function getProjectId(): string | null {
  * - Expiry (with 5-minute leeway)
  * - Issuer (https://securetoken.google.com/<projectId>)
  * - Audience (project ID)
- *
- * For internal frontend-to-API calls this is sufficient because:
- * - Tokens originate from Firebase Auth on our own client
- * - They're transmitted over HTTPS
- * - An attacker cannot forge a valid token without Firebase credentials
  */
 function decodeFirebaseToken(idToken: string): { uid: string; email?: string } | null {
   try {
     const parts = idToken.split('.');
     if (parts.length !== 3) return null;
 
-    const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+    const header = JSON.parse(decodeBase64Url(parts[0]));
     if (header.alg !== 'RS256') return null;
 
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+    const payload = JSON.parse(decodeBase64Url(parts[1]));
 
     // Must have a subject (user ID)
     if (!payload.sub || typeof payload.sub !== 'string') return null;

@@ -9,7 +9,7 @@
  * - GCP_BILLING_FUNCTION_URL: URL of the deployed billing Cloud Function
  * - GCP_BILLING_API_KEY: API key for authenticating with the Cloud Function
  *
- * If these are not configured, mock data is returned for development.
+ * If these are not configured, functions return null.
  */
 
 import { logger } from '@/lib/logger';
@@ -83,7 +83,7 @@ async function callBillingFunction<T>(
   const config = getBillingConfig();
 
   if (!config.functionUrl) {
-    logger.info('GCP_BILLING_FUNCTION_URL not configured - using mock data');
+    logger.info('GCP_BILLING_FUNCTION_URL not configured');
     return null;
   }
 
@@ -136,21 +136,16 @@ export async function fetchGCPCosts(
     endDate: endDate.toISOString().split('T')[0],
   });
 
-  if (result) {
-    // Convert date strings back to Date objects
-    return {
-      ...result,
-      period: {
-        start: new Date(result.period.start),
-        end: new Date(result.period.end),
-      },
-    };
-  }
+  if (!result) return null;
 
-  // Fallback to mock data
-  const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-  const mockData = generateMockCostData(days);
-  return mockData.summary;
+  // Convert date strings back to Date objects
+  return {
+    ...result,
+    period: {
+      start: new Date(result.period.start),
+      end: new Date(result.period.end),
+    },
+  };
 }
 
 /**
@@ -166,26 +161,22 @@ export async function fetchGCPCostTrend(days: number = 30): Promise<CostTrend | 
 
   const result = await callBillingFunction<TrendResponse>('trend', { days });
 
-  if (result) {
-    // Calculate previous month total and percent change
-    const currentMonthTotal = result.currentMonthTotal || 0;
-    const previousMonthTotal = currentMonthTotal * 0.92; // Estimate
-    const percentChange = previousMonthTotal > 0
-      ? ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100
-      : 0;
+  if (!result) return null;
 
-    return {
-      daily: result.daily,
-      weeklyAverage: result.weeklyAverage,
-      monthlyProjection: result.monthlyProjection,
-      previousMonthTotal,
-      percentChange,
-    };
-  }
+  // Calculate previous month total and percent change
+  const currentMonthTotal = result.currentMonthTotal || 0;
+  const previousMonthTotal = currentMonthTotal * 0.92; // Estimate
+  const percentChange = previousMonthTotal > 0
+    ? ((currentMonthTotal - previousMonthTotal) / previousMonthTotal) * 100
+    : 0;
 
-  // Fallback to mock data
-  const mockData = generateMockCostData(days);
-  return mockData.trend;
+  return {
+    daily: result.daily,
+    weeklyAverage: result.weeklyAverage,
+    monthlyProjection: result.monthlyProjection,
+    previousMonthTotal,
+    percentChange,
+  };
 }
 
 /**
@@ -211,96 +202,6 @@ export async function fetchServiceCostBreakdown(
     endDate: endDate.toISOString().split('T')[0],
   });
 
-  if (result) {
-    return result;
-  }
-
-  // Fallback to mock data
-  const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-  const mockData = generateMockCostData(days);
-  return mockData.breakdown;
+  return result;
 }
 
-/**
- * Generate mock cost data for development/demo
- */
-export function generateMockCostData(days: number = 30): {
-  summary: GCPCostSummary;
-  trend: CostTrend;
-  breakdown: ServiceCostBreakdown;
-} {
-  const now = new Date();
-  const startDate = new Date(now);
-  startDate.setDate(startDate.getDate() - days);
-
-  // Generate daily costs with some variance
-  const daily: DailyCost[] = [];
-  const baseDaily = 45; // Base daily cost in USD
-
-  for (let i = 0; i < days; i++) {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + i);
-
-    // Add variance: weekends are cheaper, random spikes
-    const dayOfWeek = date.getDay();
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-    const variance = (Math.random() - 0.5) * 20;
-    const weekendDiscount = isWeekend ? 0.6 : 1;
-
-    const cost = (baseDaily + variance) * weekendDiscount;
-    const credits = cost * -0.05; // 5% credits
-
-    daily.push({
-      date: date.toISOString().split('T')[0],
-      cost: Math.round(cost * 100) / 100,
-      credits: Math.round(credits * 100) / 100,
-      netCost: Math.round((cost + credits) * 100) / 100,
-    });
-  }
-
-  const totalCost = daily.reduce((sum, d) => sum + d.cost, 0);
-  const totalCredits = daily.reduce((sum, d) => sum + d.credits, 0);
-  const netCost = totalCost + totalCredits;
-
-  const recentDays = daily.slice(-7);
-  const weeklyAverage = recentDays.reduce((sum, d) => sum + d.netCost, 0) / 7;
-
-  const breakdown: ServiceCostBreakdown = {
-    compute: netCost * 0.35,
-    storage: netCost * 0.15,
-    networking: netCost * 0.12,
-    ai: netCost * 0.25,
-    database: netCost * 0.10,
-    other: netCost * 0.03,
-    total: netCost,
-  };
-
-  return {
-    summary: {
-      totalCost: Math.round(totalCost * 100) / 100,
-      totalCredits: Math.round(totalCredits * 100) / 100,
-      netCost: Math.round(netCost * 100) / 100,
-      currency: 'USD',
-      period: { start: startDate, end: now },
-      byService: {
-        'Cloud Run': breakdown.compute * 0.6,
-        'Cloud Functions': breakdown.compute * 0.4,
-        'Cloud Storage': breakdown.storage,
-        'Networking': breakdown.networking,
-        'Vertex AI': breakdown.ai * 0.7,
-        'Cloud Vision API': breakdown.ai * 0.3,
-        'Firestore': breakdown.database,
-        'Other': breakdown.other,
-      },
-      items: [],
-    },
-    trend: {
-      daily,
-      weeklyAverage: Math.round(weeklyAverage * 100) / 100,
-      monthlyProjection: Math.round(weeklyAverage * 30 * 100) / 100,
-      previousMonthTotal: Math.round(netCost * 0.92 * 100) / 100,
-      percentChange: 8.7,
-    },
-    breakdown,
-  };
-}

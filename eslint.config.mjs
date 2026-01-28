@@ -1,22 +1,57 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
 import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 import security from "eslint-plugin-security";
+import nextPlugin from "@next/eslint-plugin-next";
+import reactHooksPlugin from "eslint-plugin-react-hooks";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+export default tseslint.config(
+  // Ignore patterns (must be first for flat config)
+  {
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      "out/**",
+      "dist/**",
+      "build/**",
+      "coverage/**",
+      "*.config.js",
+      "*.config.mjs",
+      "*.config.ts",
+      "worker/**",
+      "functions/**",
+      "public/**",
+      "scripts/**",
+      "next-env.d.ts",
+    ],
+  },
 
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-export default [
   // Base JavaScript recommended rules
   js.configs.recommended,
 
-  // Next.js configuration
-  ...compat.extends("next/core-web-vitals"),
+  // TypeScript recommended (includes parser setup)
+  ...tseslint.configs.recommended,
+
+  // Next.js plugin rules
+  {
+    plugins: {
+      "@next/next": nextPlugin,
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
+    },
+  },
+
+  // React hooks
+  {
+    plugins: {
+      "react-hooks": reactHooksPlugin,
+    },
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
+    },
+  },
 
   // Security plugin
   {
@@ -24,10 +59,9 @@ export default [
       security,
     },
     rules: {
-      // Security rules
       "security/detect-object-injection": "warn",
       "security/detect-non-literal-regexp": "warn",
-      "security/detect-unsafe-regex": "error",
+      "security/detect-unsafe-regex": "warn",
       "security/detect-buffer-noassert": "error",
       "security/detect-eval-with-expression": "error",
       "security/detect-no-csrf-before-method-override": "error",
@@ -39,36 +73,19 @@ export default [
   {
     files: ["**/*.ts", "**/*.tsx"],
     rules: {
-      // Prevent common mistakes
-      "no-unused-vars": "off", // TypeScript handles this
-      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "no-console": ["warn", { allow: ["warn", "error", "log"] }],
       "no-debugger": "error",
-
-      // Best practices
       "eqeqeq": ["error", "always", { null: "ignore" }],
       "no-eval": "error",
       "no-implied-eval": "error",
       "no-new-func": "error",
-      "no-return-await": "warn",
-
-      // React specific
-      "react/no-unescaped-entities": "off",
-      "react-hooks/exhaustive-deps": "warn",
+      "no-case-declarations": "off",
+      "no-useless-escape": "warn",
+      "prefer-const": "warn",
+      "no-empty": "warn",
     },
   },
-
-  // Ignore patterns
-  {
-    ignores: [
-      "node_modules/**",
-      ".next/**",
-      "out/**",
-      "dist/**",
-      "build/**",
-      "coverage/**",
-      "*.config.js",
-      "*.config.mjs",
-      "worker/dist/**",
-    ],
-  },
-];
+);

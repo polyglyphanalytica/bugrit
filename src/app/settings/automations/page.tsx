@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { TOOL_COUNT } from '@/lib/tools/registry';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -193,8 +194,12 @@ export default function AutomationsPage() {
   }, [user, authLoading, router]);
 
   const fetchAutomations = async () => {
+    if (!user) return;
     try {
-      const res = await fetch('/api/v1/automations');
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/v1/automations', {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
       if (res.ok) {
         const data = await res.json();
         setAutomations(data.data?.automations || []);
@@ -207,8 +212,12 @@ export default function AutomationsPage() {
   };
 
   const fetchProjects = async () => {
+    if (!user) return;
     try {
-      const res = await fetch('/api/v1/projects');
+      const idToken = await user.getIdToken();
+      const res = await fetch('/api/v1/projects', {
+        headers: { Authorization: `Bearer ${idToken}` },
+      });
       if (res.ok) {
         const data = await res.json();
         setProjects(data.data || []);
@@ -271,9 +280,10 @@ export default function AutomationsPage() {
           break;
       }
 
+      const idToken = await user!.getIdToken();
       const res = await fetch('/api/v1/automations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({
           name: newAutomation.name,
           projectId: newAutomation.projectId,
@@ -333,9 +343,10 @@ export default function AutomationsPage() {
 
   const handleToggleEnabled = async (automation: Automation) => {
     try {
+      const idToken = await user!.getIdToken();
       const res = await fetch(`/api/v1/automations/${automation.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
         body: JSON.stringify({ enabled: !automation.enabled }),
       });
 
@@ -363,8 +374,10 @@ export default function AutomationsPage() {
 
   const handleDeleteAutomation = async (automationId: string) => {
     try {
+      const idToken = await user!.getIdToken();
       const res = await fetch(`/api/v1/automations/${automationId}`, {
         method: 'DELETE',
+        headers: { Authorization: `Bearer ${idToken}` },
       });
 
       if (res.ok) {
@@ -619,7 +632,7 @@ export default function AutomationsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Tools (69)</SelectItem>
+                      <SelectItem value="all">All Tools ({TOOL_COUNT})</SelectItem>
                       <SelectItem value="security">Security Only</SelectItem>
                       <SelectItem value="quality">Code Quality Only</SelectItem>
                       <SelectItem value="dependencies">Dependencies Only</SelectItem>

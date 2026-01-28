@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { VibeScoreCard } from '@/components/vibe-score/score-card';
 import type { VibeScore } from '@/lib/vibe-score/types';
+import { getDb } from '@/lib/firestore';
 
 /**
  * Verification Landing Page
@@ -374,49 +375,53 @@ interface VerifiedSite {
 }
 
 async function getVerifiedSite(siteId: string): Promise<VerifiedSite | null> {
-  // TODO: Implement Firestore lookup
-  if (siteId.startsWith('site_')) {
+  const db = getDb();
+  if (!db) return null;
+
+  try {
+    const doc = await db.collection('trustBadgeSites').doc(siteId).get();
+    if (!doc.exists) return null;
+
+    const data = doc.data()!;
     return {
-      id: siteId,
-      domain: 'example.com',
+      id: doc.id,
+      domain: data.domain,
       metadata: {
-        siteName: 'Example Company',
-        description: 'We build amazing products that help developers ship faster. Our platform is trusted by thousands of teams worldwide.',
-        category: 'SaaS',
-        privacyPolicyUrl: 'https://example.com/privacy',
+        siteName: data.siteName || data.domain,
+        description: data.description || '',
+        category: data.category || 'Website',
+        privacyPolicyUrl: data.privacyPolicyUrl,
       },
-      latestScan: {
-        vibeScore: 87,
-        grade: 'B+',
-        scannedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-        components: {
-          security: 92,
-          quality: 78,
-          accessibility: 85,
-          performance: 88,
-          dependencies: 91,
-          documentation: 75,
+      latestScan: data.latestScan ? {
+        vibeScore: data.latestScan.vibeScore,
+        grade: data.latestScan.grade,
+        scannedAt: data.latestScan.scannedAt?.toDate?.() || new Date(data.latestScan.scannedAt),
+        components: data.latestScan.components || {
+          security: 0, quality: 0, accessibility: 0,
+          performance: 0, dependencies: 0, documentation: 0,
         },
-        trend: {
-          direction: 'up',
-          delta: 5,
-          previousScore: 82,
-        },
-        findingsSummary: {
-          critical: 0,
-          high: 2,
-          medium: 8,
-          low: 15,
-        },
-      },
+        trend: data.latestScan.trend || { direction: 'stable', delta: 0, previousScore: null },
+        findingsSummary: data.latestScan.findingsSummary || { critical: 0, high: 0, medium: 0, low: 0 },
+      } : null,
     };
+  } catch (error) {
+    console.error('Failed to fetch verified site:', error);
+    return null;
   }
-  return null;
 }
 
 async function trackVerificationPageView(siteId: string): Promise<void> {
-  // TODO: Implement analytics
-  console.log(`[Verification] Page view for ${siteId}`);
+  const db = getDb();
+  if (!db) return;
+
+  try {
+    await db.collection('trustBadgeSites').doc(siteId).update({
+      pageViews: (await import('firebase-admin/firestore')).FieldValue.increment(1),
+      lastViewedAt: new Date(),
+    });
+  } catch {
+    // Non-critical — silently ignore tracking failures
+  }
 }
 
 function formatRelativeTime(date: Date): string {

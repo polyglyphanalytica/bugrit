@@ -9,7 +9,7 @@
     "build": "NODE_OPTIONS='--max-old-space-size=4096' NODE_ENV=production next build",
     "build:worker": "tsc worker/server.ts --outDir worker/dist --esModuleInterop --resolveJsonModule --skipLibCheck",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

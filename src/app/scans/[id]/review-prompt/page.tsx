@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ReviewMergePrompt } from '@/components/fixes/review-merge-prompt';
+import { getDb } from '@/lib/firestore';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -127,55 +128,49 @@ export default async function ReviewPromptPage({ params }: PageProps) {
   );
 }
 
-// Mock function - replace with actual database call
 async function getScanWithFixes(scanId: string) {
-  // TODO: Replace with actual Firestore queries
-  // const scan = await db.collection('scans').doc(scanId).get();
-  // const fixes = await db.collection('fixes').where('scanId', '==', scanId).get();
+  const db = getDb();
+  if (!db) return null;
 
-  // For now, return mock data
-  // In production, return null if scan not found
-  return {
-    scan: {
-      id: scanId,
-      repoUrl: 'https://github.com/example/repo',
-      baseBranch: 'main',
-      status: 'completed',
-      createdAt: new Date(),
-    },
-    fixes: {
-      branchName: `bugrit/fixes-${scanId.slice(0, 8)}`,
-      prUrl: 'https://github.com/example/repo/pull/123',
-      findings: [
-        {
-          id: 'finding-1',
-          severity: 'critical',
-          title: 'SQL Injection vulnerability',
-          file: 'src/api/users.ts',
-          line: 42,
-        },
-        {
-          id: 'finding-2',
-          severity: 'high',
-          title: 'Cross-Site Scripting (XSS)',
-          file: 'src/components/Comment.tsx',
-          line: 18,
-        },
-        {
-          id: 'finding-3',
-          severity: 'medium',
-          title: 'Missing input validation',
-          file: 'src/api/posts.ts',
-          line: 55,
-        },
-        {
-          id: 'finding-4',
-          severity: 'low',
-          title: 'Console.log statement in production code',
-          file: 'src/utils/debug.ts',
-          line: 12,
-        },
-      ],
-    },
-  };
+  try {
+    const scanDoc = await db.collection('scans').doc(scanId).get();
+    if (!scanDoc.exists) return null;
+
+    const scanData = scanDoc.data()!;
+
+    // Fetch findings for this scan
+    const findingsSnapshot = await db.collection('findings')
+      .where('scanId', '==', scanId)
+      .orderBy('severity', 'asc')
+      .get();
+
+    const findings = findingsSnapshot.docs.map(doc => {
+      const d = doc.data();
+      return {
+        id: doc.id,
+        severity: d.severity || 'medium',
+        title: d.title || d.message || 'Finding',
+        file: d.file || d.filePath || '',
+        line: d.line || d.lineNumber || 0,
+      };
+    });
+
+    return {
+      scan: {
+        id: scanId,
+        repoUrl: scanData.repoUrl || scanData.targetUrl || '',
+        baseBranch: scanData.baseBranch || 'main',
+        status: scanData.status || 'completed',
+        createdAt: scanData.createdAt?.toDate?.() || new Date(scanData.createdAt || Date.now()),
+      },
+      fixes: {
+        branchName: scanData.fixBranch || `bugrit/fixes-${scanId.slice(0, 8)}`,
+        prUrl: scanData.prUrl || '',
+        findings,
+      },
+    };
+  } catch (error) {
+    console.error('Failed to fetch scan with fixes:', error);
+    return null;
+  }
 }
