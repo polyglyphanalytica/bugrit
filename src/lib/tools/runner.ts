@@ -871,6 +871,308 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
   },
 
   // ─────────────────────────────────────────────────────────────
+  // Dredd (API contract testing against documentation)
+  // ─────────────────────────────────────────────────────────────
+  dredd: async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const fs = await import('fs/promises');
+    const path = await import('path');
+
+    // Find API spec files (OpenAPI/Swagger)
+    const specFiles = ['openapi.yaml', 'openapi.yml', 'openapi.json', 'swagger.yaml', 'swagger.yml', 'swagger.json', 'api.yaml', 'api.yml', 'api.json'];
+    let specFile: string | null = null;
+
+    for (const name of specFiles) {
+      try {
+        await fs.access(path.join(targetPath, name));
+        specFile = name;
+        break;
+      } catch {
+        // File doesn't exist, try next
+      }
+    }
+
+    // Also check docs/ and api/ subdirectories
+    if (!specFile) {
+      for (const dir of ['docs', 'api', 'spec']) {
+        for (const name of specFiles) {
+          try {
+            await fs.access(path.join(targetPath, dir, name));
+            specFile = path.join(dir, name);
+            break;
+          } catch {
+            // File doesn't exist
+          }
+        }
+        if (specFile) break;
+      }
+    }
+
+    if (!specFile) {
+      findings.push({
+        id: 'dredd-no-spec',
+        severity: 'info',
+        message: 'No OpenAPI/Swagger specification file found. Dredd requires an API spec to validate.',
+        suggestion: 'Add an openapi.yaml or swagger.json file to enable API contract testing.',
+      });
+      return { findings, summary: summarizeFindings(findings) };
+    }
+
+    // Validate the API spec structure (dry-run, no live server needed)
+    const output = runCli(`npx dredd "${specFile}" http://localhost:3000 --dry-run --reporter json 2>/dev/null`, targetPath, 60000);
+
+    if (output) {
+      try {
+        const data = JSON.parse(output);
+        for (const test of data.tests || []) {
+          if (test.status === 'fail') {
+            findings.push({
+              id: `dredd-${test.title?.slice(0, 50) || 'unknown'}`,
+              severity: 'error',
+              message: `API contract violation: ${test.title}`,
+              file: specFile,
+              suggestion: test.message || 'Fix the API implementation to match the spec.',
+            });
+          }
+        }
+
+        // Check for spec validation warnings
+        for (const warning of data.warnings || []) {
+          findings.push({
+            id: `dredd-warn-${warning.component || 'unknown'}`,
+            severity: 'warning',
+            message: `API spec issue: ${warning.message}`,
+            file: specFile,
+            suggestion: 'Update the API specification to resolve this issue.',
+          });
+        }
+      } catch {
+        // Dredd may output non-JSON; try parsing line output
+        const lines = output.split('\n').filter(l => l.includes('fail') || l.includes('error'));
+        for (const line of lines) {
+          findings.push({
+            id: `dredd-${findings.length}`,
+            severity: 'warning',
+            message: line.trim(),
+            file: specFile,
+          });
+        }
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // SBOM Generator (CycloneDX Software Bill of Materials)
+  // ─────────────────────────────────────────────────────────────
+  'sbom-generator': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('npx @cyclonedx/cdxgen -o /dev/stdout --format json 2>/dev/null', targetPath, 120000);
+
+    if (output) {
+      try {
+        const sbom = JSON.parse(output);
+        const components = sbom.components || [];
+
+        // Analyze components for issues
+        let missingLicense = 0;
+        let missingVersion = 0;
+        let deprecatedPkgs = 0;
+
+        for (const component of components) {
+          if (!component.licenses || component.licenses.length === 0) {
+            missingLicense++;
+            if (missingLicense <= 20) { // Cap at 20 findings
+              findings.push({
+                id: `sbom-no-license-${component.name}`,
+                severity: 'warning',
+                message: `Component ${component.name}@${component.version || 'unknown'} has no license information`,
+                file: 'package.json',
+                suggestion: 'Ensure all dependencies have proper license declarations.',
+              });
+            }
+          }
+
+          if (!component.version) {
+            missingVersion++;
+            findings.push({
+              id: `sbom-no-version-${component.name}`,
+              severity: 'warning',
+              message: `Component ${component.name} has no version pinned`,
+              suggestion: 'Pin dependency versions for reproducible builds.',
+            });
+          }
+
+          // Check for known problematic licenses
+          const licenses = (component.licenses || [])
+            .map((l: { license?: { id?: string }; expression?: string }) => l.license?.id || l.expression || '')
+            .join(',');
+          if (licenses.match(/GPL|AGPL|SSPL/i)) {
+            findings.push({
+              id: `sbom-copyleft-${component.name}`,
+              severity: 'error',
+              message: `Component ${component.name} uses copyleft license: ${licenses}`,
+              file: 'package.json',
+              suggestion: 'Review copyleft license compatibility with your project license.',
+            });
+          }
+        }
+
+        // Summary findings
+        if (missingLicense > 20) {
+          findings.push({
+            id: 'sbom-license-summary',
+            severity: 'warning',
+            message: `${missingLicense} components total are missing license information (showing first 20)`,
+          });
+        }
+
+        findings.push({
+          id: 'sbom-summary',
+          severity: 'info',
+          message: `SBOM generated: ${components.length} components, ${missingLicense} missing licenses, ${missingVersion} missing versions`,
+        });
+      } catch {
+        // JSON parse error
+      }
+    } else {
+      findings.push({
+        id: 'sbom-no-output',
+        severity: 'info',
+        message: 'Could not generate SBOM. Ensure the project has a supported manifest file (package.json, requirements.txt, go.mod, etc.)',
+      });
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Release Risk Analyzer (git-based change risk analysis)
+  // ─────────────────────────────────────────────────────────────
+  'release-risk-analyzer': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+
+    // Get recent changes (last 50 commits or since last tag)
+    const lastTag = runCli('git describe --tags --abbrev=0 2>/dev/null', targetPath);
+    const diffRange = lastTag?.trim() ? `${lastTag.trim()}..HEAD` : 'HEAD~50..HEAD';
+
+    const diffStat = runCli(`git diff --stat ${diffRange} 2>/dev/null`, targetPath);
+    const diffFiles = runCli(`git diff --name-only ${diffRange} 2>/dev/null`, targetPath);
+    const commitCount = runCli(`git rev-list --count ${diffRange} 2>/dev/null`, targetPath);
+
+    if (!diffFiles) {
+      findings.push({
+        id: 'risk-no-git',
+        severity: 'info',
+        message: 'No git history available for risk analysis.',
+      });
+      return { findings, summary: summarizeFindings(findings) };
+    }
+
+    const files = diffFiles.trim().split('\n').filter(Boolean);
+    const numCommits = parseInt(commitCount?.trim() || '0', 10);
+
+    // High-risk pattern detection
+    const authFiles = files.filter(f => /auth|login|session|token|oauth|jwt|password|credential/i.test(f));
+    const infraFiles = files.filter(f => /dockerfile|docker-compose|\.env|terraform|k8s|kubernetes|helm|\.github\/workflows/i.test(f));
+    const testFiles = files.filter(f => /\.test\.|\.spec\.|__tests__|__mocks__/i.test(f));
+    const deletedTests = runCli(`git diff --diff-filter=D --name-only ${diffRange} 2>/dev/null`, targetPath);
+    const removedTests = deletedTests?.trim().split('\n').filter(f => /\.test\.|\.spec\./i.test(f)) || [];
+    const migrationFiles = files.filter(f => /migrat|schema|\.sql/i.test(f));
+    const securityFiles = files.filter(f => /security|crypt|cipher|hash|secret|key/i.test(f));
+
+    // Auth changes
+    if (authFiles.length > 0) {
+      findings.push({
+        id: 'risk-auth-changes',
+        severity: 'error',
+        message: `${authFiles.length} authentication/authorization file(s) modified: ${authFiles.slice(0, 5).join(', ')}`,
+        suggestion: 'Auth changes require thorough security review before release.',
+      });
+    }
+
+    // Deleted tests
+    if (removedTests.length > 0) {
+      findings.push({
+        id: 'risk-deleted-tests',
+        severity: 'error',
+        message: `${removedTests.length} test file(s) were deleted: ${removedTests.slice(0, 5).join(', ')}`,
+        suggestion: 'Deleted tests reduce coverage. Ensure equivalent tests exist or deletion is intentional.',
+      });
+    }
+
+    // Infrastructure changes
+    if (infraFiles.length > 0) {
+      findings.push({
+        id: 'risk-infra-changes',
+        severity: 'warning',
+        message: `${infraFiles.length} infrastructure file(s) modified: ${infraFiles.slice(0, 5).join(', ')}`,
+        suggestion: 'Infrastructure changes should be reviewed for security and availability impact.',
+      });
+    }
+
+    // Database migrations
+    if (migrationFiles.length > 0) {
+      findings.push({
+        id: 'risk-migrations',
+        severity: 'warning',
+        message: `${migrationFiles.length} database migration/schema file(s) modified: ${migrationFiles.slice(0, 5).join(', ')}`,
+        suggestion: 'Database changes should be tested with rollback plans.',
+      });
+    }
+
+    // Security-related file changes
+    if (securityFiles.length > 0) {
+      findings.push({
+        id: 'risk-security-changes',
+        severity: 'warning',
+        message: `${securityFiles.length} security-related file(s) modified: ${securityFiles.slice(0, 5).join(', ')}`,
+        suggestion: 'Security-sensitive code changes require dedicated security review.',
+      });
+    }
+
+    // Large diff (>500 files or >50 commits)
+    if (files.length > 500) {
+      findings.push({
+        id: 'risk-large-diff',
+        severity: 'warning',
+        message: `Large release: ${files.length} files changed across ${numCommits} commits`,
+        suggestion: 'Consider breaking this into smaller, incremental releases to reduce risk.',
+      });
+    } else if (files.length > 100) {
+      findings.push({
+        id: 'risk-medium-diff',
+        severity: 'info',
+        message: `Medium release: ${files.length} files changed across ${numCommits} commits`,
+      });
+    }
+
+    // Test coverage ratio
+    const codeFiles = files.filter(f => !(/\.test\.|\.spec\.|__tests__|__mocks__/.test(f)));
+    if (codeFiles.length > 10 && testFiles.length === 0) {
+      findings.push({
+        id: 'risk-no-tests',
+        severity: 'warning',
+        message: `${codeFiles.length} source files changed but no test files were modified`,
+        suggestion: 'Changes without corresponding test updates increase regression risk.',
+      });
+    }
+
+    // Summary
+    const riskScore = (authFiles.length * 3) + (removedTests.length * 3) + (infraFiles.length * 2) + (migrationFiles.length * 2) + (securityFiles.length * 2) + Math.floor(files.length / 100);
+    const riskLevel = riskScore >= 8 ? 'high' : riskScore >= 4 ? 'medium' : 'low';
+
+    findings.push({
+      id: 'risk-summary',
+      severity: riskLevel === 'high' ? 'error' : riskLevel === 'medium' ? 'warning' : 'info',
+      message: `Release risk: ${riskLevel} (score: ${riskScore}). ${files.length} files, ${numCommits} commits, ${authFiles.length} auth, ${infraFiles.length} infra, ${migrationFiles.length} migration, ${removedTests.length} deleted tests.`,
+    });
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
   // Lockfile Lint
   // ─────────────────────────────────────────────────────────────
   'lockfile-lint': async ({ targetPath }) => {

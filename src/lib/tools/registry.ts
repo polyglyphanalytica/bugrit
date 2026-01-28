@@ -1,14 +1,14 @@
 /**
  * Comprehensive Tool Registry
  *
- * 117 registry entries (150 total modules with integrations + AI) for security, quality, and compliance.
+ * 118 registry entries (150+ total modules with integrations + AI) for security, quality, and compliance.
  *
  * Deployment types:
- * - Native JS (38 tools): Run via npm packages on Node.js
+ * - Native JS (39 tools): Run via npm packages on Node.js
  * - Docker (78 tools): Run via Google Cloud Build containers
  * - Git-based (1 tool): Uses git CLI for analysis
  *
- * Total: 117 registry tools across 11 categories (150 modules including integrations + AI)
+ * Total: 118 registry tools across 11 categories (150+ modules including integrations + AI)
  */
 
 export interface ToolDefinition {
@@ -86,6 +86,16 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   // ═══════════════════════════════════════════════════════════════
   // SECURITY - General (10+ tools)
   // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'eslint-security',
+    name: 'ESLint Security',
+    description: 'Detect security vulnerabilities in JavaScript/TypeScript using eslint-plugin-security rules',
+    category: 'security',
+    npm: 'eslint-plugin-security',
+    languages: ['javascript', 'typescript'],
+    filePatterns: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+    credits: 0,
+  },
   {
     id: 'semgrep',
     name: 'Semgrep',
@@ -1227,7 +1237,7 @@ export function getTotalCredits(toolIds: string[]): number {
   }, 0);
 }
 
-export const TOOL_COUNT = TOOL_REGISTRY.length;  // 117 registry tools (38 npm + 78 docker + 1 git); 150 total modules with integrations + AI
+export const TOOL_COUNT = TOOL_REGISTRY.length;  // 118 registry tools (39 npm + 78 docker + 1 git); 150+ total modules with integrations + AI
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   linting: 'Linting & Formatting',
