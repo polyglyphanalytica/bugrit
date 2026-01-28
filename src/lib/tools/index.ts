@@ -1,7 +1,7 @@
 /**
  * Bugrit Tools Module
  *
- * 118 security and quality tools (39 JS native + 78 Docker + 1 git) that run in Firebase.
+ * 150 security and quality tools (51 JS native + 95 Docker + 4 git/cli) that run in Firebase.
  * Tool count is dynamic via TOOL_COUNT export from registry.
  */
 
