@@ -284,46 +284,27 @@ export function getAuthenticatedUserId(request: NextRequest): string | null {
  * 3. Firebase session cookie - For browser-based SSR access
  */
 export async function requireAuthenticatedUser(request: NextRequest): Promise<NextResponse | string> {
-  const url = request.nextUrl.pathname;
-
-  // 1. Try API key first (for programmatic access)
+  // 1. API key (for programmatic access)
   const userId = getAuthenticatedUserId(request);
-  if (userId) {
-    return userId;
-  }
+  if (userId) return userId;
 
-  // 2. Try Firebase ID token from Authorization header (for client-side fetch calls)
+  // 2. Bearer token — Firebase ID token from client-side fetch calls
   const authHeader = request.headers.get('authorization');
-  if (authHeader) {
-    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-    if (token && !token.startsWith('bg_')) {
-      try {
-        const decoded = await verifyIdToken(token);
-        if (decoded?.uid) {
-          return decoded.uid;
-        }
-        console.warn(`[api-auth] Bearer token verification returned null for ${url}`);
-      } catch (error) {
-        console.error(`[api-auth] Bearer token verification threw for ${url}:`, error instanceof Error ? error.message : error);
-      }
-    } else {
-      console.warn(`[api-auth] Authorization header present but token empty or is API key format for ${url}`);
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    if (token) {
+      const decoded = await verifyIdToken(token);
+      if (decoded?.uid) return decoded.uid;
     }
-  } else {
-    console.warn(`[api-auth] No Authorization header present for ${url}`);
   }
 
-  // 3. Try Firebase session cookie (for browser-based SSR access)
+  // 3. Session cookie (for browser-based SSR access)
   try {
     const session = await verifySession();
-    if (session?.uid) {
-      return session.uid;
-    }
+    if (session?.uid) return session.uid;
   } catch {
     // Session verification failed
   }
-
-  console.error(`[api-auth] All auth methods failed for ${url}. Has auth header: ${!!authHeader}`);
 
   return NextResponse.json(
     { error: 'Authentication required. Provide API key via x-api-key header or login.' },
