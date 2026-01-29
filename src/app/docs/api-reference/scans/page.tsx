@@ -47,10 +47,10 @@ export default function ScansApiPage() {
         </p>
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div className="p-3 bg-background/80 rounded-lg">
-            <strong className="text-green-600 dark:text-green-400">Before:</strong> Wait 2-5 minutes for all tools, then see results
+            <strong className="text-green-600 dark:text-green-400">Before:</strong> Wait 2-5 minutes for all modules, then see results
           </div>
           <div className="p-3 bg-background/80 rounded-lg">
-            <strong className="text-green-600 dark:text-green-400">Now:</strong> See each tool&apos;s results immediately as it finishes
+            <strong className="text-green-600 dark:text-green-400">Now:</strong> See each module&apos;s results immediately as it finishes
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -698,7 +698,7 @@ My stack: [YOUR_STACK]`)}
             </tr>
             <tr className="border-b">
               <td className="py-2 px-2"><code>completed</code></td>
-              <td className="py-2 px-2 text-muted-foreground">All tools finished, report ready</td>
+              <td className="py-2 px-2 text-muted-foreground">All modules finished, report ready</td>
             </tr>
             <tr className="border-b">
               <td className="py-2 px-2"><code>failed</code></td>

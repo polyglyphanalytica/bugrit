@@ -483,7 +483,7 @@ export default function PricingDocs() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Full Audit with AI Fixes</CardTitle>
-              <CardDescription>50,000 lines, all tools, 100 issues</CardDescription>
+              <CardDescription>50,000 lines, all modules, 100 issues</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="font-mono text-sm space-y-1">

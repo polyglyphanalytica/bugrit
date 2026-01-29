@@ -117,7 +117,7 @@ POST https://bugrit.com/api/v1/automations
 
 Create an automation with:
 - trigger: github_push to main branch
-- action: full scan with all tools
+- action: full scan with all modules
 - failOn: critical
 - notification: Slack webhook
 

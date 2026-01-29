@@ -30,10 +30,10 @@ const navItems = [
   {
     title: 'Code Scanning',
     items: [
-      { href: '/docs/scanning/security', label: 'Security Tools' },
-      { href: '/docs/scanning/quality', label: 'Quality Tools' },
-      { href: '/docs/scanning/dependencies', label: 'Dependency Tools' },
-      { href: '/docs/scanning/accessibility', label: 'Accessibility Tools' },
+      { href: '/docs/scanning/security', label: 'Security Modules' },
+      { href: '/docs/scanning/quality', label: 'Quality Modules' },
+      { href: '/docs/scanning/dependencies', label: 'Dependency Modules' },
+      { href: '/docs/scanning/accessibility', label: 'Accessibility Modules' },
     ],
   },
   {

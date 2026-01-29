@@ -234,7 +234,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Smart Tool Advisor — NEW feature highlight */}
+      {/* Smart Module Advisor — NEW feature highlight */}
       <section className="py-24 md:py-32">
         <div className="container-wide">
           <ScrollReveal>
@@ -242,7 +242,7 @@ export default function HomePage() {
               badge="Smart Advisor"
               title="Never overpay. Never miss a vulnerability."
               titleGradient="Never miss"
-              description="Our intelligent tool advisor analyzes your project and recommends exactly what you need — no more, no less."
+              description="Our intelligent module advisor analyzes your project and recommends exactly what you need — no more, no less."
             />
           </ScrollReveal>
 
@@ -258,7 +258,7 @@ export default function HomePage() {
                     <div>
                       <h3 className="text-base font-semibold text-gray-900 mb-1">Smart Recommendations</h3>
                       <p className="text-sm text-gray-500 leading-relaxed">
-                        Tell us your app type and sensitivity level. We&apos;ll bubble up the most important tools and prioritize what matters for your stack.
+                        Tell us your app type and sensitivity level. We&apos;ll bubble up the most important modules and prioritize what matters for your stack.
                       </p>
                     </div>
                   </div>
@@ -290,7 +290,7 @@ export default function HomePage() {
                     <div>
                       <h3 className="text-base font-semibold text-gray-900 mb-1">Redundancy Alerts</h3>
                       <p className="text-sm text-gray-500 leading-relaxed">
-                        Selected both Trivy and Grype? They do the same thing. We&apos;ll catch overlapping tools so you don&apos;t waste credits.
+                        Selected both Trivy and Grype? They do the same thing. We&apos;ll catch overlapping modules so you don&apos;t waste credits.
                       </p>
                     </div>
                   </div>
@@ -306,7 +306,7 @@ export default function HomePage() {
                     <div>
                       <h3 className="text-base font-semibold text-gray-900 mb-1">Learns From Your Scans</h3>
                       <p className="text-sm text-gray-500 leading-relaxed">
-                        Had security issues last time? We&apos;ll recommend follow-up tools. New commits? We&apos;ll suggest scans for changed files.
+                        Had security issues last time? We&apos;ll recommend follow-up modules. New commits? We&apos;ll suggest scans for changed files.
                       </p>
                     </div>
                   </div>
@@ -321,7 +321,7 @@ export default function HomePage() {
                   <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
                     <Sparkles className="w-3 h-3 text-orange-500" />
                   </div>
-                  <span className="text-sm font-medium text-gray-900">Tool Advisor</span>
+                  <span className="text-sm font-medium text-gray-900">Module Advisor</span>
                   <span className="ml-auto text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Score: 85/100</span>
                 </div>
 
@@ -339,7 +339,7 @@ export default function HomePage() {
                   <div className="p-3 rounded-lg bg-amber-50 border border-amber-100">
                     <div className="flex items-center gap-2 mb-1">
                       <AlertTriangle className="w-4 h-4 text-amber-500" />
-                      <span className="text-sm font-medium text-amber-700">Overlapping tools detected</span>
+                      <span className="text-sm font-medium text-amber-700">Overlapping modules detected</span>
                     </div>
                     <p className="text-xs text-amber-600">Trivy and Grype both scan for vulnerabilities. Remove one to save 2 credits.</p>
                     <button className="mt-2 text-xs font-medium text-amber-700 hover:text-amber-800">
@@ -353,7 +353,7 @@ export default function HomePage() {
                       <Target className="w-4 h-4 text-blue-500" />
                       <span className="text-sm font-medium text-blue-700">Recommended for your stack</span>
                     </div>
-                    <p className="text-xs text-blue-600">Based on your fintech API, these tools provide essential coverage.</p>
+                    <p className="text-xs text-blue-600">Based on your fintech API, these modules provide essential coverage.</p>
                     <div className="flex gap-2 mt-2">
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Semgrep</span>
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">OWASP ZAP</span>
@@ -447,7 +447,7 @@ export default function HomePage() {
                 price: '$19',
                 description: 'For side projects',
                 credits: '50 credits/mo',
-                features: ['3 projects', 'Up to 50K lines', 'All security tools', 'Smart Tool Advisor', 'AI scan summaries', '14-day history'],
+                features: ['3 projects', 'Up to 50K lines', 'All security modules', 'Smart Module Advisor', 'AI scan summaries', '14-day history'],
                 cta: 'Start Free Trial',
                 popular: false,
               },
@@ -456,7 +456,7 @@ export default function HomePage() {
                 price: '$49',
                 description: 'For serious builders',
                 credits: '200 credits/mo',
-                features: ['10 projects', 'Up to 150K lines', 'All tools + browser testing', 'Smart Tool Advisor', 'AI explanations', 'GitHub integration', '30-day history'],
+                features: ['10 projects', 'Up to 150K lines', 'All modules + browser testing', 'Smart Module Advisor', 'AI explanations', 'GitHub integration', '30-day history'],
                 cta: 'Start Free Trial',
                 popular: true,
               },
@@ -465,7 +465,7 @@ export default function HomePage() {
                 price: '$99',
                 description: 'For teams',
                 credits: '500 credits/mo',
-                features: ['Unlimited projects', 'Up to 500K lines', 'All tools + AI fixes', 'Smart Tool Advisor', '10 team members', 'Slack + webhooks', 'API access', '90-day history'],
+                features: ['Unlimited projects', 'Up to 500K lines', 'All modules + AI fixes', 'Smart Module Advisor', '10 team members', 'Slack + webhooks', 'API access', '90-day history'],
                 cta: 'Start Free Trial',
                 popular: false,
               },

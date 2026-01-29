@@ -1,10 +1,10 @@
 /**
- * Intelligent Tool Advisor
+ * Intelligent Module Advisor
  *
- * Provides real-time intelligent feedback on tool selection:
+ * Provides real-time intelligent feedback on module selection:
  * - Coverage gap detection (what's missing)
- * - Redundancy detection (overlapping/overbought tools)
- * - Smart prioritization (bubbles up essential tools)
+ * - Redundancy detection (overlapping/overbought modules)
+ * - Smart prioritization (bubbles up essential modules)
  * - Cost optimization advice
  */
 
@@ -97,7 +97,7 @@ export interface PrioritizedTool {
 // ============================================================
 
 /**
- * Tools that serve similar purposes - selecting multiple is often redundant
+ * Modules that serve similar purposes - selecting multiple is often redundant
  */
 const TOOL_OVERLAP_GROUPS: Array<{
   purpose: string;
@@ -218,7 +218,7 @@ function getCategoryRequirements(
   requirements.push({
     category: 'code-quality',
     severity: 'recommended',
-    reason: 'Code quality tools catch bugs and enforce best practices',
+    reason: 'Code quality modules catch bugs and enforce best practices',
     minimumTools: 1,
   });
 
@@ -677,7 +677,7 @@ export class ToolAdvisor {
       messages.push({
         severity: 'warning',
         category: 'redundancy',
-        title: `Overlapping tools for ${group.purpose}`,
+        title: `Overlapping modules for ${group.purpose}`,
         description: group.recommendation,
         affectedTools: group.tools,
         suggestedAction: {
@@ -693,7 +693,7 @@ export class ToolAdvisor {
         severity: 'info',
         category: 'optimization',
         title: `Save ${redundancy.totalWastedCredits} credits`,
-        description: `You have ${redundancy.redundantGroups.length} groups of overlapping tools. Removing duplicates won't reduce scan quality but will save credits.`,
+        description: `You have ${redundancy.redundantGroups.length} groups of overlapping modules. Removing duplicates won't reduce scan quality but will save credits.`,
       });
     }
 
@@ -708,26 +708,26 @@ export class ToolAdvisor {
     const selectedCount = selectionState.selectedTools.length;
     const totalCredits = selectionState.credits.selected;
 
-    // Too few tools warning
+    // Too few modules warning
     if (selectedCount < 3) {
       const sensitivity = context?.sensitivity || 'personal';
       if (sensitivity !== 'personal') {
         messages.push({
           severity: 'warning',
           category: 'recommendation',
-          title: 'Consider adding more tools',
-          description: `Only ${selectedCount} tool${selectedCount === 1 ? '' : 's'} selected. For ${sensitivity} applications, we recommend at least 5 tools for adequate coverage.`,
+          title: 'Consider adding more modules',
+          description: `Only ${selectedCount} module${selectedCount === 1 ? '' : 's'} selected. For ${sensitivity} applications, we recommend at least 5 modules for adequate coverage.`,
         });
       }
     }
 
-    // Too many tools warning
+    // Too many modules warning
     if (selectedCount > 20) {
       messages.push({
         severity: 'info',
         category: 'optimization',
         title: 'Large scan selection',
-        description: `You've selected ${selectedCount} tools (${totalCredits} credits). This comprehensive scan will take longer. Consider running essential tools first, then optional ones.`,
+        description: `You've selected ${selectedCount} modules (${totalCredits} credits). This comprehensive scan will take longer. Consider running essential modules first, then optional ones.`,
       });
     }
 
@@ -741,13 +741,13 @@ export class ToolAdvisor {
       });
     }
 
-    // No tools selected
+    // No modules selected
     if (selectedCount === 0) {
       messages.push({
         severity: 'critical',
         category: 'recommendation',
-        title: 'No tools selected',
-        description: 'Select at least one tool to run a scan. We recommend starting with Semgrep and Gitleaks for basic security coverage.',
+        title: 'No modules selected',
+        description: 'Select at least one module to run a scan. We recommend starting with Semgrep and Gitleaks for basic security coverage.',
         suggestedAction: {
           type: 'add',
           toolIds: ['semgrep', 'gitleaks'],
@@ -810,15 +810,15 @@ export class ToolAdvisor {
     let verdict: string;
 
     if (selectedCount === 0) {
-      verdict = 'Select tools to begin your security scan';
+      verdict = 'Select modules to begin your security scan';
     } else if (criticalGaps > 0) {
       verdict = `Address ${criticalGaps} critical coverage gap${criticalGaps > 1 ? 's' : ''} for better protection`;
     } else if (redundancy.redundantGroups.length > 2) {
-      verdict = 'Good coverage, but consider removing redundant tools to optimize costs';
+      verdict = 'Good coverage, but consider removing redundant modules to optimize costs';
     } else if (score >= 75) {
       verdict = 'Well-balanced selection with good coverage';
     } else {
-      verdict = 'Consider adding tools for more comprehensive coverage';
+      verdict = 'Consider adding modules for more comprehensive coverage';
     }
 
     return {

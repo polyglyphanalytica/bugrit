@@ -149,7 +149,7 @@ export default function DocsPage() {
       {/* Code Scanning Section */}
       <div>
         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <span>🔍</span> Code Scanning Tools
+          <span>🔍</span> Code Scanning Modules
         </h2>
         <p className="text-muted-foreground mb-4">
           150 analysis modules running 5,000+ individual scans in parallel, consolidating findings into one report.

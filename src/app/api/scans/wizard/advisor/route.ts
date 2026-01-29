@@ -12,11 +12,11 @@ import { logger } from '@/lib/logger';
 /**
  * POST /api/scans/wizard/advisor
  *
- * Get intelligent tool recommendations and analysis
+ * Get intelligent module recommendations and analysis
  *
  * This endpoint provides conversational AI-style recommendations that:
- * 1. Analyze the app type and sensitivity to suggest appropriate tools
- * 2. Review previous findings to recommend follow-up tools
+ * 1. Analyze the app type and sensitivity to suggest appropriate modules
+ * 2. Review previous findings to recommend follow-up modules
  * 3. Consider new commits/changes to suggest relevant scans
  *
  * Body:
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       advisorResult
     );
 
-    // Get smart tool bubbling (prioritized recommendations)
+    // Get smart module bubbling (prioritized recommendations)
     const bubbledTools = ToolAdvisor.getTopRecommendations(selectionState, context, 10);
 
     return NextResponse.json({
@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
       // Conversational AI-style advice
       conversation,
 
-      // Tools bubbled to top (most important first)
-      bubbledTools: bubbledTools.map(pt => ({
+      // Modules bubbled to top (most important first)
+      bubbledModules: bubbledTools.map(pt => ({
         toolId: pt.tool.id,
         toolName: pt.tool.name,
         category: pt.tool.category,
@@ -123,7 +123,7 @@ function generateConversationalAdvice(
     messages.push({
       type: 'greeting',
       title: "Let's set up your scan",
-      content: "I'll help you choose the right tools for your project. Tell me about your app, or I can suggest some essentials to start.",
+      content: "I'll help you choose the right modules for your project. Tell me about your app, or I can suggest some essentials to start.",
     });
   }
 
@@ -137,7 +137,7 @@ function generateConversationalAdvice(
         content: findingAnalysis.summary,
         tools: findingAnalysis.recommendations,
         action: {
-          label: 'Add recommended follow-up tools',
+          label: 'Add recommended follow-up modules',
           toolIds: findingAnalysis.recommendations,
         },
       });
@@ -154,7 +154,7 @@ function generateConversationalAdvice(
         content: changeAnalysis.summary,
         tools: changeAnalysis.recommendations,
         action: {
-          label: 'Add tools for changed areas',
+          label: 'Add modules for changed areas',
           toolIds: changeAnalysis.recommendations,
         },
       });
@@ -183,8 +183,8 @@ function generateConversationalAdvice(
     const group = advisorResult.redundancy.redundantGroups[0];
     messages.push({
       type: 'warning',
-      title: `Overlapping tools detected`,
-      content: `You've selected multiple tools for ${group.purpose}. ${group.recommendation}`,
+      title: `Overlapping modules detected`,
+      content: `You've selected multiple modules for ${group.purpose}. ${group.recommendation}`,
       tools: group.tools,
       action: {
         label: `Keep ${TOOL_DATABASE.find(t => t.id === group.keepTool)?.name}, remove others`,
@@ -203,7 +203,7 @@ function generateConversationalAdvice(
         content: smartRecs.content,
         tools: smartRecs.tools,
         action: {
-          label: 'Add these tools',
+          label: 'Add these modules',
           toolIds: smartRecs.tools,
         },
       });
@@ -224,7 +224,7 @@ function generateConversationalAdvice(
     messages.push({
       type: 'tip',
       title: 'Pro tip',
-      content: 'For large scans, consider running security tools first, then code quality. This lets you prioritize fixing critical issues.',
+      content: 'For large scans, consider running security modules first, then code quality. This lets you prioritize fixing critical issues.',
     });
   }
 
@@ -266,14 +266,14 @@ function getGreetingContent(context: WizardInput): string {
   const highSecurity = ['financial', 'healthcare', 'government', 'enterprise'];
 
   if (highSecurity.includes(context.sensitivity)) {
-    return `${context.sensitivity.charAt(0).toUpperCase() + context.sensitivity.slice(1)} applications require comprehensive security coverage. I've prioritized essential security tools for you.`;
+    return `${context.sensitivity.charAt(0).toUpperCase() + context.sensitivity.slice(1)} applications require comprehensive security coverage. I've prioritized essential security modules for you.`;
   }
 
   if (context.aiAgent && context.aiAgent !== 'none') {
-    return `Since you're using ${context.aiAgent}, I've included tools that catch common AI-generated code issues alongside standard security checks.`;
+    return `Since you're using ${context.aiAgent}, I've included modules that catch common AI-generated code issues alongside standard security checks.`;
   }
 
-  return "I've analyzed your project type and selected tools that match your needs. You can customize the selection below.";
+  return "I've analyzed your project type and selected modules that match your needs. You can customize the selection below.";
 }
 
 // ============================================================
@@ -319,9 +319,9 @@ function analyzePreviousFindings(findings: PreviousFinding[]): {
   // Build summary
   let summary = '';
   if (criticalCount > 0) {
-    summary = `Your last scan found ${criticalCount} critical/high severity issues. I recommend running deeper analysis tools to ensure they're fully resolved.`;
+    summary = `Your last scan found ${criticalCount} critical/high severity issues. I recommend running deeper analysis modules to ensure they're fully resolved.`;
   } else if (findings.length > 0) {
-    summary = 'Your previous scans found some issues. These additional tools can help verify fixes and catch related problems.';
+    summary = 'Your previous scans found some issues. These additional modules can help verify fixes and catch related problems.';
   }
 
   return {
@@ -393,9 +393,9 @@ function analyzeRecentChanges(changes: RecentChanges): {
   if (changes.commits > 10) {
     summary = `You have ${changes.commits} new commits since your last scan. I recommend a comprehensive scan to catch any issues introduced.`;
   } else if (changes.commits > 0) {
-    summary = `${changes.commits} commit${changes.commits > 1 ? 's' : ''} since last scan. These tools are relevant to your changed files.`;
+    summary = `${changes.commits} commit${changes.commits > 1 ? 's' : ''} since last scan. These modules are relevant to your changed files.`;
   } else {
-    summary = 'Based on the files you\'ve modified, these tools would be most relevant.';
+    summary = 'Based on the files you\'ve modified, these modules would be most relevant.';
   }
 
   return {
@@ -415,7 +415,7 @@ function getSmartRecommendations(
   const selectedIds = new Set(selectionState.selectedTools.map(t => t.id));
   const recommendations: string[] = [];
 
-  // Essential tools everyone should have
+  // Essential modules everyone should have
   const essentials = ['semgrep', 'gitleaks', 'osv-scanner'];
   for (const tool of essentials) {
     if (!selectedIds.has(tool)) {
@@ -448,7 +448,7 @@ function getSmartRecommendations(
 
   return {
     title: 'Recommended for your stack',
-    content: `Based on your ${context.appType} ${context.sensitivity} app, these tools provide essential coverage.`,
+    content: `Based on your ${context.appType} ${context.sensitivity} app, these modules provide essential coverage.`,
     tools: finalRecs,
   };
 }

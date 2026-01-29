@@ -929,19 +929,19 @@ My stack: [YOUR_STACK]`)}
           <tbody>
             <tr className="border-b">
               <td className="py-2 px-2"><code>initializing</code></td>
-              <td className="py-2 px-2 text-muted-foreground">Session created, tools being prepared</td>
+              <td className="py-2 px-2 text-muted-foreground">Session created, modules being prepared</td>
             </tr>
             <tr className="border-b">
               <td className="py-2 px-2"><code>running</code></td>
-              <td className="py-2 px-2 text-muted-foreground">Tools actively running, results streaming in</td>
+              <td className="py-2 px-2 text-muted-foreground">Modules actively running, results streaming in</td>
             </tr>
             <tr className="border-b">
               <td className="py-2 px-2"><code>completed</code></td>
-              <td className="py-2 px-2 text-muted-foreground">All tools finished successfully</td>
+              <td className="py-2 px-2 text-muted-foreground">All modules finished successfully</td>
             </tr>
             <tr className="border-b">
               <td className="py-2 px-2"><code>partial</code></td>
-              <td className="py-2 px-2 text-muted-foreground">Completed with some tools failed/skipped</td>
+              <td className="py-2 px-2 text-muted-foreground">Completed with some modules failed/skipped</td>
             </tr>
             <tr>
               <td className="py-2 px-2"><code>failed</code></td>
