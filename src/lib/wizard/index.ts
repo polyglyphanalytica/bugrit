@@ -39,6 +39,27 @@ export type {
 } from './recommendation-engine';
 
 // ============================================================
+// Intelligent Tool Advisor
+// ============================================================
+
+export {
+  ToolAdvisor,
+  TOOL_OVERLAP_GROUPS,
+  getCategoryRequirements,
+} from './tool-advisor';
+
+export type {
+  AdvisorSeverity,
+  AdvisorMessage,
+  CoverageAnalysis,
+  CoverageGap,
+  RedundancyAnalysis,
+  RedundantToolGroup,
+  ToolAdvisorResult,
+  PrioritizedTool,
+} from './tool-advisor';
+
+// ============================================================
 // Simple API Functions
 // ============================================================
 

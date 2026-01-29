@@ -11,6 +11,7 @@ import {
   AppType,
   AppSensitivity,
   AICodingAgent,
+  ToolAdvisor,
 } from '@/lib/wizard';
 import { logger } from '@/lib/logger';
 
@@ -127,6 +128,16 @@ export async function POST(request: NextRequest) {
     // Get recommendations
     const recommendations = ScanRecommendationEngine.recommend(input);
 
+    // Run advisor analysis on the recommended selection
+    const advisorResult = ToolAdvisor.analyze(recommendations.selectionState, input);
+
+    // Get top recommendations for bubbling
+    const topRecommendations = ToolAdvisor.getTopRecommendations(
+      recommendations.selectionState,
+      input,
+      10
+    );
+
     return NextResponse.json({
       input,
       // UI-ready selection state with all tools
@@ -136,6 +147,31 @@ export async function POST(request: NextRequest) {
       selectionState: recommendations.selectionState,
       // Full recommendations (includes selectionState as well)
       recommendations,
+      // Intelligent advisor feedback
+      advisor: {
+        score: advisorResult.score,
+        scoreLabel: advisorResult.scoreLabel,
+        verdict: advisorResult.summary.verdict,
+        messages: advisorResult.messages,
+        coverage: {
+          percentage: advisorResult.coverage.coveragePercentage,
+          covered: advisorResult.coverage.coveredCategories,
+          missing: advisorResult.coverage.missingCategories,
+          criticalGaps: advisorResult.coverage.criticalGaps,
+        },
+        redundancy: advisorResult.redundancy,
+        // Tools bubbled to top - most important unselected tools
+        bubbledRecommendations: topRecommendations.map(pt => ({
+          toolId: pt.tool.id,
+          toolName: pt.tool.name,
+          category: pt.tool.category,
+          description: pt.tool.description,
+          priority: pt.priority,
+          reasons: pt.reasons,
+          isEssential: pt.isEssential,
+          credits: pt.tool.credits,
+        })),
+      },
     });
   } catch (error) {
     logger.error('Wizard error', { error });
