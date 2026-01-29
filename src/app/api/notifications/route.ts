@@ -46,6 +46,12 @@ export async function GET(request: NextRequest) {
 
     const notifications = snapshot.docs.map(doc => {
       const data = doc.data();
+      let createdAt: string;
+      try {
+        createdAt = data.createdAt ? toDate(data.createdAt).toISOString() : new Date().toISOString();
+      } catch {
+        createdAt = new Date().toISOString();
+      }
       return {
         id: doc.id,
         type: data.type,
@@ -54,20 +60,26 @@ export async function GET(request: NextRequest) {
         severity: data.severity,
         actionUrl: data.actionUrl,
         actionLabel: data.actionLabel,
-        read: data.read,
-        createdAt: toDate(data.createdAt).toISOString(),
+        read: data.read ?? false,
+        createdAt,
       };
     });
 
-    // Get unread count
-    const unreadSnapshot = await db
-      .collection(COLLECTION)
-      .where('userId', '==', userId)
-      .where('read', '==', false)
-      .count()
-      .get();
-
-    const unreadCount = unreadSnapshot.data().count;
+    // Get unread count (wrapped in try/catch as it may require composite index)
+    let unreadCount = 0;
+    try {
+      const unreadSnapshot = await db
+        .collection(COLLECTION)
+        .where('userId', '==', userId)
+        .where('read', '==', false)
+        .count()
+        .get();
+      unreadCount = unreadSnapshot.data()?.count ?? 0;
+    } catch (countError) {
+      // Fallback: count from already fetched notifications
+      unreadCount = notifications.filter(n => !n.read).length;
+      logger.warn('Failed to get unread count from Firestore, using fallback', { countError });
+    }
 
     return NextResponse.json({
       notifications,

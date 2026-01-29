@@ -240,8 +240,8 @@ export default function HomePage() {
           <ScrollReveal>
             <SectionHeading
               badge="Smart Advisor"
-              title="Never overpay. Never miss a vulnerability."
-              titleGradient="Never miss"
+              title="Never overpay. Stay ahead of vulnerabilities."
+              titleGradient="Stay ahead"
               description="Our intelligent module advisor analyzes your project and recommends exactly what you need — no more, no less."
             />
           </ScrollReveal>
