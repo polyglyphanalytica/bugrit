@@ -120,7 +120,7 @@ function simulateExecution(
 
     // Complete the execution
     const execution = store.getExecution(executionId);
-    const allPassed = execution?.results.every((r) => r.status === 'passed');
+    const allPassed = execution?.results?.every((r) => r.status === 'passed') ?? false;
     store.updateExecution(executionId, {
       status: allPassed ? 'completed' : 'failed',
       completedAt: new Date(),
