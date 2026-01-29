@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateReviewMergePrompt, generateQuickReviewPrompt } from '@/ai/flows/generate-fix';
 import { getDb, COLLECTIONS } from '@/lib/firestore';
 import { logger } from '@/lib/logger';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 
 /**
  * GET /api/fixes/review-prompt
@@ -28,6 +29,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     // Fetch scan details from database
     const scanData = await getScanData(scanId);
 

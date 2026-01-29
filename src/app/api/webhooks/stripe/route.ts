@@ -278,10 +278,10 @@ async function handleCreditPurchase(session: Stripe.Checkout.Session) {
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  const userId = subscription.metadata.userId;
+  const userId = subscription.metadata?.userId;
   // Default to 'starter' (lowest paid tier) if metadata missing - safer than 'free' which would downgrade paid users
-  const tier = (subscription.metadata.tier as TierName) || 'starter';
-  if (!subscription.metadata.tier) {
+  const tier = (subscription.metadata?.tier as TierName) || 'starter';
+  if (!subscription.metadata?.tier) {
     logger.warn('Subscription missing tier metadata in update, defaulting to starter', { subscriptionId: subscription.id });
   }
 
@@ -362,7 +362,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  const userId = subscription.metadata.userId;
+  const userId = subscription.metadata?.userId;
 
   if (!userId) {
     logger.warn('No user ID in deleted subscription metadata, skipping', { subscriptionId: subscription.id });

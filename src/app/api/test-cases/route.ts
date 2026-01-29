@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { store } from '@/lib/store';
 import { logger } from '@/lib/logger';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 
 // GET /api/test-cases - Get all test cases
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     const testCases = store.getAllTestCases();
 
     return NextResponse.json({
@@ -23,6 +27,9 @@ export async function GET() {
 // POST /api/test-cases - Create a new test case
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     const body = await request.json();
 
     const { name, description, category, priority, status, steps, expectedResult } = body;

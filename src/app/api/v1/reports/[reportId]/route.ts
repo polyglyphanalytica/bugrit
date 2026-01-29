@@ -10,8 +10,8 @@ import {
   successResponse,
   handleError,
   Errors,
-  projectStore,
-  reportStore,
+  getProject,
+  getReport,
 } from '@/lib/api';
 
 interface RouteParams {
@@ -23,14 +23,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const keyData = await authenticateRequest(request, 'reports:read');
     const { reportId } = await params;
 
-    const report = reportStore.get(reportId);
+    const report = await getReport(reportId);
 
     if (!report) {
       return Errors.notFound('Report');
     }
 
     // Verify access
-    const project = projectStore.get(report.projectId);
+    const project = await getProject(report.projectId);
     if (!project || project.organizationId !== keyData.organizationId) {
       return Errors.forbidden();
     }

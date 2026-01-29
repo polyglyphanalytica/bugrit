@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCheckoutSession } from '@/lib/subscriptions/stripe';
 import { TierName, TIERS } from '@/lib/subscriptions/tiers';
-import { verifySession } from '@/lib/auth/session';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
+import { verifyIdToken } from '@/lib/auth';
 import { db } from '@/lib/firebase/admin';
 import { canChangeSubscriptionPlan } from '@/lib/billing/dunning';
 import { logger } from '@/lib/logger';
@@ -39,18 +40,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await verifySession();
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    // Extract email from Bearer token if available, otherwise from Firestore
+    let userEmail = '';
+    const authHeader = request.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const decoded = await verifyIdToken(authHeader.slice(7));
+      userEmail = decoded?.email || '';
+    }
+    if (!userEmail) {
+      const emailDoc = await db.collection('users').doc(userId).get();
+      if (emailDoc.exists) {
+        userEmail = emailDoc.data()?.email || '';
+      }
     }
 
     // Check if user is in dunning state (payment past due)
     // Block plan changes until payment is resolved to avoid billing complications
-    const planChangeCheck = await canChangeSubscriptionPlan(user.uid);
+    const planChangeCheck = await canChangeSubscriptionPlan(userId);
     if (!planChangeCheck.allowed) {
       return NextResponse.json(
         { error: planChangeCheck.reason },
@@ -61,7 +71,7 @@ export async function POST(request: NextRequest) {
     // Check if user already has an active subscription
     const existingSubscription = await db
       .collection('subscriptions')
-      .doc(user.uid)
+      .doc(userId)
       .get();
 
     const subData = existingSubscription.data();
@@ -75,7 +85,7 @@ export async function POST(request: NextRequest) {
     // Check for existing Stripe customer ID (from previous credit purchases or canceled subscription)
     let existingCustomerId: string | undefined = subData?.stripeCustomerId;
     if (!existingCustomerId) {
-      const userDoc = await db.collection('users').doc(user.uid).get();
+      const userDoc = await db.collection('users').doc(userId).get();
       if (userDoc.exists) {
         existingCustomerId = userDoc.data()?.stripeCustomerId;
       }
@@ -83,8 +93,8 @@ export async function POST(request: NextRequest) {
 
     // Create checkout session
     const { url } = await createCheckoutSession({
-      userId: user.uid,
-      userEmail: user.email || '',
+      userId,
+      userEmail,
       tier,
       interval,
       customerId: existingCustomerId,

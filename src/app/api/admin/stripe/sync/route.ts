@@ -8,10 +8,10 @@ import { logger } from '@/lib/logger';
  * Sync pricing to Stripe or import from Stripe
  */
 export async function POST(request: NextRequest) {
-  const auth = await verifySuperadmin(request);
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifySuperadmin(request);
+    if (!auth.success) return auth.response;
+
     const body = await request.json();
     const { direction } = body;
 

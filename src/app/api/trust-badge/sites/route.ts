@@ -17,14 +17,14 @@ import { logger } from '@/lib/logger';
 
 // GET - List user's registered sites
 export async function GET(request: NextRequest) {
-  // Authenticate user
-  const authResult = await requireAuthenticatedUser(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-  const userId = authResult;
-
   try {
+    // Authenticate user
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    const userId = authResult;
+
     const sites = await getSitesByOwner(userId);
 
     return NextResponse.json({
@@ -52,14 +52,14 @@ export async function GET(request: NextRequest) {
 
 // POST - Register a new site
 export async function POST(request: NextRequest) {
-  // Authenticate user
-  const authResult = await requireAuthenticatedUser(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
-  }
-  const userId = authResult;
-
   try {
+    // Authenticate user
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    const userId = authResult;
+
     const body = await request.json();
 
     const { domain, siteName, description, category, contactEmail, privacyPolicyUrl } = body;

@@ -8,7 +8,7 @@ import {
   hasPermission,
   MemberRole,
 } from '@/lib/organizations';
-import { verifySession } from '@/lib/auth/session';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { logger } from '@/lib/logger';
 
 interface RouteParams {
@@ -21,14 +21,11 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifySession();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const { orgId } = await params;
-    const userId = user.uid;
 
     // Verify user has permission to view invites
     const members = await getOrganizationMembers(orgId);
@@ -57,14 +54,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifySession();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const { orgId } = await params;
-    const userId = user.uid;
     const { email, role = 'member' } = await request.json();
 
     if (!email || typeof email !== 'string') {
@@ -91,6 +85,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Only owner can invite as admin
     const org = await getOrganization(orgId);
+    if (!org) {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+    }
     if (role === 'admin' && org?.ownerId !== userId) {
       return NextResponse.json({ error: 'Only owner can invite admins' }, { status: 403 });
     }
@@ -121,14 +118,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifySession();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const { orgId } = await params;
-    const userId = user.uid;
     const { token } = await request.json();
 
     if (!token) {

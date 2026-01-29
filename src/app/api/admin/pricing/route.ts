@@ -13,10 +13,10 @@ import { logger } from '@/lib/logger';
  * Get all pricing tiers
  */
 export async function GET(request: NextRequest) {
-  const auth = await verifyAdminPermission(request, 'canManagePricing');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManagePricing');
+    if (!auth.success) return auth.response;
+
     let tiers = await getAllPricingConfigs();
 
     // Initialize default pricing if none exists
@@ -37,10 +37,10 @@ export async function GET(request: NextRequest) {
  * Create a new pricing tier
  */
 export async function POST(request: NextRequest) {
-  const auth = await verifyAdminPermission(request, 'canManagePricing');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManagePricing');
+    if (!auth.success) return auth.response;
+
     const body = await request.json();
 
     // Validate required fields

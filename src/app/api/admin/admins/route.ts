@@ -8,10 +8,10 @@ import { logger } from '@/lib/logger';
  * Get all platform admins
  */
 export async function GET(request: NextRequest) {
-  const auth = await verifySuperadmin(request);
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifySuperadmin(request);
+    if (!auth.success) return auth.response;
+
     const admins = await getAllPlatformAdmins();
     return NextResponse.json({ admins });
   } catch (error) {
@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
  * Add a new platform admin
  */
 export async function POST(request: NextRequest) {
-  const auth = await verifySuperadmin(request);
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifySuperadmin(request);
+    if (!auth.success) return auth.response;
+
     const body = await request.json();
     const { userId, email, role, displayName } = body;
 
@@ -60,10 +60,10 @@ export async function POST(request: NextRequest) {
  * Remove a platform admin
  */
 export async function DELETE(request: NextRequest) {
-  const auth = await verifySuperadmin(request);
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifySuperadmin(request);
+    if (!auth.success) return auth.response;
+
     const body = await request.json();
     const { userId } = body;
 
@@ -80,7 +80,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (error instanceof Error && error.message.includes('last superadmin')) {
+    if (error instanceof Error && (error.message.includes('last superadmin') || error.message.includes('platform owner'))) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     logger.error('Failed to remove admin', { error });

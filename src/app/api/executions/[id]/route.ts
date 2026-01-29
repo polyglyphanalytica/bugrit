@@ -9,10 +9,10 @@ interface RouteParams {
 
 // GET /api/executions/[id] - Get execution status
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const authError = requirePermission(request, 'executions:read');
-  if (authError) return authError;
-
   try {
+    const authError = requirePermission(request, 'executions:read');
+    if (authError) return authError;
+
     const { id } = await params;
     const execution = store.getExecution(id);
 

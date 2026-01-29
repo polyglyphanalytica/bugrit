@@ -9,10 +9,10 @@ interface RouteParams {
 
 // GET /api/scripts/[id] - Get a specific script
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const authError = requirePermission(request, 'scripts:read');
-  if (authError) return authError;
-
   try {
+    const authError = requirePermission(request, 'scripts:read');
+    if (authError) return authError;
+
     const { id } = await params;
     const script = store.getTestScript(id);
 
@@ -32,10 +32,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 // DELETE /api/scripts/[id] - Delete a script
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  const authError = requirePermission(request, 'scripts:submit');
-  if (authError) return authError;
-
   try {
+    const authError = requirePermission(request, 'scripts:submit');
+    if (authError) return authError;
+
     const { id } = await params;
     const deleted = store.deleteTestScript(id);
 

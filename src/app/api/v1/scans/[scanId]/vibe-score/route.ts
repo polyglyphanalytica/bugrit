@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { calculateVibeScore } from '@/lib/vibe-score/calculator';
 import { getDb, COLLECTIONS } from '@/lib/firestore';
 import { logger } from '@/lib/logger';
+import { authenticateRequest } from '@/lib/api/auth';
+import { handleError } from '@/lib/api/errors';
 
 interface RouteParams {
   params: Promise<{ scanId: string }>;
@@ -13,9 +15,10 @@ interface RouteParams {
  * Get the Vibe Score for a completed scan.
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const { scanId } = await params;
-
   try {
+    const { scanId } = await params;
+    const context = await authenticateRequest(request, 'scans:read');
+
     const scan = await getScanData(scanId);
 
     if (!scan) {
@@ -34,6 +37,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Calculate Vibe Score from scan results
     const vibeScore = calculateVibeScore(scan.results);
+    if (!vibeScore) {
+      return NextResponse.json(
+        { error: 'Failed to calculate vibe score' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       scanId,
@@ -75,11 +84,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       calculatedAt: new Date().toISOString(),
     });
   } catch (error) {
-    logger.error('Error calculating Vibe Score', { scanId, error });
-    return NextResponse.json(
-      { error: 'Failed to calculate Vibe Score' },
-      { status: 500 }
-    );
+    return handleError(error);
   }
 }
 

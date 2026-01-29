@@ -8,10 +8,10 @@ import { logger } from '@/lib/logger';
  * Get audit logs
  */
 export async function GET(request: NextRequest) {
-  const auth = await verifyAdminPermission(request, 'canViewAuditLogs');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canViewAuditLogs');
+    if (!auth.success) return auth.response;
+
     const { searchParams } = new URL(request.url);
 
     const options: {

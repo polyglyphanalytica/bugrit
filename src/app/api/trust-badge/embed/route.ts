@@ -43,46 +43,46 @@ interface EmbedResponse {
 }
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const siteId = searchParams.get('siteId');
-  const size = (searchParams.get('size') || 'medium') as BadgeSize;
-  const theme = (searchParams.get('theme') || 'auto') as BadgeTheme;
-  const position = (searchParams.get('position') || 'inline') as BadgePosition;
-
-  if (!siteId) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Missing siteId parameter',
-        usage: 'GET /api/trust-badge/embed?siteId=YOUR_SITE_ID&size=medium&theme=auto&position=inline',
-      },
-      { status: 400 }
-    );
-  }
-
-  // Validate parameters
-  if (!['small', 'medium', 'large'].includes(size)) {
-    return NextResponse.json(
-      { success: false, error: 'Invalid size. Use: small, medium, or large' },
-      { status: 400 }
-    );
-  }
-
-  if (!['light', 'dark', 'auto'].includes(theme)) {
-    return NextResponse.json(
-      { success: false, error: 'Invalid theme. Use: light, dark, or auto' },
-      { status: 400 }
-    );
-  }
-
-  if (!['inline', 'fixed-bottom-right', 'fixed-bottom-left'].includes(position)) {
-    return NextResponse.json(
-      { success: false, error: 'Invalid position. Use: inline, fixed-bottom-right, or fixed-bottom-left' },
-      { status: 400 }
-    );
-  }
-
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const siteId = searchParams.get('siteId');
+    const size = (searchParams.get('size') || 'medium') as BadgeSize;
+    const theme = (searchParams.get('theme') || 'auto') as BadgeTheme;
+    const position = (searchParams.get('position') || 'inline') as BadgePosition;
+
+    if (!siteId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Missing siteId parameter',
+          usage: 'GET /api/trust-badge/embed?siteId=YOUR_SITE_ID&size=medium&theme=auto&position=inline',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate parameters
+    if (!['small', 'medium', 'large'].includes(size)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid size. Use: small, medium, or large' },
+        { status: 400 }
+      );
+    }
+
+    if (!['light', 'dark', 'auto'].includes(theme)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid theme. Use: light, dark, or auto' },
+        { status: 400 }
+      );
+    }
+
+    if (!['inline', 'fixed-bottom-right', 'fixed-bottom-left'].includes(position)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid position. Use: inline, fixed-bottom-right, or fixed-bottom-left' },
+        { status: 400 }
+      );
+    }
+
     // Fetch site from database
     const site = await getRegisteredSite(siteId);
 
@@ -135,7 +135,7 @@ ${scriptMinified}`;
 
     return NextResponse.json(response);
   } catch (error) {
-    logger.error('[TrustBadge] Embed API error', { siteId, error });
+    logger.error('[TrustBadge] Embed API error', { error });
     return NextResponse.json(
       { success: false, error: 'Internal error' },
       { status: 500 }

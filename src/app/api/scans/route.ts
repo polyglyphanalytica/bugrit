@@ -765,41 +765,46 @@ async function downloadNpmPackage(packageName: string, version: string, targetDi
 
 // Cancel a running scan
 export async function DELETE(request: NextRequest) {
-  // Authenticate user
-  const authResult = await requireAuthenticatedUser(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
+  try {
+    // Authenticate user
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    const userId = authResult;
+
+    const { searchParams } = new URL(request.url);
+    const scanId = searchParams.get('scanId');
+
+    if (!scanId) {
+      return NextResponse.json({ error: 'Missing scanId' }, { status: 400 });
+    }
+
+    const scan = await getScan(scanId);
+
+    if (!scan) {
+      return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
+    }
+
+    // Verify ownership - user can only cancel their own scans
+    if (scan.userId !== userId) {
+      return NextResponse.json({ error: 'Not authorized to cancel this scan' }, { status: 403 });
+    }
+
+    if (scan.status === 'running') {
+      scan.status = 'failed';
+      scan.error = 'Cancelled by user';
+      scan.completedAt = new Date().toISOString();
+      await saveScan(scan);
+
+      // Release the reserved credits
+      await releaseReservation(scanId);
+      logger.info('Released credit reservation for cancelled scan', { scanId, userId });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    logger.error('Error cancelling scan', { error });
+    return NextResponse.json({ error: 'Failed to cancel scan' }, { status: 500 });
   }
-  const userId = authResult;
-
-  const { searchParams } = new URL(request.url);
-  const scanId = searchParams.get('scanId');
-
-  if (!scanId) {
-    return NextResponse.json({ error: 'Missing scanId' }, { status: 400 });
-  }
-
-  const scan = await getScan(scanId);
-
-  if (!scan) {
-    return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
-  }
-
-  // Verify ownership - user can only cancel their own scans
-  if (scan.userId !== userId) {
-    return NextResponse.json({ error: 'Not authorized to cancel this scan' }, { status: 403 });
-  }
-
-  if (scan.status === 'running') {
-    scan.status = 'failed';
-    scan.error = 'Cancelled by user';
-    scan.completedAt = new Date().toISOString();
-    await saveScan(scan);
-
-    // Release the reserved credits
-    await releaseReservation(scanId);
-    logger.info('Released credit reservation for cancelled scan', { scanId, userId });
-  }
-
-  return NextResponse.json({ success: true });
 }

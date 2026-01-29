@@ -21,26 +21,31 @@ export async function GET(
   request: NextRequest,
   { params }: BadgeParams
 ) {
-  const { owner, repo } = await params;
-  const searchParams = request.nextUrl.searchParams;
+  try {
+    const { owner, repo } = await params;
+    const searchParams = request.nextUrl.searchParams;
 
-  // Get optional overrides from query params (for testing/preview)
-  const scoreOverride = searchParams.get('score');
-  const gradeOverride = searchParams.get('grade');
+    // Get optional overrides from query params (for testing/preview)
+    const scoreOverride = searchParams.get('score');
+    const gradeOverride = searchParams.get('grade');
 
-  // Fetch actual score from database (or use override for testing)
-  const score = scoreOverride ? parseInt(scoreOverride) : await getRepoScore(owner, repo);
-  const grade = gradeOverride || scoreToGrade(score);
+    // Fetch actual score from database (or use override for testing)
+    const score = scoreOverride ? parseInt(scoreOverride) : await getRepoScore(owner, repo);
+    const grade = gradeOverride || scoreToGrade(score);
 
-  // Generate SVG badge
-  const svg = generateBadgeSvg(score, grade);
+    // Generate SVG badge
+    const svg = generateBadgeSvg(score, grade);
 
-  return new NextResponse(svg, {
-    headers: {
-      'Content-Type': 'image/svg+xml',
-      'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
-    },
-  });
+    return new NextResponse(svg, {
+      headers: {
+        'Content-Type': 'image/svg+xml',
+        'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
+      },
+    });
+  } catch (error) {
+    logger.error('Error generating badge', { error });
+    return NextResponse.json({ error: 'Failed to generate badge' }, { status: 500 });
+  }
 }
 
 async function getRepoScore(owner: string, repo: string): Promise<number> {

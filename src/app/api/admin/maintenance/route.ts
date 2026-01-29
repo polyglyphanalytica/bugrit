@@ -13,10 +13,10 @@ import { logger } from '@/lib/logger';
  * Preview what data would be deleted by retention policy
  */
 export async function GET(request: NextRequest) {
-  const auth = await verifyAdminPermission(request, 'canViewAuditLogs');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canViewAuditLogs');
+    if (!auth.success) return auth.response;
+
     const { searchParams } = new URL(request.url);
     const organizationId = searchParams.get('organizationId') || undefined;
 
@@ -45,10 +45,10 @@ export async function GET(request: NextRequest) {
  * - tier: (optional override for 'data-retention-single')
  */
 export async function POST(request: NextRequest) {
-  const auth = await verifyAdminPermission(request, 'canManageStripeConfig');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManageStripeConfig');
+    if (!auth.success) return auth.response;
+
     const body = await request.json();
     const action = body.action || 'data-retention';
 

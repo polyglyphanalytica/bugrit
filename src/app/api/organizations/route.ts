@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createOrganization, getUserOrganizations } from '@/lib/organizations';
-import { verifySession } from '@/lib/auth/session';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
+import { verifyIdToken } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 
 /**
  * GET /api/organizations
  * List user's organizations
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const user = await verifySession();
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
-    if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    const organizations = await getUserOrganizations(user.uid);
+    const organizations = await getUserOrganizations(userId);
 
     return NextResponse.json({ organizations });
   } catch (error) {
@@ -33,10 +32,20 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await verifySession();
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
-    if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    // Get user email from Bearer token if available
+    let userEmail = '';
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const decoded = await verifyIdToken(authHeader.substring(7));
+        userEmail = decoded?.email || '';
+      } catch {
+        // email is optional here, userId is sufficient
+      }
     }
 
     const { name } = await request.json();
@@ -48,7 +57,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const organization = await createOrganization(user.uid, user.email || '', name.trim());
+    const organization = await createOrganization(userId, userEmail, name.trim());
 
     return NextResponse.json({ organization }, { status: 201 });
   } catch (error) {

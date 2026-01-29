@@ -9,10 +9,10 @@ interface RouteParams {
 
 // POST /api/scripts/[id]/promote - Promote script to regression suite
 export async function POST(request: NextRequest, { params }: RouteParams) {
-  const authError = requirePermission(request, 'scripts:submit');
-  if (authError) return authError;
-
   try {
+    const authError = requirePermission(request, 'scripts:submit');
+    if (authError) return authError;
+
     const { id } = await params;
     const script = store.promoteToRegression(id);
 

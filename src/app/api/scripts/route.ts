@@ -5,10 +5,10 @@ import { logger } from '@/lib/logger';
 
 // GET /api/scripts - Get all test scripts
 export async function GET(request: NextRequest) {
-  const authError = requirePermission(request, 'scripts:read');
-  if (authError) return authError;
-
   try {
+    const authError = requirePermission(request, 'scripts:read');
+    if (authError) return authError;
+
     const { searchParams } = new URL(request.url);
     const regression = searchParams.get('regression') === 'true';
 
@@ -31,10 +31,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/scripts - Submit a new test script
 export async function POST(request: NextRequest) {
-  const authError = requirePermission(request, 'scripts:submit');
-  if (authError) return authError;
-
   try {
+    const authError = requirePermission(request, 'scripts:submit');
+    if (authError) return authError;
+
     const body = await request.json();
 
     const { name, description, code, targetUrl, tags, appId, buildId, runnerType, targetPlatform } = body;

@@ -16,12 +16,11 @@ interface RouteContext {
  * Get a specific credit package
  */
 export async function GET(request: NextRequest, context: RouteContext) {
-  const auth = await verifyAdminPermission(request, 'canManagePricing');
-  if (!auth.success) return auth.response;
-
-  const { packageId } = await context.params;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManagePricing');
+    if (!auth.success) return auth.response;
+
+    const { packageId } = await context.params;
     const pkg = await getCreditPackage(packageId);
 
     if (!pkg) {
@@ -40,12 +39,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
  * Update a credit package
  */
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  const auth = await verifyAdminPermission(request, 'canManagePricing');
-  if (!auth.success) return auth.response;
-
-  const { packageId } = await context.params;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManagePricing');
+    if (!auth.success) return auth.response;
+
+    const { packageId } = await context.params;
     const body = await request.json();
 
     // Check if package exists
@@ -69,12 +67,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
  * Delete a credit package
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
-  const auth = await verifyAdminPermission(request, 'canManagePricing');
-  if (!auth.success) return auth.response;
-
-  const { packageId } = await context.params;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManagePricing');
+    if (!auth.success) return auth.response;
+
+    const { packageId } = await context.params;
+
     // Check if package exists
     const existing = await getCreditPackage(packageId);
     if (!existing) {

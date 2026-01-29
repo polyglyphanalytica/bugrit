@@ -13,23 +13,16 @@ import {
   type NotificationEventType,
 } from '@/lib/notifications/preferences';
 import { logger } from '@/lib/logger';
-import { verifySession } from '@/lib/auth/session';
-
-async function getUserFromSession(): Promise<string | null> {
-  const session = await verifySession();
-  return session?.uid || null;
-}
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 
 /**
  * Get user notification preferences
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserFromSession();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const preferences = await getUserNotificationPreferences(userId);
 
@@ -57,11 +50,9 @@ export async function GET() {
  */
 export async function PATCH(request: NextRequest) {
   try {
-    const userId = await getUserFromSession();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const body = await request.json();
 

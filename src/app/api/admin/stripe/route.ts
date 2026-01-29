@@ -9,10 +9,10 @@ import { logger } from '@/lib/logger';
  * Get Stripe configuration status
  */
 export async function GET(request: NextRequest) {
-  const auth = await verifySuperadmin(request);
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifySuperadmin(request);
+    if (!auth.success) return auth.response;
+
     const config = await getStripeConfig();
     const connectionTest = config?.isConfigured ? await testStripeConnection() : null;
 
@@ -31,10 +31,10 @@ export async function GET(request: NextRequest) {
  * Update Stripe configuration
  */
 export async function POST(request: NextRequest) {
-  const auth = await verifySuperadmin(request);
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifySuperadmin(request);
+    if (!auth.success) return auth.response;
+
     const body = await request.json();
     const { secretKey, publishableKey, webhookSecret, mode } = body;
 
