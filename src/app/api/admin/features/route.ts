@@ -8,10 +8,10 @@ import { logger } from '@/lib/logger';
  * Get all feature flags
  */
 export async function GET(request: NextRequest) {
-  const auth = await verifyAdminPermission(request, 'canManageFeatures');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManageFeatures');
+    if (!auth.success) return auth.response;
+
     const flags = await getAllFeatureFlags();
     return NextResponse.json({ flags });
   } catch (error) {
@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
  * Create a new feature flag
  */
 export async function POST(request: NextRequest) {
-  const auth = await verifyAdminPermission(request, 'canManageFeatures');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManageFeatures');
+    if (!auth.success) return auth.response;
+
     const body = await request.json();
 
     // Validate required fields

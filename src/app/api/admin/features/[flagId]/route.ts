@@ -12,10 +12,10 @@ interface RouteParams {
  * Get a specific feature flag
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const auth = await verifyAdminPermission(request, 'canManageFeatures');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManageFeatures');
+    if (!auth.success) return auth.response;
+
     const { flagId } = await params;
     const flag = await getFeatureFlag(flagId);
 
@@ -35,10 +35,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * Update a feature flag
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const auth = await verifyAdminPermission(request, 'canManageFeatures');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManageFeatures');
+    if (!auth.success) return auth.response;
+
     const { flagId } = await params;
     const body = await request.json();
 
@@ -63,10 +63,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  * Delete a feature flag
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  const auth = await verifyAdminPermission(request, 'canManageFeatures');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManageFeatures');
+    if (!auth.success) return auth.response;
+
     const { flagId } = await params;
 
     const existing = await getFeatureFlag(flagId);

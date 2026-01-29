@@ -10,9 +10,9 @@ import {
   successResponse,
   handleError,
   Errors,
-  projectStore,
-  scanStore,
-  generateReport,
+  getProject,
+  getScan,
+  generateReportFromScan,
   getReportByScan,
 } from '@/lib/api';
 
@@ -25,14 +25,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const keyData = await authenticateRequest(request, 'reports:read');
     const { scanId } = await params;
 
-    const scan = scanStore.get(scanId);
+    const scan = await getScan(scanId);
 
     if (!scan) {
       return Errors.notFound('Scan');
     }
 
     // Verify access
-    const project = projectStore.get(scan.projectId);
+    const project = await getProject(scan.projectId);
     if (!project || project.organizationId !== keyData.organizationId) {
       return Errors.forbidden();
     }
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Generate if not exists
     if (!report) {
-      report = await generateReport(scanId);
+      report = await generateReportFromScan(scanId);
     }
 
     if (!report) {

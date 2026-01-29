@@ -4,7 +4,7 @@ import type {NextConfig} from 'next';
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: 'standalone',
   typescript: {
     // Type errors are checked during builds
     // Set to true only in development for faster iteration

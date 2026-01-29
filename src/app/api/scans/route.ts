@@ -423,13 +423,15 @@ interface ScanOptions {
 }
 
 async function runScanInBackground(scanId: string, options: ScanOptions) {
-  const scan = await getScan(scanId);
-  if (!scan) return;
-
   let tempDir: string | null = null;
   let linesOfCode = 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let scan: any = null;
 
   try {
+    scan = await getScan(scanId);
+    if (!scan) return;
+
     // Update status to running
     scan.status = 'running';
     scan.startedAt = new Date().toISOString();
@@ -601,30 +603,34 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
     }
   } catch (error) {
     logger.error('Scan failed', { scanId, error });
-    scan.status = 'failed';
-    scan.error = error instanceof Error ? error.message : 'Unknown error';
-    scan.completedAt = new Date().toISOString();
-    await saveScan(scan);
+    if (scan) {
+      scan.status = 'failed';
+      scan.error = error instanceof Error ? error.message : 'Unknown error';
+      scan.completedAt = new Date().toISOString();
+      await saveScan(scan);
+    }
 
     // Release the reserved credits since scan failed
     await releaseReservation(scanId);
     logger.info('Released credit reservation for failed scan', { scanId });
 
     // Send notification for scan failure
-    try {
-      const userEmail = await getUserEmail(options.userId);
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bugrit.com';
+    if (scan) {
+      try {
+        const userEmail = await getUserEmail(options.userId);
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bugrit.com';
 
-      await notifyScanFailed({
-        userId: options.userId,
-        userEmail,
-        scanId,
-        applicationName: scan.applicationId,
-        error: scan.error || 'Unknown error',
-        scanUrl: `${baseUrl}/scans/${scanId}`,
-      });
-    } catch (notifyError) {
-      logger.warn('Failed to send scan failure notification', { scanId, error: notifyError });
+        await notifyScanFailed({
+          userId: options.userId,
+          userEmail,
+          scanId,
+          applicationName: scan.applicationId,
+          error: scan.error || 'Unknown error',
+          scanUrl: `${baseUrl}/scans/${scanId}`,
+        });
+      } catch (notifyError) {
+        logger.warn('Failed to send scan failure notification', { scanId, error: notifyError });
+      }
     }
   } finally {
     // Cleanup temp directory
@@ -765,41 +771,46 @@ async function downloadNpmPackage(packageName: string, version: string, targetDi
 
 // Cancel a running scan
 export async function DELETE(request: NextRequest) {
-  // Authenticate user
-  const authResult = await requireAuthenticatedUser(request);
-  if (authResult instanceof NextResponse) {
-    return authResult;
+  try {
+    // Authenticate user
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) {
+      return authResult;
+    }
+    const userId = authResult;
+
+    const { searchParams } = new URL(request.url);
+    const scanId = searchParams.get('scanId');
+
+    if (!scanId) {
+      return NextResponse.json({ error: 'Missing scanId' }, { status: 400 });
+    }
+
+    const scan = await getScan(scanId);
+
+    if (!scan) {
+      return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
+    }
+
+    // Verify ownership - user can only cancel their own scans
+    if (scan.userId !== userId) {
+      return NextResponse.json({ error: 'Not authorized to cancel this scan' }, { status: 403 });
+    }
+
+    if (scan.status === 'running') {
+      scan.status = 'failed';
+      scan.error = 'Cancelled by user';
+      scan.completedAt = new Date().toISOString();
+      await saveScan(scan);
+
+      // Release the reserved credits
+      await releaseReservation(scanId);
+      logger.info('Released credit reservation for cancelled scan', { scanId, userId });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    logger.error('Error cancelling scan', { error });
+    return NextResponse.json({ error: 'Failed to cancel scan' }, { status: 500 });
   }
-  const userId = authResult;
-
-  const { searchParams } = new URL(request.url);
-  const scanId = searchParams.get('scanId');
-
-  if (!scanId) {
-    return NextResponse.json({ error: 'Missing scanId' }, { status: 400 });
-  }
-
-  const scan = await getScan(scanId);
-
-  if (!scan) {
-    return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
-  }
-
-  // Verify ownership - user can only cancel their own scans
-  if (scan.userId !== userId) {
-    return NextResponse.json({ error: 'Not authorized to cancel this scan' }, { status: 403 });
-  }
-
-  if (scan.status === 'running') {
-    scan.status = 'failed';
-    scan.error = 'Cancelled by user';
-    scan.completedAt = new Date().toISOString();
-    await saveScan(scan);
-
-    // Release the reserved credits
-    await releaseReservation(scanId);
-    logger.info('Released credit reservation for cancelled scan', { scanId, userId });
-  }
-
-  return NextResponse.json({ success: true });
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateReviewMergePrompt, generateQuickReviewPrompt } from '@/ai/flows/generate-fix';
 import { getDb, COLLECTIONS } from '@/lib/firestore';
 import { logger } from '@/lib/logger';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 
 /**
  * GET /api/fixes/review-prompt
@@ -15,19 +16,22 @@ import { logger } from '@/lib/logger';
  * Returns the prompt as plain text (for easy copy/paste) or JSON.
  */
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const scanId = searchParams.get('scanId');
-  const format = searchParams.get('format') || 'full';
-  const responseFormat = searchParams.get('response') || 'text';
-
-  if (!scanId) {
-    return NextResponse.json(
-      { error: 'scanId is required' },
-      { status: 400 }
-    );
-  }
-
   try {
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+
+    const { searchParams } = new URL(request.url);
+    const scanId = searchParams.get('scanId');
+    const format = searchParams.get('format') || 'full';
+    const responseFormat = searchParams.get('response') || 'text';
+
+    if (!scanId) {
+      return NextResponse.json(
+        { error: 'scanId is required' },
+        { status: 400 }
+      );
+    }
+
     // Fetch scan details from database
     const scanData = await getScanData(scanId);
 

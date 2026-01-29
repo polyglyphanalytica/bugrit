@@ -17,10 +17,10 @@ interface RouteParams {
  * Get a specific pricing tier
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const auth = await verifyAdminPermission(request, 'canManagePricing');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManagePricing');
+    if (!auth.success) return auth.response;
+
     const { tierName } = await params;
     const tier = await getPricingConfig(tierName);
 
@@ -43,10 +43,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * Update a pricing tier
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
-  const auth = await verifyAdminPermission(request, 'canManagePricing');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManagePricing');
+    if (!auth.success) return auth.response;
+
     const { tierName } = await params;
     const body = await request.json();
 
@@ -88,10 +88,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  * Delete a pricing tier
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  const auth = await verifyAdminPermission(request, 'canManagePricing');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManagePricing');
+    if (!auth.success) return auth.response;
+
     const { tierName } = await params;
 
     // Check tier exists

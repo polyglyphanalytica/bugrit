@@ -1,25 +1,18 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createBillingPortalSession } from '@/lib/subscriptions/stripe';
 import { db } from '@/lib/firebase/admin';
-import { verifySession } from '@/lib/auth/session';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { logger } from '@/lib/logger';
 
 /**
  * POST /api/subscription/portal
  * Create a Stripe billing portal session
  */
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    const user = await verifySession();
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
-
-    const userId = user.uid;
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     // Get Stripe customer ID - check both subscriptions and users collections
     let stripeCustomerId: string | undefined;

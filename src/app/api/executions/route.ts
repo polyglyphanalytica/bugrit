@@ -6,10 +6,10 @@ import { logger } from '@/lib/logger';
 
 // GET /api/executions - Get all executions
 export async function GET(request: NextRequest) {
-  const authError = requirePermission(request, 'executions:read');
-  if (authError) return authError;
-
   try {
+    const authError = requirePermission(request, 'executions:read');
+    if (authError) return authError;
+
     const executions = store.getAllExecutions();
 
     return NextResponse.json({
@@ -27,10 +27,10 @@ export async function GET(request: NextRequest) {
 
 // POST /api/executions - Trigger a new execution
 export async function POST(request: NextRequest) {
-  const authError = requirePermission(request, 'executions:trigger');
-  if (authError) return authError;
-
   try {
+    const authError = requirePermission(request, 'executions:trigger');
+    if (authError) return authError;
+
     const body = await request.json();
 
     const { scriptIds, browsers, nativePlatforms } = body;
@@ -120,7 +120,7 @@ function simulateExecution(
 
     // Complete the execution
     const execution = store.getExecution(executionId);
-    const allPassed = execution?.results.every((r) => r.status === 'passed');
+    const allPassed = execution?.results?.every((r) => r.status === 'passed') ?? false;
     store.updateExecution(executionId, {
       status: allPassed ? 'completed' : 'failed',
       completedAt: new Date(),

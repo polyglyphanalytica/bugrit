@@ -348,24 +348,29 @@ function getCategoryDescription(category: ToolCategory): string {
 
 // Also support GET for simple balance check
 export async function GET(req: NextRequest) {
-  const user = await getUserFromRequest(req);
+  try {
+    const user = await getUserFromRequest(req);
 
-  if (!user) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const billing = await getUserBilling(user.userId, user.tier);
+
+    return NextResponse.json({
+      balance: {
+        remaining: billing.credits.remaining,
+        included: billing.credits.included,
+        used: billing.credits.used,
+      },
+      tier: user.tier,
+      overageEnabled: billing.overageRate !== null,
+    });
+  } catch (error) {
+    logger.error('Error fetching billing balance', { error });
+    return NextResponse.json({ error: 'Failed to fetch billing balance' }, { status: 500 });
   }
-
-  const billing = await getUserBilling(user.userId, user.tier);
-
-  return NextResponse.json({
-    balance: {
-      remaining: billing.credits.remaining,
-      included: billing.credits.included,
-      used: billing.credits.used,
-    },
-    tier: user.tier,
-    overageEnabled: billing.overageRate !== null,
-  });
 }

@@ -16,10 +16,6 @@ import { logger } from '@/lib/logger';
  */
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const siteId = searchParams.get('siteId');
-  const domain = searchParams.get('domain');
-
   // CORS headers for cross-origin script access
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -28,19 +24,23 @@ export async function GET(request: NextRequest) {
     'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
   };
 
-  // If missing parameters, show advertising badge
-  if (!siteId || !domain) {
-    return NextResponse.json(
-      {
-        valid: false,
-        mode: 'advertising',
-        reason: 'missing_params',
-      },
-      { headers: corsHeaders }
-    );
-  }
-
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const siteId = searchParams.get('siteId');
+    const domain = searchParams.get('domain');
+
+    // If missing parameters, show advertising badge
+    if (!siteId || !domain) {
+      return NextResponse.json(
+        {
+          valid: false,
+          mode: 'advertising',
+          reason: 'missing_params',
+        },
+        { headers: corsHeaders }
+      );
+    }
+
     // Fetch site from database
     const site = await getRegisteredSite(siteId);
 

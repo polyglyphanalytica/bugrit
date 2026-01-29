@@ -14,7 +14,18 @@
 #    - GCP_SA_KEY: Service account JSON key (base64 encoded)
 #    - FIREBASE_SERVICE_ACCOUNT: Firebase service account JSON key
 #
-# 3. Enable required GCP APIs:
+# 3. Create these secrets in Google Cloud Secret Manager:
+#    - FIREBASE_SERVICE_ACCOUNT_KEY: Firebase Admin SDK service account JSON
+#    - ADMIN_ENCRYPTION_KEY: 32-char encryption key (openssl rand -hex 16)
+#    - SUPERADMIN_EMAIL: Primary superadmin email address
+#    - STRIPE_SECRET_KEY: Stripe secret API key
+#    - STRIPE_WEBHOOK_SECRET: Stripe webhook signing secret
+#    - FIREBASE_API_KEY: Firebase client API key (for build-time embedding)
+#    - STRIPE_PUBLISHABLE_KEY: Stripe publishable key (for build-time embedding)
+#    - FIREBASE_APP_ID: Firebase app ID (for build-time embedding)
+#    - FIREBASE_MESSAGING_SENDER_ID: Firebase messaging sender ID (for build-time embedding)
+#
+# 4. Enable required GCP APIs:
 #    - Cloud Build API
 #    - Cloud Run API
 #    - Artifact Registry API
@@ -110,9 +121,25 @@ jobs:
             --description="Bugrit Docker images" \
             --project=${{ env.PROJECT_ID }}
 
+      - name: Fetch NEXT_PUBLIC build args from Secret Manager
+        id: build_secrets
+        run: |
+          echo "FIREBASE_API_KEY=$(gcloud secrets versions access latest --secret=FIREBASE_API_KEY --project=${{ env.PROJECT_ID }} 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
+          echo "STRIPE_PUB_KEY=$(gcloud secrets versions access latest --secret=STRIPE_PUBLISHABLE_KEY --project=${{ env.PROJECT_ID }} 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
+          echo "FIREBASE_APP_ID=$(gcloud secrets versions access latest --secret=FIREBASE_APP_ID --project=${{ env.PROJECT_ID }} 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
+          echo "FIREBASE_SENDER_ID=$(gcloud secrets versions access latest --secret=FIREBASE_MESSAGING_SENDER_ID --project=${{ env.PROJECT_ID }} 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
+
       - name: Build and push Docker image
         run: |
           docker build \
+            --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ steps.build_secrets.outputs.FIREBASE_API_KEY }}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ env.PROJECT_ID }}.firebaseapp.com" \
+            --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ env.PROJECT_ID }}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="${{ env.PROJECT_ID }}.appspot.com" \
+            --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="${{ steps.build_secrets.outputs.FIREBASE_SENDER_ID }}" \
+            --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="${{ steps.build_secrets.outputs.FIREBASE_APP_ID }}" \
+            --build-arg NEXT_PUBLIC_APP_URL="https://${{ env.SERVICE_NAME }}-${{ env.PROJECT_ID }}.run.app" \
+            --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ steps.build_secrets.outputs.STRIPE_PUB_KEY }}" \
             -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
             -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.SERVICE_NAME }}:latest \
             .
@@ -137,15 +164,12 @@ jobs:
             NODE_ENV=production
             PUPPETEER_SKIP_DOWNLOAD=true
             PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ env.PROJECT_ID }}.firebaseapp.com
-            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ env.PROJECT_ID }}
-            NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ env.PROJECT_ID }}.appspot.com
             FIREBASE_PROJECT_ID=${{ env.PROJECT_ID }}
             GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }}
           secrets: |
-            NEXT_PUBLIC_FIREBASE_API_KEY=FIREBASE_API_KEY:latest
             FIREBASE_SERVICE_ACCOUNT_KEY=FIREBASE_SERVICE_ACCOUNT_KEY:latest
             ADMIN_ENCRYPTION_KEY=ADMIN_ENCRYPTION_KEY:latest
+            SUPERADMIN_EMAIL=SUPERADMIN_EMAIL:latest
             STRIPE_SECRET_KEY=STRIPE_SECRET_KEY:latest
             STRIPE_WEBHOOK_SECRET=STRIPE_WEBHOOK_SECRET:latest
 
@@ -157,9 +181,31 @@ jobs:
     needs: build-and-deploy-cloud-run
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Fetch NEXT_PUBLIC env vars from Secret Manager
+        id: hosting_secrets
+        run: |
+          echo "FIREBASE_API_KEY=$(gcloud secrets versions access latest --secret=FIREBASE_API_KEY --project=${{ env.PROJECT_ID }} 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
+          echo "STRIPE_PUB_KEY=$(gcloud secrets versions access latest --secret=STRIPE_PUBLISHABLE_KEY --project=${{ env.PROJECT_ID }} 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
+          echo "FIREBASE_APP_ID=$(gcloud secrets versions access latest --secret=FIREBASE_APP_ID --project=${{ env.PROJECT_ID }} 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
+          echo "FIREBASE_SENDER_ID=$(gcloud secrets versions access latest --secret=FIREBASE_MESSAGING_SENDER_ID --project=${{ env.PROJECT_ID }} 2>/dev/null || echo '')" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -174,6 +220,14 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ steps.hosting_secrets.outputs.FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ env.PROJECT_ID }}.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ env.PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ env.PROJECT_ID }}.appspot.com
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ steps.hosting_secrets.outputs.FIREBASE_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ steps.hosting_secrets.outputs.FIREBASE_APP_ID }}
+          NEXT_PUBLIC_APP_URL: https://${{ env.PROJECT_ID }}.web.app
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ steps.hosting_secrets.outputs.STRIPE_PUB_KEY }}
 
       - name: Deploy to Firebase Hosting
         uses: FirebaseExtended/action-hosting-deploy@v0

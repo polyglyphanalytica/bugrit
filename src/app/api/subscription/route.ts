@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/admin';
-import { verifySession } from '@/lib/auth/session';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { getGracePeriodInfo } from '@/lib/billing/dunning';
 import { logger } from '@/lib/logger';
 
@@ -8,18 +8,11 @@ import { logger } from '@/lib/logger';
  * GET /api/subscription
  * Get current user's subscription status
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const user = await verifySession();
-
-    if (!user) {
-      return NextResponse.json(
-        { subscription: { tier: 'free', status: 'none', scansUsedThisMonth: 0, projectCount: 0 } },
-        { status: 200 }
-      );
-    }
-
-    const userId = user.uid;
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     // Get subscription from Firestore
     const subscriptionDoc = await db

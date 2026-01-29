@@ -70,6 +70,7 @@ export {
   reportStore,
   // Additional helpers
   generateReport,
+  generateReportFromScan,
   getReportsByProject,
   startScan,
   completeScan,

@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth } from '@/lib/firebase-admin';
+import { verifyIdToken } from '@/lib/auth';
 import { isPlatformAdminByEmail } from '@/lib/admin/service';
 import { logger } from '@/lib/logger';
 
 /**
  * GET /api/auth/check-admin
  * Check if the current user is a platform admin
+ *
+ * Supports:
+ * 1. Bearer token (Authorization header) — uses verifyIdToken with JWT decode fallback
+ * 2. Session cookie — requires Firebase Admin SDK
  */
 export async function GET(request: NextRequest) {
   try {
@@ -20,12 +25,12 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ isAdmin: false, error: 'Not authenticated' }, { status: 401 });
       }
 
-      // For cookie-based auth, we'll verify via Firebase Admin
+      // Session cookie verification requires Firebase Admin SDK
       try {
         const auth = getAdminAuth();
         if (!auth) {
-          logger.error('Firebase Admin not initialized');
-          return NextResponse.json({ isAdmin: false, error: 'Server error' }, { status: 500 });
+          // Admin SDK unavailable — can't verify session cookies
+          return NextResponse.json({ isAdmin: false });
         }
         const decodedToken = await auth.verifySessionCookie(sessionCookie);
         const email = decodedToken.email;
@@ -42,23 +47,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Extract the token
+    // Extract the Bearer token and verify it
+    // verifyIdToken has a JWT decode fallback when Admin SDK is unavailable
     const idToken = authHeader.substring(7);
 
     try {
-      const auth = getAdminAuth();
-      if (!auth) {
-        logger.error('Firebase Admin not initialized');
-        return NextResponse.json({ isAdmin: false, error: 'Server error' }, { status: 500 });
-      }
-      const decodedToken = await auth.verifyIdToken(idToken);
-      const email = decodedToken.email;
-
-      if (!email) {
+      const decoded = await verifyIdToken(idToken);
+      if (!decoded?.email) {
         return NextResponse.json({ isAdmin: false });
       }
 
-      const isAdmin = await isPlatformAdminByEmail(email);
+      const isAdmin = await isPlatformAdminByEmail(decoded.email);
       // SECURITY: Don't return email to prevent email enumeration
       return NextResponse.json({ isAdmin });
     } catch (error) {

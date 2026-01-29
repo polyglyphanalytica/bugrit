@@ -9,10 +9,10 @@ interface RouteParams {
 
 // GET /api/executions/[id] - Get execution status
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const authError = requirePermission(request, 'executions:read');
-  if (authError) return authError;
-
   try {
+    const authError = requirePermission(request, 'executions:read');
+    if (authError) return authError;
+
     const { id } = await params;
     const execution = store.getExecution(id);
 
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Calculate summary
-    const results = execution.results;
+    const results = execution.results || [];
     const passed = results.filter((r) => r.status === 'passed').length;
     const failed = results.filter((r) => r.status === 'failed').length;
     const skipped = results.filter((r) => r.status === 'skipped').length;

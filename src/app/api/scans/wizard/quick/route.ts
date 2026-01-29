@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 import {
   getQuickRecommendation,
   getAIAwareRecommendation,
@@ -6,6 +7,7 @@ import {
   AppSensitivity,
   AICodingAgent,
 } from '@/lib/wizard';
+import { logger } from '@/lib/logger';
 
 /**
  * GET /api/scans/wizard/quick
@@ -22,78 +24,86 @@ import {
  * - /api/scans/wizard/quick?type=api&level=serious
  */
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
+  try {
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
 
-  // Parse simple type param
-  const typeParam = searchParams.get('type') || 'web';
-  const appType: AppType =
-    typeParam === 'api' ? 'api' :
-    typeParam === 'mobile' ? 'mobile-native' :
-    typeParam === 'desktop' ? 'desktop-native' :
-    typeParam === 'cli' ? 'cli' :
-    typeParam === 'library' ? 'library' :
-    typeParam === 'pwa' ? 'pwa' :
-    'web';
+    const { searchParams } = new URL(request.url);
 
-  // Parse simple level param (translate to sensitivity)
-  const levelParam = searchParams.get('level') || 'startup';
-  const sensitivity: AppSensitivity =
-    levelParam === 'chill' ? 'personal' :
-    levelParam === 'startup' ? 'social' :
-    levelParam === 'serious' ? 'enterprise' :
-    levelParam === 'paranoid' ? 'financial' :
-    'social';
+    // Parse simple type param
+    const typeParam = searchParams.get('type') || 'web';
+    const appType: AppType =
+      typeParam === 'api' ? 'api' :
+      typeParam === 'mobile' ? 'mobile-native' :
+      typeParam === 'desktop' ? 'desktop-native' :
+      typeParam === 'cli' ? 'cli' :
+      typeParam === 'library' ? 'library' :
+      typeParam === 'pwa' ? 'pwa' :
+      'web';
 
-  // Parse AI param
-  const aiParam = searchParams.get('ai');
-  const aiAgent: AICodingAgent | undefined =
-    aiParam === 'cursor' ? 'cursor' :
-    aiParam === 'copilot' ? 'copilot' :
-    aiParam === 'claude' ? 'claude-code' :
-    aiParam === 'codeium' ? 'codeium' :
-    aiParam === 'none' ? 'none' :
-    aiParam ? 'other-ai' :
-    undefined;
+    // Parse simple level param (translate to sensitivity)
+    const levelParam = searchParams.get('level') || 'startup';
+    const sensitivity: AppSensitivity =
+      levelParam === 'chill' ? 'personal' :
+      levelParam === 'startup' ? 'social' :
+      levelParam === 'serious' ? 'enterprise' :
+      levelParam === 'paranoid' ? 'financial' :
+      'social';
 
-  // Get recommendations
-  const recommendations = aiAgent
-    ? getAIAwareRecommendation(appType, sensitivity, aiAgent)
-    : getQuickRecommendation(appType, sensitivity);
+    // Parse AI param
+    const aiParam = searchParams.get('ai');
+    const aiAgent: AICodingAgent | undefined =
+      aiParam === 'cursor' ? 'cursor' :
+      aiParam === 'copilot' ? 'copilot' :
+      aiParam === 'claude' ? 'claude-code' :
+      aiParam === 'codeium' ? 'codeium' :
+      aiParam === 'none' ? 'none' :
+      aiParam ? 'other-ai' :
+      undefined;
 
-  // Return simplified response
-  return NextResponse.json({
-    // Summary in plain English
-    summary: {
-      message: getSummaryMessage(recommendations.summary.essentialScans, sensitivity),
-      scans: recommendations.summary.totalScans,
-      essentialScans: recommendations.summary.essentialScans,
-      credits: recommendations.summary.estimatedCredits,
-      time: recommendations.summary.estimatedTime,
-    },
+    // Get recommendations
+    const recommendations = aiAgent
+      ? getAIAwareRecommendation(appType, sensitivity, aiAgent)
+      : getQuickRecommendation(appType, sensitivity);
 
-    // Just the scan IDs for quick use
-    quickStart: recommendations.recommendations
-      .filter(r => r.priority === 'essential')
-      .map(r => r.toolId),
+    // Return simplified response
+    return NextResponse.json({
+      // Summary in plain English
+      summary: {
+        message: getSummaryMessage(recommendations.summary.essentialScans, sensitivity),
+        scans: recommendations.summary.totalScans,
+        essentialScans: recommendations.summary.essentialScans,
+        credits: recommendations.summary.estimatedCredits,
+        time: recommendations.summary.estimatedTime,
+      },
 
-    // Packages for easy selection
-    packages: recommendations.packages.map(p => ({
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      credits: p.credits,
-      scans: p.scans.length,
-    })),
+      // Just the scan IDs for quick use
+      quickStart: recommendations.recommendations
+        .filter(r => r.priority === 'essential')
+        .map(r => r.toolId),
 
-    // UI-ready selection state with all tools
-    // - selectedTools: pre-selected recommendations (bubble to top)
-    // - availableByCategory: remaining tools grouped by category
-    // - credits: selected total and per-tool breakdown
-    selectionState: recommendations.selectionState,
+      // Packages for easy selection
+      packages: recommendations.packages.map(p => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        credits: p.credits,
+        scans: p.scans.length,
+      })),
 
-    // Full recommendations if needed
-    full: recommendations,
-  });
+      // UI-ready selection state with all tools
+      // - selectedTools: pre-selected recommendations (bubble to top)
+      // - availableByCategory: remaining tools grouped by category
+      // - credits: selected total and per-tool breakdown
+      selectionState: recommendations.selectionState,
+
+      // Full recommendations if needed
+      full: recommendations,
+    });
+  } catch (error) {
+    logger.error('Error getting quick recommendations', { error });
+    return NextResponse.json({ error: 'Failed to get recommendations' }, { status: 500 });
+  }
 }
 
 function getSummaryMessage(essentialScans: number, sensitivity: AppSensitivity): string {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 import {
   ScanRecommendationEngine,
   WIZARD_STEPS,
@@ -19,13 +20,17 @@ import { logger } from '@/lib/logger';
  * Get wizard steps and options
  */
 export async function GET() {
-  return NextResponse.json({
-    steps: WIZARD_STEPS,
-    sensitivityDescriptions: SENSITIVITY_DESCRIPTIONS,
-    aiAgentDescriptions: AI_AGENT_DESCRIPTIONS,
-    categoryInfo: CATEGORY_INFO,
-    presets: Object.keys(PRESETS),
-  });
+  try {
+    return NextResponse.json({
+      steps: WIZARD_STEPS,
+      sensitivityDescriptions: SENSITIVITY_DESCRIPTIONS,
+      aiAgentDescriptions: AI_AGENT_DESCRIPTIONS,
+      categoryInfo: CATEGORY_INFO,
+      presets: Object.keys(PRESETS),
+    });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch wizard configuration' }, { status: 500 });
+  }
 }
 
 /**
@@ -44,6 +49,9 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     const body = await request.json();
 
     // Handle preset requests

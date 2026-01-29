@@ -429,13 +429,13 @@ function generateAlerts(
 }
 
 export async function GET(request: NextRequest) {
-  // Verify superadmin access
-  const auth = await verifySuperadmin(request);
-  if (!auth.success) {
-    return auth.response;
-  }
-
   try {
+    // Verify superadmin access
+    const auth = await verifySuperadmin(request);
+    if (!auth.success) {
+      return auth.response;
+    }
+
     const { searchParams } = new URL(request.url);
     const days = parseInt(searchParams.get('days') || '30');
 

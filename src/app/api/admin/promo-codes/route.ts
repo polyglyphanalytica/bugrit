@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripeSecretKey } from '@/lib/admin/service';
+import { verifySuperadmin } from '@/lib/admin/middleware';
 import { logger } from '@/lib/logger';
 import { createHash } from 'crypto';
 import type Stripe from 'stripe';
@@ -20,8 +21,11 @@ function generateIdempotencyKey(operation: string, ...args: string[]): string {
   return createHash('sha256').update(data).digest('hex').slice(0, 32);
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const auth = await verifySuperadmin(request);
+    if (!auth.success) return auth.response;
+
     const stripeSecretKey = await getStripeSecretKey();
     if (!stripeSecretKey) {
       return NextResponse.json({ promoCodes: [], error: 'Stripe not configured' });
@@ -64,9 +68,12 @@ export async function GET() {
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
+    const auth = await verifySuperadmin(request);
+    if (!auth.success) return auth.response;
+
+    const body = await request.json();
     const { code, percentOff, amountOff, duration, durationInMonths, maxRedemptions, expiresAt } = body;
 
     if (!code) {

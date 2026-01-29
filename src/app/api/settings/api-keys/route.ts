@@ -8,29 +8,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiKeysByOwner, createApiKey } from '@/lib/db/api-keys';
 import { ApiKeyPermission, API_PERMISSION_GROUPS } from '@/lib/types';
-import { cookies } from 'next/headers';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { logger } from '@/lib/logger';
 
-// Helper to get user ID from session
-async function getUserFromSession(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('session');
-
-  if (!sessionCookie || !sessionCookie.value) {
-    return null;
-  }
-
-  // Session value contains the user ID
-  return sessionCookie.value;
-}
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserFromSession();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized. Please login.' }, { status: 401 });
-    }
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const keys = await getApiKeysByOwner(userId);
 
@@ -43,11 +28,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const userId = await getUserFromSession();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized. Please login.' }, { status: 401 });
-    }
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const body = await request.json();
 

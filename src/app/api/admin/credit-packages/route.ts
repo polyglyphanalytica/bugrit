@@ -12,10 +12,10 @@ import { logger } from '@/lib/logger';
  * Get all credit packages
  */
 export async function GET(request: NextRequest) {
-  const auth = await verifyAdminPermission(request, 'canManagePricing');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManagePricing');
+    if (!auth.success) return auth.response;
+
     let packages = await getAllCreditPackages();
 
     // Initialize default packages if none exist
@@ -36,10 +36,10 @@ export async function GET(request: NextRequest) {
  * Create a new credit package
  */
 export async function POST(request: NextRequest) {
-  const auth = await verifyAdminPermission(request, 'canManagePricing');
-  if (!auth.success) return auth.response;
-
   try {
+    const auth = await verifyAdminPermission(request, 'canManagePricing');
+    if (!auth.success) return auth.response;
+
     const body = await request.json();
 
     // Validate required fields

@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripeSecretKey } from '@/lib/admin/service';
+import { verifySuperadmin } from '@/lib/admin/middleware';
 import { logger } from '@/lib/logger';
 
 export async function DELETE(
@@ -13,6 +14,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await verifySuperadmin(req);
+    if (!auth.success) return auth.response;
+
     const { id } = await params;
 
     const stripeSecretKey = await getStripeSecretKey();

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 import {
   toggleToolSelection,
   selectTools,
@@ -23,6 +24,9 @@ import { logger } from '@/lib/logger';
  */
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+
     const body = await request.json();
 
     const { action, toolId, toolIds, currentState } = body;

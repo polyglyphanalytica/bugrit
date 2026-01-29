@@ -1,14 +1,16 @@
 /**
  * Comprehensive Tool Registry
  *
- * 118 registry entries (150+ total modules with integrations + AI) for security, quality, and compliance.
+ * 150 tools for security, quality, and compliance.
+ *
+ * All tools are registered, credited, orchestrated, and reported equally.
  *
  * Deployment types:
- * - Native JS (39 tools): Run via npm packages on Node.js
- * - Docker (78 tools): Run via Google Cloud Build containers
- * - Git-based (1 tool): Uses git CLI for analysis
+ * - Native JS/npm (51 tools): Run via npm packages on Node.js
+ * - Docker (95 tools): Run via Google Cloud Build containers
+ * - Git/CLI (4 tools): Uses git or system CLI
  *
- * Total: 118 registry tools across 11 categories (150+ modules including integrations + AI)
+ * Total: 150 tools across 11 categories
  */
 
 export interface ToolDefinition {
@@ -1197,6 +1199,332 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     languages: ['javascript', 'typescript', 'python', 'go', 'java', 'ruby', 'php', 'rust'],
     credits: 1,
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // API TESTING (4 tools)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'openapi-diff',
+    name: 'OpenAPI Diff',
+    description: 'Detect breaking and non-breaking changes between OpenAPI specifications',
+    category: 'api-security',
+    npm: 'openapi-diff',
+    filePatterns: ['**/openapi.{json,yaml,yml}', '**/swagger.{json,yaml,yml}'],
+    credits: 1,
+  },
+  {
+    id: 'graphql-inspector',
+    name: 'GraphQL Inspector',
+    description: 'Detect breaking changes, validate coverage, and audit GraphQL schemas',
+    category: 'api-security',
+    npm: '@graphql-inspector/cli',
+    filePatterns: ['**/*.graphql', '**/*.gql', '**/schema.json'],
+    languages: ['graphql', 'typescript'],
+    credits: 1,
+  },
+  {
+    id: 'newman',
+    name: 'Newman',
+    description: 'Command-line collection runner for Postman API tests',
+    category: 'api-security',
+    npm: 'newman',
+    filePatterns: ['**/*.postman_collection.json', '**/*.postman_environment.json'],
+    credits: 2,
+  },
+  {
+    id: 'pact',
+    name: 'Pact',
+    description: 'Contract testing for microservices integration verification',
+    category: 'api-security',
+    npm: '@pact-foundation/pact',
+    languages: ['javascript', 'typescript'],
+    credits: 2,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // QUALITY - Analysis, Complexity & Coverage (7 tools)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'sonarqube',
+    name: 'SonarQube',
+    description: 'Continuous code quality inspection with deep analysis for bugs, vulnerabilities, and code smells',
+    category: 'quality',
+    docker: 'sonarqube:lts-community',
+    languages: ['javascript', 'typescript', 'python', 'java', 'php', 'csharp', 'go'],
+    credits: 3,
+  },
+  {
+    id: 'htmlhint',
+    name: 'HTMLHint',
+    description: 'Static code analysis tool for HTML',
+    category: 'quality',
+    npm: 'htmlhint',
+    filePatterns: ['**/*.html', '**/*.htm'],
+    languages: ['html'],
+    credits: 0,
+  },
+  {
+    id: 'lizard',
+    name: 'Lizard',
+    description: 'Code complexity analyzer with cyclomatic complexity metrics across multiple languages',
+    category: 'quality',
+    docker: 'lizard:latest',
+    languages: ['javascript', 'python', 'java', 'cpp', 'csharp', 'go', 'rust'],
+    credits: 1,
+  },
+  {
+    id: 'ts-prune',
+    name: 'ts-prune',
+    description: 'Find unused exports in TypeScript projects to identify dead code',
+    category: 'quality',
+    npm: 'ts-prune',
+    filePatterns: ['**/*.ts', '**/*.tsx'],
+    languages: ['typescript'],
+    credits: 0,
+  },
+  {
+    id: 'bundle-analyzer',
+    name: 'Bundle Analyzer',
+    description: 'Analyze webpack bundle size and composition to identify bloat',
+    category: 'quality',
+    npm: 'webpack-bundle-analyzer',
+    filePatterns: ['**/webpack.config.*', '**/stats.json'],
+    languages: ['javascript', 'typescript'],
+    credits: 1,
+  },
+  {
+    id: 'istanbul',
+    name: 'Istanbul',
+    description: 'JavaScript code coverage instrumentation and reporting with ES6+ support',
+    category: 'quality',
+    npm: 'nyc',
+    filePatterns: ['**/*.js', '**/*.ts', '**/*.jsx', '**/*.tsx'],
+    languages: ['javascript', 'typescript'],
+    credits: 2,
+  },
+  {
+    id: 'stryker',
+    name: 'Stryker',
+    description: 'Mutation testing framework to measure test suite quality by injecting faults',
+    category: 'quality',
+    npm: '@stryker-mutator/core',
+    filePatterns: ['**/stryker.conf.*', '**/*.test.*', '**/*.spec.*'],
+    languages: ['javascript', 'typescript'],
+    credits: 3,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // VISUAL TESTING (3 tools)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'backstop',
+    name: 'BackstopJS',
+    description: 'Visual regression testing with automated screenshot comparison',
+    category: 'quality',
+    npm: 'backstopjs',
+    filePatterns: ['**/backstop.json', '**/backstop_data/**'],
+    credits: 2,
+  },
+  {
+    id: 'puppeteer',
+    name: 'Puppeteer',
+    description: 'Headless browser automation for visual testing and screenshot capture',
+    category: 'quality',
+    npm: 'puppeteer',
+    languages: ['javascript', 'typescript'],
+    credits: 1,
+  },
+  {
+    id: 'storybook',
+    name: 'Storybook',
+    description: 'UI component development environment with visual regression testing support',
+    category: 'quality',
+    npm: 'storybook',
+    filePatterns: ['.storybook/**', '**/*.stories.*'],
+    languages: ['javascript', 'typescript'],
+    credits: 2,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // SECURITY - Secret Scanning (2 tools)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'git-secrets',
+    name: 'git-secrets',
+    description: 'Prevent committing secrets and credentials into git repositories',
+    category: 'security',
+    credits: 0,
+  },
+  {
+    id: 'detect-secrets',
+    name: 'detect-secrets',
+    description: 'Enterprise-friendly detection of secrets in code to prevent leaks into the codebase',
+    category: 'security',
+    docker: 'yelp/detect-secrets:latest',
+    credits: 1,
+  },
+  {
+    id: 'retirejs',
+    name: 'Retire.js',
+    description: 'Detect use of JavaScript libraries with known vulnerabilities',
+    category: 'security',
+    npm: 'retire',
+    filePatterns: ['**/package.json', '**/*.js', '**/*.html'],
+    languages: ['javascript'],
+    credits: 1,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // DOCUMENTATION (1 tool)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'write-good',
+    name: 'write-good',
+    description: 'Naive linter for English prose that catches passive voice, weasel words, and other issues',
+    category: 'documentation',
+    npm: 'write-good',
+    filePatterns: ['**/*.md', '**/*.txt', '**/*.mdx'],
+    credits: 0,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // DEPENDENCIES - License (1 tool)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'scancode',
+    name: 'ScanCode Toolkit',
+    description: 'Scan code for licenses, copyrights, and dependencies with high accuracy',
+    category: 'dependencies',
+    docker: 'ghcr.io/nexb/scancode-toolkit:latest',
+    credits: 2,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // PERFORMANCE - Load Testing (5 tools)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'artillery',
+    name: 'Artillery',
+    description: 'Modern load testing toolkit for APIs, microservices, and web apps',
+    category: 'performance',
+    npm: 'artillery',
+    filePatterns: ['**/artillery.yml', '**/*.artillery.yml'],
+    languages: ['yaml', 'javascript'],
+    credits: 2,
+  },
+  {
+    id: 'jmeter',
+    name: 'Apache JMeter',
+    description: 'Load testing and performance measurement for web applications',
+    category: 'performance',
+    docker: 'justb4/jmeter:latest',
+    filePatterns: ['**/*.jmx'],
+    credits: 2,
+  },
+  {
+    id: 'k6',
+    name: 'k6',
+    description: 'Modern load testing tool with JavaScript scripting for developers',
+    category: 'performance',
+    docker: 'grafana/k6:latest',
+    filePatterns: ['**/k6/**', '**/*.k6.js'],
+    languages: ['javascript'],
+    credits: 2,
+  },
+  {
+    id: 'locust',
+    name: 'Locust',
+    description: 'Scalable user load testing tool written in Python',
+    category: 'performance',
+    docker: 'locustio/locust:latest',
+    filePatterns: ['**/locustfile.py'],
+    languages: ['python'],
+    credits: 2,
+  },
+  {
+    id: 'webpagetest',
+    name: 'WebPageTest',
+    description: 'Web performance testing with real browsers and network conditions',
+    category: 'performance',
+    docker: 'webpagetest/server:latest',
+    credits: 3,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // CLOUD-NATIVE (3 tools)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'kubebench',
+    name: 'kube-bench (CIS)',
+    description: 'Check Kubernetes clusters against CIS Benchmark security recommendations',
+    category: 'cloud-native',
+    docker: 'aquasec/kube-bench:latest',
+    filePatterns: ['**/*.yaml', '**/*.yml'],
+    credits: 1,
+  },
+  {
+    id: 'litmus',
+    name: 'LitmusChaos',
+    description: 'Cloud-native chaos engineering framework for Kubernetes resilience testing',
+    category: 'cloud-native',
+    docker: 'litmuschaos/litmusctl:latest',
+    filePatterns: ['**/experiments/**', '**/*.yaml'],
+    credits: 3,
+  },
+  {
+    id: 'schemaspy',
+    name: 'SchemaSpy',
+    description: 'Database documentation generator that analyzes schema metadata and relationships',
+    category: 'cloud-native',
+    docker: 'schemaspy/schemaspy:latest',
+    filePatterns: ['**/schema.sql', '**/migrations/**', '**/schema.prisma'],
+    credits: 2,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // OBSERVABILITY (2 tools)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'opentelemetry',
+    name: 'OpenTelemetry',
+    description: 'Distributed tracing and metrics analysis for application observability',
+    category: 'quality',
+    npm: '@opentelemetry/sdk-node',
+    credits: 1,
+  },
+  {
+    id: 'sentry',
+    name: 'Sentry',
+    description: 'Application monitoring and error tracking for production systems',
+    category: 'quality',
+    npm: '@sentry/node',
+    credits: 1,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // AI ANALYSIS (3 modules)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'environment-profiles',
+    name: 'Environment Profiles',
+    description: 'AI-powered environment-specific tool configuration and optimization profiles',
+    category: 'quality',
+    credits: 1,
+  },
+  {
+    id: 'finding-intelligence',
+    name: 'Finding Intelligence',
+    description: 'AI-powered finding correlation, deduplication, and prioritization across tools',
+    category: 'quality',
+    credits: 1,
+  },
+  {
+    id: 'report-generator',
+    name: 'AI Report Generator',
+    description: 'AI-powered aggregated report generation with executive summaries and fix recommendations',
+    category: 'quality',
+    credits: 2,
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -1237,7 +1565,7 @@ export function getTotalCredits(toolIds: string[]): number {
   }, 0);
 }
 
-export const TOOL_COUNT = TOOL_REGISTRY.length;  // 118 registry tools (39 npm + 78 docker + 1 git); 150+ total modules with integrations + AI
+export const TOOL_COUNT = TOOL_REGISTRY.length;  // 150 tools (51 npm + 95 docker + 4 git/cli)
 
 export const CATEGORY_LABELS: Record<ToolCategory, string> = {
   linting: 'Linting & Formatting',

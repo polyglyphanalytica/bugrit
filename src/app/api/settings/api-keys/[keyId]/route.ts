@@ -7,32 +7,18 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getApiKey, revokeApiKey, deleteApiKey } from '@/lib/db/api-keys';
-import { cookies } from 'next/headers';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ keyId: string }>;
 }
 
-// Helper to get user ID from session
-async function getUserFromSession(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('session');
-
-  if (!sessionCookie || !sessionCookie.value) {
-    return null;
-  }
-
-  return sessionCookie.value;
-}
-
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserFromSession();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized. Please login.' }, { status: 401 });
-    }
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const { keyId } = await params;
     const apiKey = await getApiKey(keyId);
@@ -55,11 +41,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = await getUserFromSession();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized. Please login.' }, { status: 401 });
-    }
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const { keyId } = await params;
     const apiKey = await getApiKey(keyId);

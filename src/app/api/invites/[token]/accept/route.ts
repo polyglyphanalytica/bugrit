@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { acceptInvite } from '@/lib/organizations';
-import { verifySession } from '@/lib/auth/session';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { getAdminAuth } from '@/lib/firebase-admin';
 import { logger } from '@/lib/logger';
 
@@ -14,27 +14,27 @@ interface RouteParams {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const user = await verifySession();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const { token } = await params;
 
-    // Get display name from Firebase Auth
-    let displayName = user.email?.split('@')[0] || 'User';
+    // Get display name and email from Firebase Auth
+    let displayName = 'User';
+    let email = '';
     const auth = getAdminAuth();
     if (auth) {
       try {
-        const firebaseUser = await auth.getUser(user.uid);
-        displayName = firebaseUser.displayName || displayName;
+        const firebaseUser = await auth.getUser(userId);
+        email = firebaseUser.email || '';
+        displayName = firebaseUser.displayName || email.split('@')[0] || displayName;
       } catch {
         // Use fallback display name
       }
     }
 
-    const result = await acceptInvite(token, user.uid, user.email || '', displayName);
+    const result = await acceptInvite(token, userId, email, displayName);
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });

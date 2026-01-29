@@ -11,11 +11,11 @@ import {
   successResponse,
   handleError,
   Errors,
-  projectStore,
-  scanStore,
-  reportStore,
-  generateReport,
-  getReportsByProject,
+  getProject,
+  getScan,
+  getReportByScan,
+  getReportsByOrganization,
+  generateReportFromScan,
 } from '@/lib/api';
 
 export async function GET(request: NextRequest) {
@@ -32,12 +32,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify access
-    const project = projectStore.get(projectId);
+    const project = await getProject(projectId);
     if (!project || project.organizationId !== keyData.organizationId) {
       return Errors.forbidden();
     }
 
-    let reports = getReportsByProject(projectId);
+    const allReports = await getReportsByOrganization(keyData.organizationId);
+    let reports = allReports.filter(r => r.projectId === projectId);
 
     // Sort by generation date (newest first)
     reports.sort((a, b) => new Date(b.generatedAt).getTime() - new Date(a.generatedAt).getTime());
@@ -68,13 +69,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Get scan
-    const scan = scanStore.get(body.scanId);
+    const scan = await getScan(body.scanId);
     if (!scan) {
       return Errors.notFound('Scan');
     }
 
     // Verify access
-    const project = projectStore.get(scan.projectId);
+    const project = await getProject(scan.projectId);
     if (!project || project.organizationId !== keyData.organizationId) {
       return Errors.forbidden();
     }
@@ -87,13 +88,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if report already exists
-    const existingReport = reportStore.list((r) => r.scanId === body.scanId)[0];
+    const existingReport = await getReportByScan(body.scanId);
     if (existingReport) {
       return successResponse(existingReport);
     }
 
     // Generate report
-    const report = generateReport(body.scanId);
+    const report = await generateReportFromScan(body.scanId);
     if (!report) {
       return Errors.internalError();
     }
