@@ -56,33 +56,32 @@ function getSafeReturnUrl(returnUrl: string | undefined, baseUrl: string): strin
 }
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const code = searchParams.get('code');
-  const state = searchParams.get('state');
-  const error = searchParams.get('error');
-  const errorDescription = searchParams.get('error_description');
-
   // Build base URL for redirects
   const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-  // Handle GitHub error response
-  if (error) {
-    logger.error('GitHub OAuth error', { error, errorDescription });
-    const redirectUrl = new URL('/settings/integrations', baseUrl);
-    redirectUrl.searchParams.set('error', error);
-    redirectUrl.searchParams.set('error_description', errorDescription || 'Authorization failed');
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  // Validate required params
-  if (!code || !state) {
-    const redirectUrl = new URL('/settings/integrations', baseUrl);
-    redirectUrl.searchParams.set('error', 'invalid_request');
-    redirectUrl.searchParams.set('error_description', 'Missing code or state parameter');
-    return NextResponse.redirect(redirectUrl);
-  }
-
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const code = searchParams.get('code');
+    const state = searchParams.get('state');
+    const error = searchParams.get('error');
+    const errorDescription = searchParams.get('error_description');
+
+    // Handle GitHub error response
+    if (error) {
+      logger.error('GitHub OAuth error', { error, errorDescription });
+      const redirectUrl = new URL('/settings/integrations', baseUrl);
+      redirectUrl.searchParams.set('error', error);
+      redirectUrl.searchParams.set('error_description', errorDescription || 'Authorization failed');
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // Validate required params
+    if (!code || !state) {
+      const redirectUrl = new URL('/settings/integrations', baseUrl);
+      redirectUrl.searchParams.set('error', 'invalid_request');
+      redirectUrl.searchParams.set('error_description', 'Missing code or state parameter');
+      return NextResponse.redirect(redirectUrl);
+    }
     // Decode and validate state
     let stateData: { userId: string; returnUrl: string; timestamp: number };
     try {
