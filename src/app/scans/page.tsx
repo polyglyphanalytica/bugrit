@@ -159,7 +159,7 @@ export default function ScansPage() {
                 <SelectItem value="failed">Failed</SelectItem>
               </SelectContent>
             </Select>
-            <Link href="/applications">
+            <Link href="/scans/new">
               <Button>New Scan</Button>
             </Link>
           </div>
@@ -178,8 +178,8 @@ export default function ScansPage() {
                     : `No ${statusFilter} scans found.`}
                 </p>
                 {statusFilter === 'all' && (
-                  <Link href="/applications">
-                    <Button>Create Application</Button>
+                  <Link href="/scans/new">
+                    <Button>Start Your First Scan</Button>
                   </Link>
                 )}
               </div>
