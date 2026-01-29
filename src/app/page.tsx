@@ -8,7 +8,7 @@ import { SectionHeading } from '@/components/ui/section-heading';
 import { ScrollReveal } from '@/components/ui/scroll-reveal';
 import { Logo } from '@/components/ui/logo';
 import { PlatformLogos } from '@/components/ui/platform-logos';
-import { Menu, X, Shield, Zap, Eye, ArrowRight, Check } from 'lucide-react';
+import { Menu, X, Shield, Zap, Eye, ArrowRight, Check, Sparkles, TrendingUp, AlertTriangle, Target } from 'lucide-react';
 
 export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -234,8 +234,176 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Smart Tool Advisor — NEW feature highlight */}
+      <section className="py-24 md:py-32">
+        <div className="container-wide">
+          <ScrollReveal>
+            <SectionHeading
+              badge="Smart Advisor"
+              title="Never overpay. Never miss a vulnerability."
+              titleGradient="Never miss"
+              description="Our intelligent tool advisor analyzes your project and recommends exactly what you need — no more, no less."
+            />
+          </ScrollReveal>
+
+          <div className="grid md:grid-cols-2 gap-8 mt-16 max-w-5xl mx-auto">
+            {/* Left column — feature cards */}
+            <div className="space-y-4">
+              <ScrollReveal delay={0}>
+                <GlassCard hover className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+                      <Target className="w-5 h-5 text-green-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-1">Smart Recommendations</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed">
+                        Tell us your app type and sensitivity level. We&apos;ll bubble up the most important tools and prioritize what matters for your stack.
+                      </p>
+                    </div>
+                  </div>
+                </GlassCard>
+              </ScrollReveal>
+
+              <ScrollReveal delay={100}>
+                <GlassCard hover className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
+                      <AlertTriangle className="w-5 h-5 text-red-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-1">Coverage Gap Detection</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed">
+                        Building a fintech app but forgot API security scanning? We&apos;ll tell you what&apos;s missing before you ship with blind spots.
+                      </p>
+                    </div>
+                  </div>
+                </GlassCard>
+              </ScrollReveal>
+
+              <ScrollReveal delay={200}>
+                <GlassCard hover className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <TrendingUp className="w-5 h-5 text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-1">Redundancy Alerts</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed">
+                        Selected both Trivy and Grype? They do the same thing. We&apos;ll catch overlapping tools so you don&apos;t waste credits.
+                      </p>
+                    </div>
+                  </div>
+                </GlassCard>
+              </ScrollReveal>
+
+              <ScrollReveal delay={300}>
+                <GlassCard hover className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="w-5 h-5 text-purple-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900 mb-1">Learns From Your Scans</h3>
+                      <p className="text-sm text-gray-500 leading-relaxed">
+                        Had security issues last time? We&apos;ll recommend follow-up tools. New commits? We&apos;ll suggest scans for changed files.
+                      </p>
+                    </div>
+                  </div>
+                </GlassCard>
+              </ScrollReveal>
+            </div>
+
+            {/* Right column — example advisor UI */}
+            <ScrollReveal delay={150}>
+              <GlassCard className="p-6 h-full bg-gradient-to-br from-gray-50 to-white">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
+                    <Sparkles className="w-3 h-3 text-orange-500" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-900">Tool Advisor</span>
+                  <span className="ml-auto text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Score: 85/100</span>
+                </div>
+
+                <div className="space-y-3">
+                  {/* Example message 1 */}
+                  <div className="p-3 rounded-lg bg-green-50 border border-green-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Check className="w-4 h-4 text-green-500" />
+                      <span className="text-sm font-medium text-green-700">Good coverage!</span>
+                    </div>
+                    <p className="text-xs text-green-600">Your selection covers 85% of recommended categories for financial applications.</p>
+                  </div>
+
+                  {/* Example message 2 */}
+                  <div className="p-3 rounded-lg bg-amber-50 border border-amber-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <AlertTriangle className="w-4 h-4 text-amber-500" />
+                      <span className="text-sm font-medium text-amber-700">Overlapping tools detected</span>
+                    </div>
+                    <p className="text-xs text-amber-600">Trivy and Grype both scan for vulnerabilities. Remove one to save 2 credits.</p>
+                    <button className="mt-2 text-xs font-medium text-amber-700 hover:text-amber-800">
+                      Keep Trivy, remove Grype →
+                    </button>
+                  </div>
+
+                  {/* Example message 3 */}
+                  <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Target className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm font-medium text-blue-700">Recommended for your stack</span>
+                    </div>
+                    <p className="text-xs text-blue-600">Based on your fintech API, these tools provide essential coverage.</p>
+                    <div className="flex gap-2 mt-2">
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Semgrep</span>
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">OWASP ZAP</span>
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Spectral</span>
+                    </div>
+                  </div>
+
+                  {/* Bubbled recommendations */}
+                  <div className="pt-3 border-t border-gray-100">
+                    <p className="text-xs font-medium text-gray-500 mb-2">Top recommendations for you:</p>
+                    <div className="space-y-2">
+                      {[
+                        { name: 'Semgrep', reason: 'Essential for financial apps', credits: 2 },
+                        { name: 'Gitleaks', reason: 'Protects against leaked secrets', credits: 1 },
+                        { name: 'OSV Scanner', reason: 'Supply chain protection', credits: 1 },
+                      ].map((tool) => (
+                        <div key={tool.name} className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded bg-orange-100 flex items-center justify-center">
+                              <Shield className="w-2.5 h-2.5 text-orange-500" />
+                            </div>
+                            <span className="font-medium text-gray-700">{tool.name}</span>
+                            <span className="text-gray-400">· {tool.reason}</span>
+                          </div>
+                          <span className="text-gray-400">{tool.credits} cr</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </GlassCard>
+            </ScrollReveal>
+          </div>
+
+          <ScrollReveal delay={400}>
+            <div className="mt-12 text-center">
+              <Link href="/signup">
+                <GradientButton size="lg">
+                  Try the Smart Advisor
+                  <ArrowRight className="w-4 h-4" />
+                </GradientButton>
+              </Link>
+              <p className="text-xs text-gray-400 mt-3">Included free with every plan</p>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* Social proof — simple quote */}
-      <section className="py-20 md:py-24">
+      <section className="py-20 md:py-24 bg-gray-50/50">
         <div className="container-tight">
           <ScrollReveal>
             <div className="max-w-2xl mx-auto text-center">
@@ -279,7 +447,7 @@ export default function HomePage() {
                 price: '$19',
                 description: 'For side projects',
                 credits: '50 credits/mo',
-                features: ['3 projects', 'Up to 50K lines', 'All security tools', 'AI scan summaries', '14-day history'],
+                features: ['3 projects', 'Up to 50K lines', 'All security tools', 'Smart Tool Advisor', 'AI scan summaries', '14-day history'],
                 cta: 'Start Free Trial',
                 popular: false,
               },
@@ -288,7 +456,7 @@ export default function HomePage() {
                 price: '$49',
                 description: 'For serious builders',
                 credits: '200 credits/mo',
-                features: ['10 projects', 'Up to 150K lines', 'All tools + browser testing', 'AI explanations', 'GitHub integration', '30-day history'],
+                features: ['10 projects', 'Up to 150K lines', 'All tools + browser testing', 'Smart Tool Advisor', 'AI explanations', 'GitHub integration', '30-day history'],
                 cta: 'Start Free Trial',
                 popular: true,
               },
@@ -297,7 +465,7 @@ export default function HomePage() {
                 price: '$99',
                 description: 'For teams',
                 credits: '500 credits/mo',
-                features: ['Unlimited projects', 'Up to 500K lines', 'All tools + AI fixes', '10 team members', 'Slack + webhooks', 'API access', '90-day history'],
+                features: ['Unlimited projects', 'Up to 500K lines', 'All tools + AI fixes', 'Smart Tool Advisor', '10 team members', 'Slack + webhooks', 'API access', '90-day history'],
                 cta: 'Start Free Trial',
                 popular: false,
               },
