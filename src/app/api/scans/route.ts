@@ -423,13 +423,15 @@ interface ScanOptions {
 }
 
 async function runScanInBackground(scanId: string, options: ScanOptions) {
-  const scan = await getScan(scanId);
-  if (!scan) return;
-
   let tempDir: string | null = null;
   let linesOfCode = 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let scan: any = null;
 
   try {
+    scan = await getScan(scanId);
+    if (!scan) return;
+
     // Update status to running
     scan.status = 'running';
     scan.startedAt = new Date().toISOString();
@@ -601,30 +603,34 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
     }
   } catch (error) {
     logger.error('Scan failed', { scanId, error });
-    scan.status = 'failed';
-    scan.error = error instanceof Error ? error.message : 'Unknown error';
-    scan.completedAt = new Date().toISOString();
-    await saveScan(scan);
+    if (scan) {
+      scan.status = 'failed';
+      scan.error = error instanceof Error ? error.message : 'Unknown error';
+      scan.completedAt = new Date().toISOString();
+      await saveScan(scan);
+    }
 
     // Release the reserved credits since scan failed
     await releaseReservation(scanId);
     logger.info('Released credit reservation for failed scan', { scanId });
 
     // Send notification for scan failure
-    try {
-      const userEmail = await getUserEmail(options.userId);
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bugrit.com';
+    if (scan) {
+      try {
+        const userEmail = await getUserEmail(options.userId);
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bugrit.com';
 
-      await notifyScanFailed({
-        userId: options.userId,
-        userEmail,
-        scanId,
-        applicationName: scan.applicationId,
-        error: scan.error || 'Unknown error',
-        scanUrl: `${baseUrl}/scans/${scanId}`,
-      });
-    } catch (notifyError) {
-      logger.warn('Failed to send scan failure notification', { scanId, error: notifyError });
+        await notifyScanFailed({
+          userId: options.userId,
+          userEmail,
+          scanId,
+          applicationName: scan.applicationId,
+          error: scan.error || 'Unknown error',
+          scanUrl: `${baseUrl}/scans/${scanId}`,
+        });
+      } catch (notifyError) {
+        logger.warn('Failed to send scan failure notification', { scanId, error: notifyError });
+      }
     }
   } finally {
     // Cleanup temp directory

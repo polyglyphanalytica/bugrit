@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Calculate summary
-    const results = execution.results;
+    const results = execution.results || [];
     const passed = results.filter((r) => r.status === 'passed').length;
     const failed = results.filter((r) => r.status === 'failed').length;
     const skipped = results.filter((r) => r.status === 'skipped').length;

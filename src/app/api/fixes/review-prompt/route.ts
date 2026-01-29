@@ -16,21 +16,21 @@ import { requireAuthenticatedUser } from '@/lib/api-auth';
  * Returns the prompt as plain text (for easy copy/paste) or JSON.
  */
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const scanId = searchParams.get('scanId');
-  const format = searchParams.get('format') || 'full';
-  const responseFormat = searchParams.get('response') || 'text';
-
-  if (!scanId) {
-    return NextResponse.json(
-      { error: 'scanId is required' },
-      { status: 400 }
-    );
-  }
-
   try {
     const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) return authResult;
+
+    const { searchParams } = new URL(request.url);
+    const scanId = searchParams.get('scanId');
+    const format = searchParams.get('format') || 'full';
+    const responseFormat = searchParams.get('response') || 'text';
+
+    if (!scanId) {
+      return NextResponse.json(
+        { error: 'scanId is required' },
+        { status: 400 }
+      );
+    }
 
     // Fetch scan details from database
     const scanData = await getScanData(scanId);
