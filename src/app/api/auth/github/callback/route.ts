@@ -56,10 +56,11 @@ function getSafeReturnUrl(returnUrl: string | undefined, baseUrl: string): strin
 }
 
 export async function GET(request: NextRequest) {
-  // Build base URL for redirects
-  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const getBaseUrl = () => process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
   try {
+    // Build base URL for redirects
+    const baseUrl = getBaseUrl();
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
     const state = searchParams.get('state');
@@ -149,7 +150,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
     logger.error('GitHub OAuth callback error', { error });
-    const redirectUrl = new URL('/settings/integrations', baseUrl);
+    const redirectUrl = new URL('/settings/integrations', getBaseUrl());
     redirectUrl.searchParams.set('error', 'exchange_failed');
     redirectUrl.searchParams.set('error_description', error instanceof Error ? error.message : 'Failed to complete authorization');
     return NextResponse.redirect(redirectUrl);
