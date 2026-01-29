@@ -56,15 +56,15 @@ function verifyCronAuth(request: NextRequest): boolean {
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
-  // Verify authorization
-  if (!verifyCronAuth(request)) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
-  }
-
   try {
+    // Verify authorization
+    if (!verifyCronAuth(request)) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     logger.info('Starting dunning cron job');
 
     // Send scheduled reminders to users in grace period
