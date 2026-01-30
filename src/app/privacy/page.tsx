@@ -144,10 +144,10 @@ export default function PrivacyPage() {
               <section className="mb-10">
                 <h2 className="text-2xl font-bold mb-4">6. Your Intellectual Property and Data Sharing</h2>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">6.1 Your Code Remains Yours</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">6.1 Your Code Remains Yours — We Do Not Retain It</h3>
                 <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-4">
                   <p className="text-gray-700 leading-relaxed mb-4">
-                    <strong>Your intellectual property is yours. We do not claim any ownership rights over your source code, applications, or any content you submit to our Service.</strong>
+                    <strong>Your intellectual property is yours. We do not claim any ownership rights over your source code, applications, or any content you submit to our Service. Furthermore, we do not retain your intellectual property on our platform.</strong>
                   </p>
                   <ul className="list-disc pl-6 space-y-2 text-gray-600">
                     <li>You retain full ownership of all intellectual property rights in your code and content;</li>
@@ -155,11 +155,27 @@ export default function PrivacyPage() {
                     <li>We do not share your source code with any third parties;</li>
                     <li>We do not use your code to train machine learning models or for any purpose other than providing you with the analysis services you have requested;</li>
                     <li>Your code is processed solely for the purpose of generating security and quality reports for your benefit;</li>
-                    <li>We do not retain your source code longer than necessary to provide the Service.</li>
+                    <li><strong>All uploaded content (source code, APKs, IPAs, installers, executables, and any other files) is automatically and permanently deleted immediately upon completion of the scan.</strong></li>
                   </ul>
                 </div>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">6.2 We Take Care of Your Data</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">6.2 Automatic Deletion Policy</h3>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  To ensure your intellectual property never resides on our systems longer than absolutely necessary:
+                </p>
+                <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
+                  <li><strong>Source code repositories:</strong> Deleted immediately after analysis is complete;</li>
+                  <li><strong>Mobile applications (APK, IPA):</strong> Deleted immediately after scanning;</li>
+                  <li><strong>Desktop installers and executables:</strong> Deleted immediately after scanning;</li>
+                  <li><strong>Configuration files and assets:</strong> Deleted immediately after scanning;</li>
+                  <li><strong>No backups:</strong> We do not create copies, backups, or archives of your uploaded content;</li>
+                  <li><strong>Irreversible:</strong> Once deleted, your content cannot be recovered by us or anyone else.</li>
+                </ul>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  Only the generated scan reports (containing findings, recommendations, and metadata — but never your actual source code or binaries) are retained according to your subscription tier&apos;s retention period.
+                </p>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">6.3 We Take Care of Your Data</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
                   We understand that your source code represents significant intellectual investment and may contain proprietary business logic, trade secrets, and sensitive information. We treat this responsibility with the utmost seriousness:
                 </p>
@@ -171,7 +187,7 @@ export default function PrivacyPage() {
                   <li>Our staff are bound by strict confidentiality obligations.</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">6.3 Limited Licence for Service Provision</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">6.4 Limited Licence for Service Provision</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
                   By using our Service, you grant us a limited, non-exclusive, revocable licence solely to:
                 </p>
@@ -184,12 +200,12 @@ export default function PrivacyPage() {
                   This licence terminates automatically upon completion of the analysis or deletion of your content.
                 </p>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">6.4 We Do Not Sell Your Information</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">6.5 We Do Not Sell Your Information</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
                   <strong>We do not sell, rent, or trade your personal information or your code to any third party.</strong> Period.
                 </p>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">6.5 Limited Disclosure Circumstances</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">6.6 Limited Disclosure Circumstances</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
                   We may disclose limited information only in the following narrow circumstances:
                 </p>

@@ -243,14 +243,35 @@ export default function TermsPage() {
                 <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
                   <li>Process and analyse Your Code to provide the Service;</li>
                   <li>Generate reports and insights based on Your Code;</li>
-                  <li>Store Your Code for the duration necessary to provide the Service;</li>
+                  <li>Temporarily store Your Code solely for the duration necessary to complete the analysis;</li>
                   <li>Use anonymised, aggregated data to improve the Service.</li>
                 </ul>
                 <p className="text-gray-500 leading-relaxed mb-4">
                   We will not use Your Code for any purpose other than providing and improving the Service without your explicit consent.
                 </p>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">7.3 Feedback</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">7.3 Automatic Deletion of Uploaded Content</h3>
+                <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-4">
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    <strong>We do not retain your intellectual property on our platform.</strong>
+                  </p>
+                  <p className="text-gray-600 leading-relaxed mb-4">
+                    All source code, application binaries (APKs, IPAs), installers, executables, and any other files you upload to the Service are <strong>automatically and permanently deleted</strong> upon completion of the scanning process. Specifically:
+                  </p>
+                  <ul className="list-disc pl-6 space-y-2 text-gray-600">
+                    <li>Source code repositories are deleted immediately after analysis is complete;</li>
+                    <li>Mobile application files (APK, IPA) are deleted immediately after scanning;</li>
+                    <li>Desktop application installers and executables are deleted immediately after scanning;</li>
+                    <li>Configuration files and related assets are deleted immediately after scanning;</li>
+                    <li>No copies, backups, or archives of your uploaded content are retained;</li>
+                    <li>Deletion is irreversible — we cannot recover deleted files.</li>
+                  </ul>
+                </div>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  Only the generated scan reports, which contain metadata, findings, and recommendations (but not your actual source code or binaries), are retained according to your subscription tier&apos;s data retention policy.
+                </p>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">7.4 Feedback</h3>
                 <p className="text-gray-500 leading-relaxed">
                   If you provide feedback, suggestions, or ideas regarding the Service, you grant us an unrestricted, perpetual, irrevocable, royalty-free licence to use such feedback for any purpose without compensation or attribution to you.
                 </p>
