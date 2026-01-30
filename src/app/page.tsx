@@ -557,13 +557,13 @@ export default function HomePage() {
       <footer className="border-t border-gray-100 py-12">
         <div className="container-wide">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <Logo href="/" />
-            <p className="text-sm text-gray-400">
-              150 modules. 5,000+ automated security checks.
-            </p>
+            <div className="flex items-center gap-4">
+              <Logo href="/" />
+              <span className="text-sm text-gray-400">&copy; {new Date().getFullYear()} Polyglyph Analytica</span>
+            </div>
             <div className="flex items-center gap-6">
-              <Link href="/privacy" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Privacy</Link>
-              <Link href="/terms" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Terms</Link>
+              <Link href="/terms" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Terms of Service</Link>
+              <Link href="/privacy" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Privacy Policy</Link>
               <Link href="/docs" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Docs</Link>
             </div>
           </div>
