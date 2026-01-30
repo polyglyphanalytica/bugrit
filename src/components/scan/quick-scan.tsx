@@ -1,11 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Github, Upload, Globe, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Github, Upload, Globe, ChevronDown, ChevronUp, Loader2, Check, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+interface GitHubConnection {
+  connected: boolean;
+  oauthConfigured?: boolean;
+  connection?: {
+    githubUsername: string;
+    githubAvatarUrl?: string;
+  };
+}
 
 interface QuickScanProps {
   onScan: (source: ScanSource) => Promise<void>;
@@ -33,6 +42,32 @@ export function QuickScan({ onScan, isSubmitting = false, className }: QuickScan
   const [branch, setBranch] = useState('main');
   const [accessToken, setAccessToken] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [githubConnection, setGithubConnection] = useState<GitHubConnection | null>(null);
+  const [loadingConnection, setLoadingConnection] = useState(true);
+
+  // Check GitHub connection status on mount
+  useEffect(() => {
+    const checkGitHubConnection = async () => {
+      try {
+        const res = await fetch('/api/auth/github/status');
+        if (res.ok) {
+          const data = await res.json();
+          setGithubConnection(data);
+        }
+      } catch {
+        // Ignore - user may not be authenticated
+      } finally {
+        setLoadingConnection(false);
+      }
+    };
+    checkGitHubConnection();
+  }, []);
+
+  const handleConnectGitHub = () => {
+    // Redirect to GitHub OAuth with current page as return URL
+    const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = `/api/auth/github?returnUrl=${returnUrl}`;
+  };
 
   // Auto-detect source type from input
   const detectSourceType = (input: string): 'github' | 'url' | null => {
@@ -209,7 +244,46 @@ export function QuickScan({ onScan, isSubmitting = false, className }: QuickScan
 
           {/* Advanced options */}
           {showAdvanced && sourceType === 'github' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t">
+            <div className="space-y-3 pt-2 border-t">
+              {/* GitHub Connection Status */}
+              <div className="p-3 rounded-lg bg-muted/50">
+                {loadingConnection ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Checking GitHub connection...
+                  </div>
+                ) : githubConnection?.connected ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-green-500" />
+                      <span className="text-sm">
+                        Connected as <strong>@{githubConnection.connection?.githubUsername}</strong>
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      Private repos accessible
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      Connect GitHub to scan private repositories
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleConnectGitHub}
+                      className="gap-2"
+                    >
+                      <Github className="w-4 h-4" />
+                      Connect GitHub
+                      <ExternalLink className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Branch selector */}
               <div className="space-y-1">
                 <label className="text-sm text-muted-foreground">Branch</label>
                 <Input
@@ -218,15 +292,21 @@ export function QuickScan({ onScan, isSubmitting = false, className }: QuickScan
                   placeholder="main"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-sm text-muted-foreground">Access Token (private repos)</label>
-                <Input
-                  type="password"
-                  value={accessToken}
-                  onChange={(e) => setAccessToken(e.target.value)}
-                  placeholder="ghp_..."
-                />
-              </div>
+
+              {/* Manual token fallback - only show if not connected */}
+              {!githubConnection?.connected && (
+                <div className="space-y-1">
+                  <label className="text-sm text-muted-foreground">
+                    Or paste a Personal Access Token
+                  </label>
+                  <Input
+                    type="password"
+                    value={accessToken}
+                    onChange={(e) => setAccessToken(e.target.value)}
+                    placeholder="ghp_..."
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -402,13 +402,11 @@ export default function DashboardPage() {
                 <p className="text-sm text-gray-500 mb-4">
                   Your scan history will appear here after you run your first scan.
                 </p>
-                {applications.length > 0 && (
-                  <Button variant="outline" asChild size="sm">
-                    <Link href={`/applications/${applications[0].id}/new-scan`}>
-                      Run Your First Scan
-                    </Link>
-                  </Button>
-                )}
+                <Button variant="outline" asChild size="sm">
+                  <Link href="/scans/new">
+                    Run Your First Scan
+                  </Link>
+                </Button>
               </div>
             ) : (
               <>
