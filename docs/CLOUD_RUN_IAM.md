@@ -8,6 +8,8 @@ The hybrid architecture uses two service accounts:
 1. **Deployer Account** - Used by CI/CD or admin to deploy the worker
 2. **Worker Service Account** - Used by the running Cloud Run service
 
+> **Important:** If you're deploying to Firebase Hosting with Cloud Run rewrites, see [Firebase Hosting with Cloud Run Rewrites](#firebase-hosting-with-cloud-run-rewrites) below. The deployer account needs additional read permissions.
+
 ## 1. Deployer IAM Permissions
 
 The account running `npm run deploy:worker` needs these roles:
@@ -23,6 +25,12 @@ PROJECT_ID="your-project-id"
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:$DEPLOYER_EMAIL" \
   --role="roles/run.admin"
+
+# Cloud Run Viewer - read services (REQUIRED for Firebase Hosting rewrites)
+# Note: run.admin does NOT include run.services.get permission
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$DEPLOYER_EMAIL" \
+  --role="roles/run.viewer"
 
 # Service Account User - deploy as service account
 gcloud projects add-iam-policy-binding $PROJECT_ID \
@@ -266,3 +274,80 @@ gcloud run services get-iam-policy bugrit-scan-worker \
   --region=$REGION \
   --project=$PROJECT_ID
 ```
+
+### "run.services.get denied" during Firebase Hosting deployment
+This error occurs when Firebase Hosting is configured with Cloud Run rewrites but the deploying service account lacks read permissions.
+
+**Root Cause:** `roles/run.admin` grants create/update/delete permissions but does NOT include `run.services.get`. Firebase Hosting needs to verify the Cloud Run service exists when deploying rewrites.
+
+**Fix:** Add `roles/run.viewer` to the service account:
+```bash
+# For the GitHub Actions service account (GCP_SA_KEY)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$DEPLOYER_EMAIL" \
+  --role="roles/run.viewer"
+
+# For the Firebase service account (FIREBASE_SERVICE_ACCOUNT)
+# Get the email from the JSON: jq -r '.client_email' firebase-sa.json
+FIREBASE_SA_EMAIL="firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$FIREBASE_SA_EMAIL" \
+  --role="roles/run.viewer"
+```
+
+Wait 2-3 minutes for IAM propagation, then retry the deployment.
+
+## 8. Firebase Hosting with Cloud Run Rewrites
+
+When using Firebase Hosting with Cloud Run rewrites (configured in `firebase.json`):
+
+```json
+{
+  "hosting": {
+    "rewrites": [{
+      "source": "**",
+      "run": { "serviceId": "bugrit", "region": "us-central1" }
+    }]
+  }
+}
+```
+
+Firebase Hosting must verify the Cloud Run service exists before finalizing the deployment. This requires:
+
+### Required Permissions for Firebase Hosting Deployment
+
+| Service Account | Role | Purpose |
+|-----------------|------|---------|
+| GCP_SA_KEY (deployer) | `roles/run.admin` | Deploy Cloud Run service |
+| GCP_SA_KEY (deployer) | `roles/run.viewer` | Verify service exists for rewrites |
+| FIREBASE_SERVICE_ACCOUNT | `roles/run.viewer` | Firebase Hosting verifies Cloud Run target |
+
+### Complete Setup for Firebase Hosting + Cloud Run
+
+```bash
+PROJECT_ID="your-project-id"
+DEPLOYER_EMAIL="bugrit-deployer@$PROJECT_ID.iam.gserviceaccount.com"
+FIREBASE_SA_EMAIL="firebase-adminsdk-xxxxx@$PROJECT_ID.iam.gserviceaccount.com"
+
+# Deployer needs both admin (write) and viewer (read)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$DEPLOYER_EMAIL" \
+  --role="roles/run.admin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$DEPLOYER_EMAIL" \
+  --role="roles/run.viewer"
+
+# Firebase SA needs viewer for rewrite verification
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:$FIREBASE_SA_EMAIL" \
+  --role="roles/run.viewer"
+```
+
+### Why Cloud Run Admin Isn't Enough
+
+Google Cloud IAM follows least-privilege principles. The `roles/run.admin` role is scoped to **management operations** (create, update, delete) but does NOT include `run.services.get` for reading service details. This is by design to prevent over-privileged service accounts.
+
+For Firebase Hosting deployments with Cloud Run rewrites, you need BOTH:
+- `roles/run.admin` - To deploy the Cloud Run service
+- `roles/run.viewer` - To verify the service exists for Firebase Hosting rewrites

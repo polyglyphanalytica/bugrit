@@ -1,18 +1,24 @@
 # GitHub Actions workflow for deploying to Firebase App Hosting and Google Cloud Run
 #
 # Setup Requirements:
-# 1. Create a Google Cloud service account with these roles:
-#    - Cloud Run Admin
-#    - Service Account User
-#    - Storage Admin
-#    - Secret Manager Secret Accessor
-#    - Firebase Admin
-#    - Artifact Registry Writer
+# 1. Create a Google Cloud service account (GCP_SA_KEY) with these roles:
+#    - Cloud Run Admin (roles/run.admin) - deploy Cloud Run services
+#    - Cloud Run Viewer (roles/run.viewer) - required for Firebase Hosting to verify Cloud Run rewrites
+#    - Service Account User (roles/iam.serviceAccountUser)
+#    - Storage Admin (roles/storage.admin)
+#    - Secret Manager Secret Accessor (roles/secretmanager.secretAccessor)
+#    - Firebase Admin (roles/firebase.admin)
+#    - Artifact Registry Writer (roles/artifactregistry.writer)
+#
+#    IMPORTANT: Cloud Run Admin does NOT include read permissions. Firebase Hosting
+#    deployments with Cloud Run rewrites require run.services.get permission to verify
+#    the target service exists. Add Cloud Run Viewer to fix "run.services.get denied" errors.
 #
 # 2. Add these secrets to your GitHub repository (Settings > Secrets > Actions):
 #    - GCP_PROJECT_ID: Your Google Cloud project ID
 #    - GCP_SA_KEY: Service account JSON key (base64 encoded)
-#    - FIREBASE_SERVICE_ACCOUNT: Firebase service account JSON key
+#    - FIREBASE_SERVICE_ACCOUNT: Firebase service account JSON key (NOT base64 encoded)
+#      NOTE: This account also needs Cloud Run Viewer role for Firebase Hosting rewrites
 #
 # 3. Create these secrets in Google Cloud Secret Manager:
 #    - FIREBASE_SERVICE_ACCOUNT_KEY: Firebase Admin SDK service account JSON
