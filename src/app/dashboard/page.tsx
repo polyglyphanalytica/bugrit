@@ -198,6 +198,48 @@ export default function DashboardPage() {
           </Button>
         </div>
 
+        {/* Welcome Banner - shown at TOP when user has no applications */}
+        {applications.length === 0 && (
+          <Card className="mb-8 border border-dashed border-orange-200 bg-orange-50/30">
+            <CardContent className="py-12 text-center">
+              <div className="text-5xl mb-4">👋</div>
+              <h3 className="text-2xl font-bold mb-2">Welcome to Bugrit!</h3>
+              <p className="text-gray-500 mb-6 max-w-lg mx-auto">
+                Let&apos;s scan your first project. Just create an app and paste your GitHub URL.
+                We&apos;ll check for security issues, bugs, and more in under 2 minutes.
+              </p>
+
+              <div className="max-w-md mx-auto mb-8">
+                <div className="flex items-start gap-4 text-left mb-4">
+                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-orange-600">1</div>
+                  <div>
+                    <p className="font-medium">Create an application</p>
+                    <p className="text-sm text-gray-500">Give it a name and select the type (web, mobile, etc.)</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 text-left mb-4">
+                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-orange-600">2</div>
+                  <div>
+                    <p className="font-medium">Paste your GitHub URL</p>
+                    <p className="text-sm text-gray-500">Or upload a ZIP file if you prefer</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4 text-left">
+                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-orange-600">3</div>
+                  <div>
+                    <p className="font-medium">Get your results</p>
+                    <p className="text-sm text-gray-500">See what to fix with copy-paste AI prompts for each issue</p>
+                  </div>
+                </div>
+              </div>
+
+              <Button asChild size="lg">
+                <Link href="/applications">Create Your First App</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Two Pillars Quick Actions */}
         <div className="grid gap-4 md:grid-cols-2 mb-8">
           <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
@@ -311,8 +353,8 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Applications List */}
-        {applications.length > 0 ? (
+        {/* Applications List - only shown when user has applications */}
+        {applications.length > 0 && (
           <Card className="mb-8 border border-gray-100">
             <CardHeader>
               <CardTitle>Your Applications</CardTitle>
@@ -345,45 +387,6 @@ export default function DashboardPage() {
                   </Button>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="mb-8 border border-dashed border-orange-200 bg-orange-50/30">
-            <CardContent className="py-12 text-center">
-              <div className="text-5xl mb-4">👋</div>
-              <h3 className="text-2xl font-bold mb-2">Welcome to Bugrit!</h3>
-              <p className="text-gray-500 mb-6 max-w-lg mx-auto">
-                Let&apos;s scan your first project. Just create an app and paste your GitHub URL.
-                We&apos;ll check for security issues, bugs, and more in under 2 minutes.
-              </p>
-
-              <div className="max-w-md mx-auto mb-8">
-                <div className="flex items-start gap-4 text-left mb-4">
-                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-orange-600">1</div>
-                  <div>
-                    <p className="font-medium">Create an application</p>
-                    <p className="text-sm text-gray-500">Give it a name and select the type (web, mobile, etc.)</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 text-left mb-4">
-                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-orange-600">2</div>
-                  <div>
-                    <p className="font-medium">Paste your GitHub URL</p>
-                    <p className="text-sm text-gray-500">Or upload a ZIP file if you prefer</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 text-left">
-                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-orange-600">3</div>
-                  <div>
-                    <p className="font-medium">Get your results</p>
-                    <p className="text-sm text-gray-500">See what to fix with copy-paste AI prompts for each issue</p>
-                  </div>
-                </div>
-              </div>
-
-              <Button asChild size="lg">
-                <Link href="/applications">Create Your First App</Link>
-              </Button>
             </CardContent>
           </Card>
         )}

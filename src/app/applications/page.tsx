@@ -94,16 +94,9 @@ export default function ApplicationsPage() {
           title: 'Application Created',
           description: `${res.data.application.name} has been created successfully.`,
         });
-        setApplications([res.data.application, ...applications]);
         setCreateDialogOpen(false);
-        setNewApp({
-          name: '',
-          description: '',
-          type: '',
-          targetUrl: '',
-          packageId: '',
-          bundleId: '',
-        });
+        // Redirect to get-started page to guide them through next steps
+        router.push(`/applications/${res.data.application.id}/get-started`);
       } else {
         throw new Error(res.error || 'Failed to create application');
       }
@@ -316,20 +309,27 @@ export default function ApplicationsPage() {
                       <p>Platforms: {app.platforms.join(', ')}</p>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <Link href={`/applications/${app.id}`} className="flex-1">
-                      <Button variant="outline" className="w-full">
-                        Manage
+                  <div className="space-y-2">
+                    <Link href={`/applications/${app.id}/get-started`} className="block">
+                      <Button className="w-full">
+                        Get Started
                       </Button>
                     </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteApp(app.id, app.name)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      🗑️
-                    </Button>
+                    <div className="flex gap-2">
+                      <Link href={`/applications/${app.id}`} className="flex-1">
+                        <Button variant="outline" className="w-full">
+                          Manage
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteApp(app.id, app.name)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        🗑️
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
