@@ -180,7 +180,6 @@ jobs:
     name: Deploy Firebase Hosting
     needs: build-and-deploy-cloud-run
     runs-on: ubuntu-latest
-    if: false  # Temporarily disabled - Cloud Run serves the app directly
 
     permissions:
       contents: read
