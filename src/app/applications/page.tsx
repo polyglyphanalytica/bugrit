@@ -316,20 +316,27 @@ export default function ApplicationsPage() {
                       <p>Platforms: {app.platforms.join(', ')}</p>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <Link href={`/applications/${app.id}`} className="flex-1">
-                      <Button variant="outline" className="w-full">
-                        Manage
+                  <div className="space-y-2">
+                    <Link href={`/scans/new?applicationId=${app.id}`} className="block">
+                      <Button className="w-full">
+                        Start Scan
                       </Button>
                     </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteApp(app.id, app.name)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      🗑️
-                    </Button>
+                    <div className="flex gap-2">
+                      <Link href={`/applications/${app.id}`} className="flex-1">
+                        <Button variant="outline" className="w-full">
+                          Manage
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteApp(app.id, app.name)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        🗑️
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
