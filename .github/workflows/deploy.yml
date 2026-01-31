@@ -163,8 +163,9 @@ jobs:
             --allow-unauthenticated
             --memory=1Gi
             --cpu=1
-            --min-instances=0
+            --min-instances=1
             --max-instances=10
+            --cpu-boost
             --port=3000
           env_vars: |
             NODE_ENV=production

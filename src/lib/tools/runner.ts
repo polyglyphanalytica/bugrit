@@ -10,10 +10,17 @@
  * Browser-based tools (Lighthouse, axe-core, Pa11y) are delegated to the
  * Cloud Run worker service when configured, since serverless environments
  * don't have Chromium installed.
+ *
+ * Performance optimization: Tools run in parallel with controlled concurrency
+ * to balance speed vs resource usage.
  */
 
 import { TOOL_REGISTRY, ToolDefinition } from './registry';
 import { execSync } from 'child_process';
+
+// Concurrency control: Run up to 5 tools simultaneously
+// This balances speed with memory/CPU constraints
+const MAX_CONCURRENT_TOOLS = parseInt(process.env.MAX_CONCURRENT_TOOLS || '5', 10);
 import { safeRequire } from '@/lib/utils/safe-require';
 import {
   isWorkerConfigured,
@@ -58,7 +65,46 @@ export interface RunOptions {
 }
 
 /**
+ * Run tools with controlled concurrency
+ * Uses a semaphore pattern to limit simultaneous executions
+ */
+async function runWithConcurrency<T, R>(
+  items: T[],
+  fn: (item: T) => Promise<R>,
+  concurrency: number
+): Promise<R[]> {
+  const results: R[] = [];
+  const executing: Promise<void>[] = [];
+
+  for (const item of items) {
+    const promise = fn(item).then((result) => {
+      results.push(result);
+    });
+    executing.push(promise);
+
+    if (executing.length >= concurrency) {
+      await Promise.race(executing);
+      // Remove completed promises
+      for (let i = executing.length - 1; i >= 0; i--) {
+        // Check if promise is settled by trying to race it
+        const settled = await Promise.race([
+          executing[i].then(() => true),
+          Promise.resolve(false),
+        ]);
+        if (settled) {
+          executing.splice(i, 1);
+        }
+      }
+    }
+  }
+
+  await Promise.all(executing);
+  return results;
+}
+
+/**
  * Run all (or specified) tools against a codebase
+ * Tools execute in parallel with controlled concurrency for optimal performance
  */
 export async function runTools(options: RunOptions): Promise<ToolResult[]> {
   const { targetPath, tools: toolIds } = options;
@@ -67,8 +113,11 @@ export async function runTools(options: RunOptions): Promise<ToolResult[]> {
     ? TOOL_REGISTRY.filter(t => toolIds.includes(t.id))
     : TOOL_REGISTRY;
 
-  const results = await Promise.all(
-    toolsToRun.map(tool => runSingleTool(tool, options))
+  // Run tools with controlled parallelism (default: 5 concurrent)
+  const results = await runWithConcurrency(
+    toolsToRun,
+    (tool) => runSingleTool(tool, options),
+    MAX_CONCURRENT_TOOLS
   );
 
   return results;
