@@ -15,8 +15,18 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Pronunciation banner — slim, informative */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-orange-500 to-orange-400 text-white text-center py-1.5 px-4">
+        <p className="text-xs font-medium">
+          <span className="opacity-90">Bugrit is pronounced</span>{' '}
+          <span className="font-semibold">&ldquo;Bug Rite&rdquo;</span>
+          <span className="opacity-75 mx-2">·</span>
+          <span className="opacity-90">&ldquo;ஈ&rdquo; (E) is Tamil for the common housefly — we eliminate bugs, so there&apos;s no E in Bugrit.</span>
+        </p>
+      </div>
+
       {/* Navigation — clean, minimal */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+      <nav className="fixed top-8 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
         <div className="container-wide flex items-center justify-between h-16">
           <Logo href="/" />
           <div className="hidden md:flex items-center gap-8">
@@ -56,7 +66,7 @@ export default function HomePage() {
       </nav>
 
       {/* Hero — clean, confident, minimal */}
-      <section className="pt-32 pb-20 md:pt-44 md:pb-32">
+      <section className="pt-40 pb-20 md:pt-52 md:pb-32">
         <div className="container-wide">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 mb-8 animate-fade-down">
@@ -547,13 +557,13 @@ export default function HomePage() {
       <footer className="border-t border-gray-100 py-12">
         <div className="container-wide">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <Logo href="/" />
-            <p className="text-sm text-gray-400">
-              150 modules. 5,000+ automated security checks.
-            </p>
+            <div className="flex items-center gap-4">
+              <Logo href="/" />
+              <span className="text-sm text-gray-400">&copy; {new Date().getFullYear()} Polyglyph Analytica</span>
+            </div>
             <div className="flex items-center gap-6">
-              <Link href="/privacy" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Privacy</Link>
-              <Link href="/terms" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Terms</Link>
+              <Link href="/terms" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Terms of Service</Link>
+              <Link href="/privacy" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Privacy Policy</Link>
               <Link href="/docs" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">Docs</Link>
             </div>
           </div>

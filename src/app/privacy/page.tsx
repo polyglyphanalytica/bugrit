@@ -27,7 +27,7 @@ export default function PrivacyPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Privacy Policy</h1>
-            <p className="text-gray-500">Last updated: January 2024</p>
+            <p className="text-gray-500">Last updated: January 2026</p>
           </div>
 
           <GlassCard className="p-8 md:p-12">
@@ -142,61 +142,142 @@ export default function PrivacyPage() {
               </section>
 
               <section className="mb-10">
-                <h2 className="text-2xl font-bold mb-4">6. Data Sharing and Disclosure</h2>
-                <p className="text-gray-500 leading-relaxed mb-4">
-                  We do not sell your personal information. We may share your information in the following circumstances:
-                </p>
+                <h2 className="text-2xl font-bold mb-4">6. Your Intellectual Property and Data Sharing</h2>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">6.1 Service Providers</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">6.1 Your Code Remains Yours — We Do Not Retain It</h3>
+                <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-4">
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    <strong>Your intellectual property is yours. We do not claim any ownership rights over your source code, applications, or any content you submit to our Service. Furthermore, we do not retain your intellectual property on our platform.</strong>
+                  </p>
+                  <ul className="list-disc pl-6 space-y-2 text-gray-600">
+                    <li>You retain full ownership of all intellectual property rights in your code and content;</li>
+                    <li>We do not sell, licence, sublicence, or otherwise commercialise your code;</li>
+                    <li>We do not share your source code with any third parties;</li>
+                    <li>We do not use your code to train machine learning models or for any purpose other than providing you with the analysis services you have requested;</li>
+                    <li>Your code is processed solely for the purpose of generating security and quality reports for your benefit;</li>
+                    <li><strong>All uploaded content (source code, APKs, IPAs, installers, executables, and any other files) is automatically and permanently deleted immediately upon completion of the scan.</strong></li>
+                  </ul>
+                </div>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">6.2 Automatic Deletion Policy</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
-                  We engage trusted third-party service providers to perform functions on our behalf, including:
+                  To ensure your intellectual property never resides on our systems longer than absolutely necessary:
                 </p>
                 <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
-                  <li><strong>Cloud Infrastructure:</strong> Data hosting and storage services</li>
-                  <li><strong>Payment Processing:</strong> Stripe, Inc. for payment processing and subscription management</li>
-                  <li><strong>Analytics:</strong> Services that help us understand Service usage and improve performance</li>
-                  <li><strong>Communication:</strong> Email delivery and customer support platforms</li>
+                  <li><strong>Source code repositories:</strong> Deleted immediately after analysis is complete;</li>
+                  <li><strong>Mobile applications (APK, IPA):</strong> Deleted immediately after scanning;</li>
+                  <li><strong>Desktop installers and executables:</strong> Deleted immediately after scanning;</li>
+                  <li><strong>Configuration files and assets:</strong> Deleted immediately after scanning;</li>
+                  <li><strong>No backups:</strong> We do not create copies, backups, or archives of your uploaded content;</li>
+                  <li><strong>Irreversible:</strong> Once deleted, your content cannot be recovered by us or anyone else.</li>
                 </ul>
                 <p className="text-gray-500 leading-relaxed mb-4">
-                  These service providers are contractually bound to protect your information and may only use it for the specific purposes for which we engage them.
+                  Only the generated scan reports (containing findings, recommendations, and metadata — but never your actual source code or binaries) are retained according to your subscription tier&apos;s retention period.
                 </p>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">6.2 Legal Requirements</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">6.3 We Take Care of Your Data</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
-                  We may disclose your information if required to do so by law or in response to valid legal requests, including:
+                  We understand that your source code represents significant intellectual investment and may contain proprietary business logic, trade secrets, and sensitive information. We treat this responsibility with the utmost seriousness:
                 </p>
                 <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
-                  <li>Complying with a subpoena, court order, or other legal process</li>
-                  <li>Responding to requests from law enforcement or government authorities</li>
-                  <li>Protecting our rights, property, or safety, or that of our users or others</li>
-                  <li>Enforcing our agreements and policies</li>
+                  <li>All data is encrypted in transit using TLS 1.3 and at rest using AES-256;</li>
+                  <li>Access to user data is strictly limited to essential personnel on a need-to-know basis;</li>
+                  <li>We maintain comprehensive audit logs of all data access;</li>
+                  <li>We conduct regular security assessments and penetration testing;</li>
+                  <li>Our staff are bound by strict confidentiality obligations.</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">6.3 Business Transfers</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">6.4 Limited Licence for Service Provision</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
-                  In the event of a merger, acquisition, reorganisation, bankruptcy, or sale of all or a portion of our assets, your information may be transferred as part of that transaction. We will notify you of any such change and the choices you may have regarding your information.
+                  By using our Service, you grant us a limited, non-exclusive, revocable licence solely to:
+                </p>
+                <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
+                  <li>Access and analyse your code to provide the security and quality scanning services you have requested;</li>
+                  <li>Generate and deliver reports based on that analysis;</li>
+                  <li>Temporarily store your code for the duration necessary to perform the analysis.</li>
+                </ul>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  This licence terminates automatically upon completion of the analysis or deletion of your content.
                 </p>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">6.4 With Your Consent</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">6.5 We Do Not Sell Your Information</h3>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  <strong>We do not sell, rent, or trade your personal information or your code to any third party.</strong> Period.
+                </p>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">6.6 Limited Disclosure Circumstances</h3>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  We may disclose limited information only in the following narrow circumstances:
+                </p>
+
+                <h4 className="text-lg font-medium mb-2 mt-4">Service Providers</h4>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  We engage trusted third-party service providers (such as cloud infrastructure, payment processing, and email delivery) who may process certain data on our behalf. These providers:
+                </p>
+                <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
+                  <li>Are contractually bound by strict data protection and confidentiality obligations;</li>
+                  <li>May only use data for the specific purposes for which we engage them;</li>
+                  <li>Do not have access to your source code;</li>
+                  <li>Are subject to our vendor security assessment process.</li>
+                </ul>
+
+                <h4 className="text-lg font-medium mb-2 mt-4">Legal Requirements</h4>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  We may disclose information only if strictly required by law, such as in response to a valid court order, subpoena, or binding legal process. We will, to the extent permitted by law, provide you with notice of any such requirement before disclosure.
+                </p>
+
+                <h4 className="text-lg font-medium mb-2 mt-4">Business Transfers</h4>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction. Any successor entity will be bound by the terms of this Privacy Policy.
+                </p>
+
+                <h4 className="text-lg font-medium mb-2 mt-4">With Your Consent</h4>
                 <p className="text-gray-500 leading-relaxed">
-                  We may share your information with third parties when you have given us your explicit consent to do so.
+                  We may share information with third parties when you have given us your explicit, informed consent to do so.
                 </p>
               </section>
 
               <section className="mb-10">
-                <h2 className="text-2xl font-bold mb-4">7. International Data Transfers</h2>
+                <h2 className="text-2xl font-bold mb-4">7. Data Storage Location and GDPR Compliance</h2>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">7.1 Western European Data Centres</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
-                  Your information is stored and processed in the United States of America. If you are accessing our Service from outside the United States, please be aware that your information may be transferred to, stored, and processed in the United States where our servers are located and our central database is operated.
+                  All user data, including personal information, account data, and any source code or content you submit to the Service, is stored and processed exclusively in data centres located in <strong>Western Europe</strong>. Our primary infrastructure is hosted in the European Union, ensuring that your data benefits from the robust protections afforded by European data protection law.
                 </p>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">7.2 GDPR Compliance</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
-                  For transfers of personal data from the European Economic Area (&quot;EEA&quot;), United Kingdom, or Switzerland to the United States, we rely on:
+                  We are fully committed to compliance with the General Data Protection Regulation (EU) 2016/679 (&quot;GDPR&quot;). Our data processing activities are designed to meet the highest standards of data protection, including:
                 </p>
                 <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
-                  <li><strong>Standard Contractual Clauses:</strong> We use European Commission-approved Standard Contractual Clauses to provide adequate safeguards for transfers of personal data.</li>
-                  <li><strong>Supplementary Measures:</strong> We implement additional technical and organisational measures to ensure the security of your data during transfer and processing.</li>
+                  <li>Processing personal data only for specified, explicit, and legitimate purposes;</li>
+                  <li>Ensuring data minimisation and storage limitation;</li>
+                  <li>Implementing appropriate technical and organisational security measures;</li>
+                  <li>Facilitating the exercise of data subject rights;</li>
+                  <li>Maintaining records of processing activities;</li>
+                  <li>Conducting data protection impact assessments where required.</li>
                 </ul>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">7.3 Geographic Data Segregation Disclaimer</h3>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-4">
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    <strong>Important Notice:</strong> Whilst our databases and primary infrastructure are located in Western Europe, we do not guarantee or take responsibility for:
+                  </p>
+                  <ul className="list-disc pl-6 space-y-2 text-gray-600">
+                    <li>Data segregation based on your specific geographic location or jurisdiction;</li>
+                    <li>Compliance with data residency requirements that may apply in your particular jurisdiction beyond those mandated by GDPR;</li>
+                    <li>Routing of data through any specific geographic regions during transmission;</li>
+                    <li>The geographic location of third-party service providers&apos; sub-processors;</li>
+                    <li>Temporary data caching or processing that may occur in other regions for performance optimisation purposes.</li>
+                  </ul>
+                </div>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  If you have specific data residency, localisation, or sovereignty requirements arising from applicable laws in your jurisdiction (such as sector-specific regulations or national data protection laws), you are responsible for determining whether our Service is appropriate for your needs prior to use.
+                </p>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">7.4 Transfers Outside the EEA</h3>
                 <p className="text-gray-500 leading-relaxed">
-                  By using our Service, you consent to the transfer of your information to the United States and other jurisdictions where we or our service providers operate.
+                  In limited circumstances, certain third-party service providers we engage may process data outside the European Economic Area. Where such transfers occur, we ensure appropriate safeguards are in place, including European Commission-approved Standard Contractual Clauses and supplementary technical measures, to maintain the protection of your data.
                 </p>
               </section>
 

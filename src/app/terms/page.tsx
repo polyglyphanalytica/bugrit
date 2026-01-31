@@ -28,7 +28,7 @@ export default function TermsPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Terms of Service</h1>
-            <p className="text-gray-500">Last updated: January 2024</p>
+            <p className="text-gray-500">Last updated: January 2026</p>
           </div>
 
           <GlassCard className="p-8 md:p-12">
@@ -243,14 +243,35 @@ export default function TermsPage() {
                 <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
                   <li>Process and analyse Your Code to provide the Service;</li>
                   <li>Generate reports and insights based on Your Code;</li>
-                  <li>Store Your Code for the duration necessary to provide the Service;</li>
+                  <li>Temporarily store Your Code solely for the duration necessary to complete the analysis;</li>
                   <li>Use anonymised, aggregated data to improve the Service.</li>
                 </ul>
                 <p className="text-gray-500 leading-relaxed mb-4">
                   We will not use Your Code for any purpose other than providing and improving the Service without your explicit consent.
                 </p>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">7.3 Feedback</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">7.3 Automatic Deletion of Uploaded Content</h3>
+                <div className="bg-green-50 border border-green-200 rounded-xl p-6 mb-4">
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    <strong>We do not retain your intellectual property on our platform.</strong>
+                  </p>
+                  <p className="text-gray-600 leading-relaxed mb-4">
+                    All source code, application binaries (APKs, IPAs), installers, executables, and any other files you upload to the Service are <strong>automatically and permanently deleted</strong> upon completion of the scanning process. Specifically:
+                  </p>
+                  <ul className="list-disc pl-6 space-y-2 text-gray-600">
+                    <li>Source code repositories are deleted immediately after analysis is complete;</li>
+                    <li>Mobile application files (APK, IPA) are deleted immediately after scanning;</li>
+                    <li>Desktop application installers and executables are deleted immediately after scanning;</li>
+                    <li>Configuration files and related assets are deleted immediately after scanning;</li>
+                    <li>No copies, backups, or archives of your uploaded content are retained;</li>
+                    <li>Deletion is irreversible — we cannot recover deleted files.</li>
+                  </ul>
+                </div>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  Only the generated scan reports, which contain metadata, findings, and recommendations (but not your actual source code or binaries), are retained according to your subscription tier&apos;s data retention policy.
+                </p>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">7.4 Feedback</h3>
                 <p className="text-gray-500 leading-relaxed">
                   If you provide feedback, suggestions, or ideas regarding the Service, you grant us an unrestricted, perpetual, irrevocable, royalty-free licence to use such feedback for any purpose without compensation or attribution to you.
                 </p>
@@ -301,61 +322,119 @@ export default function TermsPage() {
               <section className="mb-10">
                 <h2 className="text-2xl font-bold mb-4">10. Warranties and Disclaimers</h2>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">10.1 Our Warranties</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">10.1 No Warranty</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
-                  We warrant that:
+                  THE SERVICE IS PROVIDED ON AN &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; BASIS, WITHOUT WARRANTY OF ANY KIND, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE. TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, POLYGLYPH ANALYTICA EXPRESSLY DISCLAIMS ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO:
                 </p>
                 <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
-                  <li>We have the right and authority to provide the Service;</li>
-                  <li>The Service will perform substantially in accordance with the Documentation;</li>
-                  <li>We will use commercially reasonable efforts to maintain the security of the Service.</li>
+                  <li>Any implied warranties of merchantability, fitness for a particular purpose, title, and non-infringement;</li>
+                  <li>Any warranties arising out of course of dealing, usage, or trade practice;</li>
+                  <li>Any warranties that the Service will meet your requirements or expectations;</li>
+                  <li>Any warranties that the Service will be uninterrupted, timely, secure, or error-free;</li>
+                  <li>Any warranties that any defects in the Service will be corrected.</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">10.2 Disclaimer</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">10.2 Security Analysis Disclaimer — Critical Notice</h3>
+                <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-4">
+                  <p className="text-gray-700 leading-relaxed mb-4 font-medium">
+                    YOU EXPRESSLY ACKNOWLEDGE AND AGREE THAT:
+                  </p>
+                  <ul className="list-disc pl-6 space-y-3 text-gray-600">
+                    <li><strong>No Guarantee of Security:</strong> The Service does not and cannot guarantee that any application, codebase, or system that has undergone our security scanning, analysis, or testing is secure, safe from attack, free from vulnerabilities, or protected against malicious activity, bugs, or defects of any kind.</li>
+                    <li><strong>Evolving Threat Landscape:</strong> The cybersecurity landscape is in a constant state of flux. New vulnerabilities, attack vectors, zero-day exploits, and malicious techniques emerge continuously and unpredictably. No security scanning tool, including our Service, can detect threats that are unknown at the time of analysis.</li>
+                    <li><strong>Inherent Limitations:</strong> Security analysis tools are inherently limited in their scope and capability. Our Service employs {TOOL_COUNT} analysis modules, each of which has its own detection parameters, false positive rates, and blind spots. Certain categories of vulnerabilities—including but not limited to business logic flaws, novel attack patterns, sophisticated obfuscation techniques, and context-specific security issues—may not be detectable through automated analysis.</li>
+                    <li><strong>Best Efforts, Not Guarantees:</strong> Whilst we endeavour to update our analysis tools, security databases, vulnerability signatures, and detection algorithms to address newly discovered threats, this is an ongoing process that cannot keep pace with the full breadth of emerging security risks. We make no representation or warranty that our tools are current, comprehensive, or capable of detecting any particular vulnerability.</li>
+                    <li><strong>Not a Substitute for Professional Security Assessment:</strong> The Service is provided as a supplementary tool and is not a substitute for comprehensive security audits, penetration testing conducted by qualified professionals, secure development practices, or other security measures appropriate to your specific circumstances.</li>
+                    <li><strong>No Certification or Attestation:</strong> Completion of a scan or receipt of a report from our Service does not constitute any form of security certification, attestation, or endorsement of your code or application. You must not represent to any third party that your application has been &quot;certified&quot; or &quot;approved&quot; by Bugrit or Polyglyph Analytica.</li>
+                  </ul>
+                </div>
                 <p className="text-gray-500 leading-relaxed mb-4">
-                  EXCEPT AS EXPRESSLY PROVIDED HEREIN, THE SERVICE IS PROVIDED &quot;AS IS&quot; AND &quot;AS AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, OR NON-INFRINGEMENT.
+                  THE NATURE OF SOFTWARE SECURITY IS SUCH THAT ABSOLUTE PROTECTION IS IMPOSSIBLE. BY USING OUR SERVICE, YOU ACKNOWLEDGE THAT YOU UNDERSTAND AND ACCEPT THESE FUNDAMENTAL LIMITATIONS.
                 </p>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">10.3 Your Responsibility</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
-                  WE DO NOT WARRANT THAT:
+                  You remain solely responsible for:
                 </p>
                 <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
-                  <li>The Service will be uninterrupted, error-free, or secure;</li>
-                  <li>Any defects will be corrected;</li>
-                  <li>The Service will meet your specific requirements;</li>
-                  <li>Analysis results will be complete, accurate, or suitable for any purpose;</li>
-                  <li>The Service will detect all issues or vulnerabilities in Your Code.</li>
+                  <li>The security, quality, and fitness for purpose of your code and applications;</li>
+                  <li>Implementing appropriate security measures beyond automated scanning;</li>
+                  <li>Conducting independent verification and validation of your software;</li>
+                  <li>Maintaining ongoing security monitoring and incident response capabilities;</li>
+                  <li>Compliance with applicable security standards, regulations, and contractual obligations;</li>
+                  <li>Any decisions made based on reports or analysis provided by the Service.</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">10.3 Beta Features</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">10.4 Beta Features</h3>
                 <p className="text-gray-500 leading-relaxed">
-                  Any features designated as &quot;beta&quot;, &quot;preview&quot;, or &quot;experimental&quot; are provided without any warranty and may be modified or discontinued at any time without notice.
+                  Any features designated as &quot;beta&quot;, &quot;preview&quot;, or &quot;experimental&quot; are provided without any warranty whatsoever and may be modified, suspended, or discontinued at any time without notice. You use beta features entirely at your own risk.
                 </p>
               </section>
 
               <section className="mb-10">
                 <h2 className="text-2xl font-bold mb-4">11. Limitation of Liability</h2>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">11.1 Exclusion of Damages</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">11.1 Exclusion of Liability</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
-                  TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL POLYGLYPH ANALYTICA, ITS AFFILIATES, DIRECTORS, OFFICERS, EMPLOYEES, OR AGENTS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, PUNITIVE, OR EXEMPLARY DAMAGES, INCLUDING BUT NOT LIMITED TO:
+                  TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, POLYGLYPH ANALYTICA, ITS PARENT COMPANIES, SUBSIDIARIES, AFFILIATES, DIRECTORS, OFFICERS, EMPLOYEES, AGENTS, CONTRACTORS, AND LICENSORS SHALL NOT BE LIABLE TO YOU OR ANY THIRD PARTY FOR ANY:
                 </p>
                 <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
-                  <li>Loss of profits, revenue, or business;</li>
-                  <li>Loss of data or data breaches;</li>
-                  <li>Loss of goodwill or reputation;</li>
-                  <li>Cost of procurement of substitute services;</li>
-                  <li>Any damages arising from Your Code or its deployment;</li>
-                  <li>Any damages resulting from undetected issues or vulnerabilities.</li>
+                  <li>Indirect, incidental, special, consequential, punitive, or exemplary damages;</li>
+                  <li>Loss of profits, revenue, business, or anticipated savings;</li>
+                  <li>Loss of data, including any data breaches or security incidents;</li>
+                  <li>Loss of goodwill, reputation, or business opportunities;</li>
+                  <li>Cost of procurement of substitute goods or services;</li>
+                  <li>Personal injury or property damage;</li>
+                  <li>Business interruption or downtime;</li>
+                  <li>Any other pecuniary loss.</li>
                 </ul>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">11.2 Cap on Liability</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">11.2 Security-Related Exclusions</h3>
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-4">
+                  <p className="text-gray-700 leading-relaxed mb-4">
+                    WITHOUT LIMITING THE GENERALITY OF THE FOREGOING, WE SHALL HAVE NO LIABILITY WHATSOEVER FOR:
+                  </p>
+                  <ul className="list-disc pl-6 space-y-2 text-gray-600">
+                    <li>Any security vulnerabilities, bugs, defects, or malicious code that the Service fails to detect in Your Code or applications;</li>
+                    <li>Any cyberattack, data breach, security incident, or exploitation of vulnerabilities affecting your systems, applications, or data, regardless of whether such systems were scanned using our Service;</li>
+                    <li>Any damages arising from your reliance on scan results, reports, or recommendations provided by the Service;</li>
+                    <li>Any regulatory fines, penalties, or legal costs arising from security incidents affecting your applications;</li>
+                    <li>Any claims brought against you by third parties relating to security issues in your applications;</li>
+                    <li>The failure of our Service to identify any particular vulnerability, regardless of whether such vulnerability was known or unknown at the time of analysis;</li>
+                    <li>Any damages resulting from the deployment, distribution, or use of code that has been analysed by our Service.</li>
+                  </ul>
+                </div>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">11.3 Cap on Liability</h3>
                 <p className="text-gray-500 leading-relaxed mb-4">
-                  TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, OUR TOTAL CUMULATIVE LIABILITY ARISING OUT OF OR RELATED TO THESE TERMS OR THE SERVICE SHALL NOT EXCEED THE GREATER OF: (A) THE AMOUNTS PAID BY YOU TO US IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM; OR (B) ONE HUNDRED UNITED STATES DOLLARS (USD $100).
+                  NOTWITHSTANDING ANY OTHER PROVISION OF THESE TERMS, TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, OUR TOTAL AGGREGATE LIABILITY TO YOU FOR ALL CLAIMS ARISING OUT OF OR RELATING TO THESE TERMS OR THE SERVICE, WHETHER IN CONTRACT, TORT (INCLUDING NEGLIGENCE), STRICT LIABILITY, OR ANY OTHER LEGAL THEORY, SHALL NOT EXCEED THE LESSER OF: (A) THE TOTAL AMOUNTS ACTUALLY PAID BY YOU TO US IN THE SIX (6) MONTHS IMMEDIATELY PRECEDING THE EVENT GIVING RISE TO THE CLAIM; OR (B) FIFTY UNITED STATES DOLLARS (USD $50).
                 </p>
 
-                <h3 className="text-xl font-semibold mb-3 mt-6">11.3 Basis of the Bargain</h3>
+                <h3 className="text-xl font-semibold mb-3 mt-6">11.4 Application of Exclusions</h3>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  The exclusions and limitations of liability set forth in this Section shall apply:
+                </p>
+                <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
+                  <li>Regardless of the form of action, whether in contract, tort (including negligence), strict liability, or any other legal or equitable theory;</li>
+                  <li>Even if we have been advised of the possibility of such damages;</li>
+                  <li>Even if a limited remedy set forth herein is found to have failed of its essential purpose;</li>
+                  <li>To the fullest extent permitted by applicable law in your jurisdiction.</li>
+                </ul>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">11.5 Essential Basis of Agreement</h3>
+                <p className="text-gray-500 leading-relaxed mb-4">
+                  You acknowledge and agree that:
+                </p>
+                <ul className="list-disc pl-6 space-y-2 text-gray-500 mb-4">
+                  <li>The limitations of liability and exclusions of damages set forth in this Section are fundamental elements of the basis of the bargain between you and Polyglyph Analytica;</li>
+                  <li>Polyglyph Analytica would not provide the Service without these limitations;</li>
+                  <li>The pricing of the Service reflects and is based upon these limitations;</li>
+                  <li>These limitations allocate the risks between the parties and are an essential element of our agreement.</li>
+                </ul>
+
+                <h3 className="text-xl font-semibold mb-3 mt-6">11.6 Jurisdictional Limitations</h3>
                 <p className="text-gray-500 leading-relaxed">
-                  The limitations and exclusions in this Section reflect the allocation of risk between the parties and are an essential element of the basis of the bargain between us. The Service would not be provided without these limitations.
+                  Some jurisdictions do not allow the exclusion of certain warranties or the limitation or exclusion of liability for certain types of damages. To the extent that applicable law does not permit the disclaimers, exclusions, or limitations set forth in these Terms, such disclaimers, exclusions, or limitations shall not apply to you, and the remainder of these Terms shall continue in full force and effect.
                 </p>
               </section>
 
