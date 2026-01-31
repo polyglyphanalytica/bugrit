@@ -94,16 +94,9 @@ export default function ApplicationsPage() {
           title: 'Application Created',
           description: `${res.data.application.name} has been created successfully.`,
         });
-        setApplications([res.data.application, ...applications]);
         setCreateDialogOpen(false);
-        setNewApp({
-          name: '',
-          description: '',
-          type: '',
-          targetUrl: '',
-          packageId: '',
-          bundleId: '',
-        });
+        // Redirect to get-started page to guide them through next steps
+        router.push(`/applications/${res.data.application.id}/get-started`);
       } else {
         throw new Error(res.error || 'Failed to create application');
       }
@@ -317,9 +310,9 @@ export default function ApplicationsPage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Link href={`/scans/new?applicationId=${app.id}`} className="block">
+                    <Link href={`/applications/${app.id}/get-started`} className="block">
                       <Button className="w-full">
-                        Start Scan
+                        Get Started
                       </Button>
                     </Link>
                     <div className="flex gap-2">
