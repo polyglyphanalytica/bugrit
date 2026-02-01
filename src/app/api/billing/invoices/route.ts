@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { verifyAuth } from '@/lib/auth/verify';
+import { verifySession } from '@/lib/auth/session';
 import { logger } from '@/lib/logger';
 import { db } from '@/lib/firebase-admin';
 
@@ -45,16 +45,16 @@ export interface InvoicesResponse {
 
 export async function GET(req: NextRequest) {
   try {
-    // Authenticate user
-    const authResult = await verifyAuth(req);
-    if (!authResult.authenticated || !authResult.user) {
+    // Authenticate user via session cookie
+    const user = await verifySession();
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
 
-    const userId = authResult.user.uid;
+    const userId = user.uid;
 
     // Get Stripe customer ID from user record
     const userDoc = await db.collection('users').doc(userId).get();
