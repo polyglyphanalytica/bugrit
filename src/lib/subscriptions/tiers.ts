@@ -2,7 +2,7 @@
  * Subscription Tiers Configuration
  *
  * Credit-based pricing that scales with usage:
- * - Free: 5 credits - Try it out
+ * - Free: 10 credits - Try it out
  * - Solo: $19/mo, 50 credits - For side projects
  * - Scale: $49/mo, 200 credits - For serious builders
  * - Business: $99/mo, 500 credits - For teams
@@ -72,7 +72,7 @@ export const TIERS: Record<TierName, TierDefinition> = {
     priceMonthly: 0,
     priceYearly: 0,
     limits: {
-      credits: 5,          // Reduced from 10 to limit trial abuse
+      credits: 10,         // Restored to 10 for better trial experience
       creditsRollover: 0,
       overageRate: null,
       maxRepoSize: 10_000,

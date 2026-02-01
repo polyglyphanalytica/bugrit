@@ -213,7 +213,7 @@ describe('getDefaultScanConfig', () => {
 describe('SUBSCRIPTION_TIERS', () => {
   it('should have correct credit allocations', () => {
     // Updated credit allocations for profitability
-    expect(SUBSCRIPTION_TIERS.free.credits).toBe(5);      // Reduced from 10
+    expect(SUBSCRIPTION_TIERS.free.credits).toBe(10);     // Restored to 10
     expect(SUBSCRIPTION_TIERS.starter.credits).toBe(50);
     expect(SUBSCRIPTION_TIERS.pro.credits).toBe(200);
     expect(SUBSCRIPTION_TIERS.business.credits).toBe(500); // Reduced from 600
