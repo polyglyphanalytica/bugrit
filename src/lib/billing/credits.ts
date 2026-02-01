@@ -44,7 +44,7 @@ export const SUBSCRIPTION_TIERS = {
   free: {
     name: 'Free',
     price: 0,
-    credits: 5,          // Reduced from 10 to limit trial abuse
+    credits: 10,         // Restored to 10 for better trial experience
     overageRate: null,   // No overage allowed
     features: {
       maxProjects: 1,
