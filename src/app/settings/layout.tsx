@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { DashboardNav } from '@/components/dashboard-nav';
 import { DashboardFooter } from '@/components/dashboard-footer';
-import { User, Key, Users, CreditCard, Settings, Zap, GitBranch, Bell } from 'lucide-react';
+import { User, Key, Users, CreditCard, Settings, Zap, GitBranch, Bell, Receipt } from 'lucide-react';
 
 const settingsNavItems = [
   { href: '/settings', label: 'Profile', icon: User },
@@ -15,6 +15,7 @@ const settingsNavItems = [
   { href: '/settings/automations', label: 'Automations', icon: Zap },
   { href: '/settings/team', label: 'Team', icon: Users },
   { href: '/settings/subscription', label: 'Subscription', icon: CreditCard },
+  { href: '/settings/billing', label: 'Billing History', icon: Receipt },
 ];
 
 export default function SettingsLayout({
