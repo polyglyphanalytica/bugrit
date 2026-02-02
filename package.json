@@ -73,7 +73,7 @@
     "dotenv": "^16.5.0",
     "embla-carousel-react": "^8.6.0",
     "eslint": "^9.39.2",
-    "eslint-config-next": "^16.1.5",
+    "eslint-config-next": "^16.1.6",
     "eslint-plugin-security": "^3.0.1",
     "express": "^4.21.0",
     "firebase": "^11.9.1",
