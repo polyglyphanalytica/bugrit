@@ -92,7 +92,7 @@
     "madge": "^8.0.0",
     "markdownlint": "^0.40.0",
     "markdownlint-cli": "^0.47.0",
-    "next": "15.5.10",
+    "next": "15.5.11",
     "node-fetch": "^3.3.2",
     "pa11y": "^8.0.0",
     "patch-package": "^8.0.0",
