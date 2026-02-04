@@ -79,6 +79,9 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Scan mode types
+type ScanMode = 'incremental' | 'full';
+
 export async function POST(request: NextRequest) {
   try {
     const context = await authenticateRequest(request, 'scans:write');
@@ -91,6 +94,18 @@ export async function POST(request: NextRequest) {
     }
     if (!body.platform) {
       return Errors.missingField('platform');
+    }
+
+    // Scan mode: "incremental" (default) or "full"
+    // Incremental scans only analyze changed files, using fewer credits
+    const scanMode: ScanMode = body.scanMode === 'full' ? 'full' : 'incremental';
+    const changedFiles: string[] = body.changedFiles || [];
+    const baseBranch: string = body.baseBranch || 'main';
+
+    // For incremental scans, warn if no changed files provided
+    if (scanMode === 'incremental' && changedFiles.length === 0 && !body.estimatedLines) {
+      // If no changed files and no explicit line count, treat as minimal scan
+      // This allows API users to trigger incremental without file list
     }
 
     // Verify project exists and user has access
@@ -146,7 +161,12 @@ export async function POST(request: NextRequest) {
     // Check if user can afford this scan (credit-based billing)
     const userId = context.apiKey.ownerId;
     const defaultCategories: ToolCategory[] = ['linting', 'security', 'accessibility'];
-    const estimatedLines = body.estimatedLines || 50000;
+
+    // Estimate lines based on scan mode:
+    // - incremental: default to 1000 lines (typical PR change), or explicit value
+    // - full: default to 50000 lines (typical repo), or explicit value
+    const defaultLines = scanMode === 'incremental' ? 1000 : 50000;
+    const estimatedLines = body.estimatedLines || defaultLines;
 
     // Check maxRepoSize limit for the tier
     const tierConfig = SUBSCRIPTION_TIERS[context.tier as SubscriptionTier];
@@ -189,7 +209,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create scan
+    // Create scan with scan mode metadata
     const scan = await createScan({
       projectId: body.projectId,
       organizationId: context.organizationId,
@@ -199,6 +219,9 @@ export async function POST(request: NextRequest) {
       status: 'pending',
       metadata: {
         ...body.metadata,
+        scanMode,
+        changedFiles: scanMode === 'incremental' ? changedFiles : undefined,
+        baseBranch: scanMode === 'incremental' ? baseBranch : undefined,
         billing: {
           estimatedCredits: affordCheck.estimate.total,
           userId,
@@ -230,6 +253,7 @@ export async function POST(request: NextRequest) {
       {
         ...scan,
         status: 'running',
+        scanMode,
         startedAt: new Date().toISOString(),
       },
       201
