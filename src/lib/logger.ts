@@ -25,6 +25,8 @@
  * ```
  */
 
+import { getDefaultEnvironment, isProductionHostname } from '@/lib/environment';
+
 /**
  * Log levels in order of severity
  */
@@ -110,30 +112,21 @@ const RESET_COLOR = '\x1b[0m';
 const isBrowser = typeof window !== 'undefined';
 
 /**
- * Production domains where console output should be suppressed
- */
-const PRODUCTION_DOMAINS = ['bugrit.com', 'bugrit.com'];
-
-/**
  * Check if running on a production domain (browser only)
  * Returns true if console output should be suppressed
  */
 const isProductionDomain = (): boolean => {
   if (!isBrowser) return false;
-  const hostname = window.location.hostname;
-  return PRODUCTION_DOMAINS.some(
-    (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
-  );
+  return isProductionHostname(window.location.hostname);
 };
 
 /**
  * Determine the current environment
  */
 const getEnvironment = (): string => {
-  if (isBrowser) {
-    return process.env.NODE_ENV || 'development';
-  }
-  return process.env.NODE_ENV || 'development';
+  return getDefaultEnvironment() === 'production'
+    ? 'production'
+    : process.env.NODE_ENV || 'development';
 };
 
 /**

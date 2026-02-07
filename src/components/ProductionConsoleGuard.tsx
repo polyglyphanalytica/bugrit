@@ -1,6 +1,6 @@
 'use client';
 
-const PRODUCTION_DOMAINS = ['bugrit.com', 'bugrit.com'];
+import { isProductionHostname } from '@/lib/environment';
 
 /**
  * Suppresses native console methods on production domains.
@@ -19,11 +19,7 @@ const PRODUCTION_DOMAINS = ['bugrit.com', 'bugrit.com'];
 // Execute immediately at module load to avoid race conditions
 if (typeof window !== 'undefined') {
   const hostname = window.location.hostname;
-  const isProduction = PRODUCTION_DOMAINS.some(
-    (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
-  );
-
-  if (isProduction) {
+  if (isProductionHostname(hostname)) {
     const noop = () => {};
     console.log = noop;
     console.debug = noop;
