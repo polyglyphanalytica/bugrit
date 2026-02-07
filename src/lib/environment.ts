@@ -1,6 +1,6 @@
 export type BugritEnvironment = 'production' | 'dev';
 
-const PRODUCTION_HOSTNAMES = ['bugrit.com', 'bugrid.com'];
+const PRODUCTION_HOSTNAMES = ['bugrit.com'];
 
 export const DEFAULT_FIRESTORE_DATABASE_ID = '(default)';
 export const DEV_FIRESTORE_DATABASE_ID = 'devdb';
