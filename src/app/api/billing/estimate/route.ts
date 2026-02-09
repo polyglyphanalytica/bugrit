@@ -13,119 +13,138 @@ import {
   SubscriptionTier,
 } from '@/lib/billing/credits';
 import { ScanEstimateRequest, ScanEstimateResponse } from '@/lib/billing/types';
-import { authenticateRequest, ApiKeyContext } from '@/lib/api/auth';
-import { ApiException } from '@/lib/api/errors';
-import { logger } from '@/lib/logger';
-import { getBillingAccount } from '@/lib/billing/scan-billing';
-import { getDb, COLLECTIONS } from '@/lib/firestore';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
+import { getDb } from '@/lib/firestore';
 
-// Map tier names to SubscriptionTier
-function mapTierToSubscriptionTier(tier: string): SubscriptionTier {
-  const tierMap: Record<string, SubscriptionTier> = {
-    free: 'free',
-    starter: 'starter',
-    pro: 'pro',
-    business: 'business',
-    enterprise: 'enterprise',
-  };
-  return tierMap[tier] || 'free';
+interface UserBillingContext {
+  userId: string;
+  tier: SubscriptionTier;
+  credits: number;
 }
 
-// Get user from authenticated request
-async function getUserFromRequest(req: NextRequest): Promise<{ userId: string; tier: SubscriptionTier; context: ApiKeyContext } | null> {
-  try {
-    const context = await authenticateRequest(req);
+// Get user's billing context (tier and remaining credits)
+async function getUserBillingContext(userId: string): Promise<UserBillingContext> {
+  const db = getDb();
+
+  if (!db) {
+    // Demo/development fallback
     return {
-      userId: context.apiKey.ownerId,
-      tier: mapTierToSubscriptionTier(context.tier),
-      context,
+      userId,
+      tier: 'starter',
+      credits: 50,
+    };
+  }
+
+  try {
+    // Check user's default organization first
+    const userDoc = await db.collection('users').doc(userId).get();
+
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      const defaultOrgId = userData?.defaultOrganizationId;
+
+      if (defaultOrgId) {
+        const orgDoc = await db.collection('organizations').doc(defaultOrgId).get();
+
+        if (orgDoc.exists) {
+          const orgData = orgDoc.data();
+          const subscription = orgData?.subscription || {};
+          const billing = orgData?.billing || {};
+
+          return {
+            userId,
+            tier: (subscription.tier as SubscriptionTier) || 'starter',
+            credits: billing.creditsRemaining ?? 50,
+          };
+        }
+      }
+    }
+
+    // Fallback: Check individual billing account
+    const billingDoc = await db.collection('billingAccounts').doc(userId).get();
+
+    if (billingDoc.exists) {
+      const data = billingDoc.data()!;
+      return {
+        userId,
+        tier: (data.tier as SubscriptionTier) || 'starter',
+        credits: data.credits?.remaining ?? 50,
+      };
+    }
+
+    // No billing account - return free tier defaults
+    return {
+      userId,
+      tier: 'free',
+      credits: SUBSCRIPTION_TIERS.free.credits,
     };
   } catch (error) {
-    if (error instanceof ApiException) {
-      return null;
-    }
-    throw error;
+    console.error('Error fetching user billing context:', error);
+    return {
+      userId,
+      tier: 'free',
+      credits: SUBSCRIPTION_TIERS.free.credits,
+    };
   }
 }
 
-// Get user's remaining credits from Firestore
-async function getUserCredits(userId: string): Promise<number> {
-  const account = await getBillingAccount(userId);
-  return account?.credits.remaining ?? 0;
-}
-
-// Estimate repo size from URL or project based on historical scans
+// Estimate repo size from previous scans
 async function estimateRepoSize(repoUrl?: string, projectId?: string): Promise<number | null> {
   const db = getDb();
-  if (!db) return null;
+
+  if (!db || (!repoUrl && !projectId)) {
+    return null;
+  }
 
   try {
-    // If we have a projectId, look up recent scans to get actual lines of code
+    // If we have a projectId, look up the most recent scan for that project
     if (projectId) {
       const scansSnapshot = await db
-        .collection(COLLECTIONS.SCANS)
+        .collection('scans')
         .where('projectId', '==', projectId)
-        .where('status', '==', 'completed')
         .orderBy('createdAt', 'desc')
         .limit(1)
         .get();
 
       if (!scansSnapshot.empty) {
-        const scanData = scansSnapshot.docs[0].data();
-        // Check if we stored linesOfCode in metadata
-        const linesOfCode = scanData?.metadata?.billing?.linesOfCode ||
-                           scanData?.metadata?.linesOfCode;
-        if (typeof linesOfCode === 'number' && linesOfCode > 0) {
-          return linesOfCode;
-        }
+        const lastScan = scansSnapshot.docs[0].data();
+        return lastScan.linesScanned || null;
       }
     }
 
-    // If we have a repoUrl, try to find a project with this URL and its scan history
+    // If we have a repoUrl, look up scans for that repo
     if (repoUrl) {
-      const projectsSnapshot = await db
-        .collection(COLLECTIONS.PROJECTS)
-        .where('repositoryUrl', '==', repoUrl)
+      const scansSnapshot = await db
+        .collection('scans')
+        .where('repoUrl', '==', repoUrl)
+        .orderBy('createdAt', 'desc')
         .limit(1)
         .get();
 
-      if (!projectsSnapshot.empty) {
-        const projectData = projectsSnapshot.docs[0];
-        const scansSnapshot = await db
-          .collection(COLLECTIONS.SCANS)
-          .where('projectId', '==', projectData.id)
-          .where('status', '==', 'completed')
-          .orderBy('createdAt', 'desc')
-          .limit(1)
-          .get();
-
-        if (!scansSnapshot.empty) {
-          const scanData = scansSnapshot.docs[0].data();
-          const linesOfCode = scanData?.metadata?.billing?.linesOfCode ||
-                             scanData?.metadata?.linesOfCode;
-          if (typeof linesOfCode === 'number' && linesOfCode > 0) {
-            return linesOfCode;
-          }
-        }
+      if (!scansSnapshot.empty) {
+        const lastScan = scansSnapshot.docs[0].data();
+        return lastScan.linesScanned || null;
       }
     }
-  } catch (error) {
-    logger.warn('Failed to estimate repo size', { repoUrl, projectId, error });
-  }
 
-  return null;
+    return null;
+  } catch (error) {
+    console.error('Error estimating repo size:', error);
+    return null;
+  }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await getUserFromRequest(req);
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'Valid API key or auth token required' },
-        { status: 401 }
-      );
+    // Authenticate user via API key or session
+    const authResult = requireAuthenticatedUser(req);
+    if (authResult instanceof NextResponse) {
+      return authResult;
     }
+    const userId = authResult;
+
+    // Get user's billing context (tier and credits)
+    const userContext = await getUserBillingContext(userId);
 
     const body: ScanEstimateRequest = await req.json();
 
@@ -155,14 +174,14 @@ export async function POST(req: NextRequest) {
     // Calculate credits
     const estimate = calculateCredits(configWithEstimates);
 
-    // Get user's balance
-    const currentBalance = await getUserCredits(user.userId);
+    // Use credits from user context
+    const currentBalance = userContext.credits;
 
     // Check affordability
-    const affordCheck = canAffordScan(currentBalance, estimate, user.tier);
+    const affordCheck = canAffordScan(currentBalance, estimate, userContext.tier);
 
     // Calculate overage if applicable
-    const tierConfig = SUBSCRIPTION_TIERS[user.tier];
+    const tierConfig = SUBSCRIPTION_TIERS[userContext.tier];
     let overageAmount: number | undefined;
     let overageCost: number | undefined;
 
@@ -190,11 +209,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    logger.error('Estimate error', {
-      path: '/api/billing/estimate',
-      method: 'POST',
-      error,
-    });
+    console.error('Estimate error:', error);
     return NextResponse.json(
       { error: 'Internal error', message: 'Failed to calculate estimate' },
       { status: 500 }

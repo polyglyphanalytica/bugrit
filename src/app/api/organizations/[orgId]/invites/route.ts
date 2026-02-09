@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getApps, initializeApp, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import {
   getOrganization,
   getOrganizationMembers,
@@ -8,8 +11,39 @@ import {
   hasPermission,
   MemberRole,
 } from '@/lib/organizations';
-import { requireAuthenticatedUser } from '@/lib/api-auth';
-import { logger } from '@/lib/logger';
+
+// Initialize Firebase Admin if not already initialized
+function getFirebaseAuth() {
+  if (getApps().length === 0) {
+    const projectId =
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+      process.env.FIREBASE_PROJECT_ID ||
+      process.env.GOOGLE_CLOUD_PROJECT;
+
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      initializeApp({
+        credential: cert(serviceAccount),
+        projectId,
+      });
+    } else {
+      initializeApp({ projectId });
+    }
+  }
+  return getAuth();
+}
+
+// Verify session cookie and return user ID
+async function verifySessionAndGetUserId(sessionCookie: string): Promise<string | null> {
+  try {
+    const auth = getFirebaseAuth();
+    const decodedToken = await auth.verifySessionCookie(sessionCookie);
+    return decodedToken.uid;
+  } catch (error) {
+    console.error('Session verification failed:', error);
+    return null;
+  }
+}
 
 interface RouteParams {
   params: Promise<{ orgId: string }>;
@@ -21,9 +55,18 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const authResult = await requireAuthenticatedUser(request);
-    if (authResult instanceof NextResponse) return authResult;
-    const userId = authResult;
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('session')?.value;
+
+    if (!sessionCookie) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    // Verify session and get user ID
+    const userId = await verifySessionAndGetUserId(sessionCookie);
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
+    }
 
     const { orgId } = await params;
 
@@ -43,7 +86,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ invites });
   } catch (error) {
-    logger.error('Failed to fetch invites', { error });
+    console.error('Failed to fetch invites:', error);
     return NextResponse.json({ error: 'Failed to fetch invites' }, { status: 500 });
   }
 }
@@ -54,9 +97,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const authResult = await requireAuthenticatedUser(request);
-    if (authResult instanceof NextResponse) return authResult;
-    const userId = authResult;
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('session')?.value;
+
+    if (!sessionCookie) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    // Verify session and get user ID
+    const userId = await verifySessionAndGetUserId(sessionCookie);
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
+    }
 
     const { orgId } = await params;
     const { email, role = 'member' } = await request.json();
@@ -85,9 +137,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Only owner can invite as admin
     const org = await getOrganization(orgId);
-    if (!org) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
-    }
     if (role === 'admin' && org?.ownerId !== userId) {
       return NextResponse.json({ error: 'Only owner can invite admins' }, { status: 403 });
     }
@@ -98,7 +147,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
-    // TODO: Send email with invite link via notification system
+    // In production, send email with invite link
     const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invite/${result.token}`;
 
     return NextResponse.json({
@@ -107,7 +156,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       message: `Invite sent to ${email}`,
     });
   } catch (error) {
-    logger.error('Failed to create invite', { error });
+    console.error('Failed to create invite:', error);
     return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
   }
 }
@@ -118,9 +167,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const authResult = await requireAuthenticatedUser(request);
-    if (authResult instanceof NextResponse) return authResult;
-    const userId = authResult;
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('session')?.value;
+
+    if (!sessionCookie) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    // Verify session and get user ID
+    const userId = await verifySessionAndGetUserId(sessionCookie);
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid or expired session' }, { status: 401 });
+    }
 
     const { orgId } = await params;
     const { token } = await request.json();
@@ -145,7 +203,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error('Failed to cancel invite', { error });
+    console.error('Failed to cancel invite:', error);
     return NextResponse.json({ error: 'Failed to cancel invite' }, { status: 500 });
   }
 }

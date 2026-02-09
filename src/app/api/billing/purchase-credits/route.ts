@@ -7,64 +7,17 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedUser, errorResponse } from '@/lib/api-auth';
-import { getCreditPackage, updateCreditPackage } from '@/lib/admin/service';
+import { getCreditPackage } from '@/lib/admin/service';
 import { getStripeSecretKey } from '@/lib/admin/service';
-import { db } from '@/lib/firebase/admin';
-import { logger } from '@/lib/logger';
-
-// Validate and get safe return URL to prevent open redirect attacks
-function getSafeReturnUrl(origin: string | null): string | null {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (!appUrl) return null;
-
-  // If no origin provided, use configured app URL
-  if (!origin) return appUrl;
-
-  try {
-    const originUrl = new URL(origin);
-    const appUrlParsed = new URL(appUrl);
-
-    // Only allow the exact configured domain or localhost for development
-    const allowedHosts = [
-      appUrlParsed.host,
-      'localhost:3000',
-      '127.0.0.1:3000',
-    ];
-
-    if (allowedHosts.includes(originUrl.host)) {
-      return origin;
-    }
-
-    // Origin not in whitelist, use configured app URL
-    return appUrl;
-  } catch {
-    // Invalid URL, use configured app URL
-    return appUrl;
-  }
-}
 
 export async function POST(req: NextRequest) {
   try {
     // Authenticate user
-    const authResult = await requireAuthenticatedUser(req);
+    const authResult = requireAuthenticatedUser(req);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
     const userId = authResult;
-
-    // Check if user already has a Stripe customer ID
-    let existingCustomerId: string | undefined;
-    const userDoc = await db.collection('users').doc(userId).get();
-    if (userDoc.exists) {
-      existingCustomerId = userDoc.data()?.stripeCustomerId;
-    }
-    // Also check subscriptions collection
-    if (!existingCustomerId) {
-      const subDoc = await db.collection('subscriptions').doc(userId).get();
-      if (subDoc.exists) {
-        existingCustomerId = subDoc.data()?.stripeCustomerId;
-      }
-    }
 
     // Parse request body
     const body = await req.json();
@@ -93,7 +46,7 @@ export async function POST(req: NextRequest) {
     // Dynamically import Stripe to avoid issues during build
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2025-12-15.clover',
+      apiVersion: '2024-12-18.acacia',
     });
 
     // Get or create Stripe price ID for this package
@@ -123,32 +76,23 @@ export async function POST(req: NextRequest) {
 
       priceId = price.id;
 
-      // Save the priceId back to the credit package in Firestore
-      try {
-        await updateCreditPackage(creditPackage.id, { stripePriceId: priceId }, 'system');
-      } catch (saveError) {
-        logger.warn('Failed to save stripePriceId to credit package', {
-          packageId: creditPackage.id,
-          priceId,
-          error: saveError,
-        });
-        // Continue anyway - the price was created in Stripe
-      }
+      // TODO: Save the priceId back to the credit package in Firestore
     }
 
-    // Create Stripe Checkout session with validated return URLs
-    const safeOrigin = getSafeReturnUrl(req.headers.get('origin'));
+    // Create Stripe Checkout session
+    // Get origin from headers or environment variable (do NOT fall back to hardcoded URLs)
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL;
 
-    if (!safeOrigin) {
-      return errorResponse('NEXT_PUBLIC_APP_URL environment variable is required', 500);
+    if (!origin) {
+      return errorResponse(
+        'Application URL not configured. Set NEXT_PUBLIC_APP_URL environment variable.',
+        503
+      );
     }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      // Card + Link for faster checkout (Stripe's one-click payment)
-      payment_method_types: ['card', 'link'],
-      // Reuse existing customer for consolidated billing history
-      ...(existingCustomerId && { customer: existingCustomerId }),
+      payment_method_types: ['card'],
       line_items: [
         {
           price: priceId,
@@ -161,8 +105,8 @@ export async function POST(req: NextRequest) {
         credits: creditPackage.credits.toString(),
         type: 'credit_purchase',
       },
-      success_url: `${safeOrigin}/settings/subscription?purchase=success&credits=${creditPackage.credits}`,
-      cancel_url: `${safeOrigin}/settings/subscription?purchase=canceled`,
+      success_url: `${origin}/settings/subscription?purchase=success&credits=${creditPackage.credits}`,
+      cancel_url: `${origin}/settings/subscription?purchase=canceled`,
     });
 
     return NextResponse.json({
@@ -170,11 +114,7 @@ export async function POST(req: NextRequest) {
       sessionId: session.id,
     });
   } catch (error) {
-    logger.error('Purchase credits error', {
-      path: '/api/billing/purchase-credits',
-      method: 'POST',
-      error,
-    });
+    console.error('Purchase credits error:', error);
     return errorResponse('Failed to initiate purchase', 500);
   }
 }

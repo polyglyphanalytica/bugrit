@@ -8,48 +8,108 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@/lib/billing/credits';
 import { BillingStatus } from '@/lib/billing/types';
-import { authenticateRequest, ApiKeyContext } from '@/lib/api/auth';
-import { ApiException } from '@/lib/api/errors';
-import { logger } from '@/lib/logger';
-import { getBillingAccount as getRealBillingAccount } from '@/lib/billing/scan-billing';
+import { requireAuthenticatedUser, errorResponse } from '@/lib/api-auth';
+import { getDb, toDate } from '@/lib/firestore';
 
-// Map tier names to SubscriptionTier
-function mapTierToSubscriptionTier(tier: string): SubscriptionTier {
-  const tierMap: Record<string, SubscriptionTier> = {
-    free: 'free',
-    starter: 'starter',
-    pro: 'pro',
-    business: 'business',
-    enterprise: 'enterprise',
+interface BillingAccountData {
+  tier: SubscriptionTier;
+  credits: {
+    included: number;
+    used: number;
+    remaining: number;
+    rollover: number;
   };
-  return tierMap[tier] || 'free';
+  subscription: {
+    status: 'active' | 'past_due' | 'canceled' | 'trialing';
+    currentPeriodEnd: Date;
+    cancelAtPeriodEnd: boolean;
+  };
 }
 
-// Get user from authenticated request
-async function getUserFromRequest(req: NextRequest): Promise<{ userId: string; tier: SubscriptionTier; context: ApiKeyContext } | null> {
-  try {
-    const context = await authenticateRequest(req);
+async function getBillingAccount(userId: string): Promise<BillingAccountData> {
+  const db = getDb();
+
+  if (!db) {
+    // Fallback for demo/development mode - return starter tier defaults
     return {
-      userId: context.apiKey.ownerId,
-      tier: mapTierToSubscriptionTier(context.tier),
-      context,
+      tier: 'starter',
+      credits: {
+        included: 50,
+        used: 0,
+        remaining: 50,
+        rollover: 0,
+      },
+      subscription: {
+        status: 'active',
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        cancelAtPeriodEnd: false,
+      },
     };
-  } catch (error) {
-    if (error instanceof ApiException) {
-      return null;
-    }
-    throw error;
   }
-}
 
-// Fetch billing account from Firestore
-async function getBillingAccount(userId: string) {
-  const account = await getRealBillingAccount(userId);
+  try {
+    // First try to find user's default organization billing
+    const userDoc = await db.collection('users').doc(userId).get();
 
-  if (!account) {
-    // Return default free tier if no account found
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      const defaultOrgId = userData?.defaultOrganizationId;
+
+      if (defaultOrgId) {
+        // Get organization billing data
+        const orgDoc = await db.collection('organizations').doc(defaultOrgId).get();
+
+        if (orgDoc.exists) {
+          const orgData = orgDoc.data();
+          const subscription = orgData?.subscription || {};
+          const billing = orgData?.billing || {};
+
+          return {
+            tier: (subscription.tier as SubscriptionTier) || 'starter',
+            credits: {
+              included: billing.creditsIncluded || SUBSCRIPTION_TIERS[subscription.tier || 'starter']?.credits || 50,
+              used: billing.creditsUsed || 0,
+              remaining: billing.creditsRemaining ?? (billing.creditsIncluded || 50) - (billing.creditsUsed || 0),
+              rollover: billing.creditsRollover || 0,
+            },
+            subscription: {
+              status: subscription.status || 'active',
+              currentPeriodEnd: subscription.currentPeriodEnd
+                ? toDate(subscription.currentPeriodEnd)
+                : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              cancelAtPeriodEnd: subscription.cancelAtPeriodEnd || false,
+            },
+          };
+        }
+      }
+    }
+
+    // Fallback: Check for individual billing account
+    const billingDoc = await db.collection('billingAccounts').doc(userId).get();
+
+    if (billingDoc.exists) {
+      const data = billingDoc.data()!;
+      return {
+        tier: (data.tier as SubscriptionTier) || 'starter',
+        credits: {
+          included: data.credits?.included || 50,
+          used: data.credits?.used || 0,
+          remaining: data.credits?.remaining ?? 50,
+          rollover: data.credits?.rollover || 0,
+        },
+        subscription: {
+          status: data.subscription?.status || 'active',
+          currentPeriodEnd: data.subscription?.currentPeriodEnd
+            ? toDate(data.subscription.currentPeriodEnd)
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          cancelAtPeriodEnd: data.subscription?.cancelAtPeriodEnd || false,
+        },
+      };
+    }
+
+    // No billing account found - return free tier defaults
     return {
-      tier: 'free' as SubscriptionTier,
+      tier: 'free',
       credits: {
         included: SUBSCRIPTION_TIERS.free.credits,
         used: 0,
@@ -57,41 +117,41 @@ async function getBillingAccount(userId: string) {
         rollover: 0,
       },
       subscription: {
-        status: 'none' as const,
-        currentPeriodEnd: null,
+        status: 'active',
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        cancelAtPeriodEnd: false,
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching billing account:', error);
+    // Return free tier on error
+    return {
+      tier: 'free',
+      credits: {
+        included: SUBSCRIPTION_TIERS.free.credits,
+        used: 0,
+        remaining: SUBSCRIPTION_TIERS.free.credits,
+        rollover: 0,
+      },
+      subscription: {
+        status: 'active',
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         cancelAtPeriodEnd: false,
       },
     };
   }
-
-  return {
-    tier: account.tier,
-    credits: {
-      included: account.credits.included,
-      used: account.credits.used,
-      remaining: account.credits.remaining,
-      rollover: account.credits.rollover,
-    },
-    subscription: {
-      status: account.subscription.status,
-      currentPeriodEnd: account.subscription.currentPeriodEnd || null,
-      cancelAtPeriodEnd: false, // Not tracked in BillingAccount type yet
-    },
-  };
 }
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await getUserFromRequest(req);
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: 'Valid API key or auth token required' },
-        { status: 401 }
-      );
+    // Authenticate user via API key or session
+    const authResult = requireAuthenticatedUser(req);
+    if (authResult instanceof NextResponse) {
+      return authResult;
     }
+    const userId = authResult;
 
-    const account = await getBillingAccount(user.userId);
+    const account = await getBillingAccount(userId);
     const tierConfig = SUBSCRIPTION_TIERS[account.tier];
 
     const status: BillingStatus = {
@@ -115,7 +175,7 @@ export async function GET(req: NextRequest) {
       limits: {
         maxProjects: tierConfig.features.maxProjects,
         maxRepoSize: tierConfig.features.maxRepoSize,
-        aiFeatures: [...tierConfig.features.aiFeatures],
+        aiFeatures: tierConfig.features.aiFeatures,
       },
 
       canScan: account.credits.remaining > 0 || tierConfig.overageRate !== null,
@@ -125,11 +185,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(status);
   } catch (error) {
-    logger.error('Billing status error', {
-      path: '/api/billing/status',
-      method: 'GET',
-      error,
-    });
+    console.error('Billing status error:', error);
     return NextResponse.json(
       { error: 'Internal error', message: 'Failed to fetch billing status' },
       { status: 500 }
