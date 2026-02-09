@@ -14,6 +14,11 @@
 import type { App } from 'firebase-admin/app';
 import type { Auth } from 'firebase-admin/auth';
 import type { Firestore } from 'firebase-admin/firestore';
+import {
+  getDefaultEnvironment,
+  getFirestoreDatabaseId,
+  DEFAULT_FIRESTORE_DATABASE_ID,
+} from '@/lib/environment';
 
 // Singleton instances
 let adminApp: App | null = null;
@@ -230,7 +235,11 @@ export function getAdminFirestore(): Firestore | null {
   if (!adminFirestore) {
     const fsModule = loadFirestoreModule();
     if (!fsModule) return null;
+    const databaseId = getFirestoreDatabaseId(getDefaultEnvironment());
     adminFirestore = fsModule.getFirestore();
+    if (databaseId !== DEFAULT_FIRESTORE_DATABASE_ID) {
+      adminFirestore.settings({ databaseId });
+    }
   }
 
   return adminFirestore;

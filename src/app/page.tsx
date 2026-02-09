@@ -13,6 +13,39 @@ import { Menu, X, Shield, Zap, Eye, ArrowRight, Check, Sparkles, TrendingUp, Ale
 export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
+  const senseiMessages = [
+    {
+      role: 'Sensei',
+      text: 'Connected to GitHub · polyglyphanalytica/bugrit. Want me to run the security + quality pipeline for the latest commit?',
+    },
+    {
+      role: 'User',
+      text: 'Yes, launch a code scan + regression test, and give me the tool roadmap before you start.',
+    },
+    {
+      role: 'Sensei',
+      text: 'Running Semgrep, OWASP ZAP, Supply Chain auditor, and the QA regression suite. I will surface results inline and log everything to Firestore + API.',
+    },
+  ];
+
+  const quickActions = [
+    { label: 'GitHub repo', description: 'polyglyphanalytica/bugrit', icon: Shield },
+    { label: 'Upload bundle', description: 'Drag-and-drop ZIP or CLI payload', icon: ArrowRight },
+    { label: 'API/Shell', description: 'POST to /api/v1/scans', icon: Sparkles },
+  ];
+
+  const moduleSelections = [
+    { name: 'Semgrep', impact: 'Security', status: 'Recommended' },
+    { name: 'Supply Chain Auditor', impact: 'Dependency attacks', status: 'Enabled' },
+    { name: 'QA Regression Suite', impact: 'Tests', status: 'Queued' },
+  ];
+
+  const scanTimeline = [
+    { label: 'Queued', detail: 'Awaiting worker', time: '10:12' },
+    { label: 'Running', detail: 'Semgrep + QA suite', time: '10:13' },
+    { label: 'Advice', detail: 'Upgrade to Pro for more scans', time: '10:15' },
+  ];
+
   return (
     <div className="min-h-screen bg-white">
       {/* Pronunciation banner — slim, informative */}
@@ -65,18 +98,47 @@ export default function HomePage() {
         )}
       </nav>
 
-      {/* Hero — clean, confident, minimal */}
-      <section className="pt-40 pb-20 md:pt-52 md:pb-32">
+      {/* Hero — sensei-first prompt */}
+      <section className="pt-32 pb-16 md:pt-44 md:pb-20">
         <div className="container-wide">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 mb-8 animate-fade-down">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500"></span>
-              </span>
-              <span className="text-xs font-medium text-orange-600">150 modules. 5,000+ automated checks.</span>
+          <div className="grid md:grid-cols-[1.1fr,0.9fr] gap-10 items-start">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 border border-orange-200 w-fit">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500"></span>
+                </span>
+                <span className="text-xs font-medium text-orange-600">Sensei-first · Instant scans · Auth gated</span>
+              </div>
+
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-gray-900 leading-[1.1]">
+                Sensei leads the scan, you get the insights.
+              </h1>
+
+              <p className="text-lg text-gray-500 max-w-2xl leading-relaxed">
+                Every post-login action flows through the always-on Sensei chat. Connect a repo, submit code, and the AI orchestrates scans, tests, and subscription upgrades on-screen without detached menus.
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                <Link href="/signup">
+                  <GradientButton size="lg" glow>
+                    Start a Sensei scan
+                    <ArrowRight className="w-4 h-4" />
+                  </GradientButton>
+                </Link>
+                <Link href="#how-it-works">
+                  <GradientButton variant="outline" size="lg">
+                    Preview the flow
+                  </GradientButton>
+                </Link>
+              </div>
+
+              <p className="text-xs text-gray-400">
+                Sensei already knows your GitHub, manual uploads, and API surface. Every capability is mirrored in the documented API, so menus are optional.
+              </p>
             </div>
 
+<<<<<<< HEAD
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-gray-900 mb-6 animate-fade-up fill-both leading-[1.1]">
               Scan every PR.{' '}
               <span className="bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
@@ -87,24 +149,80 @@ export default function HomePage() {
             <p className="text-lg text-gray-500 max-w-xl mx-auto mb-10 animate-fade-up delay-200 fill-both leading-relaxed">
               Security scanning that runs on every commit. Only scans what you changed—1-2 credits per PR, results in 30 seconds.
             </p>
+=======
+            <div className="relative bg-slate-900/95 text-white backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-white/60">Sensei</p>
+                  <p className="text-sm text-white/80">Always-on developer copilot</p>
+                </div>
+                <span className="text-xs text-green-400 px-3 py-1 rounded-full bg-green-900/60 border border-green-500/40">Live</span>
+              </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-up delay-300 fill-both">
-              <Link href="/signup">
-                <GradientButton size="lg" glow>
-                  Scan My Code Free
-                  <ArrowRight className="w-4 h-4" />
-                </GradientButton>
-              </Link>
-              <Link href="#how-it-works">
-                <GradientButton variant="outline" size="lg">
-                  See How It Works
-                </GradientButton>
-              </Link>
+              <div className="space-y-3">
+                {senseiMessages.map((message) => (
+                  <div
+                    key={message.text}
+                    className={`p-3 rounded-2xl border ${
+                      message.role === 'Sensei'
+                        ? 'border-white/30 bg-white/5'
+                        : 'border-white/10 bg-white/5'
+                    }`}
+                  >
+                    <p className="text-[13px] uppercase tracking-[0.2em] text-white/50 mb-1">
+                      {message.role}
+                    </p>
+                    <p className="text-sm leading-relaxed text-white">{message.text}</p>
+                  </div>
+                ))}
+              </div>
+>>>>>>> origin/dev-candidate
+
+              <div className="mt-6 grid gap-2">
+                {quickActions.map((action) => (
+                  <button
+                    key={action.label}
+                    className="flex items-center justify-between rounded-2xl border border-white/20 px-4 py-2 text-sm hover:border-white/60 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <action.icon className="w-4 h-4 text-orange-300" />
+                      <div className="text-left">
+                        <p className="font-semibold text-white">{action.label}</p>
+                        <p className="text-xs text-white/70">{action.description}</p>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-white/60" />
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-6 border-t border-white/10 pt-4 space-y-3">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-white/60">Module advisor</p>
+                {moduleSelections.map((module) => (
+                  <div key={module.name} className="flex items-center justify-between text-sm">
+                    <div>
+                      <p className="font-semibold text-white">{module.name}</p>
+                      <p className="text-xs text-white/60">{module.impact}</p>
+                    </div>
+                    <span className="text-xs px-2 py-1 rounded-full border border-white/20 text-white/70">
+                      {module.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 border-t border-white/10 pt-4 space-y-2 text-xs text-white/60">
+                {scanTimeline.map((event) => (
+                  <div key={event.label} className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-white/40">{event.label}</p>
+                      <p className="text-sm text-white">{event.detail}</p>
+                    </div>
+                    <span>{event.time}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-
-            <p className="text-xs text-gray-400 mt-6 animate-fade-up delay-400 fill-both">
-              Free tier included. No credit card required.
-            </p>
           </div>
         </div>
       </section>

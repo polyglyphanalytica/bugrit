@@ -2,6 +2,11 @@ import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
+import {
+  getDefaultEnvironment,
+  getFirestoreDatabaseId,
+  DEFAULT_FIRESTORE_DATABASE_ID,
+} from "@/lib/environment";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,6 +17,8 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
+
+const FIRESTORE_DATABASE_ID = getFirestoreDatabaseId(getDefaultEnvironment());
 
 function isFirebaseConfigured(): boolean {
   return !!(firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId);
@@ -30,7 +37,15 @@ if (!isFirebaseConfigured()) {
 
 
 const auth: Auth = isFirebaseConfigured() ? getAuth(app) : ({} as Auth);
-const db: Firestore = isFirebaseConfigured() ? getFirestore(app) : ({} as Firestore);
+const db: Firestore = isFirebaseConfigured() ? createFirestoreInstance(app) : ({} as Firestore);
 const storage: FirebaseStorage = isFirebaseConfigured() ? getStorage(app) : ({} as FirebaseStorage);
 
 export { app, auth, db, storage };
+
+function createFirestoreInstance(app: FirebaseApp): Firestore {
+  const firestore = getFirestore(app);
+  if (FIRESTORE_DATABASE_ID !== DEFAULT_FIRESTORE_DATABASE_ID) {
+    firestore.settings({ databaseId: FIRESTORE_DATABASE_ID });
+  }
+  return firestore;
+}
