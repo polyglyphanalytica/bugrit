@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { store } from '@/lib/store';
-import { requirePermission } from '@/lib/api-auth';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { logger } from '@/lib/logger';
 
-// GET /api/scripts - Get all test scripts
+const MAX_CODE_LENGTH = 100_000; // 100KB limit for script code
+
+// GET /api/scripts - Get user's test scripts
 export async function GET(request: NextRequest) {
   try {
-    const authError = requirePermission(request, 'scripts:read');
-    if (authError) return authError;
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const { searchParams } = new URL(request.url);
     const regression = searchParams.get('regression') === 'true';
 
     const scripts = regression
-      ? store.getRegressionScripts()
-      : store.getAllTestScripts();
+      ? store.getUserRegressionScripts(userId)
+      : store.getUserTestScripts(userId);
 
     return NextResponse.json({
       scripts,
@@ -32,8 +35,9 @@ export async function GET(request: NextRequest) {
 // POST /api/scripts - Submit a new test script
 export async function POST(request: NextRequest) {
   try {
-    const authError = requirePermission(request, 'scripts:submit');
-    if (authError) return authError;
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const body = await request.json();
 
@@ -49,6 +53,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate code size to prevent resource exhaustion
+    if (typeof code !== 'string' || code.length > MAX_CODE_LENGTH) {
+      return NextResponse.json(
+        { error: `Code exceeds maximum size of ${MAX_CODE_LENGTH} characters` },
+        { status: 400 }
+      );
+    }
+
     const script = store.createTestScript({
       name,
       description: description || '',
@@ -57,6 +69,7 @@ export async function POST(request: NextRequest) {
       tags: tags || [],
       appId,
       buildId,
+      userId,
       runnerType: runnerType || 'playwright',
       targetPlatform,
     });

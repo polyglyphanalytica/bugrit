@@ -273,8 +273,8 @@ async function getSubscriptionStatus(userId: string): Promise<SubscriptionStatus
     };
   } catch (error) {
     logger.error('TrustBadge subscription check error', { error });
-    // On error, allow badge display (fail open for better UX)
-    return { isValid: true, tier: 'free', expiresAt: null };
+    // Fail closed: do not display verified badge when subscription status is unknown
+    return { isValid: false, tier: null, expiresAt: null, reason: 'subscription_check_failed' };
   }
 }
 

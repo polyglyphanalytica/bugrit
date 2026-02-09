@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { WhatsAppAdapter } from '@/lib/sensei/channels/whatsapp';
 import { getWhatsAppVerifyToken } from '@/lib/sensei/channels/config';
 import { routeMessage } from '@/lib/sensei/channels/router';
@@ -25,7 +26,12 @@ export async function GET(request: NextRequest) {
 
   const verifyToken = getWhatsAppVerifyToken();
 
-  if (mode === 'subscribe' && token === verifyToken && challenge) {
+  // Use constant-time comparison to prevent timing attacks on the verify token
+  const tokenMatch = token && verifyToken &&
+    token.length === verifyToken.length &&
+    timingSafeEqual(Buffer.from(token), Buffer.from(verifyToken));
+
+  if (mode === 'subscribe' && tokenMatch && challenge) {
     logger.info('WhatsApp webhook verified');
     return new NextResponse(challenge, { status: 200 });
   }

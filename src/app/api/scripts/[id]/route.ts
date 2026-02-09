@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { store } from '@/lib/store';
-import { requirePermission } from '@/lib/api-auth';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { logger } from '@/lib/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-// GET /api/scripts/[id] - Get a specific script
+// GET /api/scripts/[id] - Get a specific script (owned by user)
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const authError = requirePermission(request, 'scripts:read');
-    if (authError) return authError;
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const { id } = await params;
     const script = store.getTestScript(id);
 
-    if (!script) {
+    if (!script || script.userId !== userId) {
       return NextResponse.json({ error: 'Script not found' }, { status: 404 });
     }
 
@@ -30,18 +31,22 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// DELETE /api/scripts/[id] - Delete a script
+// DELETE /api/scripts/[id] - Delete a script (owned by user)
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const authError = requirePermission(request, 'scripts:submit');
-    if (authError) return authError;
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const { id } = await params;
-    const deleted = store.deleteTestScript(id);
+    const script = store.getTestScript(id);
 
-    if (!deleted) {
+    // Verify ownership before deletion
+    if (!script || script.userId !== userId) {
       return NextResponse.json({ error: 'Script not found' }, { status: 404 });
     }
+
+    store.deleteTestScript(id);
 
     return NextResponse.json({ message: 'Script deleted successfully' });
   } catch (error) {

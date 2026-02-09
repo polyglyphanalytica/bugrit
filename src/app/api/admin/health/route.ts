@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
   try {
     // Require proper admin authorization — not just an API key
     const auth = await verifyAdminPermission(request, 'canViewAuditLogs');
-    if (auth instanceof NextResponse) return auth;
-    const userId = auth.userId;
+    if (!auth.success) return auth.response;
+    const userId = auth.context.userId;
 
     const [systemHealth, queueStats, circuitHealth, bulkheadHealth] = await Promise.all([
       healthMonitor.getSystemHealth(),
@@ -84,8 +84,8 @@ export async function POST(request: NextRequest) {
   try {
     // Require proper admin authorization
     const auth = await verifyAdminPermission(request, 'canManageFeatures');
-    if (auth instanceof NextResponse) return auth;
-    const adminId = auth.userId;
+    if (!auth.success) return auth.response;
+    const adminId = auth.context.userId;
 
     // In production, would check admin role from organization membership
 

@@ -23,15 +23,10 @@ export async function GET(
 ) {
   try {
     const { owner, repo } = await params;
-    const searchParams = request.nextUrl.searchParams;
 
-    // Get optional overrides from query params (for testing/preview)
-    const scoreOverride = searchParams.get('score');
-    const gradeOverride = searchParams.get('grade');
-
-    // Fetch actual score from database (or use override for testing)
-    const score = scoreOverride ? parseInt(scoreOverride) : await getRepoScore(owner, repo);
-    const grade = gradeOverride || scoreToGrade(score);
+    // Fetch actual score from database — no query parameter overrides
+    const score = await getRepoScore(owner, repo);
+    const grade = scoreToGrade(score);
 
     // Generate SVG badge
     const svg = generateBadgeSvg(score, grade);
@@ -102,14 +97,17 @@ function getGradeColor(grade: string): string {
 }
 
 function generateBadgeSvg(score: number, grade: string): string {
-  const color = getGradeColor(grade);
+  // Sanitize inputs for SVG interpolation
+  const safeScore = Math.max(0, Math.min(100, isNaN(score) ? 0 : Math.round(score)));
+  const safeGrade = grade.replace(/[^A-F+\-]/gi, '');
+  const color = getGradeColor(safeGrade);
   const labelWidth = 70;
   const valueWidth = 55;
   const totalWidth = labelWidth + valueWidth;
   const height = 20;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${height}" role="img" aria-label="Vibe Score: ${score}">
-  <title>Vibe Score: ${score} (${grade})</title>
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${height}" role="img" aria-label="Vibe Score: ${safeScore}">
+  <title>Vibe Score: ${safeScore} (${safeGrade})</title>
   <linearGradient id="s" x2="0" y2="100%">
     <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
     <stop offset="1" stop-opacity=".1"/>
@@ -125,8 +123,8 @@ function generateBadgeSvg(score: number, grade: string): string {
   <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="11">
     <text aria-hidden="true" x="${labelWidth / 2}" y="14" fill="#010101" fill-opacity=".3">vibe score</text>
     <text x="${labelWidth / 2}" y="13" fill="#fff">vibe score</text>
-    <text aria-hidden="true" x="${labelWidth + valueWidth / 2}" y="14" fill="#010101" fill-opacity=".3">${score}</text>
-    <text x="${labelWidth + valueWidth / 2}" y="13" fill="#fff">${score}</text>
+    <text aria-hidden="true" x="${labelWidth + valueWidth / 2}" y="14" fill="#010101" fill-opacity=".3">${safeScore}</text>
+    <text x="${labelWidth + valueWidth / 2}" y="13" fill="#fff">${safeScore}</text>
   </g>
 </svg>`;
 }

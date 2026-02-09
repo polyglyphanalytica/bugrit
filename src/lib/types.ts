@@ -45,6 +45,7 @@ export interface TestRun {
 // Test Script - submitted test code (Playwright, Appium, or Tauri)
 export interface TestScript {
   id: string;
+  userId?: string;
   name: string;
   description: string;
   code: string;
@@ -64,6 +65,7 @@ export interface TestScript {
 // Test Execution - orchestrates multiple script executions
 export interface TestExecution {
   id: string;
+  userId?: string;
   scriptIds: string[];
   status: 'queued' | 'running' | 'completed' | 'failed';
   browsers: BrowserType[];

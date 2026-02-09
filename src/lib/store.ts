@@ -130,6 +130,17 @@ class Store {
       .slice(0, limit);
   }
 
+  getUserTestScripts(userId: string, limit: number = 100): TestScript[] {
+    return Array.from(this.testScripts.values())
+      .filter(s => s.userId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, limit);
+  }
+
+  getUserRegressionScripts(userId: string): TestScript[] {
+    return this.getUserTestScripts(userId).filter(s => s.isRegression);
+  }
+
   getRegressionScripts(): TestScript[] {
     return this.getAllTestScripts().filter(s => s.isRegression);
   }
@@ -170,6 +181,13 @@ class Store {
 
   getAllExecutions(limit: number = 100): TestExecution[] {
     return Array.from(this.executions.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, limit);
+  }
+
+  getUserExecutions(userId: string, limit: number = 100): TestExecution[] {
+    return Array.from(this.executions.values())
+      .filter(e => e.userId === userId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, limit);
   }

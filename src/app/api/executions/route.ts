@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { store } from '@/lib/store';
-import { requirePermission } from '@/lib/api-auth';
+import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { BrowserType, NativePlatform } from '@/lib/types';
 import { logger } from '@/lib/logger';
 
-// GET /api/executions - Get all executions
+const MAX_SCRIPT_IDS = 50;
+
+// GET /api/executions - Get user's executions
 export async function GET(request: NextRequest) {
   try {
-    const authError = requirePermission(request, 'executions:read');
-    if (authError) return authError;
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
-    const executions = store.getAllExecutions();
+    const executions = store.getUserExecutions(userId);
 
     return NextResponse.json({
       executions,
@@ -28,8 +31,9 @@ export async function GET(request: NextRequest) {
 // POST /api/executions - Trigger a new execution
 export async function POST(request: NextRequest) {
   try {
-    const authError = requirePermission(request, 'executions:trigger');
-    if (authError) return authError;
+    const authResult = await requireAuthenticatedUser(request);
+    if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const body = await request.json();
 
@@ -42,10 +46,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate all scripts exist
+    // Limit the number of scripts per execution to prevent resource exhaustion
+    if (scriptIds.length > MAX_SCRIPT_IDS) {
+      return NextResponse.json(
+        { error: `Too many scripts. Maximum is ${MAX_SCRIPT_IDS}` },
+        { status: 400 }
+      );
+    }
+
+    // Validate all scripts exist AND belong to the user
     for (const scriptId of scriptIds) {
       const script = store.getTestScript(scriptId);
-      if (!script) {
+      if (!script || script.userId !== userId) {
         return NextResponse.json(
           { error: `Script not found: ${scriptId}` },
           { status: 404 }
@@ -56,6 +68,7 @@ export async function POST(request: NextRequest) {
     const defaultBrowsers: BrowserType[] = ['chromium'];
     const execution = store.createExecution({
       scriptIds,
+      userId,
       browsers: browsers || defaultBrowsers,
       nativePlatforms: nativePlatforms as NativePlatform[] | undefined,
     });
