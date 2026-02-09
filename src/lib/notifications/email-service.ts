@@ -162,14 +162,14 @@ export class EmailNotificationService {
             </div>
 
             <p><strong>Duration:</strong> ${(data.summary.duration / 1000).toFixed(2)}s</p>
-            ${data.browser ? `<p><strong>Browser:</strong> ${data.browser}</p>` : ''}
-            ${data.platform ? `<p><strong>Platform:</strong> ${data.platform}</p>` : ''}
-            ${data.buildId ? `<p><strong>Build:</strong> ${data.buildId}</p>` : ''}
-            ${data.branch ? `<p><strong>Branch:</strong> ${data.branch}</p>` : ''}
+            ${data.browser ? `<p><strong>Browser:</strong> ${escapeHtml(data.browser)}</p>` : ''}
+            ${data.platform ? `<p><strong>Platform:</strong> ${escapeHtml(data.platform)}</p>` : ''}
+            ${data.buildId ? `<p><strong>Build:</strong> ${escapeHtml(data.buildId)}</p>` : ''}
+            ${data.branch ? `<p><strong>Branch:</strong> ${escapeHtml(data.branch)}</p>` : ''}
 
             ${failedTestsHtml}
 
-            ${data.reportUrl ? `<a href="${data.reportUrl}" class="btn">View Full Report</a>` : ''}
+            ${data.reportUrl ? `<a href="${escapeHtml(data.reportUrl)}" class="btn">View Full Report</a>` : ''}
 
             <div class="footer">
               <p>Sent by Bugrit Testing Platform</p>
