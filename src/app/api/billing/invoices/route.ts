@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { verifySession } from '@/lib/auth/session';
 import { logger } from '@/lib/logger';
-import { db } from '@/lib/firebase-admin';
+import { db } from '@/lib/firebase/admin';
 
 // Initialize Stripe with environment-aware key selection
 function getStripe(): Stripe {
@@ -20,7 +20,7 @@ function getStripe(): Stripe {
     throw new Error(`Stripe secret key not configured (${isProduction() ? 'STRIPE_SECRET_KEY' : 'STRIPE_TEST_SECRET_KEY'})`);
   }
   return new Stripe(secretKey, {
-    apiVersion: '2025-12-15.clover',
+    apiVersion: '2026-01-28.clover',
   });
 }
 
@@ -97,8 +97,8 @@ export async function GET(req: NextRequest) {
       created: invoice.created,
       periodStart: invoice.period_start,
       periodEnd: invoice.period_end,
-      pdfUrl: invoice.invoice_pdf,
-      hostedUrl: invoice.hosted_invoice_url,
+      pdfUrl: invoice.invoice_pdf ?? null,
+      hostedUrl: invoice.hosted_invoice_url ?? null,
       paid: invoice.paid,
       paymentIntent: typeof invoice.payment_intent === 'string'
         ? invoice.payment_intent

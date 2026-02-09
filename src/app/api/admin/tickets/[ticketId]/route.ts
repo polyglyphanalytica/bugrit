@@ -82,11 +82,26 @@ export async function PATCH(
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 });
     }
 
+    const VALID_STATUSES = ['open', 'in_progress', 'waiting_on_customer', 'resolved', 'closed'];
+    const VALID_PRIORITIES = ['low', 'normal', 'high', 'urgent'];
+
     const updates: Record<string, unknown> = { updatedAt: new Date().toISOString() };
 
-    if (body.status) updates.status = body.status;
-    if (body.priority) updates.priority = body.priority;
-    if (body.assignedTo !== undefined) updates.assignedTo = body.assignedTo;
+    if (body.status) {
+      if (!VALID_STATUSES.includes(body.status)) {
+        return NextResponse.json({ error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}` }, { status: 400 });
+      }
+      updates.status = body.status;
+    }
+    if (body.priority) {
+      if (!VALID_PRIORITIES.includes(body.priority)) {
+        return NextResponse.json({ error: `Invalid priority. Must be one of: ${VALID_PRIORITIES.join(', ')}` }, { status: 400 });
+      }
+      updates.priority = body.priority;
+    }
+    if (body.assignedTo !== undefined) {
+      updates.assignedTo = typeof body.assignedTo === 'string' ? body.assignedTo : null;
+    }
     if (body.status === 'resolved' || body.status === 'closed') {
       updates.resolvedAt = new Date().toISOString();
     }

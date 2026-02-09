@@ -9,6 +9,20 @@ import {
   UptimeNotification,
 } from './types';
 
+/**
+ * Escape HTML special characters to prevent XSS in email templates.
+ * User-controlled values (app names, error messages, etc.) must be escaped
+ * before interpolation into HTML.
+ */
+export function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export class EmailNotificationService {
   private resend: Resend | null;
   private fromAddress: string;
@@ -85,14 +99,15 @@ export class EmailNotificationService {
 
     const subject = `${statusEmoji} ${payload.applicationName}: ${statusText}`;
 
+    const safeAppName = escapeHtml(payload.applicationName);
     const failedTestsHtml = data.failedTests?.length
       ? `
         <h3 style="color: #dc2626;">Failed Tests:</h3>
         <ul style="padding-left: 20px;">
           ${data.failedTests.map(t => `
             <li style="margin-bottom: 10px;">
-              <strong>${t.name}</strong><br/>
-              <span style="color: #666;">${t.error}</span>
+              <strong>${escapeHtml(t.name)}</strong><br/>
+              <span style="color: #666;">${escapeHtml(t.error)}</span>
             </li>
           `).join('')}
         </ul>
@@ -124,7 +139,7 @@ export class EmailNotificationService {
             <div class="header">
               <div class="status">${statusEmoji}</div>
               <h1 style="margin: 0;">${statusText}</h1>
-              <p style="color: #666; margin-top: 5px;">${payload.applicationName}</p>
+              <p style="color: #666; margin-top: 5px;">${safeAppName}</p>
             </div>
 
             <div class="summary">
@@ -191,6 +206,11 @@ ${data.reportUrl ? `View report: ${data.reportUrl}` : ''}
 
     const subject = `${statusEmoji} ${data.endpointName}: ${statusText}`;
 
+    const safeEndpointName = escapeHtml(data.endpointName);
+    const safeEndpointUrl = escapeHtml(data.endpointUrl);
+    const safeAppName = escapeHtml(payload.applicationName);
+    const safeError = data.error ? escapeHtml(data.error) : '';
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -210,19 +230,19 @@ ${data.reportUrl ? `View report: ${data.reportUrl}` : ''}
           <div class="container">
             <div class="alert ${isUp ? 'alert-success' : data.status === 'degraded' ? 'alert-warning' : 'alert-danger'}">
               <div style="font-size: 32px;">${statusEmoji}</div>
-              <h2>${data.endpointName} is ${statusText}</h2>
+              <h2>${safeEndpointName} is ${statusText}</h2>
             </div>
 
             <div class="details">
-              <p><strong>URL:</strong> ${data.endpointUrl}</p>
+              <p><strong>URL:</strong> ${safeEndpointUrl}</p>
               ${data.responseTime ? `<p><strong>Response Time:</strong> ${data.responseTime}ms</p>` : ''}
               ${data.statusCode ? `<p><strong>Status Code:</strong> ${data.statusCode}</p>` : ''}
-              ${data.error ? `<p><strong>Error:</strong> ${data.error}</p>` : ''}
+              ${safeError ? `<p><strong>Error:</strong> ${safeError}</p>` : ''}
               ${data.downSince ? `<p><strong>Down Since:</strong> ${data.downSince.toISOString()}</p>` : ''}
             </div>
 
             <div class="footer">
-              <p>Application: ${payload.applicationName}</p>
+              <p>Application: ${safeAppName}</p>
               <p>${payload.timestamp.toISOString()}</p>
             </div>
           </div>
@@ -252,9 +272,9 @@ Application: ${payload.applicationName}
       <!DOCTYPE html>
       <html>
         <body>
-          <h1>${payload.type} Notification</h1>
-          <p>Application: ${payload.applicationName}</p>
-          <pre>${JSON.stringify(payload.data, null, 2)}</pre>
+          <h1>${escapeHtml(payload.type)} Notification</h1>
+          <p>Application: ${escapeHtml(payload.applicationName)}</p>
+          <pre>${escapeHtml(JSON.stringify(payload.data, null, 2))}</pre>
           <p>Time: ${payload.timestamp.toISOString()}</p>
         </body>
       </html>
@@ -271,7 +291,7 @@ Time: ${payload.timestamp.toISOString()}
   }
 
   isConfigured(): boolean {
-    return !!this.apiKey;
+    return !!this.resend;
   }
 }
 
@@ -343,6 +363,9 @@ export function buildScanCompletedEmail(params: {
     ? `${emoji} Scan Complete: ${params.critical} critical issues - ${params.applicationName}`
     : `${emoji} Scan Complete: ${params.totalFindings} findings - ${params.applicationName}`;
 
+  const safeAppName = escapeHtml(params.applicationName);
+  const safeReportUrl = escapeHtml(params.reportUrl);
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -368,7 +391,7 @@ export function buildScanCompletedEmail(params: {
         <div class="header">
           <div class="emoji">${emoji}</div>
           <h1>Scan Complete</h1>
-          <p class="subtitle">${params.applicationName}</p>
+          <p class="subtitle">${safeAppName}</p>
         </div>
 
         <div class="stats">
@@ -393,7 +416,7 @@ export function buildScanCompletedEmail(params: {
         </div>
 
         <div style="text-align: center;">
-          <a href="${params.reportUrl}" class="btn">View Full Report</a>
+          <a href="${safeReportUrl}" class="btn">View Full Report</a>
         </div>
 
         <div class="footer">
@@ -427,6 +450,10 @@ export function buildScanFailedEmail(params: {
 }): { subject: string; html: string; text: string } {
   const subject = `❌ Scan Failed - ${params.applicationName}`;
 
+  const safeAppName = escapeHtml(params.applicationName);
+  const safeError = escapeHtml(params.error);
+  const safeScanUrl = escapeHtml(params.scanUrl);
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -447,16 +474,16 @@ export function buildScanFailedEmail(params: {
         <div class="header">
           <div class="emoji">❌</div>
           <h1>Scan Failed</h1>
-          <p style="color: #666;">${params.applicationName}</p>
+          <p style="color: #666;">${safeAppName}</p>
         </div>
 
         <div class="error-box">
           <div class="error-label">ERROR</div>
-          <div class="error-message">${params.error}</div>
+          <div class="error-message">${safeError}</div>
         </div>
 
         <div style="text-align: center;">
-          <a href="${params.scanUrl}" class="btn">View Details</a>
+          <a href="${safeScanUrl}" class="btn">View Details</a>
         </div>
 
         <div class="footer">
@@ -488,6 +515,11 @@ export function buildGenericEmail(params: {
 }): { subject: string; html: string; text: string } {
   const subject = `Bugrit: ${params.title}`;
 
+  const safeTitle = escapeHtml(params.title);
+  const safeMessage = escapeHtml(params.message);
+  const safeActionUrl = params.actionUrl ? escapeHtml(params.actionUrl) : '';
+  const safeActionLabel = params.actionLabel ? escapeHtml(params.actionLabel) : 'View Details';
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -502,15 +534,15 @@ export function buildGenericEmail(params: {
       </head>
       <body>
         <div class="header">
-          <h1>${params.title}</h1>
+          <h1>${safeTitle}</h1>
         </div>
 
         <div class="content">
-          <p>${params.message}</p>
+          <p>${safeMessage}</p>
 
-          ${params.actionUrl ? `
+          ${safeActionUrl ? `
           <div style="text-align: center; margin-top: 30px;">
-            <a href="${params.actionUrl}" class="btn">${params.actionLabel || 'View Details'}</a>
+            <a href="${safeActionUrl}" class="btn">${safeActionLabel}</a>
           </div>
           ` : ''}
         </div>

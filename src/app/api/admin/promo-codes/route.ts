@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2025-12-15.clover',
+      apiVersion: '2026-01-28.clover',
     });
 
     // List all promotion codes
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2025-12-15.clover',
+      apiVersion: '2026-01-28.clover',
     });
 
     // Generate idempotency keys to prevent duplicate creations

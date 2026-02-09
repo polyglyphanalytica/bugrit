@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { generateId, getDb, COLLECTIONS } from '@/lib/firestore';
 import { logger } from '@/lib/logger';
@@ -81,7 +82,11 @@ export async function POST(request: NextRequest) {
     const apiKey = request.headers.get('x-admin-api-key');
     const expectedKey = process.env.ADMIN_API_KEY;
 
-    if (apiKey && expectedKey && apiKey === expectedKey) {
+    // Use constant-time comparison to prevent timing attacks
+    const keyMatch = apiKey && expectedKey && apiKey.length === expectedKey.length &&
+      timingSafeEqual(Buffer.from(apiKey, 'utf8'), Buffer.from(expectedKey, 'utf8'));
+
+    if (keyMatch) {
       // Authenticated via API key — proceed
     } else {
       const adminResult = await requireAdmin(request);

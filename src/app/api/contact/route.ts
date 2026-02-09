@@ -13,6 +13,17 @@ import { logger } from '@/lib/logger';
 const CATEGORIES = ['general', 'sales', 'support', 'enterprise', 'security', 'billing', 'escalation'] as const;
 type TicketCategory = (typeof CATEGORIES)[number];
 
+const VALID_SOURCES = ['contact_form', 'sensei_escalation', 'api'] as const;
+const VALID_CHANNELS = ['web', 'slack', 'whatsapp'] as const;
+
+// Input length limits to prevent abuse
+const MAX_NAME_LENGTH = 200;
+const MAX_EMAIL_LENGTH = 320; // RFC 5321 max
+const MAX_SUBJECT_LENGTH = 500;
+const MAX_MESSAGE_LENGTH = 10000;
+const MAX_COMPANY_LENGTH = 200;
+const MAX_TRANSCRIPT_ENTRIES = 50;
+
 export interface SupportTicket {
   id: string;
   // Submitter info
@@ -59,8 +70,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Enforce input length limits
+    const name = body.name.trim().slice(0, MAX_NAME_LENGTH);
+    const email = body.email.trim().toLowerCase().slice(0, MAX_EMAIL_LENGTH);
+    const subject = body.subject.trim().slice(0, MAX_SUBJECT_LENGTH);
+    const message = body.message.trim().slice(0, MAX_MESSAGE_LENGTH);
+    const company = body.company?.trim()?.slice(0, MAX_COMPANY_LENGTH) || null;
+
     // Basic email validation
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
@@ -69,21 +87,39 @@ export async function POST(request: NextRequest) {
       ? body.category
       : 'general';
 
+    // Validate source and channel against allowed values (prevent spoofing)
+    const source = VALID_SOURCES.includes(body.source) ? body.source : 'contact_form';
+    const channel = VALID_CHANNELS.includes(body.channel) ? body.channel : 'web';
+
+    // Sanitize transcript if provided (limit size)
+    let transcript: SupportTicket['transcript'] | undefined;
+    if (Array.isArray(body.transcript)) {
+      transcript = body.transcript.slice(0, MAX_TRANSCRIPT_ENTRIES).map((entry: Record<string, unknown>) => ({
+        role: entry.role === 'assistant' ? 'assistant' as const : 'user' as const,
+        text: typeof entry.text === 'string' ? entry.text.slice(0, 5000) : '',
+        timestamp: typeof entry.timestamp === 'string' ? entry.timestamp : undefined,
+      }));
+    }
+
+    // SECURITY: Do NOT accept userId from the public request body.
+    // Only the server-side Sensei escalation (executor.ts) should set userId
+    // because it has already authenticated the user.
+    // Public contact form tickets are linked by email, not userId.
     const ticketId = generateId('tkt');
     const now = new Date().toISOString();
 
     const ticket: SupportTicket = {
       id: ticketId,
-      userId: body.userId || null,
-      name: body.name.trim(),
-      email: body.email.trim().toLowerCase(),
-      company: body.company?.trim() || null,
+      // userId is intentionally omitted — only server-side code should set it
+      name,
+      email,
+      company,
       category,
-      subject: body.subject.trim(),
-      message: body.message.trim(),
-      source: body.source || 'contact_form',
-      channel: body.channel || 'web',
-      transcript: body.transcript || undefined,
+      subject,
+      message,
+      source,
+      channel,
+      transcript,
       status: 'open',
       priority: category === 'escalation' ? 'high' : 'normal',
       assignedTo: null,

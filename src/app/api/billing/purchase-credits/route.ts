@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     // Dynamically import Stripe to avoid issues during build
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2025-12-15.clover',
+      apiVersion: '2026-01-28.clover',
     });
 
     // Get or create Stripe price ID for this package

@@ -172,7 +172,7 @@ async function executeAutoTopupCharge(
     // Dynamically import Stripe
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2025-12-15.clover',
+      apiVersion: '2026-01-28.clover',
     });
 
     // Get customer's default payment method

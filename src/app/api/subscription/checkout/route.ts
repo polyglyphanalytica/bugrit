@@ -91,6 +91,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Validate origin to prevent open redirect — only allow configured app URL or localhost
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl) {
+      return NextResponse.json(
+        { error: 'Application URL not configured' },
+        { status: 503 }
+      );
+    }
+
     // Create checkout session
     const { url } = await createCheckoutSession({
       userId,
@@ -98,8 +107,8 @@ export async function POST(request: NextRequest) {
       tier,
       interval,
       customerId: existingCustomerId,
-      successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?subscription=success`,
-      cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?subscription=canceled`,
+      successUrl: `${appUrl}/dashboard?subscription=success`,
+      cancelUrl: `${appUrl}/pricing?subscription=canceled`,
     });
 
     return NextResponse.json({ url });
