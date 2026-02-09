@@ -1,5 +1,6 @@
-// Email Notification Service using Resend
+// Email Notification Service using Resend SDK
 
+import { Resend } from 'resend';
 import {
   NotificationPayload,
   NotificationResult,
@@ -9,12 +10,13 @@ import {
 } from './types';
 
 export class EmailNotificationService {
-  private apiKey: string | undefined;
+  private resend: Resend | null;
   private fromAddress: string;
   private fromName: string;
 
   constructor(config?: { apiKey?: string; fromAddress?: string; fromName?: string }) {
-    this.apiKey = config?.apiKey || process.env.RESEND_API_KEY;
+    const apiKey = config?.apiKey || process.env.RESEND_API_KEY;
+    this.resend = apiKey ? new Resend(apiKey) : null;
     this.fromAddress = config?.fromAddress || process.env.EMAIL_FROM_ADDRESS || 'noreply@bugrit.com';
     this.fromName = config?.fromName || 'Bugrit Testing';
   }
@@ -23,7 +25,7 @@ export class EmailNotificationService {
     recipients: string[],
     payload: NotificationPayload
   ): Promise<NotificationResult> {
-    if (!this.apiKey) {
+    if (!this.resend) {
       console.warn('Email notifications disabled: RESEND_API_KEY not configured');
       return {
         channel: 'email',
@@ -35,32 +37,22 @@ export class EmailNotificationService {
     try {
       const template = this.buildTemplate(payload);
 
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: `${this.fromName} <${this.fromAddress}>`,
-          to: recipients,
-          subject: template.subject,
-          html: template.html,
-          text: template.text,
-        }),
+      const { data, error } = await this.resend.emails.send({
+        from: `${this.fromName} <${this.fromAddress}>`,
+        to: recipients,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Failed to send email: ${error}`);
+      if (error) {
+        throw new Error(error.message);
       }
-
-      const data = await response.json();
 
       return {
         channel: 'email',
         success: true,
-        messageId: data.id,
+        messageId: data?.id,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -287,12 +279,20 @@ Time: ${payload.timestamp.toISOString()}
 // Standalone email functions for use by the notification dispatcher
 // ============================================================================
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const EMAIL_FROM = process.env.EMAIL_FROM_ADDRESS || 'noreply@bugrit.com';
 const EMAIL_FROM_NAME = 'Bugrit';
 
+// Lazy-initialized singleton — avoids creating the client if no emails are sent
+let _resend: Resend | null | undefined;
+function getResendClient(): Resend | null {
+  if (_resend !== undefined) return _resend;
+  const key = process.env.RESEND_API_KEY;
+  _resend = key ? new Resend(key) : null;
+  return _resend;
+}
+
 /**
- * Send a single email via Resend
+ * Send a single email via Resend SDK
  */
 export async function sendEmail(params: {
   to: string;
@@ -300,34 +300,26 @@ export async function sendEmail(params: {
   html: string;
   text: string;
 }): Promise<{ success: boolean; error?: string; messageId?: string }> {
-  if (!RESEND_API_KEY) {
+  const resend = getResendClient();
+  if (!resend) {
     console.warn('Email not configured: RESEND_API_KEY missing');
     return { success: false, error: 'Email service not configured' };
   }
 
   try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: `${EMAIL_FROM_NAME} <${EMAIL_FROM}>`,
-        to: params.to,
-        subject: params.subject,
-        html: params.html,
-        text: params.text,
-      }),
+    const { data, error } = await resend.emails.send({
+      from: `${EMAIL_FROM_NAME} <${EMAIL_FROM}>`,
+      to: params.to,
+      subject: params.subject,
+      html: params.html,
+      text: params.text,
     });
 
-    if (!response.ok) {
-      const error = await response.text();
-      return { success: false, error: `Email API error: ${error}` };
+    if (error) {
+      return { success: false, error: error.message };
     }
 
-    const data = await response.json();
-    return { success: true, messageId: data.id };
+    return { success: true, messageId: data?.id };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : 'Email send failed' };
   }
