@@ -12,11 +12,20 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { timingSafeEqual } from 'crypto';
 import {
   processExpiredGracePeriods,
   sendScheduledReminders,
 } from '@/lib/billing/dunning';
 import { logger } from '@/lib/logger';
+
+/**
+ * Constant-time string comparison to prevent timing attacks
+ */
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 /**
  * Verify the cron request is authorized
@@ -36,13 +45,13 @@ function verifyCronAuth(request: NextRequest): boolean {
 
   // Check Authorization header
   const authHeader = request.headers.get('authorization');
-  if (authHeader === `Bearer ${cronSecret}`) {
+  if (authHeader && safeCompare(authHeader, `Bearer ${cronSecret}`)) {
     return true;
   }
 
   // Check x-cron-secret header (alternative)
   const cronHeader = request.headers.get('x-cron-secret');
-  if (cronHeader === cronSecret) {
+  if (cronHeader && safeCompare(cronHeader, cronSecret)) {
     return true;
   }
 

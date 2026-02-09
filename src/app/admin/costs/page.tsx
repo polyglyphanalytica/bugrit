@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -109,11 +110,42 @@ interface CostData {
 
 export default function CostsManagementPage() {
   const { user } = useAuth();
+  const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<CostData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [days, setDays] = useState('30');
   const [refreshing, setRefreshing] = useState(false);
+
+  // Admin auth guard
+  useEffect(() => {
+    async function checkAdmin() {
+      if (!user) {
+        router.replace('/login');
+        return;
+      }
+      try {
+        const idToken = await user.getIdToken();
+        const res = await fetch('/api/auth/check-admin', {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.isAdmin) {
+            setIsAdmin(true);
+          } else {
+            router.replace('/dashboard');
+          }
+        } else {
+          router.replace('/dashboard');
+        }
+      } catch {
+        router.replace('/dashboard');
+      }
+    }
+    checkAdmin();
+  }, [user, router]);
 
   const fetchCostData = async () => {
     try {
@@ -181,6 +213,14 @@ export default function CostsManagementPage() {
         return null;
     }
   };
+
+  if (isAdmin !== true) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (loading) {
     return (

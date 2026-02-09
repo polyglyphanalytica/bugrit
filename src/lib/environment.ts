@@ -23,6 +23,14 @@ export function resolveEnvironmentFromHost(hostname?: string | null): BugritEnvi
 }
 
 function getHostCandidate(): string | null {
+  // Explicit environment override takes priority
+  if (process.env.BUGRIT_ENVIRONMENT === 'production') {
+    return PRODUCTION_HOSTNAMES[0];
+  }
+  if (process.env.BUGRIT_ENVIRONMENT === 'dev') {
+    return null;
+  }
+
   if (typeof window !== 'undefined') {
     return window.location.hostname;
   }
@@ -31,7 +39,7 @@ function getHostCandidate(): string | null {
     try {
       const url = new URL(process.env.NEXT_PUBLIC_APP_URL);
       return url.hostname;
-    } catch (error) {
+    } catch {
       // ignore invalid URL
     }
   }
@@ -52,7 +60,12 @@ function getHostCandidate(): string | null {
 }
 
 export function getDefaultEnvironment(): BugritEnvironment {
-  return resolveEnvironmentFromHost(getHostCandidate());
+  const host = getHostCandidate();
+  const env = resolveEnvironmentFromHost(host);
+  if (!host && typeof window === 'undefined') {
+    console.warn('[environment] No hostname detected server-side, defaulting to dev. Set BUGRIT_ENVIRONMENT=production for production.');
+  }
+  return env;
 }
 
 export function getFirestoreDatabaseId(environment: BugritEnvironment): string {

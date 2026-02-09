@@ -216,9 +216,13 @@ export async function trackVerificationPageView(siteId: string): Promise<void> {
  * Generate a verification token for a site
  */
 export function generateVerificationToken(siteId: string): string {
+  const encryptionKey = process.env.ADMIN_ENCRYPTION_KEY;
+  if (!encryptionKey) {
+    throw new Error('ADMIN_ENCRYPTION_KEY environment variable is required for verification token generation');
+  }
   // Generate a deterministic but unpredictable token based on siteId
   const encoder = new TextEncoder();
-  const data = encoder.encode(siteId + (process.env.ADMIN_ENCRYPTION_KEY || 'bugrit-verify'));
+  const data = encoder.encode(siteId + encryptionKey);
   let hash = 0;
   for (let i = 0; i < data.length; i++) {
     hash = ((hash << 5) - hash) + data[i];

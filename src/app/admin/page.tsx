@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/auth-context';
 import { GlassCard } from '@/components/ui/glass-card';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Logo } from '@/components/ui/logo';
@@ -75,7 +77,46 @@ const tabs: { id: TabType; label: string; icon: React.ReactElement }[] = [
 ];
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('stripe');
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    async function checkAdmin() {
+      if (!user) {
+        router.replace('/login');
+        return;
+      }
+      try {
+        const idToken = await user.getIdToken();
+        const res = await fetch('/api/auth/check-admin', {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.isAdmin) {
+            setIsAdmin(true);
+          } else {
+            router.replace('/dashboard');
+          }
+        } else {
+          router.replace('/dashboard');
+        }
+      } catch {
+        router.replace('/dashboard');
+      }
+    }
+    checkAdmin();
+  }, [user, router]);
+
+  if (isAdmin !== true) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">

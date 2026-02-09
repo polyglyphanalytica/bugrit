@@ -236,9 +236,11 @@ export function getAdminFirestore(): Firestore | null {
     const fsModule = loadFirestoreModule();
     if (!fsModule) return null;
     const databaseId = getFirestoreDatabaseId(getDefaultEnvironment());
-    adminFirestore = fsModule.getFirestore();
     if (databaseId !== DEFAULT_FIRESTORE_DATABASE_ID) {
-      adminFirestore.settings({ databaseId });
+      // Use getFirestore(app, databaseId) to atomically initialize with the correct database
+      adminFirestore = fsModule.getFirestore(adminApp!, databaseId);
+    } else {
+      adminFirestore = fsModule.getFirestore();
     }
   }
 

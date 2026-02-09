@@ -13,13 +13,11 @@ const PlainEnglishContext = createContext<PlainEnglishContextType | undefined>(u
 const STORAGE_KEY = 'bugrit-plain-english-mode';
 
 export function PlainEnglishProvider({ children }: { children: ReactNode }) {
-  // Default to plain mode ON for new users
+  // Default to plain mode ON for new users (matches SSR default to avoid hydration mismatch)
   const [plainMode, setPlainModeState] = useState(true);
-  const [mounted, setMounted] = useState(false);
 
   // Load preference from localStorage on mount
   useEffect(() => {
-    setMounted(true);
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored !== null) {
       setPlainModeState(stored === 'true');
@@ -35,11 +33,6 @@ export function PlainEnglishProvider({ children }: { children: ReactNode }) {
   const togglePlainMode = () => {
     setPlainMode(!plainMode);
   };
-
-  // Prevent hydration mismatch by not rendering children until mounted
-  if (!mounted) {
-    return null;
-  }
 
   return (
     <PlainEnglishContext.Provider value={{ plainMode, togglePlainMode, setPlainMode }}>
