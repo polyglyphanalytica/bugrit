@@ -214,6 +214,8 @@ export const CATEGORY_LABELS = {
     mobile: 'Mobile',
     'api-security': 'API Security',
     'cloud-native': 'Cloud Native',
+    container: 'Container Security',
+    sbom: 'SBOM',
   },
   plain: {
     security: 'Security Risks',
@@ -227,6 +229,8 @@ export const CATEGORY_LABELS = {
     mobile: 'Mobile Security',
     'api-security': 'API Issues',
     'cloud-native': 'Infrastructure',
+    container: 'Docker Issues',
+    sbom: 'Supply Chain',
   },
 };
 

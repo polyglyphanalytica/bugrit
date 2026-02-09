@@ -36,6 +36,11 @@ async function getUsageSummary(userId: string, periodStart: Date, periodEnd: Dat
       documentation: { scans: 0, credits: 0, issues: 0 },
       git: { scans: 0, credits: 0, issues: 0 },
       performance: { scans: 0, credits: 0, issues: 0 },
+      mobile: { scans: 0, credits: 0, issues: 0 },
+      'api-security': { scans: 0, credits: 0, issues: 0 },
+      'cloud-native': { scans: 0, credits: 0, issues: 0 },
+      container: { scans: 0, credits: 0, issues: 0 },
+      sbom: { scans: 0, credits: 0, issues: 0 },
     } as Record<ToolCategory, { scans: number; credits: number; issues: number }>,
     byAIFeature: {
       summary: { uses: 0, credits: 0 },

@@ -28,6 +28,9 @@ export const CREDIT_COSTS = {
     documentation: 0,  // Free - fast analysis
     git: 0,            // Free - fast analysis
     performance: 3,    // Heavy - Lighthouse needs browser
+    mobile: 1,         // Mobile app security checks
+    'api-security': 1, // API endpoint security testing
+    'cloud-native': 1, // Cloud configuration security
     container: 1,      // Dockerfile and image security scanning
     sbom: 1,           // SBOM generation for supply chain security
   } as Record<ToolCategory, number>,

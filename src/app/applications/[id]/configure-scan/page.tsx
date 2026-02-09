@@ -79,6 +79,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   'cloud-native': 'Cloud Native',
   mobile: 'Mobile',
   git: 'Git',
+  container: 'Container Security',
+  sbom: 'SBOM & Supply Chain',
 };
 
 function ConfigureScanInner() {

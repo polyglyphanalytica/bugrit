@@ -86,7 +86,7 @@ env:
   - variable: GITHUB_CLIENT_SECRET
     secret: github-client-secret
   - variable: GITHUB_REDIRECT_URI
-    value: "https://your-domain.web.app/api/auth/github/callback"
+    value: "https://bugrit-prod.web.app/api/auth/github/callback"
 
   # ============================================================
   # Email Notifications (Resend)

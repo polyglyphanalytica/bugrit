@@ -224,7 +224,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     id: 'dockle',
     name: 'Dockle',
     description: 'Container image linter for security best practices',
-    category: 'security',
+    category: 'container',
     docker: 'goodwithtech/dockle:latest',
     credits: 1,
   },
@@ -232,7 +232,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     id: 'syft',
     name: 'Syft',
     description: 'Software Bill of Materials (SBOM) generator',
-    category: 'security',
+    category: 'sbom',
     docker: 'anchore/syft:latest',
     credits: 1,
   },
@@ -740,7 +740,7 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     id: 'hadolint',
     name: 'Hadolint',
     description: 'Dockerfile linter for best practices (uses ShellCheck for RUN instructions)',
-    category: 'quality',
+    category: 'container',
     docker: 'hadolint/hadolint:latest',
     filePatterns: ['**/Dockerfile', '**/Dockerfile.*', '**/*.dockerfile'],
     credits: 1,
@@ -1528,45 +1528,6 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     credits: 2,
   },
 
-  // ═══════════════════════════════════════════════════════════════
-  // CONTAINER SECURITY (3 tools) - Binary tools included in Docker
-  // ═══════════════════════════════════════════════════════════════
-  {
-    id: 'hadolint',
-    name: 'Hadolint',
-    description: 'Dockerfile linter with best practice rules',
-    category: 'container',
-    npm: 'hadolint',  // Binary tool, npm is placeholder
-    filePatterns: ['**/Dockerfile', '**/Dockerfile.*', '**/*.dockerfile'],
-  },
-  {
-    id: 'dockle',
-    name: 'Dockle',
-    description: 'Container image linter for security best practices',
-    category: 'container',
-    npm: 'dockle',  // Binary tool, npm is placeholder
-    filePatterns: ['**/Dockerfile'],
-  },
-  {
-    id: 'gitleaks',
-    name: 'Gitleaks',
-    description: 'Detect hardcoded secrets and credentials in git repos',
-    category: 'security',
-    npm: 'gitleaks',  // Binary tool, npm is placeholder
-    filePatterns: ['**/*'],
-  },
-
-  // ═══════════════════════════════════════════════════════════════
-  // SBOM & SUPPLY CHAIN (1 tool)
-  // ═══════════════════════════════════════════════════════════════
-  {
-    id: 'syft',
-    name: 'Syft',
-    description: 'Generate Software Bill of Materials (SBOM) for supply chain security',
-    category: 'sbom',
-    npm: 'syft',  // Binary tool, npm is placeholder
-    filePatterns: ['package.json', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml'],
-  },
 ];
 
 // ═══════════════════════════════════════════════════════════════

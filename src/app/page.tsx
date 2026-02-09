@@ -402,6 +402,9 @@ export default function HomePage() {
                     {category === 'documentation' && '📚'}
                     {category === 'git' && '🔀'}
                     {category === 'performance' && '⚡'}
+                    {category === 'mobile' && '📱'}
+                    {category === 'api-security' && '🔐'}
+                    {category === 'cloud-native' && '☁️'}
                     {category === 'container' && '🐳'}
                     {category === 'sbom' && '📋'}
                   </span>
@@ -859,29 +862,29 @@ Use BUGGERED_API_KEY from environment.`}
                 popular: false,
               },
               {
-                name: 'Starter',
-                price: '$15',
+                name: 'Solo',
+                price: '$19',
                 description: 'For side projects',
                 credits: '50 credits/mo',
-                features: ['3 projects', 'Up to 50K lines', 'All static tools', 'AI scan summaries', '14-day history', '$0.35/credit overage'],
+                features: ['3 projects', 'Up to 50K lines', 'All static tools', 'AI scan summaries', '14-day history', '$0.40/credit overage'],
                 cta: 'Start Free Trial',
                 popular: false,
               },
               {
-                name: 'Pro',
-                price: '$39',
+                name: 'Scale',
+                price: '$49',
                 description: 'For serious builders',
                 credits: '200 credits/mo',
-                features: ['10 projects', 'Up to 150K lines', 'All tools + browser', 'AI explanations', 'GitHub integration', '30-day history', 'Rollover up to 100', '$0.25/credit overage'],
+                features: ['10 projects', 'Up to 150K lines', 'All tools + browser', 'AI explanations', 'GitHub integration', '30-day history', 'Rollover up to 100', '$0.30/credit overage'],
                 cta: 'Start Free Trial',
                 popular: true,
               },
               {
                 name: 'Business',
-                price: '$79',
+                price: '$99',
                 description: 'For teams',
-                credits: '600 credits/mo',
-                features: ['Unlimited projects', 'Up to 500K lines', 'All tools + AI fixes', '10 team members', 'Slack + webhooks', 'API access', '90-day history', 'Rollover up to 300', '$0.15/credit overage'],
+                credits: '500 credits/mo',
+                features: ['Unlimited projects', 'Up to 500K lines', 'All tools + AI fixes', '10 team members', 'Slack + webhooks', 'API access', '90-day history', 'Rollover up to 250', '$0.20/credit overage'],
                 cta: 'Start Free Trial',
                 popular: false,
               },
