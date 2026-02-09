@@ -68,6 +68,10 @@ export function getDefaultEnvironment(): BugritEnvironment {
   return env;
 }
 
+export function isProduction(): boolean {
+  return getDefaultEnvironment() === 'production';
+}
+
 export function getFirestoreDatabaseId(environment: BugritEnvironment): string {
   return environment === 'production'
     ? DEFAULT_FIRESTORE_DATABASE_ID

@@ -242,31 +242,49 @@ export async function getStripeConfig(): Promise<StripeConfig | null> {
 }
 
 export async function getStripeSecretKey(): Promise<string | null> {
-  const doc = await db.collection('platform_settings').doc('stripe').get();
-  if (!doc.exists) return null;
-
-  const data = doc.data() as StripeConfig;
-  if (!data.secretKeyEncrypted) return null;
-
+  // Try database first (admin-configured keys)
   try {
-    return decrypt(data.secretKeyEncrypted);
+    const doc = await db.collection('platform_settings').doc('stripe').get();
+    if (doc.exists) {
+      const data = doc.data() as StripeConfig;
+      if (data.secretKeyEncrypted) {
+        const key = decrypt(data.secretKeyEncrypted);
+        if (key) return key;
+      }
+    }
   } catch {
-    return null;
+    // Fall through to env var
   }
+
+  // Fall back to environment-aware env var
+  const { isProduction } = await import('@/lib/environment');
+  if (isProduction()) {
+    return process.env.STRIPE_SECRET_KEY || null;
+  }
+  return process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY || null;
 }
 
 export async function getStripeWebhookSecret(): Promise<string | null> {
-  const doc = await db.collection('platform_settings').doc('stripe').get();
-  if (!doc.exists) return null;
-
-  const data = doc.data() as StripeConfig;
-  if (!data.webhookSecretEncrypted) return null;
-
+  // Try database first (admin-configured keys)
   try {
-    return decrypt(data.webhookSecretEncrypted);
+    const doc = await db.collection('platform_settings').doc('stripe').get();
+    if (doc.exists) {
+      const data = doc.data() as StripeConfig;
+      if (data.webhookSecretEncrypted) {
+        const key = decrypt(data.webhookSecretEncrypted);
+        if (key) return key;
+      }
+    }
   } catch {
-    return null;
+    // Fall through to env var
   }
+
+  // Fall back to environment-aware env var
+  const { isProduction } = await import('@/lib/environment');
+  if (isProduction()) {
+    return process.env.STRIPE_WEBHOOK_SECRET || null;
+  }
+  return process.env.STRIPE_TEST_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET || null;
 }
 
 export async function updateStripeConfig(

@@ -10,11 +10,14 @@ import { verifySession } from '@/lib/auth/session';
 import { logger } from '@/lib/logger';
 import { db } from '@/lib/firebase-admin';
 
-// Initialize Stripe
+// Initialize Stripe with environment-aware key selection
 function getStripe(): Stripe {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
+  const { isProduction } = require('@/lib/environment');
+  const secretKey = isProduction()
+    ? process.env.STRIPE_SECRET_KEY
+    : (process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY);
   if (!secretKey) {
-    throw new Error('STRIPE_SECRET_KEY not configured');
+    throw new Error(`Stripe secret key not configured (${isProduction() ? 'STRIPE_SECRET_KEY' : 'STRIPE_TEST_SECRET_KEY'})`);
   }
   return new Stripe(secretKey, {
     apiVersion: '2025-12-15.clover',

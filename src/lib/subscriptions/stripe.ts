@@ -14,20 +14,43 @@
  */
 
 import Stripe from 'stripe';
-import { TierName, TIERS } from './tiers';
+import { TierName, TIERS, getStripePriceId } from './tiers';
 import { createHash } from 'crypto';
+import { isProduction } from '@/lib/environment';
 
 // Stripe client singleton - uses environment variable for initialization
 // For operations requiring database-stored key, use getStripeClient()
 let stripeClient: Stripe | null = null;
 
+/**
+ * Get the correct Stripe secret key based on environment.
+ * Production (bugrit.com) uses STRIPE_SECRET_KEY (live).
+ * Non-prod uses STRIPE_TEST_SECRET_KEY (sandbox), falling back to STRIPE_SECRET_KEY.
+ */
+export function getEnvironmentStripeSecretKey(): string | undefined {
+  if (isProduction()) {
+    return process.env.STRIPE_SECRET_KEY;
+  }
+  return process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+}
+
+/**
+ * Get the correct Stripe webhook secret based on environment.
+ */
+export function getEnvironmentWebhookSecret(): string | undefined {
+  if (isProduction()) {
+    return process.env.STRIPE_WEBHOOK_SECRET;
+  }
+  return process.env.STRIPE_TEST_WEBHOOK_SECRET || process.env.STRIPE_WEBHOOK_SECRET;
+}
+
 function getDefaultStripeClient(): Stripe {
   if (!stripeClient) {
-    const secretKey = process.env.STRIPE_SECRET_KEY;
+    const secretKey = getEnvironmentStripeSecretKey();
     if (!secretKey) {
       throw new Error(
-        'STRIPE_SECRET_KEY environment variable is not set. ' +
-        'Configure it in your environment or use the admin panel to set up Stripe.'
+        'Stripe secret key is not set. ' +
+        `Configure ${isProduction() ? 'STRIPE_SECRET_KEY' : 'STRIPE_TEST_SECRET_KEY'} in your environment or use the admin panel.`
       );
     }
     stripeClient = new Stripe(secretKey, {
@@ -96,14 +119,10 @@ export async function createCheckoutSession(
     throw new Error('Cannot create checkout for free tier');
   }
 
-  const tierConfig = TIERS[tier];
-  const priceId =
-    interval === 'month'
-      ? tierConfig.stripePriceIdMonthly
-      : tierConfig.stripePriceIdYearly;
+  const priceId = getStripePriceId(tier, interval);
 
   if (!priceId) {
-    throw new Error(`No Stripe price ID configured for ${tier} ${interval}`);
+    throw new Error(`No Stripe price ID configured for ${tier} ${interval} (${isProduction() ? 'live' : 'test'} mode)`);
   }
 
   // Generate idempotency key to prevent duplicate checkouts on retries
@@ -228,14 +247,10 @@ export async function changeSubscriptionTier(
     return cancelSubscription(subscriptionId);
   }
 
-  const tierConfig = TIERS[newTier];
-  const priceId =
-    interval === 'month'
-      ? tierConfig.stripePriceIdMonthly
-      : tierConfig.stripePriceIdYearly;
+  const priceId = getStripePriceId(newTier, interval);
 
   if (!priceId) {
-    throw new Error(`No Stripe price ID configured for ${newTier} ${interval}`);
+    throw new Error(`No Stripe price ID configured for ${newTier} ${interval} (${isProduction() ? 'live' : 'test'} mode)`);
   }
 
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -295,10 +310,10 @@ export function constructWebhookEvent(
   payload: string | Buffer,
   signature: string
 ): Stripe.Event {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = getEnvironmentWebhookSecret();
 
   if (!webhookSecret) {
-    throw new Error('STRIPE_WEBHOOK_SECRET not configured');
+    throw new Error(`Stripe webhook secret not configured (${isProduction() ? 'STRIPE_WEBHOOK_SECRET' : 'STRIPE_TEST_WEBHOOK_SECRET'})`);
   }
 
   return stripe.webhooks.constructEvent(payload, signature, webhookSecret);

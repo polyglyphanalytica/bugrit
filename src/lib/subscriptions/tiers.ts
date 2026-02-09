@@ -269,6 +269,40 @@ export const TIERS: Record<TierName, TierDefinition> = {
   },
 };
 
+// --- Environment-aware Stripe price ID resolution ---
+
+import { isProduction } from '@/lib/environment';
+
+const TIER_ENV_KEYS: Record<Exclude<TierName, 'free'>, { monthly: { live: string; test: string }; yearly: { live: string; test: string } }> = {
+  starter: {
+    monthly: { live: 'STRIPE_STARTER_MONTHLY_PRICE_ID', test: 'STRIPE_TEST_STARTER_MONTHLY_PRICE_ID' },
+    yearly:  { live: 'STRIPE_STARTER_YEARLY_PRICE_ID',  test: 'STRIPE_TEST_STARTER_YEARLY_PRICE_ID' },
+  },
+  pro: {
+    monthly: { live: 'STRIPE_PRO_MONTHLY_PRICE_ID', test: 'STRIPE_TEST_PRO_MONTHLY_PRICE_ID' },
+    yearly:  { live: 'STRIPE_PRO_YEARLY_PRICE_ID',  test: 'STRIPE_TEST_PRO_YEARLY_PRICE_ID' },
+  },
+  business: {
+    monthly: { live: 'STRIPE_BUSINESS_MONTHLY_PRICE_ID', test: 'STRIPE_TEST_BUSINESS_MONTHLY_PRICE_ID' },
+    yearly:  { live: 'STRIPE_BUSINESS_YEARLY_PRICE_ID',  test: 'STRIPE_TEST_BUSINESS_YEARLY_PRICE_ID' },
+  },
+};
+
+/**
+ * Get the correct Stripe price ID based on environment.
+ * Production (bugrit.com) uses live price IDs. Everything else uses test price IDs.
+ */
+export function getStripePriceId(tier: TierName, interval: 'month' | 'year'): string | undefined {
+  if (tier === 'free') return undefined;
+  const keys = TIER_ENV_KEYS[tier];
+  const envKey = interval === 'month' ? keys.monthly : keys.yearly;
+  if (isProduction()) {
+    return process.env[envKey.live];
+  }
+  // Non-prod: prefer test key, fall back to live key
+  return process.env[envKey.test] || process.env[envKey.live];
+}
+
 // Helper functions - These use hardcoded values by default
 // For dynamic values from database, use the async functions below
 

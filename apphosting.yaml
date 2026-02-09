@@ -64,7 +64,7 @@ env:
     secret: platform-superadmin-email
 
   # ============================================================
-  # Stripe Billing (if using payments)
+  # Stripe Billing — LIVE keys (used on bugrit.com only)
   # ============================================================
   - variable: STRIPE_SECRET_KEY
     secret: stripe-secret-key
@@ -84,6 +84,29 @@ env:
     secret: stripe-business-monthly-price-id
   - variable: STRIPE_BUSINESS_YEARLY_PRICE_ID
     secret: stripe-business-yearly-price-id
+
+  # ============================================================
+  # Stripe Billing — TEST/SANDBOX keys (used on all non-prod URLs)
+  # The app auto-selects test vs live based on hostname detection.
+  # ============================================================
+  - variable: STRIPE_TEST_SECRET_KEY
+    secret: stripe-test-secret-key
+  - variable: STRIPE_TEST_WEBHOOK_SECRET
+    secret: stripe-test-webhook-secret
+  - variable: NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY
+    secret: STRIPE_TEST_PUBLISHABLE_KEY
+  - variable: STRIPE_TEST_STARTER_MONTHLY_PRICE_ID
+    secret: stripe-test-starter-monthly-price-id
+  - variable: STRIPE_TEST_STARTER_YEARLY_PRICE_ID
+    secret: stripe-test-starter-yearly-price-id
+  - variable: STRIPE_TEST_PRO_MONTHLY_PRICE_ID
+    secret: stripe-test-pro-monthly-price-id
+  - variable: STRIPE_TEST_PRO_YEARLY_PRICE_ID
+    secret: stripe-test-pro-yearly-price-id
+  - variable: STRIPE_TEST_BUSINESS_MONTHLY_PRICE_ID
+    secret: stripe-test-business-monthly-price-id
+  - variable: STRIPE_TEST_BUSINESS_YEARLY_PRICE_ID
+    secret: stripe-test-business-yearly-price-id
 
   # ============================================================
   # Google Cloud (for Docker-based scanning tools)
