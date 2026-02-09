@@ -347,40 +347,54 @@ export async function reserveCreditsForScan(
   estimatedCost: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const account = await getBillingAccount(userId);
+    const billingRef = db.collection('billing_accounts').doc(userId);
 
-    if (!account) {
-      return { success: false, error: 'Billing account not found' };
-    }
+    // Use a Firestore transaction to atomically check balance and reserve credits.
+    // This prevents race conditions where two concurrent scans could both pass the
+    // balance check before either deducts, leading to negative balances.
+    const result = await db.runTransaction(async (tx) => {
+      const billingDoc = await tx.get(billingRef);
 
-    // Check if they can afford it
-    if (account.credits.remaining < estimatedCost) {
-      const tierConfig = SUBSCRIPTION_TIERS[account.tier];
-      if (!tierConfig.overageRate) {
-        return {
-          success: false,
-          error: `Insufficient credits. Need ${estimatedCost}, have ${account.credits.remaining}`,
-        };
+      if (!billingDoc.exists) {
+        return { success: false as const, error: 'Billing account not found' };
       }
-    }
 
-    // Create a reservation (pending charge)
-    await db.collection('credit_reservations').doc(scanId).set({
-      userId,
-      scanId,
-      amount: estimatedCost,
-      status: 'reserved',
-      createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour expiry
+      const data = billingDoc.data()!;
+      const remaining = data.credits?.remaining ?? 0;
+      const reserved = data.credits?.reserved ?? 0;
+      const tier: SubscriptionTier = data.tier || 'free';
+
+      // Check if they can afford it
+      if (remaining < estimatedCost) {
+        const tierConfig = SUBSCRIPTION_TIERS[tier];
+        if (!tierConfig.overageRate) {
+          return {
+            success: false as const,
+            error: `Insufficient credits. Need ${estimatedCost}, have ${remaining}`,
+          };
+        }
+      }
+
+      // Create the reservation doc
+      tx.set(db.collection('credit_reservations').doc(scanId), {
+        userId,
+        scanId,
+        amount: estimatedCost,
+        status: 'reserved',
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour expiry
+      });
+
+      // Atomically deduct from available balance within the transaction
+      tx.update(billingRef, {
+        'credits.remaining': remaining - estimatedCost,
+        'credits.reserved': reserved + estimatedCost,
+      });
+
+      return { success: true as const };
     });
 
-    // Deduct from available balance (will be finalized or released)
-    await db.collection('billing_accounts').doc(userId).update({
-      'credits.remaining': account.credits.remaining - estimatedCost,
-      'credits.reserved': (account.credits.reserved || 0) + estimatedCost,
-    });
-
-    return { success: true };
+    return result;
   } catch (error) {
     logger.error('Credit reservation error', { userId, scanId, error });
     return {

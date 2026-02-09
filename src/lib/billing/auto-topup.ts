@@ -5,7 +5,7 @@
  * their configured threshold. Uses saved payment method via Stripe.
  */
 
-import { db } from '@/lib/firebase/admin';
+import { db, FieldValue } from '@/lib/firebase/admin';
 import { getCreditPackage, getStripeSecretKey } from '@/lib/admin/service';
 import { logger } from '@/lib/logger';
 
@@ -117,10 +117,11 @@ export async function checkAndTriggerAutoTopup(
     );
 
     if (result.success) {
-      // Update billing account with new credits and increment purchase count
+      // Use FieldValue.increment() for atomic credit updates to prevent race conditions
+      // with concurrent deductions or other top-ups
       await db.collection('billing_accounts').doc(userId).update({
-        'credits.remaining': (billingData?.credits?.remaining || 0) + creditPackage.credits,
-        'credits.purchased': (billingData?.credits?.purchased || 0) + creditPackage.credits,
+        'credits.remaining': FieldValue.increment(creditPackage.credits),
+        'credits.purchased': FieldValue.increment(creditPackage.credits),
         'autoTopup.purchasesThisMonth': purchasesThisMonth + 1,
         'autoTopup.lastPurchaseAt': now,
         'autoTopup.monthResetAt': monthStart,
@@ -329,13 +330,15 @@ export async function deductCreditsWithAutoTopup(
       // Allow overage - will be billed at end of period
     }
 
-    // Deduct credits
-    const newBalance = currentCredits - amount;
-
+    // Use FieldValue.increment() for atomic credit deduction.
+    // This prevents race conditions where concurrent deductions could
+    // read the same balance and both succeed.
     await db.collection('billing_accounts').doc(userId).update({
-      'credits.remaining': newBalance,
-      'credits.used': (billingData?.credits?.used || 0) + amount,
+      'credits.remaining': FieldValue.increment(-amount),
+      'credits.used': FieldValue.increment(amount),
     });
+
+    const newBalance = currentCredits - amount;
 
     // Record transaction with idempotency key
     const transactionData = {
@@ -354,11 +357,11 @@ export async function deductCreditsWithAutoTopup(
     // Check and trigger auto top-up if needed
     const autoTopupResult = await checkAndTriggerAutoTopup(userId, newBalance);
 
-    // Get final balance (may have changed due to auto top-up)
-    let finalBalance = newBalance;
-    if (autoTopupResult.success && autoTopupResult.creditsAdded) {
-      finalBalance = newBalance + autoTopupResult.creditsAdded;
-    }
+    // Re-read balance to get the actual value (may have changed due to auto top-up or concurrent ops)
+    const updatedDoc = await db.collection('billing_accounts').doc(userId).get();
+    const finalBalance = updatedDoc.exists
+      ? (updatedDoc.data()?.credits?.remaining ?? newBalance)
+      : newBalance;
 
     return {
       success: true,

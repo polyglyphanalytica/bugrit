@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
   try {
     const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
     const { searchParams } = new URL(request.url);
     const scanId = searchParams.get('scanId');
@@ -36,6 +37,14 @@ export async function GET(request: NextRequest) {
     const scanData = await getScanData(scanId);
 
     if (!scanData) {
+      return NextResponse.json(
+        { error: 'Scan not found' },
+        { status: 404 }
+      );
+    }
+
+    // SECURITY: Verify scan ownership to prevent IDOR
+    if (scanData.userId && scanData.userId !== userId) {
       return NextResponse.json(
         { error: 'Scan not found' },
         { status: 404 }
@@ -134,6 +143,7 @@ async function getScanData(scanId: string) {
     });
 
     return {
+      userId: scanData.userId,
       repoUrl: scanData.source?.repoUrl || scanData.source?.url || '',
       baseBranch: scanData.baseBranch || 'main',
       fixBranch: scanData.fixBranch || `bugrit/fixes-${scanId}`,

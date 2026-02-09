@@ -72,6 +72,7 @@ export default function AdminTicketsPage() {
   const router = useRouter();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [statusFilter, setStatusFilter] = useState('open');
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [replyMessage, setReplyMessage] = useState('');
@@ -79,9 +80,29 @@ export default function AdminTicketsPage() {
   const [sending, setSending] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
 
+  // Verify admin status before showing admin UI
   useEffect(() => {
-    if (user) fetchTickets();
-  }, [user, statusFilter]);
+    if (!user) return;
+    (async () => {
+      try {
+        const idToken = await user.getIdToken();
+        const res = await fetch('/api/auth/check-admin', {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+        if (res.ok) {
+          setIsAdmin(true);
+        } else {
+          router.push('/dashboard');
+        }
+      } catch {
+        router.push('/dashboard');
+      }
+    })();
+  }, [user, router]);
+
+  useEffect(() => {
+    if (user && isAdmin) fetchTickets();
+  }, [user, isAdmin, statusFilter]);
 
   const fetchTickets = async () => {
     if (!user) return;

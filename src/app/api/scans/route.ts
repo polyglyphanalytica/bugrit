@@ -368,6 +368,10 @@ export async function GET(request: NextRequest) {
       if (!scan) {
         return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
       }
+      // SECURITY: Verify scan ownership to prevent IDOR
+      if (scan.userId !== userId) {
+        return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
+      }
       return NextResponse.json({ scan });
     }
 

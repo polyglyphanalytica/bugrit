@@ -47,7 +47,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Feature flag not found' }, { status: 404 });
     }
 
-    await updateFeatureFlag(flagId, body, auth.context.userId);
+    // Only allow known fields to prevent arbitrary field injection
+    const allowedFields = ['name', 'description', 'enabled', 'percentage', 'userIds', 'tiers', 'startDate', 'endDate'];
+    const sanitizedBody: Record<string, unknown> = {};
+    for (const key of allowedFields) {
+      if (key in body) sanitizedBody[key] = body[key];
+    }
+
+    await updateFeatureFlag(flagId, sanitizedBody, auth.context.userId);
 
     const updated = await getFeatureFlag(flagId);
 

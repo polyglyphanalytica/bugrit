@@ -63,12 +63,31 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    const { testCaseId, testCaseName, runnerType, config, code } = body;
+    const { testCaseId, testCaseName, runnerType, config, scriptId } = body;
 
     if (!testCaseId || !testCaseName) {
       return NextResponse.json(
         { error: 'Missing required fields: testCaseId, testCaseName' },
         { status: 400 }
+      );
+    }
+
+    // SECURITY: Code must come from a stored script, not inline in the request body.
+    // Accepting arbitrary code would allow remote code execution (RCE).
+    let code = '';
+    if (scriptId) {
+      const script = store.getTestScript(scriptId);
+      if (!script) {
+        return NextResponse.json(
+          { error: 'Script not found. Create one via /api/scripts first.' },
+          { status: 404 }
+        );
+      }
+      code = script.code;
+    } else if (body.code) {
+      return NextResponse.json(
+        { error: 'Inline code execution is not allowed. Create a script via /api/scripts first and pass scriptId.' },
+        { status: 403 }
       );
     }
 
@@ -80,13 +99,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Get base URL for notification links
-    const baseUrl = request.headers.get('origin') || 'https://bugrit.com';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bugrit.com';
 
     // Execute test in background using dynamic import
     executeTestInBackground(testRun.id, testCaseName, {
       runnerType: runnerType || 'playwright',
       config: config || {},
-      code: code || '',
+      code,
       userId,
       userEmail,
       baseUrl,

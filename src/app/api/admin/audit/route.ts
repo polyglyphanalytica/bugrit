@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     } = {};
 
     const limit = searchParams.get('limit');
-    if (limit) options.limit = parseInt(limit, 10);
+    if (limit) options.limit = Math.min(parseInt(limit, 10) || 100, 500);
 
     const adminId = searchParams.get('adminId');
     if (adminId) options.adminId = adminId;

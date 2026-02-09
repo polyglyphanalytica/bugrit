@@ -67,6 +67,47 @@ export async function POST(request: NextRequest) {
       return Errors.validationError('Target must include directory, url, or urls');
     }
 
+    // SECURITY: Validate directory path to prevent path traversal
+    if (target.directory) {
+      const normalizedDir = require('path').resolve(target.directory);
+      // Only allow directories under /tmp or known safe workspace paths
+      const allowedPrefixes = ['/tmp/', '/workspace/', '/home/'];
+      const isAllowed = allowedPrefixes.some(p => normalizedDir.startsWith(p));
+      if (!isAllowed || normalizedDir.includes('..')) {
+        return Errors.validationError('Invalid directory path. Only workspace directories are allowed.');
+      }
+    }
+
+    // SECURITY: Validate URLs to prevent SSRF against internal services
+    const validateUrl = (url: string): boolean => {
+      try {
+        const parsed = new URL(url);
+        // Block internal/private IPs and protocols
+        if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+        const host = parsed.hostname.toLowerCase();
+        // Block localhost, private IPs, link-local, and cloud metadata
+        if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return false;
+        if (host.startsWith('10.') || host.startsWith('192.168.')) return false;
+        if (host.startsWith('172.') && parseInt(host.split('.')[1]) >= 16 && parseInt(host.split('.')[1]) <= 31) return false;
+        if (host === '169.254.169.254' || host.endsWith('.internal')) return false;
+        if (host === '0.0.0.0' || host === '[::0]') return false;
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    if (target.url && !validateUrl(target.url)) {
+      return Errors.validationError('Invalid target URL. Internal and private addresses are not allowed.');
+    }
+    if (target.urls) {
+      for (const url of target.urls) {
+        if (!validateUrl(url)) {
+          return Errors.validationError(`Invalid target URL: ${url}. Internal and private addresses are not allowed.`);
+        }
+      }
+    }
+
     // Check billing account exists
     const account = await getBillingAccount(userId);
     if (!account) {

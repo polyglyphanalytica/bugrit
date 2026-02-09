@@ -28,6 +28,18 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // SECURITY: Verify organization owns this scan via the project
+    if (scan.projectId) {
+      const db = getDb();
+      if (db) {
+        const projectDoc = await db.collection('projects').doc(scan.projectId).get();
+        const project = projectDoc.exists ? projectDoc.data() : null;
+        if (!project || project.organizationId !== context.apiKey.organizationId) {
+          return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
+        }
+      }
+    }
+
     if (scan.status !== 'completed') {
       return NextResponse.json(
         { error: 'Scan not yet completed', status: scan.status },
@@ -104,6 +116,7 @@ async function getScanData(scanId: string) {
     const data = doc.data();
     return {
       id: doc.id,
+      projectId: data?.projectId,
       status: data?.status,
       results: data?.results || {
         security: { score: 0, issues: 0 },

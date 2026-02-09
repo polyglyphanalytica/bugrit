@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { healthMonitor, circuitRegistry, bulkheadRegistry, jobQueue } from '@/lib/resilience';
-import { authenticateRequest } from '@/lib/api/auth';
+import { verifyAdminPermission } from '@/lib/admin/middleware';
 import { handleError, successResponse, Errors } from '@/lib/api/errors';
 import { logger } from '@/lib/logger';
 
@@ -21,12 +21,10 @@ import { logger } from '@/lib/logger';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Admin endpoint - use reports:read permission as proxy for admin access
-    const context = await authenticateRequest(request, 'reports:read');
-    const userId = context.apiKey.ownerId;
-
-    // In production, would check admin role from organization membership
-    // For now, allow any authenticated user with reports:read
+    // Require proper admin authorization — not just an API key
+    const auth = await verifyAdminPermission(request, 'canViewAuditLogs');
+    if (auth instanceof NextResponse) return auth;
+    const userId = auth.userId;
 
     const [systemHealth, queueStats, circuitHealth, bulkheadHealth] = await Promise.all([
       healthMonitor.getSystemHealth(),
@@ -84,9 +82,10 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Admin endpoint - use reports:write permission as proxy for admin access
-    const context = await authenticateRequest(request, 'reports:write');
-    const adminId = context.apiKey.ownerId;
+    // Require proper admin authorization
+    const auth = await verifyAdminPermission(request, 'canManageFeatures');
+    if (auth instanceof NextResponse) return auth;
+    const adminId = auth.userId;
 
     // In production, would check admin role from organization membership
 

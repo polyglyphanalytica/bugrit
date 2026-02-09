@@ -6,6 +6,7 @@
  */
 
 import { getDb, toTimestamp, generateId } from '../firestore';
+import { logger } from '../logger';
 import {
   getUserNotificationPreferences,
   shouldNotify,
@@ -114,7 +115,7 @@ export async function dispatchNotification(event: NotificationEvent): Promise<Di
     result.success = Object.values(result.channels).some(ch => ch?.sent);
 
   } catch (error) {
-    console.error('Error dispatching notification:', error);
+    logger.error('Error dispatching notification', { error, userId: event.userId, type: event.type });
   }
 
   return result;
@@ -243,7 +244,7 @@ async function sendPushNotification(
     const response = await getMessaging().sendEachForMulticast(message);
 
     if (response.failureCount > 0) {
-      console.warn('Some push notifications failed:', response.responses.filter(r => !r.success));
+      logger.warn('Some push notifications failed', { failedCount: response.failureCount });
     }
 
     return {
@@ -252,7 +253,7 @@ async function sendPushNotification(
     };
   } catch (error) {
     // Push notifications may fail if FCM is not configured
-    console.warn('Push notification failed:', error);
+    logger.warn('Push notification failed', { error: error instanceof Error ? error.message : 'Unknown' });
     return { sent: false, error: error instanceof Error ? error.message : 'Push failed' };
   }
 }
