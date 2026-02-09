@@ -193,85 +193,68 @@ export default function DashboardPage() {
       <main className="flex-1 mx-auto w-full px-4 md:px-6 lg:px-8 py-6 max-w-7xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
-          <Button asChild size="sm" className="w-full sm:w-auto">
-            <Link href="/applications">Manage Applications</Link>
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button asChild size="sm" className="flex-1 sm:flex-auto">
+              <Link href="/scans/new">New Scan</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="flex-1 sm:flex-auto">
+              <Link href="/applications">Applications</Link>
+            </Button>
+          </div>
         </div>
 
-        {/* Welcome Banner - shown at TOP when user has no applications */}
+        {/* Sensei welcome — shown when user has no scans */}
         {applications.length === 0 && (
-          <Card className="mb-8 border border-dashed border-orange-200 bg-orange-50/30">
-            <CardContent className="py-12 text-center">
-              <div className="text-5xl mb-4">👋</div>
-              <h3 className="text-2xl font-bold mb-2">Welcome to Bugrit!</h3>
-              <p className="text-gray-500 mb-6 max-w-lg mx-auto">
-                Let&apos;s scan your first project. Just create an app and paste your GitHub URL.
-                We&apos;ll check for security issues, bugs, and more in under 2 minutes.
-              </p>
-
-              <div className="max-w-md mx-auto mb-8">
-                <div className="flex items-start gap-4 text-left mb-4">
-                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-orange-600">1</div>
-                  <div>
-                    <p className="font-medium">Create an application</p>
-                    <p className="text-sm text-gray-500">Give it a name and select the type (web, mobile, etc.)</p>
+          <Card className="mb-8 border border-orange-200 bg-gradient-to-br from-orange-50/50 to-white">
+            <CardContent className="py-10">
+              <div className="grid md:grid-cols-[1fr,auto] gap-8 items-center">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                    </span>
+                    <span className="text-xs font-medium text-orange-600 uppercase tracking-wider">Sensei ready</span>
                   </div>
-                </div>
-                <div className="flex items-start gap-4 text-left mb-4">
-                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-orange-600">2</div>
-                  <div>
-                    <p className="font-medium">Paste your GitHub URL</p>
-                    <p className="text-sm text-gray-500">Or upload a ZIP file if you prefer</p>
+                  <h3 className="text-2xl font-bold mb-2">Paste a GitHub URL, Sensei does the rest.</h3>
+                  <p className="text-gray-500 mb-6 max-w-lg">
+                    No setup needed. Sensei auto-detects your tech stack, picks the right security modules,
+                    and gives you actionable fixes with AI prompts you can paste into Cursor, Copilot, or Claude.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <Button asChild size="lg">
+                      <Link href="/scans/new">Scan My Code</Link>
+                    </Button>
+                    <Button asChild variant="outline" size="lg">
+                      <Link href="/docs/getting-started">How it works</Link>
+                    </Button>
                   </div>
+                  <p className="text-xs text-gray-400 mt-3">10 free credits included &middot; No credit card required &middot; Results in under 2 minutes</p>
                 </div>
-                <div className="flex items-start gap-4 text-left">
-                  <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center flex-shrink-0 text-sm font-bold text-orange-600">3</div>
-                  <div>
-                    <p className="font-medium">Get your results</p>
-                    <p className="text-sm text-gray-500">See what to fix with copy-paste AI prompts for each issue</p>
+                <div className="hidden md:block bg-slate-900/95 text-white rounded-2xl p-5 max-w-xs">
+                  <p className="text-[11px] uppercase tracking-widest text-white/50 mb-2">Sensei</p>
+                  <p className="text-sm leading-relaxed mb-3">Paste your GitHub URL and I&apos;ll recommend the right modules for your stack.</p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2 text-green-400"><span>&#10003;</span> Auto-detect language &amp; framework</div>
+                    <div className="flex items-center gap-2 text-green-400"><span>&#10003;</span> Smart module recommendations</div>
+                    <div className="flex items-center gap-2 text-green-400"><span>&#10003;</span> AI-powered fix suggestions</div>
                   </div>
                 </div>
               </div>
-
-              <Button asChild size="lg">
-                <Link href="/applications">Create Your First App</Link>
-              </Button>
             </CardContent>
           </Card>
         )}
 
-        {/* Two Pillars Quick Actions */}
+        {/* Quick Actions — action-oriented */}
         <div className="grid gap-4 md:grid-cols-2 mb-8">
           <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <span className="text-xl">🧪</span>
-                Testing
-              </CardTitle>
-              <CardDescription>
-                Make sure your app works everywhere your users are
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge variant="outline">Web Browsers</Badge>
-                <Badge variant="outline">iPhone & Android</Badge>
-                <Badge variant="outline">Mac, Win, Linux</Badge>
-              </div>
-              <Button asChild variant="outline" size="sm">
-                <Link href="/docs/integrations/playwright">View Testing Docs</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
                 <span className="text-xl">🔍</span>
-                Code Scanning
+                Scan Code
               </CardTitle>
               <CardDescription>
-                Check your code with 100+ security and quality tools
+                Check your code with 100+ security and quality tools in under 2 minutes
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -279,10 +262,33 @@ export default function DashboardPage() {
                 <Badge variant="outline">Security</Badge>
                 <Badge variant="outline">Dependencies</Badge>
                 <Badge variant="outline">Accessibility</Badge>
+                <Badge variant="outline">Performance</Badge>
                 <Badge variant="outline">+8 more</Badge>
               </div>
+              <Button asChild size="sm">
+                <Link href="/scans/new">Start a Scan</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-xl">🧪</span>
+                Set Up Testing
+              </CardTitle>
+              <CardDescription>
+                Test your app on every browser, phone, and desktop OS
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Badge variant="outline">Web Browsers</Badge>
+                <Badge variant="outline">iPhone &amp; Android</Badge>
+                <Badge variant="outline">Mac, Win, Linux</Badge>
+              </div>
               <Button asChild variant="outline" size="sm">
-                <Link href="/docs">View Scanning Docs</Link>
+                <Link href="/docs/integrations/playwright">Set Up Tests</Link>
               </Button>
             </CardContent>
           </Card>

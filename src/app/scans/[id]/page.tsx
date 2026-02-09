@@ -92,7 +92,10 @@ export default function ScanDetailPage() {
 
   const fetchScan = async () => {
     try {
-      const res = await fetch(`/api/scans?scanId=${scanId}`);
+      const idToken = user ? await user.getIdToken() : '';
+      const res = await fetch(`/api/scans?scanId=${scanId}`, {
+        headers: idToken ? { Authorization: `Bearer ${idToken}` } : {},
+      });
       if (res.ok) {
         const data = await res.json();
         setScan(data.scan);
@@ -135,6 +138,16 @@ export default function ScanDetailPage() {
         return '🔀';
       case 'performance':
         return '⚡';
+      case 'mobile':
+        return '📱';
+      case 'api-security':
+        return '🌐';
+      case 'cloud-native':
+        return '☁️';
+      case 'container':
+        return '🐳';
+      case 'sbom':
+        return '📋';
       default:
         return '🔧';
     }
@@ -366,6 +379,43 @@ export default function ScanDetailPage() {
           </Card>
         )}
           </details>
+        )}
+
+        {/* Next Steps — shown after scan completion */}
+        {scan.status === 'completed' && (
+          <Card className="mt-6 border-orange-200/50 bg-orange-50/20">
+            <CardHeader>
+              <CardTitle className="text-lg">What to do next</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <p className="font-medium text-sm">Fix issues with AI</p>
+                  <p className="text-xs text-muted-foreground">
+                    Expand any finding above and copy the AI prompt into Cursor, Copilot, or Claude to get an instant fix.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <p className="font-medium text-sm">Re-scan after fixing</p>
+                  <p className="text-xs text-muted-foreground">
+                    Commit your fixes, then run another scan to verify everything is clean.
+                  </p>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/scans/new">Run New Scan</Link>
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <p className="font-medium text-sm">Set up automation</p>
+                  <p className="text-xs text-muted-foreground">
+                    Scan on every push automatically with GitHub Actions or CI/CD integration.
+                  </p>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/docs/integrations/ci-cd">Set Up CI/CD</Link>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Metadata */}

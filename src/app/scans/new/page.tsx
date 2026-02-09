@@ -313,30 +313,43 @@ function NewScanPageInner() {
           </p>
         </div>
 
-        {/* Progress indicator */}
+        {/* Progress indicator with labels */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          {['input', 'analyzing', 'recommendations', 'scanning'].map((s, i) => (
+          {[
+            { key: 'input', label: 'Paste URL' },
+            { key: 'analyzing', label: 'Analyzing' },
+            { key: 'recommendations', label: 'Review' },
+            { key: 'scanning', label: 'Scanning' },
+          ].map(({ key: s, label }, i) => (
             <div key={s} className="flex items-center gap-2">
-              <div
-                className={cn(
-                  'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors',
-                  step === s
-                    ? 'bg-primary text-primary-foreground'
-                    : ['input'].indexOf(step) < i
-                      ? 'bg-muted text-muted-foreground'
-                      : 'bg-green-500 text-white'
-                )}
-              >
-                {['input', 'analyzing'].indexOf(step) < i ? (
-                  <Check className="w-4 h-4" />
-                ) : (
-                  i + 1
-                )}
+              <div className="flex flex-col items-center gap-1">
+                <div
+                  className={cn(
+                    'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors',
+                    step === s
+                      ? 'bg-primary text-primary-foreground'
+                      : ['input'].indexOf(step) < i
+                        ? 'bg-muted text-muted-foreground'
+                        : 'bg-green-500 text-white'
+                  )}
+                >
+                  {['input', 'analyzing'].indexOf(step) < i ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    i + 1
+                  )}
+                </div>
+                <span className={cn(
+                  'text-[11px] font-medium whitespace-nowrap',
+                  step === s ? 'text-primary' : 'text-muted-foreground'
+                )}>
+                  {label}
+                </span>
               </div>
               {i < 3 && (
                 <div
                   className={cn(
-                    'w-8 h-0.5',
+                    'w-8 h-0.5 mb-5',
                     ['input', 'analyzing', 'recommendations'].indexOf(step) > i
                       ? 'bg-green-500'
                       : 'bg-muted'

@@ -76,10 +76,10 @@ export default function ApplicationsPage() {
   };
 
   const handleCreateApp = async () => {
-    if (!newApp.name || !newApp.description || !newApp.type) {
+    if (!newApp.name || !newApp.type) {
       toast({
-        title: 'Error',
-        description: 'Please fill in all required fields.',
+        title: 'Missing fields',
+        description: 'Please provide at least a name and application type.',
         variant: 'destructive',
       });
       return;
@@ -184,7 +184,7 @@ export default function ApplicationsPage() {
               <DialogHeader>
                 <DialogTitle>Register New Application</DialogTitle>
                 <DialogDescription>
-                  Add a new application to start running code analysis scans.
+                  Give your project a name and Sensei will help you set up the right scans.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -194,16 +194,17 @@ export default function ApplicationsPage() {
                     id="name"
                     value={newApp.name}
                     onChange={(e) => setNewApp({ ...newApp, name: e.target.value })}
-                    placeholder="My Application"
+                    placeholder="e.g. my-saas-app"
                   />
+                  <p className="text-xs text-muted-foreground">A short name to identify this project in your dashboard</p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description *</Label>
+                  <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
                     value={newApp.description}
                     onChange={(e) => setNewApp({ ...newApp, description: e.target.value })}
-                    placeholder="Brief description of your application"
+                    placeholder="Optional — what does this app do?"
                   />
                 </div>
                 <div className="space-y-2">
@@ -213,15 +214,16 @@ export default function ApplicationsPage() {
                     onValueChange={(v) => setNewApp({ ...newApp, type: v as typeof newApp.type })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select application type" />
+                      <SelectValue placeholder="What kind of app is this?" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="web">Web Application</SelectItem>
-                      <SelectItem value="mobile">Mobile App (Capacitor)</SelectItem>
-                      <SelectItem value="desktop">Desktop App (Tauri)</SelectItem>
-                      <SelectItem value="hybrid">Hybrid (Web + Mobile + Desktop)</SelectItem>
+                      <SelectItem value="web">Web Application &mdash; React, Next.js, Vue, etc.</SelectItem>
+                      <SelectItem value="mobile">Mobile App &mdash; React Native, Flutter, Capacitor</SelectItem>
+                      <SelectItem value="desktop">Desktop App &mdash; Electron, Tauri</SelectItem>
+                      <SelectItem value="hybrid">Hybrid &mdash; Web + Mobile + Desktop</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">This helps Sensei recommend the right security modules</p>
                 </div>
                 {(newApp.type === 'web' || newApp.type === 'hybrid') && (
                   <div className="space-y-2">
@@ -270,14 +272,22 @@ export default function ApplicationsPage() {
         </div>
 
         {applications.length === 0 ? (
-          <Card>
+          <Card className="border-dashed border-2 border-orange-200/60">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <p className="text-muted-foreground mb-4">
-                No applications registered yet.
+              <div className="text-4xl mb-4">🚀</div>
+              <h3 className="text-lg font-semibold mb-2">No applications yet</h3>
+              <p className="text-muted-foreground mb-1 text-center max-w-md">
+                Register your first app, then paste a GitHub URL to scan it.
+              </p>
+              <p className="text-xs text-muted-foreground mb-6 text-center">
+                Sensei will auto-detect your stack and recommend the right security modules.
               </p>
               <Button onClick={() => setCreateDialogOpen(true)}>
-                Register Your First Application
+                Register Your First App
               </Button>
+              <p className="text-xs text-muted-foreground mt-3">
+                Or skip this step and <Link href="/scans/new" className="text-orange-500 hover:underline">scan a repo directly</Link>
+              </p>
             </CardContent>
           </Card>
         ) : (

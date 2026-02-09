@@ -240,7 +240,11 @@ export default function GetStartedPage() {
 
         {/* Not sure hint */}
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Not sure? <strong>Code Scanning</strong> is the most popular choice for finding issues quickly.
+          Not sure? <strong>Code Scanning</strong> is the most popular choice.
+          Sensei will recommend the right tools for your stack automatically.
+        </p>
+        <p className="text-center text-xs text-muted-foreground mt-2">
+          Or skip this and <Link href="/scans/new" className="text-orange-500 hover:underline">scan a repo directly</Link> &mdash; no app registration needed.
         </p>
       </main>
       <DashboardFooter />
