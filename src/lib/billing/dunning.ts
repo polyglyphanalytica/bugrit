@@ -25,6 +25,7 @@ import {
   DunningReminderConfig,
 } from './types';
 import { logger } from '@/lib/logger';
+import { getStripeSecretKey } from '@/lib/admin/service';
 
 const DUNNING_COLLECTION = 'dunning_states';
 
@@ -207,7 +208,10 @@ export async function processExpiredGracePeriods(): Promise<number> {
 
   for (const doc of snapshot.docs) {
     try {
-      // Use transaction to re-check status before canceling
+      let cancelledUserId: string | undefined;
+      let cancelledSubscriptionId: string | undefined;
+
+      // Use transaction to re-check status before canceling in Firestore
       await db.runTransaction(async (transaction) => {
         const freshDoc = await transaction.get(doc.ref);
         const freshData = freshDoc.data() as DunningState;
@@ -238,13 +242,35 @@ export async function processExpiredGracePeriods(): Promise<number> {
           updatedAt: now,
         });
 
-        // Cancel the subscription (within transaction)
+        // Cancel the subscription in Firestore (within transaction)
         await cancelSubscriptionForNonPayment(
           transaction,
           freshData.userId,
           freshData.subscriptionId
         );
+
+        // Track for Stripe API cancellation after transaction commits
+        cancelledUserId = freshData.userId;
+        cancelledSubscriptionId = freshData.subscriptionId;
       });
+
+      // Cancel the subscription in Stripe API AFTER Firestore transaction commits.
+      // This is done outside the transaction because Stripe is an external service
+      // that can't participate in Firestore transactions.
+      if (cancelledSubscriptionId) {
+        try {
+          await cancelSubscriptionInStripe(cancelledSubscriptionId);
+        } catch (stripeError) {
+          // Log but don't fail — Firestore state is already correct.
+          // Stripe will eventually stop retrying on its own, or the subscription
+          // will be in an inconsistent state that can be resolved manually.
+          logger.error('Failed to cancel subscription in Stripe after dunning expiry', {
+            userId: cancelledUserId,
+            subscriptionId: cancelledSubscriptionId,
+            error: stripeError,
+          });
+        }
+      }
 
       processedCount++;
       logger.info('Processed expired grace period', {
@@ -561,4 +587,24 @@ export async function getGracePeriodInfo(userId: string): Promise<{
     expiresAt,
     reminderLevel: dunning.reminderLevel,
   };
+}
+
+/**
+ * Cancel a subscription in Stripe API.
+ * Called after Firestore dunning expiry to ensure Stripe stops billing.
+ */
+async function cancelSubscriptionInStripe(subscriptionId: string): Promise<void> {
+  const stripeSecretKey = await getStripeSecretKey();
+  if (!stripeSecretKey) {
+    logger.error('Cannot cancel subscription in Stripe: no secret key configured', { subscriptionId });
+    return;
+  }
+
+  const Stripe = (await import('stripe')).default;
+  const stripe = new Stripe(stripeSecretKey, {
+    apiVersion: '2025-12-15.clover',
+  });
+
+  await stripe.subscriptions.cancel(subscriptionId);
+  logger.info('Canceled subscription in Stripe', { subscriptionId });
 }

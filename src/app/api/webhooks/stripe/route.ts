@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { constructWebhookEvent } from '@/lib/subscriptions/stripe';
-import { db } from '@/lib/firebase/admin';
+import { db, FieldValue } from '@/lib/firebase/admin';
 import { TierName } from '@/lib/subscriptions/tiers';
 import Stripe from 'stripe';
 import {
@@ -220,32 +220,29 @@ async function handleCreditPurchase(session: Stripe.Checkout.Session) {
     throw new Error(`Invalid credits amount in session ${session.id}: ${credits}`);
   }
 
-  // Use batch write to update credits AND save customer ID for billing portal access
+  // Use atomic FieldValue.increment() to prevent race conditions with concurrent purchases.
+  // A read-then-write pattern could lose credits if two webhooks arrive simultaneously.
   const batch = db.batch();
-
-  // Get current billing data for credit calculation
   const billingRef = db.collection('billing_accounts').doc(userId);
-  const billingDoc = await billingRef.get();
-  const billingData = billingDoc.exists ? billingDoc.data() : {};
-  const currentPurchased = billingData?.credits?.purchased || 0;
-  const currentRemaining = billingData?.credits?.remaining || 0;
 
-  // Update billing_accounts collection
+  // Ensure the billing_accounts doc exists with base fields before incrementing
   batch.set(
     billingRef,
     {
-      credits: {
-        purchased: currentPurchased + credits,
-        remaining: currentRemaining + credits,
-        lastPurchaseAt: new Date(),
-        lastPurchaseAmount: credits,
-        lastPurchasePackageId: packageId,
-      },
       stripeCustomerId,
       updatedAt: new Date(),
     },
     { merge: true }
   );
+
+  // Atomically increment credit fields — safe under concurrent webhook delivery
+  batch.update(billingRef, {
+    'credits.purchased': FieldValue.increment(credits),
+    'credits.remaining': FieldValue.increment(credits),
+    'credits.lastPurchaseAt': new Date(),
+    'credits.lastPurchaseAmount': credits,
+    'credits.lastPurchasePackageId': packageId,
+  });
 
   // Update users collection with stripeCustomerId for billing portal access
   if (stripeCustomerId) {
@@ -424,54 +421,11 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  // In Stripe v20, subscription is accessed via parent.subscription_details
+  // invoice.payment_succeeded is a secondary event. invoice.paid is the canonical handler
+  // that confirms the invoice is fully paid and handles dunning resolution.
+  // This handler only logs for monitoring — all state updates happen in handleInvoicePaid.
   const subscriptionId = (invoice.parent?.subscription_details?.subscription as string) || null;
-
-  if (!subscriptionId) return;
-
-  // Find user by subscription ID
-  const snapshot = await db
-    .collection('subscriptions')
-    .where('stripeSubscriptionId', '==', subscriptionId)
-    .limit(1)
-    .get();
-
-  if (snapshot.empty) return;
-
-  const doc = snapshot.docs[0];
-  const userId = doc.id;
-  const now = new Date();
-
-  // Use batch to update both collections
-  const batch = db.batch();
-
-  // Update subscriptions collection
-  batch.update(doc.ref, {
-    scansUsedThisMonth: 0,
-    lastPaymentAt: now,
-    status: 'active',
-    updatedAt: now,
-  });
-
-  // Update billing_accounts collection
-  batch.set(
-    db.collection('billing_accounts').doc(userId),
-    {
-      subscription: {
-        status: 'active',
-        lastPaymentAt: now,
-      },
-      credits: {
-        used: 0, // Reset usage on new billing period
-      },
-      updatedAt: now,
-    },
-    { merge: true }
-  );
-
-  await batch.commit();
-
-  logger.info('Payment succeeded', { subscriptionId });
+  logger.info('Payment succeeded (deferred to invoice.paid)', { subscriptionId, invoiceId: invoice.id });
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
@@ -650,7 +604,9 @@ async function handlePaymentActionRequired(invoice: Stripe.Invoice) {
     { merge: true }
   );
 
-  // Create notification for user
+  await batch.commit();
+
+  // Create notification AFTER batch succeeds to avoid orphaned notifications
   await db.collection('notifications').add({
     userId,
     type: 'payment_action_required',
@@ -660,8 +616,6 @@ async function handlePaymentActionRequired(invoice: Stripe.Invoice) {
     read: false,
     createdAt: now,
   });
-
-  await batch.commit();
 
   logger.info('Payment action required', { subscriptionId, userId });
 }

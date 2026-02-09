@@ -50,9 +50,9 @@ async function getBillingAccount(userId: string): Promise<BillingAccountData> {
   try {
     // First try to find user's default organization billing
     const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.exists ? userDoc.data() : null;
 
     if (userDoc.exists) {
-      const userData = userDoc.data();
       const defaultOrgId = userData?.defaultOrganizationId;
 
       if (defaultOrgId) {
@@ -84,11 +84,37 @@ async function getBillingAccount(userId: string): Promise<BillingAccountData> {
       }
     }
 
-    // Fallback: Check for individual billing account
-    const billingDoc = await db.collection('billingAccounts').doc(userId).get();
+    // Check billing_accounts collection (where webhooks write data)
+    const billingDoc = await db.collection('billing_accounts').doc(userId).get();
 
     if (billingDoc.exists) {
       const data = billingDoc.data()!;
+      // Get tier from users collection (authoritative source) or billing data
+      const tier = (userData?.tier as SubscriptionTier) || (data.subscription?.tier as SubscriptionTier) || 'free';
+      const tierCredits = SUBSCRIPTION_TIERS[tier]?.credits || 10;
+      return {
+        tier,
+        credits: {
+          included: data.credits?.included || tierCredits,
+          used: data.credits?.used || 0,
+          remaining: data.credits?.remaining ?? tierCredits,
+          rollover: data.credits?.rollover || 0,
+        },
+        subscription: {
+          status: data.subscription?.status || 'active',
+          currentPeriodEnd: data.subscription?.currentPeriodEnd
+            ? toDate(data.subscription.currentPeriodEnd)
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          cancelAtPeriodEnd: data.subscription?.cancelAtPeriodEnd || false,
+        },
+      };
+    }
+
+    // Legacy fallback: Check billingAccounts (camelCase) collection
+    const legacyBillingDoc = await db.collection('billingAccounts').doc(userId).get();
+
+    if (legacyBillingDoc.exists) {
+      const data = legacyBillingDoc.data()!;
       return {
         tier: (data.tier as SubscriptionTier) || 'starter',
         credits: {

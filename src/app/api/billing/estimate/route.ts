@@ -60,11 +60,27 @@ async function getUserBillingContext(userId: string): Promise<UserBillingContext
       }
     }
 
-    // Fallback: Check individual billing account
-    const billingDoc = await db.collection('billingAccounts').doc(userId).get();
+    // Check billing_accounts collection (where webhooks write data)
+    const billingDoc = await db.collection('billing_accounts').doc(userId).get();
 
     if (billingDoc.exists) {
       const data = billingDoc.data()!;
+      // Get tier from users collection (authoritative) or billing data
+      const tier = (userDoc.exists ? userDoc.data()?.tier : null) as SubscriptionTier
+        || (data.subscription?.tier as SubscriptionTier)
+        || 'free';
+      return {
+        userId,
+        tier,
+        credits: data.credits?.remaining ?? SUBSCRIPTION_TIERS[tier]?.credits ?? 10,
+      };
+    }
+
+    // Legacy fallback: Check billingAccounts (camelCase) collection
+    const legacyBillingDoc = await db.collection('billingAccounts').doc(userId).get();
+
+    if (legacyBillingDoc.exists) {
+      const data = legacyBillingDoc.data()!;
       return {
         userId,
         tier: (data.tier as SubscriptionTier) || 'starter',
