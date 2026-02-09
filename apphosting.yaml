@@ -120,6 +120,9 @@ env:
 
   # ============================================================
   # GitHub OAuth Integration
+  # Must match the callback URL registered in GitHub OAuth App settings.
+  # For production (bugrit.com), update to: https://bugrit.com/api/auth/github/callback
+  # Or remove GITHUB_REDIRECT_URI to auto-derive from NEXT_PUBLIC_APP_URL.
   # ============================================================
   - variable: GITHUB_CLIENT_ID
     secret: github-client-id

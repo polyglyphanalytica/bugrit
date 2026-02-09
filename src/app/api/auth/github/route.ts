@@ -8,16 +8,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { GitHubOAuth } from '@/lib/github/oauth';
+import { verifySession } from '@/lib/auth/session';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session');
+    // Verify session and get the actual Firebase UID — NOT the raw session cookie.
+    // Previously this used sessionCookie.value (a JWT string) as the userId,
+    // which meant saved connections could never be found by the actual UID.
+    const session = await verifySession();
 
-    if (!sessionCookie?.value) {
+    if (!session?.uid) {
       return NextResponse.json({ error: 'Unauthorized. Please login first.' }, { status: 401 });
     }
 
@@ -34,9 +36,9 @@ export async function GET(request: NextRequest) {
     const returnUrl = request.nextUrl.searchParams.get('returnUrl') || '/settings/integrations';
 
     // Generate state for CSRF protection
-    // State contains: userId + returnUrl (base64 encoded)
+    // State contains: actual Firebase UID + returnUrl (base64 encoded)
     const stateData = {
-      userId: sessionCookie.value,
+      userId: session.uid,
       returnUrl,
       timestamp: Date.now(),
     };

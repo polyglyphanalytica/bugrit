@@ -11,8 +11,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { GitHubOAuth } from '@/lib/github/oauth';
+import { verifySession } from '@/lib/auth/session';
 import {
   saveGitHubConnection,
   getGitHubConnectionByUser,
@@ -102,11 +102,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    // Verify session matches state
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('session');
+    // Verify session matches state — use decoded UID, not raw cookie
+    const session = await verifySession();
 
-    if (!sessionCookie?.value || sessionCookie.value !== stateData.userId) {
+    if (!session?.uid || session.uid !== stateData.userId) {
       const redirectUrl = new URL('/settings/integrations', baseUrl);
       redirectUrl.searchParams.set('error', 'session_mismatch');
       redirectUrl.searchParams.set('error_description', 'Session mismatch. Please login and try again.');

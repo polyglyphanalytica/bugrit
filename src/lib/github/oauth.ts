@@ -18,7 +18,12 @@ export class GitHubOAuth {
   }) {
     this.clientId = config?.clientId || process.env.GITHUB_CLIENT_ID || '';
     this.clientSecret = config?.clientSecret || process.env.GITHUB_CLIENT_SECRET || '';
-    this.redirectUri = config?.redirectUri || process.env.GITHUB_REDIRECT_URI || '';
+    // Prefer explicit GITHUB_REDIRECT_URI, fall back to deriving from app URL
+    this.redirectUri = config?.redirectUri
+      || process.env.GITHUB_REDIRECT_URI
+      || (process.env.NEXT_PUBLIC_APP_URL
+        ? `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/github/callback`
+        : '');
   }
 
   /**
