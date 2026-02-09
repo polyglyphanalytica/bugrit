@@ -7,7 +7,10 @@
  * - Feature flags
  * - Audit logging
  *
- * Default superadmin: polyglyph.analytica@gmail.com
+ * CONFIGURATION (via Google Secret Manager):
+ * - PLATFORM_SUPERADMIN_EMAIL: Platform owner email (superadmin)
+ * - ADMIN_ENCRYPTION_KEY: 32-byte hex key for encrypting stored secrets
+ *
  * Superadmins bypass all subscription limits.
  */
 

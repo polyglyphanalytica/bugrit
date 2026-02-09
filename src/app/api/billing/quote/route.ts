@@ -342,6 +342,8 @@ function getCategoryDescription(category: ToolCategory): string {
     mobile: 'Mobile app security and quality checks',
     'api-security': 'API endpoint security testing',
     'cloud-native': 'Cloud configuration and container security',
+    container: 'Dockerfile security and container image scanning',
+    sbom: 'Software Bill of Materials for supply chain security',
   };
   return descriptions[category];
 }

@@ -1,40 +1,29 @@
 /**
  * Platform Admin Constants
  *
- * Superadmin configuration via environment variables
+ * Superadmin configuration loaded from environment variables.
+ * Set PLATFORM_SUPERADMIN_EMAIL in Google Secret Manager.
  */
 
-/**
- * Get the default superadmin email from environment
- * Falls back to empty string if not configured (requires DB setup)
- */
-export function getDefaultSuperadminEmail(): string {
-  return process.env.SUPERADMIN_EMAIL || '';
-}
+// Default superadmin email - bypasses all subscription limits
+// Loaded from environment variable for security (supports both env var names)
+export const DEFAULT_SUPERADMIN_EMAIL =
+  process.env.PLATFORM_SUPERADMIN_EMAIL || process.env.SUPERADMIN_EMAIL || '';
 
-/**
- * Get list of protected superadmin emails from environment
- * Format: comma-separated list of emails
- * Example: PROTECTED_SUPERADMIN_EMAILS=admin@example.com,super@example.com
- */
-export function getProtectedSuperadminEmails(): string[] {
-  const envEmails = process.env.PROTECTED_SUPERADMIN_EMAILS;
-  if (!envEmails) {
-    // Fall back to SUPERADMIN_EMAIL if PROTECTED_SUPERADMIN_EMAILS not set
-    const defaultEmail = getDefaultSuperadminEmail();
-    return defaultEmail ? [defaultEmail] : [];
-  }
-  return envEmails.split(',').map(email => email.trim().toLowerCase()).filter(Boolean);
-}
+// List of emails that are always superadmins (can't be removed)
+// Additional protected emails can be comma-separated in PLATFORM_PROTECTED_ADMINS
+const additionalProtectedAdmins = process.env.PLATFORM_PROTECTED_ADMINS?.split(',').map(e => e.trim().toLowerCase()) || [];
+export const PROTECTED_SUPERADMIN_EMAILS = [
+  DEFAULT_SUPERADMIN_EMAIL.toLowerCase(),
+  ...additionalProtectedAdmins,
+].filter(Boolean);
 
-// Legacy exports for backward compatibility (read from env)
-export const DEFAULT_SUPERADMIN_EMAIL = getDefaultSuperadminEmail();
-export const PROTECTED_SUPERADMIN_EMAILS = getProtectedSuperadminEmails();
-
-/**
- * Check if an email is a protected superadmin
- */
+// Check if an email is a protected superadmin
 export function isProtectedSuperadmin(email: string): boolean {
-  const protectedEmails = getProtectedSuperadminEmails();
-  return protectedEmails.includes(email.toLowerCase());
+  return PROTECTED_SUPERADMIN_EMAILS.includes(email.toLowerCase());
+}
+
+// Warn if superadmin email is not configured in production
+if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.PLATFORM_SUPERADMIN_EMAIL) {
+  console.warn('⚠️  PLATFORM_SUPERADMIN_EMAIL not set - using default. Configure in Secret Manager.');
 }

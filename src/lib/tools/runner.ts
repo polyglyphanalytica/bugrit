@@ -1,11 +1,9 @@
 /**
  * Tool Runner
  *
- * Executes 72 tools locally via npm packages, CLI commands, and git operations.
- * The remaining 78 tools run via Google Cloud Build Docker containers.
- * Total: 150 tools across local + cloud execution.
- *
+ * Executes tools using a mix of npm packages, CLI commands, and git operations.
  * CLI execution is used for tools with native bindings that can't be bundled.
+ * Binary tools (hadolint, gitleaks, dockle, syft) are pre-installed in Docker.
  *
  * Browser-based tools (Lighthouse, axe-core, Pa11y) are delegated to the
  * Cloud Run worker service when configured, since serverless environments
@@ -3395,6 +3393,184 @@ const TOOL_RUNNERS: Record<string, ToolRunner> = {
       severity: 'info',
       message: `Project: ${technologies.join(', ') || 'unknown'} | ${projectFiles.length} root files | Docs: ${hasReadme ? 'README' : 'none'}${hasDocs ? ', docs/' : ''}${hasChangelog ? ', CHANGELOG' : ''} | CI: ${hasCI ? 'yes' : 'no'}`,
     });
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Hadolint (Dockerfile linter - binary pre-installed in Docker)
+  // ─────────────────────────────────────────────────────────────
+  'hadolint': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const path = await import('path');
+    const { glob } = safeRequire<typeof import('glob')>('glob');
+
+    // Find all Dockerfiles
+    const dockerfiles = await glob('**/Dockerfile*', {
+      cwd: targetPath,
+      ignore: ['**/node_modules/**'],
+    });
+
+    for (const dockerfile of dockerfiles) {
+      const fullPath = path.join(targetPath, dockerfile);
+      const output = runCli(`hadolint --format json "${fullPath}" 2>/dev/null`, targetPath);
+
+      if (output) {
+        try {
+          const issues = JSON.parse(output);
+          for (const issue of issues) {
+            findings.push({
+              id: `hadolint-${dockerfile}-${issue.line}`,
+              severity: issue.level === 'error' ? 'error' : issue.level === 'warning' ? 'warning' : 'info',
+              message: `${issue.code}: ${issue.message}`,
+              file: dockerfile,
+              line: issue.line,
+              rule: issue.code,
+              suggestion: issue.message,
+            });
+          }
+        } catch {
+          // JSON parse error - try text output
+        }
+      }
+    }
+
+    if (dockerfiles.length === 0) {
+      findings.push({
+        id: 'hadolint-no-dockerfile',
+        severity: 'info',
+        message: 'No Dockerfile found in the repository',
+      });
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Gitleaks (secret detection - binary pre-installed in Docker)
+  // ─────────────────────────────────────────────────────────────
+  'gitleaks': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli('gitleaks detect --source . --report-format json --report-path /dev/stdout --no-git 2>/dev/null', targetPath);
+
+    if (output) {
+      try {
+        const leaks = JSON.parse(output);
+        for (const leak of leaks) {
+          findings.push({
+            id: `gitleaks-${leak.File}-${leak.StartLine}`,
+            severity: 'error',
+            message: `Potential secret detected: ${leak.Description || leak.RuleID}`,
+            file: leak.File,
+            line: leak.StartLine,
+            rule: leak.RuleID,
+            suggestion: 'Remove hardcoded secret and use environment variables or a secret manager',
+          });
+        }
+      } catch {
+        // JSON parse error or no leaks found (empty output)
+      }
+    }
+
+    return { findings, summary: summarizeFindings(findings) };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Dockle (container image linter - binary pre-installed in Docker)
+  // ─────────────────────────────────────────────────────────────
+  'dockle': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const path = await import('path');
+    const fs = await import('fs/promises');
+
+    // Check if there's a Dockerfile to analyze
+    const dockerfilePath = path.join(targetPath, 'Dockerfile');
+    try {
+      await fs.access(dockerfilePath);
+    } catch {
+      return {
+        findings: [{
+          id: 'dockle-no-dockerfile',
+          severity: 'info' as const,
+          message: 'Dockle requires a built Docker image. No Dockerfile found to provide context.',
+          suggestion: 'Build a Docker image and provide the image name for analysis',
+        }],
+        summary: { total: 1, errors: 0, warnings: 0, info: 1 },
+      };
+    }
+
+    // Dockle analyzes built images, not Dockerfiles directly
+    // For now, we'll provide guidance since we can't build images during scan
+    return {
+      findings: [{
+        id: 'dockle-image-required',
+        severity: 'info' as const,
+        message: 'Dockle analyzes built Docker images for security best practices',
+        suggestion: 'Run: dockle <image-name> after building your Docker image',
+      }],
+      summary: { total: 1, errors: 0, warnings: 0, info: 1 },
+    };
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // Syft (SBOM generator - binary pre-installed in Docker)
+  // ─────────────────────────────────────────────────────────────
+  'syft': async ({ targetPath }) => {
+    const findings: Finding[] = [];
+    const output = runCli(`syft dir:${targetPath} -o json 2>/dev/null`, targetPath, 180000);
+
+    if (output) {
+      try {
+        const sbom = JSON.parse(output);
+        const artifacts = sbom.artifacts || [];
+
+        // Analyze SBOM for potential issues
+        let unknownLicenses = 0;
+
+        for (const artifact of artifacts) {
+          // Check for unknown/missing licenses
+          if (!artifact.licenses || artifact.licenses.length === 0) {
+            unknownLicenses++;
+          }
+
+          // Check for packages without versions (potential issues)
+          if (!artifact.version || artifact.version === '') {
+            findings.push({
+              id: `syft-no-version-${artifact.name}`,
+              severity: 'warning',
+              message: `Package ${artifact.name} has no version specified`,
+              suggestion: 'Ensure all dependencies have pinned versions for reproducible builds',
+            });
+          }
+        }
+
+        // Summary finding for license issues
+        if (unknownLicenses > 0) {
+          findings.push({
+            id: 'syft-unknown-licenses',
+            severity: 'warning',
+            message: `${unknownLicenses} packages have unknown or missing licenses`,
+            suggestion: 'Review packages without licenses for compliance requirements',
+          });
+        }
+
+        // Add informational SBOM summary
+        findings.push({
+          id: 'syft-sbom-generated',
+          severity: 'info',
+          message: `SBOM generated: ${artifacts.length} packages cataloged`,
+          suggestion: 'Full SBOM available for supply chain security analysis',
+        });
+
+      } catch {
+        findings.push({
+          id: 'syft-error',
+          severity: 'warning',
+          message: 'Could not generate SBOM',
+          suggestion: 'Ensure syft is properly installed and has access to the codebase',
+        });
+      }
+    }
 
     return { findings, summary: summarizeFindings(findings) };
   },

@@ -279,7 +279,7 @@ export default function PricingPage() {
 
           <div className="grid md:grid-cols-2 gap-8">
             <GlassCard className="p-6">
-              <h3 className="font-semibold mb-4">Tool Categories</h3>
+              <h3 className="font-semibold mb-4">Tool Categories (30 Tools)</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>📝 Linting & Formatting</span>
@@ -298,12 +298,24 @@ export default function PricingPage() {
                   <span className="text-orange-400">Free</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>🔒 Security (15 tools)</span>
-                  <span>1-5 credits</span>
+                  <span>🔀 Git & Commits</span>
+                  <span className="text-green-500">Free</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>🔒 Security</span>
+                  <span>+1 credit</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>🐳 Container Security</span>
+                  <span>+1 credit</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>📋 SBOM & Supply Chain</span>
+                  <span>+1 credit</span>
                 </div>
                 <div className="flex justify-between">
                   <span>♿ Accessibility</span>
-                  <span>+4 credits</span>
+                  <span>+2 credits</span>
                 </div>
                 <div className="flex justify-between">
                   <span>⚡ Performance</span>

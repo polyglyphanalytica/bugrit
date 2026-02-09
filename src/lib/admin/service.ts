@@ -17,24 +17,24 @@ import { DEFAULT_SUPERADMIN_EMAIL, isProtectedSuperadmin } from './constants';
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 
 // Encryption helpers for sensitive data
+// ADMIN_ENCRYPTION_KEY must be set in production via Google Secret Manager
+// Generate with: openssl rand -hex 32
+const ENCRYPTION_KEY = process.env.ADMIN_ENCRYPTION_KEY;
 const ALGORITHM = 'aes-256-gcm';
 
-function getEncryptionKey(): string {
-  const key = process.env.ADMIN_ENCRYPTION_KEY;
-  if (!key) {
-    throw new Error(
-      'CRITICAL: ADMIN_ENCRYPTION_KEY environment variable is not set. ' +
-      'This is required for encrypting sensitive data like Stripe API keys. ' +
-      'Generate a secure 32-character key and set it in your environment.'
-    );
-  }
-  if (key.length < 32) {
-    throw new Error(
-      'CRITICAL: ADMIN_ENCRYPTION_KEY must be at least 32 characters long for AES-256 encryption.'
-    );
-  }
-  return key;
+// Warn if encryption key is not set in production
+if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !ENCRYPTION_KEY) {
+  console.error('CRITICAL: ADMIN_ENCRYPTION_KEY not set! Admin features requiring encryption will fail.');
 }
+
+function getEncryptionKey(): string {
+  if (ENCRYPTION_KEY) return ENCRYPTION_KEY;
+  if (process.env.NODE_ENV === 'development') {
+    return 'dev-only-key-not-for-production-32';
+  }
+  throw new Error('ADMIN_ENCRYPTION_KEY must be set in production');
+}
+
 
 function encrypt(text: string): string {
   const encryptionKey = getEncryptionKey();

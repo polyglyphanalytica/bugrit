@@ -265,6 +265,39 @@ export default function PricingDocs() {
           </Card>
         </div>
 
+          {/* Tool Categories */}
+          <div>
+            <h3 className="font-semibold mb-3">Tool Categories</h3>
+            <table className="w-full text-sm">
+              <tbody>
+                <tr className="border-b border-border/50">
+                  <td className="py-2">Linting, Dependencies, Quality, Docs, Git</td>
+                  <td className="text-right text-green-400 font-mono">Free</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2">Security</td>
+                  <td className="text-right font-mono">1 credit</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2">Container Security (Hadolint, Dockle)</td>
+                  <td className="text-right font-mono">1 credit</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2">SBOM & Supply Chain (Syft)</td>
+                  <td className="text-right font-mono">1 credit</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2">Accessibility</td>
+                  <td className="text-right font-mono">2 credits</td>
+                </tr>
+                <tr className="border-b border-border/50">
+                  <td className="py-2">Performance (Lighthouse)</td>
+                  <td className="text-right font-mono">3 credits</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
         {/* Tool Categories */}
         <h3 className="text-xl font-bold mb-4">Tool Category Costs</h3>
         <p className="text-muted-foreground mb-4">

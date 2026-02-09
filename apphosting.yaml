@@ -54,17 +54,17 @@ env:
   - variable: NEXT_PUBLIC_APP_URL
     value: https://bugrit-prod.web.app
   - variable: ADMIN_ENCRYPTION_KEY
-    secret: ADMIN_ENCRYPTION_KEY
-  - variable: SUPERADMIN_EMAIL
-    value: polyglyph.analytica@gmail.com
+    secret: admin-encryption-key
+  - variable: PLATFORM_SUPERADMIN_EMAIL
+    secret: platform-superadmin-email
 
   # ============================================================
   # Stripe Billing (if using payments)
   # ============================================================
   - variable: STRIPE_SECRET_KEY
-    secret: STRIPE_SECRET_KEY
+    secret: stripe-secret-key
   - variable: STRIPE_WEBHOOK_SECRET
-    secret: STRIPE_WEBHOOK_SECRET
+    secret: stripe-webhook-secret
   - variable: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
     secret: STRIPE_PUBLISHABLE_KEY
 
@@ -75,15 +75,29 @@ env:
     value: bugrit-prod
   - variable: SCAN_OUTPUT_BUCKET
     value: bugrit-prod-bugrit-scans
-  # GCP_BILLING_DATASET_ID is optional (only needed if using billing Cloud Function)
-  # - variable: GCP_BILLING_DATASET_ID
-  #   secret: GCP_BILLING_DATASET_ID
   - variable: GCP_PROJECT_ID
     value: bugrit-prod
 
   # ============================================================
+  # GitHub OAuth Integration
+  # ============================================================
+  - variable: GITHUB_CLIENT_ID
+    secret: github-client-id
+  - variable: GITHUB_CLIENT_SECRET
+    secret: github-client-secret
+  - variable: GITHUB_REDIRECT_URI
+    value: "https://your-domain.web.app/api/auth/github/callback"
+
+  # ============================================================
+  # Email Notifications (Resend)
+  # ============================================================
+  - variable: RESEND_API_KEY
+    secret: resend-api-key
+  - variable: EMAIL_FROM_ADDRESS
+    value: "noreply@bugrit.app"
+
+  # ============================================================
   # GCP Billing Cloud Function (optional - mock data used if not set)
-  # Deploy the Cloud Function in functions/billing/ first, then uncomment:
   # ============================================================
   # - variable: GCP_BILLING_FUNCTION_URL
   #   secret: GCP_BILLING_FUNCTION_URL

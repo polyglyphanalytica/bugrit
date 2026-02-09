@@ -35,6 +35,8 @@ const CATEGORY_ICONS: Record<ToolCategory, string> = {
   mobile: '📱',
   'api-security': '🔐',
   'cloud-native': '☁️',
+  container: '🐳',
+  sbom: '📋',
 };
 
 const AI_FEATURE_LABELS: Record<AIFeature, { name: string; description: string }> = {

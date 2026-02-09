@@ -27,7 +27,9 @@ export const CREDIT_COSTS = {
     quality: 0,        // Free - fast analysis
     documentation: 0,  // Free - fast analysis
     git: 0,            // Free - fast analysis
-    performance: 5,    // Heavy - Lighthouse + Puppeteer (~$0.10 cost)
+    performance: 3,    // Heavy - Lighthouse needs browser
+    container: 1,      // Dockerfile and image security scanning
+    sbom: 1,           // SBOM generation for supply chain security
   } as Record<ToolCategory, number>,
 
   // AI features (per-issue pricing for variable cost features)
@@ -206,10 +208,10 @@ export function calculateCredits(config: ScanConfig): CreditEstimate {
 export function getDefaultScanConfig(tier: SubscriptionTier): ScanConfig {
   const tierConfig = SUBSCRIPTION_TIERS[tier];
 
-  // All categories except performance for lower tiers
+  // All categories except performance, container, sbom for lower tiers
   const categories: ToolCategory[] = tier === 'free'
     ? ['linting', 'dependencies', 'quality', 'documentation', 'git']
-    : ['linting', 'security', 'dependencies', 'accessibility', 'quality', 'documentation', 'git', 'performance'];
+    : ['linting', 'security', 'dependencies', 'accessibility', 'quality', 'documentation', 'git', 'performance', 'container', 'sbom'];
 
   return {
     categories,
