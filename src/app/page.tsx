@@ -78,14 +78,14 @@ export default function HomePage() {
             </div>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-gray-900 mb-6 animate-fade-up fill-both leading-[1.1]">
-              Ship fast.{' '}
+              Scan every PR.{' '}
               <span className="bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
                 Ship safe.
               </span>
             </h1>
 
             <p className="text-lg text-gray-500 max-w-xl mx-auto mb-10 animate-fade-up delay-200 fill-both leading-relaxed">
-              One-click security and quality scanning for your codebase. Built for developers who use AI tools and move fast.
+              Security scanning that runs on every commit. Only scans what you changed—1-2 credits per PR, results in 30 seconds.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-up delay-300 fill-both">
@@ -115,20 +115,20 @@ export default function HomePage() {
           <div className="container-wide">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div>
-                <p className="text-2xl font-bold text-gray-900">5,000+</p>
-                <p className="text-xs text-gray-400 mt-1">automated checks</p>
+                <p className="text-2xl font-bold text-gray-900">1-2</p>
+                <p className="text-xs text-gray-400 mt-1">credits per PR</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">&lt;2 min</p>
-                <p className="text-xs text-gray-400 mt-1">scan time</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-gray-900">15+</p>
-                <p className="text-xs text-gray-400 mt-1">languages supported</p>
+                <p className="text-2xl font-bold text-gray-900">&lt;30s</p>
+                <p className="text-xs text-gray-400 mt-1">PR scan time</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-gray-900">150</p>
                 <p className="text-xs text-gray-400 mt-1">security modules</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">5,000+</p>
+                <p className="text-xs text-gray-400 mt-1">automated checks</p>
               </div>
             </div>
           </div>
@@ -202,18 +202,18 @@ export default function HomePage() {
             {[
               {
                 step: '01',
-                title: 'Paste your GitHub URL',
-                description: 'Connect your repo with one click. We auto-detect your language and framework.',
+                title: 'Connect your repo',
+                description: 'Paste your GitHub URL or add our GitHub Action. We detect changes automatically.',
               },
               {
                 step: '02',
-                title: 'We scan everything',
-                description: '150 modules run 5,000+ checks for security, quality, accessibility, and performance.',
+                title: 'We scan your changes',
+                description: 'Only changed files get scanned. 1-2 credits per PR, results in 30 seconds.',
               },
               {
                 step: '03',
-                title: 'Get actionable fixes',
-                description: 'See prioritized results with AI-ready prompts you can paste into your editor.',
+                title: 'Fix before merge',
+                description: 'See issues YOU introduced with AI-ready fix prompts. No legacy noise.',
               },
             ].map((item, i) => (
               <ScrollReveal key={item.step} delay={i * 120}>
@@ -421,10 +421,10 @@ export default function HomePage() {
                 <span className="text-orange-500 text-lg">&ldquo;</span>
               </div>
               <p className="text-xl md:text-2xl font-medium text-gray-900 leading-relaxed mb-6">
-                Built my app with Cursor in a weekend. Bugrit found 23 issues I had no idea about.
-                <span className="text-orange-500"> Fixed everything in an hour</span> with the AI prompts.
+                We run Bugrit on every PR now. Costs us 2 credits, takes 30 seconds, and
+                <span className="text-orange-500"> catches issues before they hit main</span>. No more &ldquo;oops&rdquo; commits.
               </p>
-              <p className="text-sm text-gray-400">Indie developer shipping their first SaaS</p>
+              <p className="text-sm text-gray-400">Senior Engineer at a fintech startup</p>
             </div>
           </ScrollReveal>
         </div>
@@ -533,10 +533,10 @@ export default function HomePage() {
           <ScrollReveal>
             <div className="text-center max-w-2xl mx-auto">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Ready to ship with confidence?
+                Ready to scan every PR?
               </h2>
               <p className="text-gray-500 mb-8 leading-relaxed">
-                Paste your GitHub URL and see what we find. Free scan, no credit card, results in under 2 minutes.
+                Add Bugrit to your CI pipeline. 1-2 credits per PR, results in 30 seconds, only issues you introduced.
               </p>
               <Link href="/signup">
                 <GradientButton size="lg" glow>

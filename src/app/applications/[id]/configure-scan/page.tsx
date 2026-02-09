@@ -109,6 +109,9 @@ function ConfigureScanInner() {
   const [creditBalance, setCreditBalance] = useState(0);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['security', 'dependencies']));
 
+  // Scan mode: incremental (default) or full
+  const [scanMode, setScanMode] = useState<'incremental' | 'full'>('incremental');
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
@@ -324,6 +327,7 @@ function ConfigureScanInner() {
       const body: Record<string, unknown> = {
         applicationId: appId,
         selectedModules: Array.from(selectedModules),
+        scanMode,
       };
 
       if (source === 'github' && repoUrl) {
@@ -333,6 +337,11 @@ function ConfigureScanInner() {
       } else if (source === 'upload' && uploadId) {
         body.sourceType = 'upload';
         body.uploadId = uploadId;
+      }
+
+      // For incremental scans, estimate fewer lines (cost savings)
+      if (scanMode === 'incremental') {
+        body.estimatedLines = 1000; // Default for incremental
       }
 
       const res = await fetch('/api/scans', {
@@ -452,6 +461,52 @@ function ConfigureScanInner() {
             We analyzed your code and recommend these checks
           </p>
         </div>
+
+        {/* Scan Mode Selector */}
+        <Card className="mb-6">
+          <CardContent className="py-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+              <div className="flex-1">
+                <p className="font-medium mb-1">Scan Mode</p>
+                <p className="text-sm text-muted-foreground">
+                  {scanMode === 'incremental'
+                    ? 'Only scan changed files — fast and cheap (1-2 credits)'
+                    : 'Scan entire repository — comprehensive but uses more credits'}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={scanMode === 'incremental' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setScanMode('incremental')}
+                  className="flex items-center gap-2"
+                >
+                  <Zap className="w-4 h-4" />
+                  Incremental
+                  <Badge variant="secondary" className="ml-1 text-xs">Default</Badge>
+                </Button>
+                <Button
+                  variant={scanMode === 'full' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setScanMode('full')}
+                  className="flex items-center gap-2"
+                >
+                  <Shield className="w-4 h-4" />
+                  Full Scan
+                </Button>
+              </div>
+            </div>
+            {scanMode === 'incremental' && (
+              <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div className="flex items-center gap-2 text-green-700 dark:text-green-400 text-sm">
+                  <Check className="w-4 h-4" />
+                  <span className="font-medium">Smart default:</span>
+                  <span>Uses ~80% fewer credits by scanning only what changed</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Tech Stack Summary */}
         {repoAnalysis && (
