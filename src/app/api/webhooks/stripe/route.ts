@@ -7,6 +7,11 @@ import {
   handlePaymentFailure as createDunningState,
   resolvePaymentSuccess,
 } from '@/lib/billing/dunning';
+import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@/lib/billing/credits';
+import {
+  notifySubscriptionRenewed,
+  notifySubscriptionFailed,
+} from '@/lib/notifications/dispatcher';
 import { logger } from '@/lib/logger';
 
 /**
@@ -493,6 +498,26 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     createdAt: now,
   });
 
+  // Send payment failure notification (fire-and-forget)
+  try {
+    const subData = doc.data();
+    const tier = (subData?.tier as SubscriptionTier) || 'free';
+    const tierConfig = SUBSCRIPTION_TIERS[tier];
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userEmail = userDoc.data()?.email || '';
+
+    if (tierConfig) {
+      notifySubscriptionFailed({
+        userId,
+        userEmail,
+        tierName: tierConfig.name,
+        reason: 'Your payment method was declined. Please update it to avoid service interruption.',
+      }).catch(err => logger.warn('Failed to send payment failure notification', { userId, error: err }));
+    }
+  } catch (notifErr) {
+    logger.warn('Failed to send payment failure notification', { userId, error: notifErr });
+  }
+
   logger.warn('Payment failed', { subscriptionId, attempt: dunningState?.failureCount || 1 });
 }
 
@@ -555,6 +580,33 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   );
 
   await batch.commit();
+
+  // Send renewal notification (fire-and-forget)
+  try {
+    const subData = doc.data();
+    const tier = (subData?.tier as SubscriptionTier) || 'free';
+    const tierConfig = SUBSCRIPTION_TIERS[tier];
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userEmail = userDoc.data()?.email || '';
+
+    // Get next renewal date from subscription items
+    const firstItem = (await db.collection('subscriptions').doc(userId).get()).data();
+    const nextDate = firstItem?.currentPeriodEnd
+      ? new Date(firstItem.currentPeriodEnd instanceof Date ? firstItem.currentPeriodEnd : firstItem.currentPeriodEnd.toDate?.() || firstItem.currentPeriodEnd).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+      : 'next billing cycle';
+
+    if (tierConfig && tier !== 'free') {
+      notifySubscriptionRenewed({
+        userId,
+        userEmail,
+        tierName: tierConfig.name,
+        creditsIncluded: tierConfig.credits,
+        nextRenewalDate: nextDate,
+      }).catch(err => logger.warn('Failed to send renewal notification', { userId, error: err }));
+    }
+  } catch (notifErr) {
+    logger.warn('Failed to send renewal notification', { userId, error: notifErr });
+  }
 
   logger.info('Invoice paid', { subscriptionId, recoveredFromDunning: wasInDunning });
 }

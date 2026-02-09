@@ -193,7 +193,7 @@ export default function NewScanPage() {
         const data = await res.json();
         toast({
           title: 'Scan Started',
-          description: '150 modules are now analyzing your application. This typically takes under 60 seconds.',
+          description: 'Our modules are now analyzing your application. This typically takes under 60 seconds.',
         });
         router.push(`/applications/${appId}/scans/${data.scan.id}`);
       } else {
@@ -616,7 +616,7 @@ export default function NewScanPage() {
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="text-lg">What We Check</CardTitle>
-            <CardDescription>100+ tools run automatically in under 2 minutes</CardDescription>
+            <CardDescription>150+ tools run automatically in under 2 minutes</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">

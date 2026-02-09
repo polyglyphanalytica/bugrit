@@ -21,7 +21,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import { Menu, X, LayoutDashboard, AppWindow, Scan, FileText, Settings, Key, LogOut, Shield } from 'lucide-react';
+import { Menu, X, LayoutDashboard, AppWindow, Scan, FileText, Settings, Key, LogOut, Shield, Ticket } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/notification-bell';
 
 interface NavItem {
@@ -147,6 +147,19 @@ export function DashboardNav() {
                       <Shield className="w-5 h-5" />
                       Admin Panel
                     </Link>
+                    <Link
+                      href="/admin/tickets"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors',
+                        pathname.startsWith('/admin/tickets')
+                          ? 'bg-orange-50 text-orange-600'
+                          : 'text-orange-600 hover:bg-orange-50'
+                      )}
+                    >
+                      <Ticket className="w-5 h-5" />
+                      Support Tickets
+                    </Link>
                   </>
                 )}
                 <button
@@ -235,6 +248,12 @@ export function DashboardNav() {
                   <Link href="/admin" className="cursor-pointer text-orange-600 focus:text-orange-600">
                     <Shield className="w-4 h-4 mr-2" />
                     Admin Panel
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/tickets" className="cursor-pointer text-orange-600 focus:text-orange-600">
+                    <Ticket className="w-4 h-4 mr-2" />
+                    Support Tickets
                   </Link>
                 </DropdownMenuItem>
               </>

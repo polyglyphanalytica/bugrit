@@ -185,7 +185,7 @@ export function NoIssuesFound({ className }: { className?: string }) {
         <div className="mt-6 flex justify-center gap-2">
           <CheckCircle2 className="w-5 h-5 text-green-600" />
           <span className="text-sm text-green-600 font-medium">
-            100+ tools ran successfully
+            All tools ran successfully
           </span>
         </div>
       </CardContent>

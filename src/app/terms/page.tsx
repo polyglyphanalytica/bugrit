@@ -28,7 +28,7 @@ export default function TermsPage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Terms of Service</h1>
-            <p className="text-gray-500">Last updated: January 2026</p>
+            <p className="text-gray-500">Last updated: February 2026</p>
           </div>
 
           <GlassCard className="p-8 md:p-12">
@@ -59,7 +59,7 @@ export default function TermsPage() {
                   <li><strong>&quot;Intellectual Property Rights&quot;</strong> means all patents, copyrights, trademarks, trade secrets, and other proprietary rights.</li>
                   <li><strong>&quot;Organisation&quot;</strong> means a company, team, or other entity that maintains a subscription to the Service.</li>
                   <li><strong>&quot;Scan&quot;</strong> means a single analysis of source code or repository performed by the Service.</li>
-                  <li><strong>&quot;Subscription&quot;</strong> means your selected service tier (Free, Pro, or Business) and associated features and limits.</li>
+                  <li><strong>&quot;Subscription&quot;</strong> means your selected service tier (Free, Solo, Scale, Business, or Enterprise) and associated features and limits.</li>
                   <li><strong>&quot;Your Code&quot;</strong> means source code, configuration files, and related materials you submit for analysis.</li>
                 </ul>
               </section>
@@ -143,17 +143,27 @@ export default function TermsPage() {
                       <tr className="border-b border-border/50">
                         <td className="py-3 px-4">Free</td>
                         <td className="py-3 px-4">$0/month</td>
-                        <td className="py-3 px-4">5 scans/month, 1 project, web platform</td>
+                        <td className="py-3 px-4">10 credits/month, 1 project, web platform</td>
                       </tr>
                       <tr className="border-b border-border/50">
-                        <td className="py-3 px-4">Pro</td>
-                        <td className="py-3 px-4">$29/month</td>
-                        <td className="py-3 px-4">50 scans/month, 5 projects, web + mobile</td>
+                        <td className="py-3 px-4">Solo</td>
+                        <td className="py-3 px-4">$19/month</td>
+                        <td className="py-3 px-4">50 credits/month, 3 projects, AI summaries</td>
                       </tr>
-                      <tr>
+                      <tr className="border-b border-border/50">
+                        <td className="py-3 px-4">Scale</td>
+                        <td className="py-3 px-4">$49/month</td>
+                        <td className="py-3 px-4">200 credits/month, 10 projects, AI explanations, GitHub integration</td>
+                      </tr>
+                      <tr className="border-b border-border/50">
                         <td className="py-3 px-4">Business</td>
                         <td className="py-3 px-4">$99/month</td>
-                        <td className="py-3 px-4">Unlimited scans, unlimited projects, all platforms</td>
+                        <td className="py-3 px-4">500 credits/month, unlimited projects, all AI features, API access</td>
+                      </tr>
+                      <tr>
+                        <td className="py-3 px-4">Enterprise</td>
+                        <td className="py-3 px-4">Custom</td>
+                        <td className="py-3 px-4">Unlimited credits, SSO, SLA, dedicated support</td>
                       </tr>
                     </tbody>
                   </table>

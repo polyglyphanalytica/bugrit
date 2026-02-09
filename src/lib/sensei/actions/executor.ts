@@ -32,9 +32,17 @@ const baseUrl = () => process.env.NEXT_PUBLIC_APP_URL || 'https://bugrit.com';
  * Execute a Sensei action server-side on behalf of a user.
  * Returns a human-readable result message.
  */
+export interface ExecuteActionOptions {
+  /** Conversation history for escalation transcript */
+  history?: Array<{ role: 'user' | 'sensei'; content: string }>;
+  /** Channel the user is on */
+  channel?: 'web' | 'slack' | 'whatsapp';
+}
+
 export async function executeAction(
   userId: string,
   response: SenseiResponse,
+  options?: ExecuteActionOptions,
 ): Promise<ActionResult | null> {
   if (response.actionType === 'none') return null;
 
@@ -49,6 +57,10 @@ export async function executeAction(
       return executeCheckout(response);
     case 'show_billing':
       return executeShowBilling(userId);
+    case 'escalate_to_human':
+      return executeEscalateToHuman(userId, response, options);
+    case 'reply_to_ticket':
+      return executeReplyToTicket(userId, response);
     default:
       return null;
   }
@@ -195,6 +207,191 @@ function executeCheckout(response: SenseiResponse): ActionResult {
     message: `Here's your checkout link for the *${response.tier}* plan (${interval}ly):`,
     url: `${baseUrl()}/pricing?tier=${response.tier}&interval=${interval}`,
   };
+}
+
+async function executeEscalateToHuman(
+  userId: string,
+  response: SenseiResponse,
+  options?: ExecuteActionOptions,
+): Promise<ActionResult> {
+  try {
+    const firestoreDb = getDb();
+    if (!firestoreDb) {
+      return { message: 'Could not create support ticket right now. Please try again.' };
+    }
+
+    // Get user info for the ticket
+    const userDoc = await firestoreDb.collection('users').doc(userId).get();
+    const userData = userDoc.exists ? userDoc.data() : null;
+    const userName = userData?.displayName || userData?.name || 'User';
+    const userEmail = userData?.email || userId;
+
+    const ticketId = generateId('tkt');
+    const now = new Date().toISOString();
+
+    // Build transcript from conversation history
+    const transcript = options?.history?.map(msg => ({
+      role: msg.role as 'user' | 'assistant',
+      text: msg.content,
+      timestamp: now,
+    })) || [];
+
+    const ticket = {
+      id: ticketId,
+      userId,
+      name: userName,
+      email: userEmail,
+      category: 'escalation',
+      subject: response.ticketSubject || 'Sensei escalation',
+      message: response.ticketSummary || response.message,
+      source: 'sensei_escalation',
+      channel: options?.channel || 'web',
+      transcript,
+      status: 'open',
+      priority: 'high',
+      assignedTo: null,
+      responses: [],
+      createdAt: now,
+      updatedAt: now,
+      resolvedAt: null,
+    };
+
+    await firestoreDb.collection(COLLECTIONS.SUPPORT_TICKETS).doc(ticketId).set(ticket);
+
+    // Notify the user that their ticket was created
+    await firestoreDb.collection('notifications').doc(generateId('ntf')).set({
+      userId,
+      type: 'support_ticket_created',
+      title: 'Support ticket created',
+      message: `Your issue has been escalated to our support team: "${response.ticketSubject || 'Support request'}". We'll get back to you shortly.`,
+      severity: 'info',
+      actionUrl: `/support/${ticketId}`,
+      actionLabel: 'View Ticket',
+      metadata: { ticketId },
+      read: false,
+      createdAt: new Date(),
+    });
+
+    // Notify the superadmin about the new ticket
+    const superadminEmail = process.env.PLATFORM_SUPERADMIN_EMAIL;
+    if (superadminEmail) {
+      // Find superadmin user by email
+      const adminSnapshot = await firestoreDb.collection('users')
+        .where('email', '==', superadminEmail)
+        .limit(1)
+        .get();
+
+      if (!adminSnapshot.empty) {
+        const adminUserId = adminSnapshot.docs[0].id;
+        await firestoreDb.collection('notifications').doc(generateId('ntf')).set({
+          userId: adminUserId,
+          type: 'support_ticket_new',
+          title: `New escalation from ${userName}`,
+          message: response.ticketSummary || `User escalated: ${response.ticketSubject}`,
+          severity: 'warning',
+          metadata: { ticketId, userEmail, channel: options?.channel },
+          read: false,
+          createdAt: new Date(),
+        });
+      }
+    }
+
+    logger.info('Sensei escalation ticket created', { ticketId, userId, channel: options?.channel });
+
+    return {
+      message: `I've created a support ticket (${ticketId}). Our team will review the conversation and get back to you. You'll receive a notification when they respond.`,
+    };
+  } catch (error) {
+    logger.error('Failed to create escalation ticket', { userId, error });
+    return { message: 'Sorry, I couldn\'t create the support ticket right now. Please try again or contact hello@bugrit.com.' };
+  }
+}
+
+async function executeReplyToTicket(
+  userId: string,
+  response: SenseiResponse,
+): Promise<ActionResult> {
+  if (!response.ticketId || !response.ticketReply) {
+    return { message: 'I need to know which ticket to reply to and what you want to say.' };
+  }
+
+  try {
+    const firestoreDb = getDb();
+    if (!firestoreDb) {
+      return { message: 'Could not send your response right now. Please try again.' };
+    }
+
+    // Verify ticket exists and belongs to user
+    const ticketRef = firestoreDb.collection(COLLECTIONS.SUPPORT_TICKETS).doc(response.ticketId);
+    const ticketDoc = await ticketRef.get();
+
+    if (!ticketDoc.exists) {
+      return { message: 'I couldn\'t find that ticket. It may have been resolved.' };
+    }
+
+    const ticket = ticketDoc.data()!;
+    if (ticket.userId !== userId) {
+      return { message: 'That ticket doesn\'t belong to your account.' };
+    }
+
+    if (ticket.status === 'closed') {
+      return { message: 'That ticket is already closed. Would you like me to open a new one?' };
+    }
+
+    // Get user info
+    const userDoc = await firestoreDb.collection('users').doc(userId).get();
+    const userData = userDoc.exists ? userDoc.data() : null;
+    const userName = userData?.displayName || userData?.name || 'User';
+
+    const now = new Date().toISOString();
+    const responseEntry = {
+      id: generateId('resp'),
+      author: userId,
+      authorName: userName,
+      message: response.ticketReply.trim(),
+      createdAt: now,
+      internal: false,
+    };
+
+    const existingResponses = ticket.responses || [];
+    await ticketRef.update({
+      responses: [...existingResponses, responseEntry],
+      status: 'open',
+      updatedAt: now,
+    });
+
+    // Notify superadmin
+    const superadminEmail = process.env.PLATFORM_SUPERADMIN_EMAIL;
+    if (superadminEmail) {
+      const adminSnapshot = await firestoreDb.collection('users')
+        .where('email', '==', superadminEmail)
+        .limit(1)
+        .get();
+
+      if (!adminSnapshot.empty) {
+        const adminUserId = adminSnapshot.docs[0].id;
+        await firestoreDb.collection('notifications').doc(generateId('ntf')).set({
+          userId: adminUserId,
+          type: 'support_ticket_new',
+          title: `User responded: ${ticket.subject}`,
+          message: `${userName} responded: ${response.ticketReply.trim().slice(0, 100)}`,
+          severity: 'info',
+          metadata: { ticketId: response.ticketId },
+          read: false,
+          createdAt: new Date(),
+        });
+      }
+    }
+
+    logger.info('User replied to ticket via Sensei', { ticketId: response.ticketId, userId });
+
+    return {
+      message: `Your response has been sent to the support team for ticket "${ticket.subject}". You'll be notified when they reply.`,
+    };
+  } catch (error) {
+    logger.error('Failed to reply to ticket', { userId, ticketId: response.ticketId, error });
+    return { message: 'Sorry, I couldn\'t send your response. Please try again.' };
+  }
 }
 
 async function executeShowBilling(userId: string): Promise<ActionResult> {

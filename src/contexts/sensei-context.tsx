@@ -25,12 +25,20 @@ interface SenseiServerContext {
     totalFindings?: number;
     topFindings?: Array<{ severity: string; title: string; tool: string; file?: string }>;
   };
+  openTickets?: Array<{
+    id: string;
+    subject: string;
+    status: string;
+    lastResponse?: string;
+    lastResponseFrom?: string;
+    updatedAt?: string;
+  }>;
 }
 
 // Response shape from /api/sensei/chat
 interface SenseiResponse {
   message: string;
-  actionType: 'none' | 'create_app' | 'start_scan' | 'navigate' | 'checkout' | 'show_billing';
+  actionType: 'none' | 'create_app' | 'start_scan' | 'navigate' | 'checkout' | 'show_billing' | 'escalate_to_human' | 'reply_to_ticket';
   appName?: string;
   appType?: string;
   appDescription?: string;
@@ -41,6 +49,8 @@ interface SenseiResponse {
   path?: string;
   tier?: string;
   interval?: string;
+  ticketId?: string;
+  ticketReply?: string;
   suggestedQuestions?: string[];
 }
 
@@ -128,6 +138,14 @@ export function SenseiProvider({ children }: { children: ReactNode }) {
       repoUrl?: string;
     }>;
     credits?: { remaining: number; included: number; tier: string };
+    openTickets?: Array<{
+      id: string;
+      subject: string;
+      status: string;
+      lastResponse?: string;
+      lastResponseFrom?: string;
+      updatedAt?: string;
+    }>;
     lastFetched?: number;
   }>({});
 
@@ -142,7 +160,7 @@ export function SenseiProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const [appsRes, scansRes, billingRes] = await Promise.all([
+      const [appsRes, scansRes, billingRes, ticketsRes] = await Promise.all([
         apiClient.get<{ applications: Array<{ id: string; name: string; type: string }> }>(
           user,
           '/api/applications'
@@ -154,6 +172,10 @@ export function SenseiProvider({ children }: { children: ReactNode }) {
         apiClient.get<{ tier: string; credits: { remaining: number; included: number } }>(
           user,
           '/api/billing/status'
+        ),
+        apiClient.get<{ tickets: Array<{ id: string; subject: string; status: string; responses: Array<{ authorName: string; message: string; createdAt: string }>; updatedAt: string }> }>(
+          user,
+          '/api/tickets?status=active'
         ),
       ]);
 
@@ -177,6 +199,19 @@ export function SenseiProvider({ children }: { children: ReactNode }) {
               included: billingRes.data.credits?.included ?? 0,
               tier: billingRes.data.tier ?? 'free',
             }
+          : undefined,
+        openTickets: ticketsRes.ok && ticketsRes.data?.tickets?.length
+          ? ticketsRes.data.tickets.map(t => {
+              const lastResp = t.responses?.length ? t.responses[t.responses.length - 1] : null;
+              return {
+                id: t.id,
+                subject: t.subject,
+                status: t.status,
+                lastResponse: lastResp?.message,
+                lastResponseFrom: lastResp?.authorName,
+                updatedAt: t.updatedAt,
+              };
+            })
           : undefined,
         lastFetched: now,
       };
@@ -205,6 +240,10 @@ export function SenseiProvider({ children }: { children: ReactNode }) {
 
     if (userContextRef.current.credits) {
       ctx.credits = userContextRef.current.credits;
+    }
+
+    if (userContextRef.current.openTickets) {
+      ctx.openTickets = userContextRef.current.openTickets;
     }
 
     const pc = pageContextRef.current;
@@ -347,6 +386,29 @@ export function SenseiProvider({ children }: { children: ReactNode }) {
             return info;
           }
           return 'Could not fetch billing info. Try /settings for account details.';
+        }
+
+        case 'escalate_to_human': {
+          // Escalation is handled server-side via the API
+          // The AI already composed the response message
+          return null;
+        }
+
+        case 'reply_to_ticket': {
+          if (!response.ticketId || !response.ticketReply) {
+            return 'I need to know which ticket to reply to and what you want to say.';
+          }
+          const replyRes = await apiClient.post<{ success: boolean }>(
+            user,
+            `/api/tickets/${response.ticketId}/respond`,
+            { message: response.ticketReply },
+          );
+          if (replyRes.ok) {
+            // Invalidate context cache so tickets refresh
+            userContextRef.current.lastFetched = 0;
+            return `Your response has been sent to the support team.`;
+          }
+          return `Could not send your response: ${replyRes.error || 'Unknown error'}. Please try again.`;
         }
 
         default:

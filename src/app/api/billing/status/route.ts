@@ -17,6 +17,7 @@ interface BillingAccountData {
     included: number;
     used: number;
     remaining: number;
+    reserved: number;
     rollover: number;
   };
   subscription: {
@@ -37,6 +38,7 @@ async function getBillingAccount(userId: string): Promise<BillingAccountData> {
         included: 50,
         used: 0,
         remaining: 50,
+        reserved: 0,
         rollover: 0,
       },
       subscription: {
@@ -70,6 +72,7 @@ async function getBillingAccount(userId: string): Promise<BillingAccountData> {
               included: billing.creditsIncluded || SUBSCRIPTION_TIERS[subscription.tier || 'starter']?.credits || 50,
               used: billing.creditsUsed || 0,
               remaining: billing.creditsRemaining ?? (billing.creditsIncluded || 50) - (billing.creditsUsed || 0),
+              reserved: billing.creditsReserved || 0,
               rollover: billing.creditsRollover || 0,
             },
             subscription: {
@@ -98,6 +101,7 @@ async function getBillingAccount(userId: string): Promise<BillingAccountData> {
           included: data.credits?.included || tierCredits,
           used: data.credits?.used || 0,
           remaining: data.credits?.remaining ?? tierCredits,
+          reserved: data.credits?.reserved || 0,
           rollover: data.credits?.rollover || 0,
         },
         subscription: {
@@ -121,6 +125,7 @@ async function getBillingAccount(userId: string): Promise<BillingAccountData> {
           included: data.credits?.included || 50,
           used: data.credits?.used || 0,
           remaining: data.credits?.remaining ?? 50,
+          reserved: data.credits?.reserved || 0,
           rollover: data.credits?.rollover || 0,
         },
         subscription: {
@@ -140,6 +145,7 @@ async function getBillingAccount(userId: string): Promise<BillingAccountData> {
         included: SUBSCRIPTION_TIERS.free.credits,
         used: 0,
         remaining: SUBSCRIPTION_TIERS.free.credits,
+        reserved: 0,
         rollover: 0,
       },
       subscription: {
@@ -157,6 +163,7 @@ async function getBillingAccount(userId: string): Promise<BillingAccountData> {
         included: SUBSCRIPTION_TIERS.free.credits,
         used: 0,
         remaining: SUBSCRIPTION_TIERS.free.credits,
+        reserved: 0,
         rollover: 0,
       },
       subscription: {
@@ -188,6 +195,7 @@ export async function GET(req: NextRequest) {
         remaining: account.credits.remaining,
         included: account.credits.included,
         used: account.credits.used,
+        reserved: account.credits.reserved,
         rollover: account.credits.rollover,
         percentUsed: Math.round((account.credits.used / account.credits.included) * 100),
       },

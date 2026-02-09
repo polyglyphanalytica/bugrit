@@ -19,10 +19,15 @@ export type NotificationEventType =
   | 'test_failed'
   | 'fix_branch_ready'
   | 'weekly_summary'
-  | 'security_alert'      // Critical/high severity findings
-  | 'credit_low'          // Credits running low
-  | 'subscription_update' // Billing/subscription changes
-  | 'team_invite';        // Team invitations
+  | 'security_alert'        // Critical/high severity findings
+  | 'credit_low'            // Credits running low
+  | 'subscription_update'   // Billing/subscription changes
+  | 'subscription_renewed'  // Plan successfully renewed
+  | 'subscription_failed'   // Renewal payment failed
+  | 'team_invite'           // Team invitations
+  | 'support_ticket_created'  // Support ticket opened on user's behalf
+  | 'support_ticket_new'      // Admin: new ticket received
+  | 'support_response';       // Admin responded to a support ticket
 
 /**
  * Notification channels
@@ -153,8 +158,38 @@ export function getDefaultPreferences(userId: string): UserNotificationPreferenc
         channels: ['email', 'in_app'],
       },
 
+      // Subscription renewed - ALWAYS on for email (transactional)
+      subscription_renewed: {
+        enabled: true,
+        channels: ['email', 'in_app'],
+      },
+
+      // Subscription failed - ALWAYS on for email (transactional)
+      subscription_failed: {
+        enabled: true,
+        channels: ['email', 'in_app'],
+      },
+
       // Team invites - ALWAYS on for email (transactional)
       team_invite: {
+        enabled: true,
+        channels: ['email', 'in_app'],
+      },
+
+      // Support ticket created on user's behalf - ALWAYS on (transactional)
+      support_ticket_created: {
+        enabled: true,
+        channels: ['email', 'in_app'],
+      },
+
+      // Admin: new ticket received
+      support_ticket_new: {
+        enabled: true,
+        channels: ['email', 'in_app'],
+      },
+
+      // Admin responded to a support ticket - ALWAYS on (transactional)
+      support_response: {
         enabled: true,
         channels: ['email', 'in_app'],
       },
@@ -173,7 +208,11 @@ export const TRANSACTIONAL_EVENTS: NotificationEventType[] = [
   'security_alert',
   'credit_low',
   'subscription_update',
+  'subscription_renewed',
+  'subscription_failed',
   'team_invite',
+  'support_ticket_created',
+  'support_response',
 ];
 
 // In-memory fallback

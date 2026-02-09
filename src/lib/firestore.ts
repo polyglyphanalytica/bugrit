@@ -50,6 +50,7 @@ export const COLLECTIONS = {
   REPORTS: 'reports',
   ORGANIZATIONS: 'organizations',
   USERS: 'users',
+  SUPPORT_TICKETS: 'support_tickets',
 } as const;
 
 /**

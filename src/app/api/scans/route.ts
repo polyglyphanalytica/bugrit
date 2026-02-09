@@ -13,9 +13,10 @@ import {
   reserveCreditsForScan,
   releaseReservation,
 } from '@/lib/billing';
-import { ToolCategory, TOOL_COUNT } from '@/lib/tools/registry';
+import { ToolCategory, TOOL_COUNT, TOOL_REGISTRY } from '@/lib/tools/registry';
 import { getAccessTokenForUser } from '@/lib/github/connections';
 import { notifyScanCompleted, notifyScanFailed, notifySecurityAlert } from '@/lib/notifications/dispatcher';
+import { createTelemetryTicket } from '@/lib/support/telemetry-tickets';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -53,6 +54,7 @@ interface Scan {
     info: number;
     byTool: Record<string, number>;
   };
+  selectedModules?: string[];
   error?: string;
   // Billing information
   billing?: {
@@ -139,6 +141,7 @@ export async function POST(request: NextRequest) {
     let mobilePlatform: string | undefined;
     let dockerImage: string | undefined;
     let dockerTag: string | undefined;
+    let selectedModules: string[] | undefined;
 
     // Handle FormData
     if (contentType.includes('multipart/form-data')) {
@@ -154,6 +157,11 @@ export async function POST(request: NextRequest) {
       mobilePlatform = formData.get('platform') as string | undefined;
       dockerImage = formData.get('dockerImage') as string | undefined;
       dockerTag = formData.get('dockerTag') as string | undefined;
+
+      const modulesField = formData.get('selectedModules') as string | undefined;
+      if (modulesField) {
+        try { selectedModules = JSON.parse(modulesField); } catch { /* ignore */ }
+      }
 
       const file = formData.get('file');
       if (file instanceof File) {
@@ -172,6 +180,9 @@ export async function POST(request: NextRequest) {
       mobilePlatform = body.platform;
       dockerImage = body.dockerImage;
       dockerTag = body.dockerTag;
+      if (Array.isArray(body.selectedModules)) {
+        selectedModules = body.selectedModules;
+      }
     }
 
     // Validate required fields
@@ -224,10 +235,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Resolve selected tools to their categories for billing
+    // If user selected specific modules, use those; otherwise run all tools
+    let validToolIds: string[] | undefined;
+    let scanCategories: ToolCategory[];
+
+    if (selectedModules && selectedModules.length > 0) {
+      // Validate tool IDs against registry and derive categories
+      const registryIds = new Set(TOOL_REGISTRY.map(t => t.id));
+      validToolIds = selectedModules.filter(id => registryIds.has(id));
+      const categorySet = new Set<ToolCategory>();
+      for (const id of validToolIds) {
+        const tool = TOOL_REGISTRY.find(t => t.id === id);
+        if (tool) categorySet.add(tool.category);
+      }
+      scanCategories = Array.from(categorySet);
+    } else {
+      // No specific selection — all tools will run
+      scanCategories = [...new Set(TOOL_REGISTRY.map(t => t.category))];
+    }
+
     // Check if user can afford this scan
-    const defaultCategories: ToolCategory[] = ['linting', 'security', 'accessibility'];
     const affordCheck = await checkScanAffordability(userId, {
-      categories: defaultCategories,
+      categories: scanCategories,
       aiFeatures: ['summary'],
       estimatedLines: 50000, // Default estimate, actual will be calculated during scan
     });
@@ -258,6 +288,8 @@ export async function POST(request: NextRequest) {
     }
     const now = new Date().toISOString();
 
+    const toolsTotal = validToolIds ? validToolIds.length : TOOL_COUNT;
+
     const scan: Scan = {
       id: scanId,
       applicationId,
@@ -275,9 +307,10 @@ export async function POST(request: NextRequest) {
         dockerImage,
         dockerTag: dockerTag || 'latest',
       },
+      selectedModules: validToolIds,
       createdAt: now,
       toolsCompleted: 0,
-      toolsTotal: TOOL_COUNT,
+      toolsTotal,
       billing: {
         estimatedCredits: affordCheck.estimate.total,
       },
@@ -300,6 +333,8 @@ export async function POST(request: NextRequest) {
       dockerTag: dockerTag || 'latest',
       userId,
       estimatedCredits: affordCheck.estimate.total,
+      selectedModules: validToolIds,
+      scanCategories,
     });
 
     return NextResponse.json({ scan }, { status: 201 });
@@ -417,6 +452,9 @@ interface ScanOptions {
   mobilePlatform?: string;
   dockerImage?: string;
   dockerTag?: string;
+  // Tool selection
+  selectedModules?: string[];
+  scanCategories: ToolCategory[];
   // Billing
   userId: string;
   estimatedCredits: number;
@@ -504,15 +542,19 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
       throw new Error(repoSizeCheck.reason || 'Repository size exceeds tier limit');
     }
 
-    // Run all tools
+    // Run selected tools (or all if none specified)
     const dockerImage = options.dockerImage
       ? `${options.dockerImage}:${options.dockerTag || 'latest'}`
       : undefined;
-    logger.info('Running scan tools', { scanId, targetPath, targetUrl, dockerImage });
+    logger.info('Running scan tools', {
+      scanId, targetPath, targetUrl, dockerImage,
+      selectedModules: options.selectedModules?.length ?? 'all',
+    });
     const results = await runTools({
       targetPath,
       targetUrl,
       dockerImage,
+      tools: options.selectedModules,
     });
 
     // Update scan with results
@@ -540,11 +582,10 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
     scan.status = 'completed';
     scan.completedAt = new Date().toISOString();
 
-    // Bill for the completed scan
-    const defaultCategories: ToolCategory[] = ['linting', 'security', 'accessibility'];
+    // Bill for the completed scan using actual categories run
     const billingResult = await billForCompletedScan(options.userId, scanId, {
       linesOfCode,
-      categoriesRun: defaultCategories,
+      categoriesRun: options.scanCategories,
       aiFeatures: ['summary'],
       issuesFound: summary.totalFindings,
     });
@@ -631,6 +672,16 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
       } catch (notifyError) {
         logger.warn('Failed to send scan failure notification', { scanId, error: notifyError });
       }
+
+      // Create telemetry ticket for scan failures
+      createTelemetryTicket({
+        userId: options.userId,
+        category: 'scan_failure',
+        subject: `Scan failed: ${scanId}`,
+        message: `Scan ${scanId} failed for user ${options.userId}. Error: ${scan.error || 'Unknown'}. Source: ${options.sourceType}${options.repoUrl ? ` (${options.repoUrl})` : ''}`,
+        priority: 'normal',
+        metadata: { scanId, sourceType: options.sourceType, error: scan.error },
+      }).catch(() => {}); // Fire and forget
     }
   } finally {
     // Cleanup temp directory

@@ -48,6 +48,14 @@ const SenseiContextSchema = z.object({
       file: z.string().optional(),
     })).optional(),
   }).optional(),
+  openTickets: z.array(z.object({
+    id: z.string(),
+    subject: z.string(),
+    status: z.string(),
+    lastResponse: z.string().optional(),
+    lastResponseFrom: z.string().optional(),
+    updatedAt: z.string().optional(),
+  })).optional(),
 });
 
 const SenseiInputSchema = z.object({
@@ -67,6 +75,8 @@ const SenseiResponseSchema = z.object({
     'navigate',
     'checkout',
     'show_billing',
+    'escalate_to_human',
+    'reply_to_ticket',
   ]).describe('Action to take. Use none for purely conversational responses.'),
   appName: z.string().optional().describe('For create_app: the application name'),
   appType: z.string().optional().describe('For create_app: web, mobile, desktop, or hybrid'),
@@ -78,6 +88,10 @@ const SenseiResponseSchema = z.object({
   path: z.string().optional().describe('For navigate: page path like /scans/new or /applications'),
   tier: z.string().optional().describe('For checkout: solo, scale, or business'),
   interval: z.string().optional().describe('For checkout: month or year'),
+  ticketSubject: z.string().optional().describe('For escalate_to_human: brief subject summarizing the issue'),
+  ticketSummary: z.string().optional().describe('For escalate_to_human: AI-generated summary of the issue for the support team'),
+  ticketId: z.string().optional().describe('For reply_to_ticket: the ticket ID to reply to'),
+  ticketReply: z.string().optional().describe('For reply_to_ticket: the user\'s response message to send'),
   suggestedQuestions: z.array(z.string()).optional().describe('2-3 follow-up questions'),
 });
 
@@ -89,7 +103,7 @@ export type SenseiMessage = z.infer<typeof SenseiMessageSchema>;
 // --- System Prompt ---
 
 function buildSystemPrompt(context?: SenseiContext): string {
-  let prompt = `You are Sensei, the AI copilot for Bugrit — a code security and quality scanning platform with 100+ tools.
+  let prompt = `You are Sensei, the AI copilot for Bugrit — a code security and quality scanning platform with 150+ tools.
 
 You are the primary interface. Users talk to you to get things done. Be direct, concise, and action-oriented.
 
@@ -117,6 +131,21 @@ Free tier: 10 credits included.
 ### show_billing — Show credit balance and plan info
 Set actionType to "show_billing". No extra params needed.
 
+### escalate_to_human — Escalate to human support
+Set actionType to "escalate_to_human" when:
+- The user explicitly asks to talk to a human, support team, or asks to escalate
+- The user expresses strong frustration (e.g. "this is broken", "nothing works", repeated failed attempts)
+- You genuinely cannot help with their issue (billing disputes, account recovery, bugs you can't fix)
+- The user has asked the same question 3+ times without resolution
+
+Include ticketSubject (brief subject line) and ticketSummary (2-3 sentence summary of the issue for the support team, including what was tried).
+IMPORTANT: Before escalating, ALWAYS ask the user first: "Would you like me to escalate this to our support team?" Only escalate if they confirm. The conversation transcript will be included automatically.
+
+### reply_to_ticket — Respond to an open support ticket
+Set actionType to "reply_to_ticket" with ticketId and ticketReply.
+Use this when the user wants to respond to a support ticket or when they reply to an admin's response.
+Extract the user's intended message as ticketReply — this is what gets sent to the support team.
+
 ### none — Just respond conversationally
 For questions, explanations, advice, or when no action is needed.
 
@@ -132,7 +161,8 @@ Tools include: Semgrep, ESLint, Gitleaks, OWASP ZAP, Trivy, Bandit, MobSF, Light
 - Answer scan result questions directly from the context.
 - Always suggest 2-3 follow-up questions in suggestedQuestions.
 - Be warm but professional. No emoji overload.
-- If the user needs help you cannot provide, suggest /docs or support.`;
+- If the user needs help you cannot provide, offer to escalate to a human via escalate_to_human.
+- Watch for signs of frustration: repeated complaints, strong negative language, expressions of confusion. Gently offer escalation.`;
 
   if (context) {
     prompt += '\n\n## User Context\n';
@@ -160,6 +190,18 @@ Tools include: Semgrep, ESLint, Gitleaks, OWASP ZAP, Trivy, Bandit, MobSF, Light
       prompt += `Currently viewing: ${context.currentPage}\n`;
     }
 
+    if (context.openTickets && context.openTickets.length > 0) {
+      prompt += '\nOpen support tickets:\n';
+      for (const ticket of context.openTickets) {
+        prompt += `  - [${ticket.id}] "${ticket.subject}" (${ticket.status})`;
+        if (ticket.lastResponse) {
+          prompt += ` — Last response from ${ticket.lastResponseFrom}: "${ticket.lastResponse.slice(0, 100)}${ticket.lastResponse.length > 100 ? '...' : ''}"`;
+        }
+        prompt += '\n';
+      }
+      prompt += 'If the user mentions a ticket or wants to reply to support, use reply_to_ticket with the ticket ID and their message.\n';
+    }
+
     if (context.scanContext) {
       prompt += `\nActive Scan (${context.scanContext.scanId}): ${context.scanContext.status}`;
       if (context.scanContext.totalFindings !== undefined) {
@@ -180,8 +222,34 @@ Tools include: Semgrep, ESLint, Gitleaks, OWASP ZAP, Trivy, Bandit, MobSF, Light
 
 // --- Generate Response ---
 
+async function loadKnowledgeBase(): Promise<string> {
+  try {
+    const { getDb } = await import('@/lib/firestore');
+    const db = getDb();
+    if (!db) return '';
+
+    const snapshot = await db.collection('sensei_knowledge')
+      .where('enabled', '==', true)
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get();
+
+    if (snapshot.empty) return '';
+
+    let kb = '\n\n## Knowledge Base (use these for answering common questions)\n';
+    for (const doc of snapshot.docs) {
+      const entry = doc.data();
+      kb += `Q: ${entry.question}\nA: ${entry.answer}\n\n`;
+    }
+    return kb;
+  } catch {
+    return '';
+  }
+}
+
 export async function generateSenseiResponse(input: SenseiInput): Promise<SenseiResponse> {
   const systemPrompt = buildSystemPrompt(input.context);
+  const knowledgeBase = await loadKnowledgeBase();
 
   // Build conversation as a single prompt string for reliable structured output
   let conversationText = '';
@@ -193,7 +261,7 @@ export async function generateSenseiResponse(input: SenseiInput): Promise<Sensei
     }
   }
 
-  const fullPrompt = `${systemPrompt}${conversationText}
+  const fullPrompt = `${systemPrompt}${knowledgeBase}${conversationText}
 ## Current Message
 User: ${input.message}
 

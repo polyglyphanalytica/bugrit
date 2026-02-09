@@ -207,6 +207,7 @@ export interface BillingStatus {
     remaining: number;
     included: number;
     used: number;
+    reserved: number;
     rollover: number;
     percentUsed: number;
   };

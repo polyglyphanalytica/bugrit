@@ -451,7 +451,7 @@ export default function ApplicationDetailPage({
                   <div className="text-4xl mb-4">🔍</div>
                   <h3 className="text-lg font-semibold mb-2">No Scans Yet</h3>
                   <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                    Start your first scan to analyze your application with 150 modules
+                    Start your first scan to analyze your application with 150+ modules
                     and get a unified, prioritized report.
                   </p>
                   <Button asChild>

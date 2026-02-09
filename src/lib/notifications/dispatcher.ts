@@ -526,3 +526,54 @@ export async function notifyTestFailed(params: {
     },
   });
 }
+
+/**
+ * Notify user that their subscription was successfully renewed
+ */
+export async function notifySubscriptionRenewed(params: {
+  userId: string;
+  userEmail: string;
+  tierName: string;
+  creditsIncluded: number;
+  nextRenewalDate: string;
+}): Promise<DispatchResult> {
+  return dispatchNotification({
+    type: 'subscription_renewed',
+    userId: params.userId,
+    title: 'Subscription renewed',
+    message: `Your ${params.tierName} plan has been renewed. ${params.creditsIncluded} credits have been added to your account. Next renewal: ${params.nextRenewalDate}.`,
+    severity: 'success',
+    actionUrl: '/settings',
+    actionLabel: 'View Billing',
+    metadata: {
+      email: params.userEmail,
+      tierName: params.tierName,
+      creditsIncluded: params.creditsIncluded,
+    },
+  });
+}
+
+/**
+ * Notify user that their subscription renewal payment failed
+ */
+export async function notifySubscriptionFailed(params: {
+  userId: string;
+  userEmail: string;
+  tierName: string;
+  reason: string;
+}): Promise<DispatchResult> {
+  return dispatchNotification({
+    type: 'subscription_failed',
+    userId: params.userId,
+    title: 'Payment failed',
+    message: `We couldn't process your ${params.tierName} plan renewal: ${params.reason}. Please update your payment method to avoid service interruption.`,
+    severity: 'error',
+    actionUrl: '/settings',
+    actionLabel: 'Update Payment',
+    metadata: {
+      email: params.userEmail,
+      tierName: params.tierName,
+      reason: params.reason,
+    },
+  });
+}

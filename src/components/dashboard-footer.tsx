@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
+import { TOOL_COUNT } from '@/lib/tools/registry';
 
 export function DashboardFooter() {
   return (
@@ -8,7 +9,7 @@ export function DashboardFooter() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <Logo href="/dashboard" size="sm" />
           <p className="text-gray-400 text-sm">
-            150 modules. 5,000+ automated security checks.
+            {TOOL_COUNT} modules. 5,000+ automated security checks.
           </p>
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">

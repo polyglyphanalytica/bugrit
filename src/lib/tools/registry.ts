@@ -1,16 +1,15 @@
 /**
  * Comprehensive Tool Registry
  *
- * 150 tools for security, quality, and compliance.
+ * 150+ tools for security, quality, and compliance.
  *
  * All tools are registered, credited, orchestrated, and reported equally.
+ * Actual count is dynamic: see TOOL_COUNT export.
  *
  * Deployment types:
  * - Native JS/npm (51 tools): Run via npm packages on Node.js
  * - Docker (95 tools): Run via Google Cloud Build containers
  * - Git/CLI (4 tools): Uses git or system CLI
- *
- * Total: 150 tools across 11 categories
  */
 
 export interface ToolDefinition {
