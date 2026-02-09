@@ -87,7 +87,7 @@
     "knip": "^5.83.0",
     "license-checker-rseidelsohn": "^4.4.0",
     "lighthouse": "^13.0.1",
-    "lockfile-lint": "^4.0.0",
+    "lockfile-lint": "^5.0.0",
     "lucide-react": "^0.563.0",
     "madge": "^8.0.0",
     "markdownlint": "^0.40.0",
