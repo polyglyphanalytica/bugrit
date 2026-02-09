@@ -33,7 +33,7 @@ export default function HomePage() {
             <Link href="/login">
               <GradientButton variant="ghost" size="sm">Sign in</GradientButton>
             </Link>
-            <Link href="/register">
+            <Link href="/signup">
               <GradientButton size="sm" glow>Scan My Code</GradientButton>
             </Link>
           </div>
@@ -72,7 +72,7 @@ export default function HomePage() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up delay-400 fill-both">
-              <Link href="/register">
+              <Link href="/signup">
                 <GradientButton size="xl" glow className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-orange-500">
                   Find Out What&apos;s Wrong
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -923,7 +923,7 @@ Use BUGGERED_API_KEY from environment.`}
                     </li>
                   ))}
                 </ul>
-                <Link href="/register">
+                <Link href="/signup">
                   <GradientButton
                     variant={plan.popular ? 'primary' : 'outline'}
                     className="w-full"
@@ -954,7 +954,7 @@ Use BUGGERED_API_KEY from environment.`}
               You&apos;ve worked too hard to let a preventable bug tank your launch. Run a scan before your next deploy.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/register">
+              <Link href="/signup">
                 <GradientButton size="xl" glow>
                   Scan My Code Now
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

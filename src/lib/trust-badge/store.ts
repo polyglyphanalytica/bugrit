@@ -218,7 +218,7 @@ export async function trackVerificationPageView(siteId: string): Promise<void> {
 export function generateVerificationToken(siteId: string): string {
   // Generate a deterministic but unpredictable token based on siteId
   const encoder = new TextEncoder();
-  const data = encoder.encode(siteId + process.env.ADMIN_ENCRYPTION_KEY || 'bugrit-verify');
+  const data = encoder.encode(siteId + (process.env.ADMIN_ENCRYPTION_KEY || 'bugrit-verify'));
   let hash = 0;
   for (let i = 0; i < data.length; i++) {
     hash = ((hash << 5) - hash) + data[i];

@@ -67,6 +67,18 @@ env:
     secret: stripe-webhook-secret
   - variable: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
     secret: STRIPE_PUBLISHABLE_KEY
+  - variable: STRIPE_STARTER_MONTHLY_PRICE_ID
+    secret: stripe-starter-monthly-price-id
+  - variable: STRIPE_STARTER_YEARLY_PRICE_ID
+    secret: stripe-starter-yearly-price-id
+  - variable: STRIPE_PRO_MONTHLY_PRICE_ID
+    secret: stripe-pro-monthly-price-id
+  - variable: STRIPE_PRO_YEARLY_PRICE_ID
+    secret: stripe-pro-yearly-price-id
+  - variable: STRIPE_BUSINESS_MONTHLY_PRICE_ID
+    secret: stripe-business-monthly-price-id
+  - variable: STRIPE_BUSINESS_YEARLY_PRICE_ID
+    secret: stripe-business-yearly-price-id
 
   # ============================================================
   # Google Cloud (for Docker-based scanning tools)
@@ -95,6 +107,28 @@ env:
     secret: resend-api-key
   - variable: EMAIL_FROM_ADDRESS
     value: "noreply@bugrit.app"
+
+  # ============================================================
+  # Scan Worker Service
+  # ============================================================
+  - variable: SCAN_WORKER_URL
+    secret: scan-worker-url
+  - variable: WORKER_SECRET
+    secret: worker-secret
+
+  # ============================================================
+  # Admin API
+  # ============================================================
+  - variable: ADMIN_API_KEY
+    secret: admin-api-key
+
+  # ============================================================
+  # Analytics (optional)
+  # ============================================================
+  # - variable: NEXT_PUBLIC_GA_MEASUREMENT_ID
+  #   value: "G-XXXXXXXXXX"
+  # - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+  #   value: ""
 
   # ============================================================
   # GCP Billing Cloud Function (optional - mock data used if not set)

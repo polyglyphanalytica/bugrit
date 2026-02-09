@@ -1390,18 +1390,6 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // DEPENDENCIES - License (1 tool)
-  // ═══════════════════════════════════════════════════════════════
-  {
-    id: 'scancode',
-    name: 'ScanCode Toolkit',
-    description: 'Scan code for licenses, copyrights, and dependencies with high accuracy',
-    category: 'dependencies',
-    docker: 'ghcr.io/nexb/scancode-toolkit:latest',
-    credits: 2,
-  },
-
-  // ═══════════════════════════════════════════════════════════════
   // PERFORMANCE - Load Testing (5 tools)
   // ═══════════════════════════════════════════════════════════════
   {
@@ -1453,17 +1441,8 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // CLOUD-NATIVE (3 tools)
+  // CLOUD-NATIVE (2 tools)
   // ═══════════════════════════════════════════════════════════════
-  {
-    id: 'kubebench',
-    name: 'kube-bench (CIS)',
-    description: 'Check Kubernetes clusters against CIS Benchmark security recommendations',
-    category: 'cloud-native',
-    docker: 'aquasec/kube-bench:latest',
-    filePatterns: ['**/*.yaml', '**/*.yml'],
-    credits: 1,
-  },
   {
     id: 'litmus',
     name: 'LitmusChaos',

@@ -6,7 +6,7 @@
  */
 
 import { db, FieldValue } from '@/lib/firebase/admin';
-import { calculateCredits, canAffordScan, SUBSCRIPTION_TIERS, SubscriptionTier, ScanConfig, CreditEstimate } from './credits';
+import { calculateCredits, canAffordScan, SUBSCRIPTION_TIERS, SubscriptionTier, ScanConfig, CreditEstimate, CREDIT_COSTS } from './credits';
 import { deductCreditsWithAutoTopup } from './auto-topup';
 import { logger } from '@/lib/logger';
 import { ToolCategory } from '@/lib/tools/registry';
@@ -554,29 +554,33 @@ export async function refundCreditsForFailedTools(
 
   try {
     // Calculate credit refund per tool category
-    // Each category has a different credit cost
-    const CATEGORY_CREDITS: Partial<Record<IntegrationsToolCategory, number>> = {
-      'code-quality': 1,
-      'security': 2,
-      'accessibility': 1,
-      'performance': 3, // More expensive - load testing
-      'api-testing': 2,
-      'api-schema': 1,
-      'api-security': 2,
-      'visual': 2,
-      'coverage': 1,
-      'observability': 2,
-      'chaos': 5, // Most expensive - disruptive testing
-      'complexity': 1,
-      'database': 2,
-      'documentation': 1,
-      'iac-security': 2,
-      'license': 1,
-      'secret-scanning': 2,
-      'mobile': 3,
-      'dependencies': 1,
-      'cloud-native': 2,
+    // Map integration category names to canonical credit costs from credits.ts
+    const INTEGRATION_TO_BILLING: Partial<Record<IntegrationsToolCategory, ToolCategory>> = {
+      'code-quality': 'quality',
+      'security': 'security',
+      'accessibility': 'accessibility',
+      'performance': 'performance',
+      'api-testing': 'api-security',
+      'api-schema': 'api-security',
+      'api-security': 'api-security',
+      'secret-scanning': 'security',
+      'mobile': 'mobile',
+      'dependencies': 'dependencies',
+      'cloud-native': 'cloud-native',
+      'documentation': 'documentation',
+      'iac-security': 'cloud-native',
+      'license': 'dependencies',
+      'database': 'quality',
+      'complexity': 'quality',
+      'coverage': 'quality',
+      'visual': 'accessibility',
+      'observability': 'performance',
+      'chaos': 'performance',
     };
+    const CATEGORY_CREDITS: Partial<Record<IntegrationsToolCategory, number>> = {};
+    for (const [intCat, billCat] of Object.entries(INTEGRATION_TO_BILLING)) {
+      CATEGORY_CREDITS[intCat as IntegrationsToolCategory] = CREDIT_COSTS.TOOLS[billCat as ToolCategory] || 1;
+    }
 
     // Calculate lines multiplier (matches credits.ts logic)
     const linesMultiplier = estimatedLines > 100000 ? 2 :

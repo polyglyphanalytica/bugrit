@@ -13,7 +13,7 @@ import { getStripeSecretKey } from '@/lib/admin/service';
 export async function POST(req: NextRequest) {
   try {
     // Authenticate user
-    const authResult = requireAuthenticatedUser(req);
+    const authResult = await requireAuthenticatedUser(req);
     if (authResult instanceof NextResponse) {
       return authResult;
     }

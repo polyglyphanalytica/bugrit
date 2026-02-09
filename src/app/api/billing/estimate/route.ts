@@ -137,7 +137,7 @@ async function estimateRepoSize(repoUrl?: string, projectId?: string): Promise<n
 export async function POST(req: NextRequest) {
   try {
     // Authenticate user via API key or session
-    const authResult = requireAuthenticatedUser(req);
+    const authResult = await requireAuthenticatedUser(req);
     if (authResult instanceof NextResponse) {
       return authResult;
     }

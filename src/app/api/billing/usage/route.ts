@@ -181,7 +181,7 @@ async function getTransactions(
 export async function GET(req: NextRequest) {
   try {
     // Authenticate user via API key or session
-    const authResult = requireAuthenticatedUser(req);
+    const authResult = await requireAuthenticatedUser(req);
     if (authResult instanceof NextResponse) {
       return authResult;
     }

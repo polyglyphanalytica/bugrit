@@ -211,10 +211,10 @@ export function calculateCredits(config: ScanConfig): CreditEstimate {
 export function getDefaultScanConfig(tier: SubscriptionTier): ScanConfig {
   const tierConfig = SUBSCRIPTION_TIERS[tier];
 
-  // All categories except performance, container, sbom for lower tiers
+  // Free tier gets only free categories; paid tiers get all categories
   const categories: ToolCategory[] = tier === 'free'
     ? ['linting', 'dependencies', 'quality', 'documentation', 'git']
-    : ['linting', 'security', 'dependencies', 'accessibility', 'quality', 'documentation', 'git', 'performance', 'container', 'sbom'];
+    : ['linting', 'security', 'dependencies', 'accessibility', 'quality', 'documentation', 'git', 'performance', 'mobile', 'api-security', 'cloud-native', 'container', 'sbom'];
 
   return {
     categories,

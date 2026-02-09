@@ -65,6 +65,13 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   performance: <Zap className="w-4 h-4" />,
   accessibility: <Eye className="w-4 h-4" />,
   linting: <FileCode className="w-4 h-4" />,
+  documentation: <FileCode className="w-4 h-4" />,
+  git: <FileCode className="w-4 h-4" />,
+  mobile: <Shield className="w-4 h-4" />,
+  'api-security': <Shield className="w-4 h-4" />,
+  'cloud-native': <Shield className="w-4 h-4" />,
+  container: <Package className="w-4 h-4" />,
+  sbom: <Package className="w-4 h-4" />,
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -146,12 +153,12 @@ function ConfigureScanInner() {
   const fetchCredits = async () => {
     try {
       const idToken = await user!.getIdToken();
-      const res = await fetch('/api/billing/credits', {
+      const res = await fetch('/api/billing/status', {
         headers: { Authorization: `Bearer ${idToken}` },
       });
       if (res.ok) {
         const data = await res.json();
-        setCreditBalance(data.balance || 0);
+        setCreditBalance(data.credits?.balance || data.balance || 0);
       }
     } catch {
       // Ignore
