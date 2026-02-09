@@ -19,6 +19,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ScanProgress, PrioritizedResults, NoIssuesFound, type Finding } from '@/components/scan';
 import { PlainEnglishProvider } from '@/contexts/plain-english-context';
+import { useSensei } from '@/contexts/sensei-context';
 
 interface ToolResult {
   toolId: string;
@@ -66,6 +67,7 @@ export default function ScanDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { user, loading: authLoading } = useAuth();
+  const { setPageContext } = useSensei();
   const [scan, setScan] = useState<Scan | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -89,6 +91,33 @@ export default function ScanDetailPage() {
       return () => clearInterval(interval);
     }
   }, [user, authLoading, scanId, scan?.status]);
+
+  // Push scan context to Sensei so it can answer questions about this scan
+  useEffect(() => {
+    if (scan) {
+      const allFindings = scan.results?.flatMap(r =>
+        r.findings.map(f => ({
+          severity: f.severity,
+          title: f.message,
+          tool: r.toolName,
+          file: f.file,
+        }))
+      ) || [];
+
+      setPageContext({
+        scanId: scan.id,
+        scanStatus: scan.status,
+        totalFindings: scan.summary?.totalFindings,
+        topFindings: allFindings
+          .sort((a, b) => {
+            const order: Record<string, number> = { error: 0, warning: 1, info: 2 };
+            return (order[a.severity] ?? 3) - (order[b.severity] ?? 3);
+          })
+          .slice(0, 15),
+      });
+    }
+    return () => setPageContext({});
+  }, [scan, setPageContext]);
 
   const fetchScan = async () => {
     try {

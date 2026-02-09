@@ -2,6 +2,8 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/auth-context";
+import { SenseiProvider } from "@/contexts/sensei-context";
+import { SenseiChat } from "@/components/sensei-chat";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ProductionConsoleGuard } from "@/components/ProductionConsoleGuard";
 
@@ -58,7 +60,10 @@ export default function RootLayout({
         <ProductionConsoleGuard />
         <ErrorBoundary>
           <AuthProvider>
-            {children}
+            <SenseiProvider>
+              {children}
+              <SenseiChat />
+            </SenseiProvider>
             <Toaster />
           </AuthProvider>
         </ErrorBoundary>
