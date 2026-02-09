@@ -15,7 +15,7 @@ export class EmailNotificationService {
 
   constructor(config?: { apiKey?: string; fromAddress?: string; fromName?: string }) {
     this.apiKey = config?.apiKey || process.env.RESEND_API_KEY;
-    this.fromAddress = config?.fromAddress || process.env.EMAIL_FROM_ADDRESS || 'noreply@buggered.app';
+    this.fromAddress = config?.fromAddress || process.env.EMAIL_FROM_ADDRESS || 'noreply@bugrit.com';
     this.fromName = config?.fromName || 'Bugrit Testing';
   }
 

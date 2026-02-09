@@ -24,7 +24,12 @@ const PORT = process.env.PORT || 8080;
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['https://bugrit.com'],
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || [
+    'https://bugrit.com',
+    'https://bugrit-prod.web.app',
+    'https://bugrit-prod.firebaseapp.com',
+    'http://localhost:3000',
+  ],
   methods: ['POST', 'GET'],
 }));
 app.use(express.json({ limit: '50mb' }));

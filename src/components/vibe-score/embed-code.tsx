@@ -12,8 +12,9 @@ interface EmbedCodeProps {
 export function EmbedCode({ owner, repo, className }: EmbedCodeProps) {
   const [copied, setCopied] = useState<string | null>(null);
 
-  const badgeUrl = `https://bugrit.dev/api/badge/${owner}/${repo}`;
-  const profileUrl = `https://bugrit.dev/health/${owner}/${repo}`;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://bugrit.com';
+  const badgeUrl = `${baseUrl}/api/badge/${owner}/${repo}`;
+  const profileUrl = `${baseUrl}/health/${owner}/${repo}`;
 
   const snippets = {
     markdown: `[![Vibe Score](${badgeUrl})](${profileUrl})`,

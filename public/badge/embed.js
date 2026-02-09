@@ -13,7 +13,7 @@
  * and links to the Bugrit homepage.
  *
  * Usage:
- * <script src="https://bugrit.dev/badge/embed.js"
+ * <script src="https://bugrit.com/badge/embed.js"
  *   data-site-id="site_xxx"
  *   data-size="medium"
  *   data-theme="auto"
@@ -23,11 +23,7 @@
 (function() {
   'use strict';
 
-  // Configuration
-  var BUGRIT_BASE_URL = 'https://bugrit.dev';
-  var API_ENDPOINT = BUGRIT_BASE_URL + '/api/trust-badge';
-
-  // Get script element and config
+  // Get script element
   var scriptEl = document.currentScript || (function() {
     var scripts = document.getElementsByTagName('script');
     for (var i = scripts.length - 1; i >= 0; i--) {
@@ -37,6 +33,18 @@
     }
     return null;
   })();
+
+  // Configuration — detect base URL from the script src, fallback to production
+  var BUGRIT_BASE_URL = (function() {
+    if (scriptEl && scriptEl.src) {
+      try {
+        var u = new URL(scriptEl.src);
+        return u.origin;
+      } catch (e) { /* fallback */ }
+    }
+    return 'https://bugrit.com';
+  })();
+  var API_ENDPOINT = BUGRIT_BASE_URL + '/api/trust-badge';
 
   if (!scriptEl) {
     console.error('[Bugrit] Could not find embed script element');
