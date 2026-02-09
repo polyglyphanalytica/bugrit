@@ -7,6 +7,7 @@
 
 import { createHmac, timingSafeEqual } from 'crypto';
 import { logger } from '@/lib/logger';
+import { getSlackSigningSecret, getSlackBotToken } from './config';
 import type { ChannelAdapter, InboundMessage, OutboundMessage } from './types';
 
 interface SlackEventPayload {
@@ -28,11 +29,11 @@ export class SlackAdapter implements ChannelAdapter {
   readonly channel = 'slack' as const;
 
   private get signingSecret(): string {
-    return process.env.SLACK_SIGNING_SECRET || '';
+    return getSlackSigningSecret() || '';
   }
 
   private get botToken(): string {
-    return process.env.SLACK_BOT_TOKEN || '';
+    return getSlackBotToken() || '';
   }
 
   /** Verify Slack request signature (v0 signing) */

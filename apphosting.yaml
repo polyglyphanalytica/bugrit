@@ -162,22 +162,32 @@ env:
   #   value: ""
 
   # ============================================================
-  # Slack Integration (Sensei on Slack)
+  # Slack Integration — LIVE (Sensei on Slack, used on bugrit.com)
   # ============================================================
   # Create a Slack app at https://api.slack.com/apps
   # Enable Events API → subscribe to message.im and app_mention
-  # Set Request URL to: https://<your-domain>/api/slack/events
-  # Set Interactivity URL to: https://<your-domain>/api/slack/interactivity
+  # Set Request URL to: https://bugrit.com/api/slack/events
+  # Set Interactivity URL to: https://bugrit.com/api/slack/interactivity
   - variable: SLACK_SIGNING_SECRET
     secret: slack-signing-secret
   - variable: SLACK_BOT_TOKEN
     secret: slack-bot-token
 
   # ============================================================
-  # WhatsApp Integration (Sensei on WhatsApp)
+  # Slack Integration — TEST/SANDBOX (used on all non-prod URLs)
+  # ============================================================
+  # Create a separate Slack test app for development/staging.
+  # The app auto-selects test vs live based on hostname detection.
+  - variable: SLACK_TEST_SIGNING_SECRET
+    secret: slack-test-signing-secret
+  - variable: SLACK_TEST_BOT_TOKEN
+    secret: slack-test-bot-token
+
+  # ============================================================
+  # WhatsApp Integration — LIVE (Sensei on WhatsApp, used on bugrit.com)
   # ============================================================
   # Set up at https://developers.facebook.com → WhatsApp Business
-  # Set webhook URL to: https://<your-domain>/api/whatsapp/webhook
+  # Set webhook URL to: https://bugrit.com/api/whatsapp/webhook
   - variable: WHATSAPP_ACCESS_TOKEN
     secret: whatsapp-access-token
   - variable: WHATSAPP_APP_SECRET
@@ -186,6 +196,20 @@ env:
     secret: whatsapp-phone-number-id
   - variable: WHATSAPP_VERIFY_TOKEN
     secret: whatsapp-verify-token
+
+  # ============================================================
+  # WhatsApp Integration — TEST/SANDBOX (used on all non-prod URLs)
+  # ============================================================
+  # Use WhatsApp test phone number from Meta developer dashboard.
+  # The app auto-selects test vs live based on hostname detection.
+  - variable: WHATSAPP_TEST_ACCESS_TOKEN
+    secret: whatsapp-test-access-token
+  - variable: WHATSAPP_TEST_APP_SECRET
+    secret: whatsapp-test-app-secret
+  - variable: WHATSAPP_TEST_PHONE_NUMBER_ID
+    secret: whatsapp-test-phone-number-id
+  - variable: WHATSAPP_TEST_VERIFY_TOKEN
+    secret: whatsapp-test-verify-token
 
   # ============================================================
   # GCP Billing Cloud Function (optional - mock data used if not set)

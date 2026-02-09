@@ -8,6 +8,11 @@
 
 import { createHmac, timingSafeEqual } from 'crypto';
 import { logger } from '@/lib/logger';
+import {
+  getWhatsAppAccessToken,
+  getWhatsAppAppSecret,
+  getWhatsAppPhoneNumberId,
+} from './config';
 import type { ChannelAdapter, InboundMessage, OutboundMessage } from './types';
 
 interface WhatsAppWebhookEntry {
@@ -38,15 +43,15 @@ export class WhatsAppAdapter implements ChannelAdapter {
   readonly channel = 'whatsapp' as const;
 
   private get appSecret(): string {
-    return process.env.WHATSAPP_APP_SECRET || '';
+    return getWhatsAppAppSecret() || '';
   }
 
   private get accessToken(): string {
-    return process.env.WHATSAPP_ACCESS_TOKEN || '';
+    return getWhatsAppAccessToken() || '';
   }
 
   private get phoneNumberId(): string {
-    return process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+    return getWhatsAppPhoneNumberId() || '';
   }
 
   /** Verify the Meta webhook signature */

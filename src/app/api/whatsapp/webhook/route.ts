@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { WhatsAppAdapter } from '@/lib/sensei/channels/whatsapp';
+import { getWhatsAppVerifyToken } from '@/lib/sensei/channels/config';
 import { routeMessage } from '@/lib/sensei/channels/router';
 import { logger } from '@/lib/logger';
 
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get('hub.verify_token');
   const challenge = searchParams.get('hub.challenge');
 
-  const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN;
+  const verifyToken = getWhatsAppVerifyToken();
 
   if (mode === 'subscribe' && token === verifyToken && challenge) {
     logger.info('WhatsApp webhook verified');
