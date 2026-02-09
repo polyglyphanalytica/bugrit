@@ -257,6 +257,23 @@ export async function billForCompletedScan(
   }
 ): Promise<PostScanBilling> {
   try {
+    // Idempotency check: prevent double-billing for the same scan
+    const existingBilling = await db.collection('scan_billing')
+      .where('scanId', '==', scanId)
+      .limit(1)
+      .get();
+
+    if (!existingBilling.empty) {
+      const existing = existingBilling.docs[0].data();
+      logger.warn('Scan already billed, skipping duplicate', { userId, scanId });
+      return {
+        success: true,
+        creditsCharged: existing.creditsCharged,
+        newBalance: existing.balanceAfter,
+        autoTopupTriggered: existing.autoTopupTriggered || false,
+      };
+    }
+
     // Calculate actual credit cost
     const config: ScanConfig = {
       categories: actualMetrics.categoriesRun,

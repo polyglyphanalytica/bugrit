@@ -23,6 +23,14 @@ export function escapeHtml(str: string): string {
     .replace(/'/g, '&#039;');
 }
 
+/**
+ * Sanitize email subject to prevent CRLF header injection.
+ * Strips carriage returns, newlines, and null bytes from subject lines.
+ */
+function sanitizeSubject(subject: string): string {
+  return subject.replace(/[\r\n\0]/g, ' ').trim();
+}
+
 export class EmailNotificationService {
   private resend: Resend | null;
   private fromAddress: string;
@@ -97,7 +105,7 @@ export class EmailNotificationService {
     const statusEmoji = isSuccess ? '✅' : data.status === 'partial' ? '⚠️' : '❌';
     const statusText = isSuccess ? 'All Tests Passed' : data.status === 'partial' ? 'Some Tests Failed' : 'Tests Failed';
 
-    const subject = `${statusEmoji} ${payload.applicationName}: ${statusText}`;
+    const subject = sanitizeSubject(`${statusEmoji} ${payload.applicationName}: ${statusText}`);
 
     const safeAppName = escapeHtml(payload.applicationName);
     const failedTestsHtml = data.failedTests?.length
@@ -204,7 +212,7 @@ ${data.reportUrl ? `View report: ${data.reportUrl}` : ''}
     const statusEmoji = isUp ? '✅' : data.status === 'degraded' ? '⚠️' : '🔴';
     const statusText = isUp ? 'Back Online' : data.status === 'degraded' ? 'Degraded Performance' : 'Down';
 
-    const subject = `${statusEmoji} ${data.endpointName}: ${statusText}`;
+    const subject = sanitizeSubject(`${statusEmoji} ${data.endpointName}: ${statusText}`);
 
     const safeEndpointName = escapeHtml(data.endpointName);
     const safeEndpointUrl = escapeHtml(data.endpointUrl);
@@ -266,7 +274,7 @@ Application: ${payload.applicationName}
   }
 
   private buildGenericTemplate(payload: NotificationPayload): EmailTemplate {
-    const subject = `Bugrit: ${payload.type} notification for ${payload.applicationName}`;
+    const subject = sanitizeSubject(`Bugrit: ${payload.type} notification for ${payload.applicationName}`);
 
     const html = `
       <!DOCTYPE html>
@@ -359,9 +367,9 @@ export function buildScanCompletedEmail(params: {
   const hasCritical = params.critical > 0;
   const emoji = hasCritical ? '⚠️' : params.totalFindings > 0 ? '📋' : '✅';
 
-  const subject = hasCritical
+  const subject = sanitizeSubject(hasCritical
     ? `${emoji} Scan Complete: ${params.critical} critical issues - ${params.applicationName}`
-    : `${emoji} Scan Complete: ${params.totalFindings} findings - ${params.applicationName}`;
+    : `${emoji} Scan Complete: ${params.totalFindings} findings - ${params.applicationName}`);
 
   const safeAppName = escapeHtml(params.applicationName);
   const safeReportUrl = escapeHtml(params.reportUrl);
@@ -448,7 +456,7 @@ export function buildScanFailedEmail(params: {
   error: string;
   scanUrl: string;
 }): { subject: string; html: string; text: string } {
-  const subject = `❌ Scan Failed - ${params.applicationName}`;
+  const subject = sanitizeSubject(`❌ Scan Failed - ${params.applicationName}`);
 
   const safeAppName = escapeHtml(params.applicationName);
   const safeError = escapeHtml(params.error);
@@ -513,7 +521,7 @@ export function buildGenericEmail(params: {
   actionUrl?: string;
   actionLabel?: string;
 }): { subject: string; html: string; text: string } {
-  const subject = `Bugrit: ${params.title}`;
+  const subject = sanitizeSubject(`Bugrit: ${params.title}`);
 
   const safeTitle = escapeHtml(params.title);
   const safeMessage = escapeHtml(params.message);

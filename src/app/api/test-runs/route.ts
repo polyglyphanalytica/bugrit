@@ -23,18 +23,19 @@ async function getUserEmail(userId: string): Promise<string> {
   return userId; // Fallback to userId
 }
 
-// GET /api/test-runs - Get all test runs
+// GET /api/test-runs - Get user's test runs
 export async function GET(request: NextRequest) {
   try {
     const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) {
       return authResult;
     }
+    const userId = authResult;
 
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '100', 10);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '100', 10), 500);
 
-    const runs = store.getRecentTestRuns(limit);
+    const runs = store.getUserTestRuns(userId, limit);
 
     return NextResponse.json({
       runs,
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
     const testRun = store.createTestRun({
       testCaseId,
       testCaseName,
+      userId,
       status: 'running',
     });
 

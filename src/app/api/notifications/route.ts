@@ -163,11 +163,26 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    // This should be protected by a cron secret in production
+    // Require CRON_SECRET to be configured — reject all requests if unset
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret) {
+      logger.error('CRON_SECRET not configured, denying notification cleanup request');
+      return NextResponse.json({ error: 'Service not configured' }, { status: 503 });
+    }
+
+    // Constant-time comparison to prevent timing attacks
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (!token || token.length !== cronSecret.length) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    try {
+      const { timingSafeEqual } = require('crypto');
+      if (!timingSafeEqual(Buffer.from(token), Buffer.from(cronSecret))) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    } catch {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

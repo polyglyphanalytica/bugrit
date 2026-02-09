@@ -3,13 +3,14 @@ import { store } from '@/lib/store';
 import { logger } from '@/lib/logger';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
 
-// GET /api/test-runs/stats - Get dashboard statistics
+// GET /api/test-runs/stats - Get user's dashboard statistics
 export async function GET(request: NextRequest) {
   try {
     const authResult = await requireAuthenticatedUser(request);
     if (authResult instanceof NextResponse) return authResult;
+    const userId = authResult;
 
-    const stats = store.getStats();
+    const stats = store.getUserStats(userId);
 
     return NextResponse.json(stats);
   } catch (error) {

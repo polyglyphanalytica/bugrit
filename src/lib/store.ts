@@ -30,6 +30,13 @@ class Store {
       .slice(0, limit);
   }
 
+  getUserTestCases(userId: string, limit: number = 100): TestCase[] {
+    return Array.from(this.testCases.values())
+      .filter(tc => tc.userId === userId)
+      .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+      .slice(0, limit);
+  }
+
   getTestCase(id: string): TestCase | undefined {
     return this.testCases.get(id);
   }
@@ -76,6 +83,13 @@ class Store {
 
   getRecentTestRuns(limit: number = 5): TestRun[] {
     return this.getAllTestRuns().slice(0, limit);
+  }
+
+  getUserTestRuns(userId: string, limit: number = 100): TestRun[] {
+    return Array.from(this.testRuns.values())
+      .filter(tr => tr.userId === userId)
+      .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
+      .slice(0, limit);
   }
 
   getTestRun(id: string): TestRun | undefined {
@@ -366,6 +380,23 @@ class Store {
       failing,
       skipped,
       passRate: runs.length > 0 ? Math.round((passing / runs.length) * 100) : 0,
+    };
+  }
+
+  getUserStats(userId: string): DashboardStats {
+    const userCases = this.getUserTestCases(userId);
+    const userRuns = this.getUserTestRuns(userId);
+    const passing = userRuns.filter(r => r.status === 'passed').length;
+    const failing = userRuns.filter(r => r.status === 'failed').length;
+    const skipped = userRuns.filter(r => r.status === 'skipped').length;
+
+    return {
+      totalTests: userCases.length,
+      totalRuns: userRuns.length,
+      passing,
+      failing,
+      skipped,
+      passRate: userRuns.length > 0 ? Math.round((passing / userRuns.length) * 100) : 0,
     };
   }
 }

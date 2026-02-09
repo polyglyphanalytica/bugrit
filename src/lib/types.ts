@@ -11,6 +11,7 @@ export interface TestStep {
 // Test Case - individual test specification
 export interface TestCase {
   id: string;
+  userId?: string;
   name: string;
   description: string;
   category: string;
@@ -25,6 +26,7 @@ export interface TestCase {
 // Test Run - execution instance of a test case
 export interface TestRun {
   id: string;
+  userId?: string;
   testCaseId: string;
   testCaseName: string;
   status: 'pending' | 'running' | 'passed' | 'failed' | 'skipped';

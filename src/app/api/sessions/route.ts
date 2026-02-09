@@ -78,19 +78,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // SECURITY: Validate URLs to prevent SSRF against internal services
+    // SECURITY: Validate URLs to prevent SSRF against internal services.
+    // Must handle all bypass vectors: decimal IPs, IPv6, hex notation, DNS rebinding.
     const validateUrl = (url: string): boolean => {
       try {
         const parsed = new URL(url);
-        // Block internal/private IPs and protocols
+        // Only allow http/https
         if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+        // Block URLs with credentials (can be used to bypass host checks)
+        if (parsed.username || parsed.password) return false;
+
         const host = parsed.hostname.toLowerCase();
-        // Block localhost, private IPs, link-local, and cloud metadata
-        if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return false;
-        if (host.startsWith('10.') || host.startsWith('192.168.')) return false;
-        if (host.startsWith('172.') && parseInt(host.split('.')[1]) >= 16 && parseInt(host.split('.')[1]) <= 31) return false;
-        if (host === '169.254.169.254' || host.endsWith('.internal')) return false;
-        if (host === '0.0.0.0' || host === '[::0]') return false;
+        // Must have a hostname with at least one dot (blocks single-label like "0", "localhost")
+        if (!host.includes('.') && !host.startsWith('[')) return false;
+        // Block localhost variants
+        if (host === 'localhost' || host.endsWith('.localhost')) return false;
+        // Block raw IPs — require hostnames for public targets.
+        // This prevents all IP-based bypasses (decimal, hex, octal, IPv4-mapped IPv6, etc.)
+        const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+        const isIp = ipv4Regex.test(host) || host.startsWith('[') || /^\d+$/.test(host) || host.startsWith('0x');
+        if (isIp) return false;
+        // Block known internal/cloud-metadata domains
+        if (host.endsWith('.internal') || host.endsWith('.local') || host.endsWith('.corp')) return false;
+        if (host === 'metadata.google.internal' || host === 'instance-data') return false;
         return true;
       } catch {
         return false;
