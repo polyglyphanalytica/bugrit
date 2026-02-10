@@ -1,15 +1,15 @@
 /**
  * Comprehensive Tool Registry
  *
- * 150+ tools for security, quality, and compliance.
+ * 150 tools for security, quality, and compliance.
  *
  * All tools are registered, credited, orchestrated, and reported equally.
  * Actual count is dynamic: see TOOL_COUNT export.
  *
  * Deployment types:
- * - Native JS/npm (51 tools): Run via npm packages on Node.js
- * - Docker (95 tools): Run via Google Cloud Build containers
- * - Git/CLI (4 tools): Uses git or system CLI
+ * - Native JS/npm (56 tools): Run via npm packages on Node.js
+ * - Docker (89 tools): Run via Google Cloud Build containers
+ * - Git/CLI + AI (5 tools): Uses git, system CLI, or Genkit AI
  */
 
 export interface ToolDefinition {
@@ -1504,6 +1504,29 @@ export const TOOL_REGISTRY: ToolDefinition[] = [
     description: 'AI-powered aggregated report generation with executive summaries and fix recommendations',
     category: 'quality',
     credits: 2,
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // Wave 9: February 2026 — Gap Closers (2 tools)
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: 'dotnet-analyzers',
+    name: 'Roslyn Analyzers',
+    description: '.NET/C# static analysis for code quality, style violations, and common bugs',
+    category: 'quality',
+    docker: 'mcr.microsoft.com/dotnet/sdk:8.0',
+    languages: ['csharp', 'fsharp', 'vb'],
+    filePatterns: ['**/*.cs', '**/*.csproj', '**/*.sln', '**/*.fs'],
+    credits: 2,
+  },
+  {
+    id: 'tflint',
+    name: 'TFLint',
+    description: 'Terraform linter for config errors, naming conventions, and deprecated syntax',
+    category: 'cloud-native',
+    docker: 'ghcr.io/terraform-linters/tflint:latest',
+    filePatterns: ['**/*.tf', '**/*.tfvars'],
+    credits: 1,
   },
 
 ];

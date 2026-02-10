@@ -4,7 +4,7 @@ Complete reference for all 150 integrated security, quality, and testing modules
 
 ## Overview
 
-Bugrit integrates **150 modules** (147 tools + 3 AI) across 18 categories:
+Bugrit integrates **150 modules** (147 tools + 3 AI) across 13 billing categories:
 
 | Category | Direct Tools | Cloud Build | Total | Description |
 |----------|-------------|-------------|-------|-------------|
@@ -25,7 +25,7 @@ Bugrit integrates **150 modules** (147 tools + 3 AI) across 18 categories:
 | Visual | 3 | 0 | 3 | Visual regression, screenshots |
 | Observability | 2 | 0 | 2 | Monitoring integration |
 | Chaos | 1 | 0 | 1 | Chaos engineering |
-| **Total** | **68** | **79** | **147** | (+3 AI modules = **150**) |
+| **Total** | **56 npm + 5 git/AI** | **89 Docker** | **150** | 147 tools + 3 AI modules |
 
 ---
 
