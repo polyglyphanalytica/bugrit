@@ -124,9 +124,7 @@ const isProductionDomain = (): boolean => {
  * Determine the current environment
  */
 const getEnvironment = (): string => {
-  return getDefaultEnvironment() === 'production'
-    ? 'production'
-    : process.env.NODE_ENV || 'development';
+  return getDefaultEnvironment();
 };
 
 /**

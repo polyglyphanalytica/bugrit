@@ -58,16 +58,19 @@ const PERMISSION_ALIASES: Record<V1Permission, ApiKeyPermission[]> = {
 // Rate limit tracking (in production, use Redis)
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
-// Development mode configuration
-// IMPORTANT: Auth skip only works when ALL of these conditions are met:
-// 1. NODE_ENV is 'development'
+// Development mode auth bypass — ONLY for local development.
+// On Firebase App Hosting, GOOGLE_CLOUD_PROJECT is always set, so auth is never skipped.
+// IMPORTANT: Auth skip requires ALL of:
+// 1. NODE_ENV is 'development' (local only, never on App Hosting)
 // 2. SKIP_API_AUTH is 'true'
-// 3. We are NOT running in a production environment (VERCEL_ENV != 'production', etc.)
-const isDevelopment = process.env.NODE_ENV === 'development';
-const isProductionHost = process.env.VERCEL_ENV === 'production' ||
+// 3. Not running in a deployed environment (GCP / Cloud Run)
+const isDeployedEnvironment =
   process.env.GOOGLE_CLOUD_PROJECT !== undefined ||
   process.env.K_SERVICE !== undefined; // Cloud Run
-const SKIP_AUTH_IN_DEV = process.env.SKIP_API_AUTH === 'true' && !isProductionHost;
+const SKIP_AUTH_IN_DEV =
+  process.env.NODE_ENV === 'development' &&
+  process.env.SKIP_API_AUTH === 'true' &&
+  !isDeployedEnvironment;
 
 /**
  * Get organization tier from database
@@ -169,7 +172,7 @@ function isFirebaseIdToken(token: string): boolean {
  */
 export async function validateApiKey(request: NextRequest): Promise<ApiKeyContext> {
   // Skip auth in development if configured
-  if (isDevelopment && SKIP_AUTH_IN_DEV) {
+  if (SKIP_AUTH_IN_DEV) {
     return {
       apiKey: {
         id: 'dev_key',

@@ -52,10 +52,12 @@ env:
   # Application Configuration
   # ============================================================
   # Explicit environment override — prevents hostname-based detection issues.
+  # Controls which Stripe/Slack/WhatsApp keys are used (live vs test)
+  # and which Firestore database is targeted (default vs devdb).
   # Set to 'production' only for the bugrit.com deployment.
   # Omit or set to 'dev' for all other deployments (including bugrit-prod.web.app).
-  # - variable: BUGRIT_ENVIRONMENT
-  #   value: "production"
+  - variable: BUGRIT_ENVIRONMENT
+    value: "production"
   - variable: NEXT_PUBLIC_APP_URL
     value: https://bugrit-prod.web.app
   - variable: ADMIN_ENCRYPTION_KEY

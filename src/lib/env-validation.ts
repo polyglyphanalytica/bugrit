@@ -303,16 +303,26 @@ export function getClientEnv(): ClientEnv {
 }
 
 /**
- * Check if we're in production mode
+ * Check if we're in production build mode (NODE_ENV === 'production').
+ *
+ * NOTE: This checks the Next.js build mode, NOT the hostname-based environment.
+ * On Firebase App Hosting, NODE_ENV is ALWAYS 'production' for all deployments
+ * (both bugrit.com and bugrit-prod.web.app).
+ *
+ * For hostname-based prod vs staging detection (Stripe keys, Firestore DB, etc.),
+ * use `isProduction()` from `@/lib/environment` instead.
  */
-export function isProduction(): boolean {
+export function isProductionBuild(): boolean {
   return process.env.NODE_ENV === 'production';
 }
 
 /**
- * Check if we're in development mode
+ * Check if we're in development build mode (NODE_ENV === 'development').
+ * Only true in local development, never on Firebase App Hosting.
+ *
+ * For hostname-based environment detection, use `@/lib/environment` instead.
  */
-export function isDevelopment(): boolean {
+export function isDevelopmentBuild(): boolean {
   return process.env.NODE_ENV === 'development';
 }
 
@@ -348,8 +358,8 @@ export const env = {
   get client() {
     return getClientEnv();
   },
-  isProduction,
-  isDevelopment,
+  isProduction: isProductionBuild,
+  isDevelopment: isDevelopmentBuild,
   isFirebaseConfigured,
   isStripeConfigured,
 };
