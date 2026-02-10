@@ -17,7 +17,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { formatDistanceToNow } from 'date-fns';
-import { ScanProgress, PrioritizedResults, NoIssuesFound, type Finding } from '@/components/scan';
+import { ScanProgress, PrioritizedResults, NoIssuesFound, AutofixPanel, type Finding } from '@/components/scan';
 import { PlainEnglishProvider } from '@/contexts/plain-english-context';
 import { useSensei } from '@/contexts/sensei-context';
 
@@ -410,6 +410,17 @@ export default function ScanDetailPage() {
           </details>
         )}
 
+        {/* Autofix Panel — shown for completed GitHub scans */}
+        {scan.status === 'completed' && scan.source.repoUrl && (
+          <AutofixPanel
+            scanId={scan.id}
+            appId={scan.applicationId}
+            repoUrl={scan.source.repoUrl}
+            totalFindings={scan.summary?.totalFindings || 0}
+            className="mt-6"
+          />
+        )}
+
         {/* Next Steps — shown after scan completion */}
         {scan.status === 'completed' && (
           <Card className="mt-6 border-orange-200/50 bg-orange-50/20">
@@ -421,7 +432,7 @@ export default function ScanDetailPage() {
                 <div className="space-y-2">
                   <p className="font-medium text-sm">Fix issues with AI</p>
                   <p className="text-xs text-muted-foreground">
-                    Expand any finding above and copy the AI prompt into Cursor, Copilot, or Claude to get an instant fix.
+                    Use Autofix (Enterprise) to push AI-generated fixes to a branch, or copy the AI prompt into Cursor, Copilot, or Claude.
                   </p>
                 </div>
                 <div className="space-y-2">

@@ -17,6 +17,7 @@ import { ToolCategory, TOOL_COUNT, TOOL_REGISTRY } from '@/lib/tools/registry';
 import { getAccessTokenForUser } from '@/lib/github/connections';
 import { notifyScanCompleted, notifyScanFailed, notifySecurityAlert } from '@/lib/notifications/dispatcher';
 import { createTelemetryTicket } from '@/lib/support/telemetry-tickets';
+import { maybeAutoTrigger } from '@/lib/autofix/engine';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
@@ -645,6 +646,25 @@ async function runScanInBackground(scanId: string, options: ScanOptions) {
       }
     } catch (notifyError) {
       logger.warn('Failed to send scan completion notification', { scanId, error: notifyError });
+    }
+
+    // Auto-trigger autofix if enabled (Enterprise only, GitHub repos only)
+    if (scan.source.repoUrl && scan.source.type === 'github') {
+      try {
+        const repoMatch = scan.source.repoUrl.match(/github\.com\/([^/]+)\/([^/.]+)/);
+        if (repoMatch) {
+          const [, repoOwner, repoName] = repoMatch;
+          maybeAutoTrigger({
+            userId: options.userId,
+            scanId,
+            appId: scan.applicationId,
+            repoOwner,
+            repoName,
+          }).catch(err => logger.warn('Autofix auto-trigger failed', { scanId, error: err }));
+        }
+      } catch (autofixError) {
+        logger.warn('Failed to check autofix auto-trigger', { scanId, error: autofixError });
+      }
     }
   } catch (error) {
     logger.error('Scan failed', { scanId, error });

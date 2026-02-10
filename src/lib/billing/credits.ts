@@ -121,6 +121,7 @@ export const SUBSCRIPTION_TIERS = {
       sso: true,
       sla: true,
       dedicatedSupport: true,
+      autofix: true,
     },
   },
 } as const;

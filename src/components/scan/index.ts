@@ -10,3 +10,4 @@ export {
   FirstScanCelebration,
   NoIssuesFound,
 } from './scan-celebration';
+export { AutofixPanel } from './autofix-panel';
