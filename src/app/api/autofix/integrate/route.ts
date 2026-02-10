@@ -75,8 +75,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Decrypt the user's own AI key (strict ownership check inside getDecryptedKey)
-    const apiKey = await getDecryptedKey(settings.provider.keyId, userId);
+    // Decrypt the user's own AI key/OAuth token (strict ownership check inside getDecryptedKey)
+    const { credential, authMethod } = await getDecryptedKey(settings.provider.keyId, userId);
 
     // Get the user's GitHub token
     const githubToken = await getGitHubToken(userId);
@@ -85,8 +85,9 @@ export async function POST(request: NextRequest) {
     const result = await generateAndPushIntegration({
       userId,
       providerId: settings.provider.providerId,
-      apiKey,
+      apiKey: credential,
       model: settings.provider.model,
+      authMethod,
       request: {
         target,
         framework,

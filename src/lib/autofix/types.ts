@@ -17,6 +17,19 @@ export type AIProviderID =
   | 'deepseek'
   | 'copilot';
 
+/**
+ * Auth methods for AI providers:
+ * - api_key: Traditional API key (e.g., sk-ant-..., sk-proj-...)
+ * - oauth_token: OAuth/CLI-derived token (e.g., from `gh auth token`,
+ *   `gcloud auth print-access-token`, Copilot CLI, or any CLI that
+ *   produces a Bearer token for the provider's API)
+ *
+ * Both are stored encrypted. The difference is how they're sent:
+ * - api_key: Provider-specific header (x-api-key for Claude, query param for Gemini)
+ * - oauth_token: Always sent as `Authorization: Bearer <token>`
+ */
+export type AuthMethod = 'api_key' | 'oauth_token';
+
 export interface AIProviderConfig {
   id: AIProviderID;
   name: string;
@@ -26,13 +39,19 @@ export interface AIProviderConfig {
   models: string[];
   keyPlaceholder: string;
   docsUrl: string;
+  /** Auth methods this provider supports */
+  authMethods: AuthMethod[];
+  /** Help text for how to get an OAuth token for this provider */
+  oauthHint?: string;
 }
 
 export interface UserProviderSettings {
   providerId: AIProviderID;
   model: string;
-  /** Encrypted API key reference (stored separately in keys collection) */
+  /** Encrypted API key / OAuth token reference (stored in keys collection) */
   keyId: string;
+  /** How the credential authenticates — determines header format */
+  authMethod: AuthMethod;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -43,11 +62,13 @@ export interface StoredAPIKey {
   id: string;
   userId: string;
   providerId: AIProviderID;
-  /** AES-256-GCM encrypted key value */
+  /** AES-256-GCM encrypted key/token value */
   encryptedKey: string;
   /** First 8 chars for display (e.g., "sk-proj-...") */
   keyPrefix: string;
   label: string;
+  /** How this credential authenticates */
+  authMethod: AuthMethod;
   createdAt: Date;
   lastUsedAt: Date | null;
 }
@@ -225,6 +246,7 @@ export const AI_PROVIDERS: Record<AIProviderID, AIProviderConfig> = {
     models: ['claude-sonnet-4-5-20250929', 'claude-haiku-4-5-20251001', 'claude-opus-4-6'],
     keyPlaceholder: 'sk-ant-...',
     docsUrl: 'https://docs.anthropic.com/en/docs/api-reference',
+    authMethods: ['api_key'],
   },
   gemini: {
     id: 'gemini',
@@ -235,6 +257,8 @@ export const AI_PROVIDERS: Record<AIProviderID, AIProviderConfig> = {
     models: ['gemini-2.5-flash', 'gemini-2.5-pro'],
     keyPlaceholder: 'AIza...',
     docsUrl: 'https://ai.google.dev/docs',
+    authMethods: ['api_key', 'oauth_token'],
+    oauthHint: 'Run: gcloud auth print-access-token',
   },
   openai: {
     id: 'openai',
@@ -245,6 +269,8 @@ export const AI_PROVIDERS: Record<AIProviderID, AIProviderConfig> = {
     models: ['gpt-4o', 'gpt-4o-mini', 'o3-mini'],
     keyPlaceholder: 'sk-proj-...',
     docsUrl: 'https://platform.openai.com/docs',
+    authMethods: ['api_key', 'oauth_token'],
+    oauthHint: 'Use an OAuth token from your OpenAI organization SSO',
   },
   grok: {
     id: 'grok',
@@ -255,6 +281,7 @@ export const AI_PROVIDERS: Record<AIProviderID, AIProviderConfig> = {
     models: ['grok-3', 'grok-3-mini'],
     keyPlaceholder: 'xai-...',
     docsUrl: 'https://docs.x.ai',
+    authMethods: ['api_key'],
   },
   deepseek: {
     id: 'deepseek',
@@ -265,6 +292,7 @@ export const AI_PROVIDERS: Record<AIProviderID, AIProviderConfig> = {
     models: ['deepseek-chat', 'deepseek-reasoner'],
     keyPlaceholder: 'sk-...',
     docsUrl: 'https://platform.deepseek.com/docs',
+    authMethods: ['api_key'],
   },
   copilot: {
     id: 'copilot',
@@ -275,5 +303,7 @@ export const AI_PROVIDERS: Record<AIProviderID, AIProviderConfig> = {
     models: ['gpt-4o', 'claude-sonnet-4-5-20250929'],
     keyPlaceholder: 'ghu_...',
     docsUrl: 'https://docs.github.com/en/copilot',
+    authMethods: ['api_key', 'oauth_token'],
+    oauthHint: 'Run: gh auth token (requires Copilot subscription)',
   },
 };

@@ -209,13 +209,13 @@ async function runPipeline(job: AutofixJob, settings: AutofixSettings): Promise<
       if (content) fileContents.set(filePath, content);
     }
 
-    // Step 4: Generate fixes via AI provider
+    // Step 4: Generate fixes via AI provider (BYOK key or OAuth token)
     await updateJob(job.id, { status: 'generating_fixes' });
-    const apiKey = await getDecryptedKey(provider.keyId, userId);
+    const { credential, authMethod } = await getDecryptedKey(provider.keyId, userId);
 
     const fixes = await generateBatchFixesWithProvider(
       provider.providerId,
-      apiKey,
+      credential,
       provider.model,
       findings,
       fileContents,
@@ -229,7 +229,8 @@ async function runPipeline(job: AutofixJob, settings: AutofixSettings): Promise<
             currentFinding: current,
           },
         });
-      }
+      },
+      authMethod
     );
 
     if (fixes.length === 0) {

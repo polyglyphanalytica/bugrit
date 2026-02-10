@@ -4,9 +4,18 @@
  * Unified interface for generating code fixes via Claude, Gemini,
  * OpenAI, GROK, DeepSeek, and GitHub Copilot. All providers use
  * the same prompt format and return normalized results.
+ *
+ * Supports two auth methods per the user's choice:
+ * - api_key: Traditional API key (provider-specific header format)
+ * - oauth_token: OAuth/CLI token (always Bearer token in Authorization header)
+ *
+ * OAuth tokens come from CLI tools like:
+ *   - `gh auth token` for Copilot
+ *   - `gcloud auth print-access-token` for Gemini
+ *   - OpenAI organization SSO tokens
  */
 
-import { AIProviderID, FindingForFix, GeneratedFix } from './types';
+import { AIProviderID, AuthMethod, FindingForFix, GeneratedFix } from './types';
 import { logger } from '@/lib/logger';
 
 // ═══════════════════════════════════════════════════════════════
@@ -65,21 +74,31 @@ function buildExplanationPrompt(req: FixGenerationRequest): string {
 
 // ═══════════════════════════════════════════════════════════════
 // Claude (Anthropic)
+// Supports: api_key only (x-api-key header)
 // ═══════════════════════════════════════════════════════════════
 
 async function callClaude(
-  apiKey: string,
+  credential: string,
   model: string,
-  req: FixGenerationRequest
+  req: FixGenerationRequest,
+  authMethod: AuthMethod
 ): Promise<FixGenerationResponse> {
+  // Claude API uses x-api-key for API keys. For OAuth, it's not
+  // officially supported, but we send as Bearer as a fallback.
+  const authHeaders: Record<string, string> = authMethod === 'oauth_token'
+    ? { 'Authorization': `Bearer ${credential}` }
+    : { 'x-api-key': credential };
+
+  const commonHeaders = {
+    ...authHeaders,
+    'anthropic-version': '2023-06-01',
+    'content-type': 'application/json',
+  };
+
   const [fixResp, explainResp] = await Promise.all([
     fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
+      headers: commonHeaders,
       body: JSON.stringify({
         model,
         max_tokens: 16384,
@@ -89,11 +108,7 @@ async function callClaude(
     }),
     fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
+      headers: commonHeaders,
       body: JSON.stringify({
         model,
         max_tokens: 256,
@@ -122,17 +137,19 @@ async function callClaude(
 
 // ═══════════════════════════════════════════════════════════════
 // OpenAI / Grok / DeepSeek / Copilot (OpenAI-compatible)
+// Supports: api_key and oauth_token (both use Bearer token)
 // ═══════════════════════════════════════════════════════════════
 
 async function callOpenAICompatible(
-  apiKey: string,
+  credential: string,
   model: string,
   baseUrl: string,
   req: FixGenerationRequest,
   extraHeaders?: Record<string, string>
 ): Promise<FixGenerationResponse> {
+  // OpenAI-compatible APIs all use Bearer token for both API keys and OAuth
   const headers: Record<string, string> = {
-    'Authorization': `Bearer ${apiKey}`,
+    'Authorization': `Bearer ${credential}`,
     'Content-Type': 'application/json',
     ...extraHeaders,
   };
@@ -184,27 +201,41 @@ async function callOpenAICompatible(
 
 // ═══════════════════════════════════════════════════════════════
 // Gemini (Google)
+// Supports: api_key (?key= param) and oauth_token (Bearer header)
+// OAuth token via: gcloud auth print-access-token
 // ═══════════════════════════════════════════════════════════════
 
 async function callGemini(
-  apiKey: string,
+  credential: string,
   model: string,
-  req: FixGenerationRequest
+  req: FixGenerationRequest,
+  authMethod: AuthMethod
 ): Promise<FixGenerationResponse> {
   const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}`;
 
+  // API key: passed as query param. OAuth token: passed as Bearer header.
+  const makeUrl = (action: string) =>
+    authMethod === 'oauth_token'
+      ? `${baseUrl}:${action}`
+      : `${baseUrl}:${action}?key=${credential}`;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(authMethod === 'oauth_token' ? { 'Authorization': `Bearer ${credential}` } : {}),
+  };
+
   const [fixResp, explainResp] = await Promise.all([
-    fetch(`${baseUrl}:generateContent?key=${apiKey}`, {
+    fetch(makeUrl('generateContent'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         contents: [{ parts: [{ text: buildFixPrompt(req) }] }],
         generationConfig: { temperature: 0.1, maxOutputTokens: 16384 },
       }),
     }),
-    fetch(`${baseUrl}:generateContent?key=${apiKey}`, {
+    fetch(makeUrl('generateContent'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         contents: [{ parts: [{ text: buildExplanationPrompt(req) }] }],
         generationConfig: { temperature: 0.2, maxOutputTokens: 256 },
@@ -235,28 +266,29 @@ async function callGemini(
 
 export async function generateFixWithProvider(
   providerId: AIProviderID,
-  apiKey: string,
+  credential: string,
   model: string,
-  req: FixGenerationRequest
+  req: FixGenerationRequest,
+  authMethod: AuthMethod = 'api_key'
 ): Promise<FixGenerationResponse> {
   switch (providerId) {
     case 'claude':
-      return callClaude(apiKey, model, req);
+      return callClaude(credential, model, req, authMethod);
 
     case 'gemini':
-      return callGemini(apiKey, model, req);
+      return callGemini(credential, model, req, authMethod);
 
     case 'openai':
-      return callOpenAICompatible(apiKey, model, 'https://api.openai.com', req);
+      return callOpenAICompatible(credential, model, 'https://api.openai.com', req);
 
     case 'grok':
-      return callOpenAICompatible(apiKey, model, 'https://api.x.ai', req);
+      return callOpenAICompatible(credential, model, 'https://api.x.ai', req);
 
     case 'deepseek':
-      return callOpenAICompatible(apiKey, model, 'https://api.deepseek.com', req);
+      return callOpenAICompatible(credential, model, 'https://api.deepseek.com', req);
 
     case 'copilot':
-      return callOpenAICompatible(apiKey, model, 'https://api.githubcopilot.com', req, {
+      return callOpenAICompatible(credential, model, 'https://api.githubcopilot.com', req, {
         'Copilot-Integration-Id': 'bugrit-autofix',
       });
 
@@ -271,11 +303,12 @@ export async function generateFixWithProvider(
 
 export async function generateBatchFixesWithProvider(
   providerId: AIProviderID,
-  apiKey: string,
+  credential: string,
   model: string,
   findings: FindingForFix[],
   fileContents: Map<string, string>,
-  onProgress?: (fixed: number, total: number, current: string) => void
+  onProgress?: (fixed: number, total: number, current: string) => void,
+  authMethod: AuthMethod = 'api_key'
 ): Promise<GeneratedFix[]> {
   const fixes: GeneratedFix[] = [];
   const concurrency = 3;
@@ -295,12 +328,12 @@ export async function generateBatchFixesWithProvider(
         onProgress?.(fixes.length, fixable.length, finding.title);
 
         try {
-          const result = await generateFixWithProvider(providerId, apiKey, model, {
+          const result = await generateFixWithProvider(providerId, credential, model, {
             finding,
             fileContent,
             filePath,
             language,
-          });
+          }, authMethod);
 
           if (result.success && result.fixedContent && result.fixedContent !== fileContent) {
             return {

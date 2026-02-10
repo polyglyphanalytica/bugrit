@@ -72,6 +72,8 @@ interface AIProvider {
   models: string[];
   keyPlaceholder: string;
   docsUrl: string;
+  authMethods: ('api_key' | 'oauth_token')[];
+  oauthHint?: string;
 }
 
 interface StoredKey {
@@ -79,6 +81,7 @@ interface StoredKey {
   providerId: string;
   keyPrefix: string;
   label: string;
+  authMethod: 'api_key' | 'oauth_token';
   createdAt: string;
   lastUsedAt: string | null;
 }
@@ -98,7 +101,7 @@ export default function AutofixSettingsPage() {
   // Add key dialog
   const [showAddKeyDialog, setShowAddKeyDialog] = useState(false);
   const [addingKey, setAddingKey] = useState(false);
-  const [newKey, setNewKey] = useState({ providerId: '', apiKey: '', label: '' });
+  const [newKey, setNewKey] = useState({ providerId: '', apiKey: '', label: '', authMethod: 'api_key' as 'api_key' | 'oauth_token' });
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -197,13 +200,14 @@ export default function AutofixSettingsPage() {
           providerId: newKey.providerId,
           apiKey: newKey.apiKey,
           label: newKey.label.trim(),
+          authMethod: newKey.authMethod,
         }),
       });
 
       if (res.ok) {
         toast({ title: 'API key added' });
         setShowAddKeyDialog(false);
-        setNewKey({ providerId: '', apiKey: '', label: '' });
+        setNewKey({ providerId: '', apiKey: '', label: '', authMethod: 'api_key' });
         loadKeys();
       } else {
         const error = await res.json();
@@ -390,7 +394,7 @@ export default function AutofixSettingsPage() {
                   </div>
                   <p className="text-xs text-muted-foreground">{provider.description}</p>
                   {!hasKey && (
-                    <p className="text-xs text-orange-600 mt-2">Add API key first</p>
+                    <p className="text-xs text-orange-600 mt-2">Add credential first</p>
                   )}
                 </button>
               );
@@ -425,14 +429,14 @@ export default function AutofixSettingsPage() {
         </CardContent>
       </Card>
 
-      {/* API Keys */}
+      {/* API Keys & OAuth Tokens */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>API Keys</CardTitle>
+              <CardTitle>Credentials</CardTitle>
               <CardDescription>
-                Your encrypted API keys for AI providers. Keys are stored with AES-256-GCM encryption.
+                Your encrypted API keys and OAuth tokens. Stored with AES-256-GCM encryption.
               </CardDescription>
             </div>
             <Dialog open={showAddKeyDialog} onOpenChange={setShowAddKeyDialog}>
@@ -441,9 +445,9 @@ export default function AutofixSettingsPage() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Add API Key</DialogTitle>
+                  <DialogTitle>Add Credential</DialogTitle>
                   <DialogDescription>
-                    Your key will be encrypted before storage. Bugrit never stores raw keys.
+                    Your key or token will be encrypted with AES-256-GCM before storage.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
@@ -451,7 +455,14 @@ export default function AutofixSettingsPage() {
                     <Label>Provider</Label>
                     <Select
                       value={newKey.providerId}
-                      onValueChange={(v) => setNewKey(prev => ({ ...prev, providerId: v }))}
+                      onValueChange={(v) => {
+                        const p = providers.find(pr => pr.id === v);
+                        setNewKey(prev => ({
+                          ...prev,
+                          providerId: v,
+                          authMethod: p?.authMethods?.[0] || 'api_key',
+                        }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select provider" />
@@ -463,15 +474,47 @@ export default function AutofixSettingsPage() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Auth method toggle — only show if provider supports both */}
+                  {newKey.providerId && (() => {
+                    const p = providers.find(pr => pr.id === newKey.providerId);
+                    const supportsOAuth = p?.authMethods?.includes('oauth_token');
+                    if (!supportsOAuth) return null;
+                    return (
+                      <div className="space-y-2">
+                        <Label>Auth Method</Label>
+                        <Select
+                          value={newKey.authMethod}
+                          onValueChange={(v) => setNewKey(prev => ({ ...prev, authMethod: v as 'api_key' | 'oauth_token' }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="api_key">API Key</SelectItem>
+                            <SelectItem value="oauth_token">OAuth / CLI Token</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {newKey.authMethod === 'oauth_token' && p?.oauthHint && (
+                          <p className="text-xs text-blue-600">{p.oauthHint}</p>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   <div className="space-y-2">
-                    <Label>API Key</Label>
+                    <Label>{newKey.authMethod === 'oauth_token' ? 'OAuth Token' : 'API Key'}</Label>
                     <Input
                       type="password"
-                      placeholder={providers.find(p => p.id === newKey.providerId)?.keyPlaceholder || 'Paste your API key'}
+                      placeholder={
+                        newKey.authMethod === 'oauth_token'
+                          ? 'Paste your OAuth/CLI token'
+                          : (providers.find(p => p.id === newKey.providerId)?.keyPlaceholder || 'Paste your API key')
+                      }
                       value={newKey.apiKey}
                       onChange={(e) => setNewKey(prev => ({ ...prev, apiKey: e.target.value }))}
                     />
-                    {newKey.providerId && (
+                    {newKey.providerId && newKey.authMethod === 'api_key' && (
                       <p className="text-xs text-muted-foreground">
                         Get a key from{' '}
                         <a
@@ -488,7 +531,7 @@ export default function AutofixSettingsPage() {
                   <div className="space-y-2">
                     <Label>Label</Label>
                     <Input
-                      placeholder="e.g., Production key"
+                      placeholder={newKey.authMethod === 'oauth_token' ? 'e.g., CLI OAuth token' : 'e.g., Production key'}
                       value={newKey.label}
                       onChange={(e) => setNewKey(prev => ({ ...prev, label: e.target.value }))}
                     />
@@ -508,10 +551,10 @@ export default function AutofixSettingsPage() {
           {keys.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-3">
-                No API keys stored yet. Add a key to start using autofix.
+                No credentials stored yet. Add an API key or OAuth token to start using autofix.
               </p>
               <Button variant="outline" onClick={() => setShowAddKeyDialog(true)}>
-                Add Your First Key
+                Add Your First Credential
               </Button>
             </div>
           ) : (
@@ -520,7 +563,8 @@ export default function AutofixSettingsPage() {
                 <TableRow>
                   <TableHead>Provider</TableHead>
                   <TableHead>Label</TableHead>
-                  <TableHead>Key</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Credential</TableHead>
                   <TableHead>Last Used</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -532,6 +576,11 @@ export default function AutofixSettingsPage() {
                       <Badge variant="outline">{key.providerId}</Badge>
                     </TableCell>
                     <TableCell className="font-medium">{key.label}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-xs">
+                        {key.authMethod === 'oauth_token' ? 'OAuth' : 'API Key'}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="font-mono text-sm text-muted-foreground">
                       {key.keyPrefix}
                     </TableCell>

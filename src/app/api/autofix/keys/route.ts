@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { storeAPIKey, listUserKeys, deleteAPIKey, validateProviderKey } from '@/lib/autofix/keys';
 import { requireEnterpriseTier } from '@/lib/autofix/gate';
-import { AI_PROVIDERS, AIProviderID } from '@/lib/autofix/types';
+import { AI_PROVIDERS, AIProviderID, AuthMethod } from '@/lib/autofix/types';
 import { logger } from '@/lib/logger';
 
 const VALID_PROVIDERS = new Set(Object.keys(AI_PROVIDERS));
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     if (gateResult) return gateResult;
 
     const body = await request.json();
-    const { providerId, apiKey, label } = body;
+    const { providerId, apiKey, label, authMethod: rawAuthMethod } = body;
 
     if (!providerId || !apiKey || !label) {
       return NextResponse.json(
@@ -40,24 +40,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Invalid provider: ${providerId}` }, { status: 400 });
     }
 
-    if (typeof apiKey !== 'string' || apiKey.length < 10 || apiKey.length > 500) {
-      return NextResponse.json({ error: 'Invalid API key format' }, { status: 400 });
+    // Validate auth method (default: api_key)
+    const authMethod: AuthMethod = rawAuthMethod === 'oauth_token' ? 'oauth_token' : 'api_key';
+
+    // Validate the provider supports this auth method
+    const providerConfig = AI_PROVIDERS[providerId as AIProviderID];
+    if (providerConfig && !providerConfig.authMethods.includes(authMethod)) {
+      return NextResponse.json(
+        { error: `${providerConfig.name} does not support ${authMethod === 'oauth_token' ? 'OAuth token' : 'API key'} authentication` },
+        { status: 400 }
+      );
+    }
+
+    if (typeof apiKey !== 'string' || apiKey.length < 10 || apiKey.length > 2000) {
+      return NextResponse.json({ error: 'Invalid credential format' }, { status: 400 });
     }
 
     if (typeof label !== 'string' || label.length > 100) {
       return NextResponse.json({ error: 'Label must be under 100 characters' }, { status: 400 });
     }
 
-    // Validate the key against the provider
-    const validation = await validateProviderKey(providerId as AIProviderID, apiKey);
+    // Validate the credential against the provider
+    const validation = await validateProviderKey(providerId as AIProviderID, apiKey, authMethod);
     if (!validation.valid) {
       return NextResponse.json(
-        { error: validation.error || 'Invalid API key' },
+        { error: validation.error || 'Invalid credential' },
         { status: 400 }
       );
     }
 
-    const stored = await storeAPIKey(userId, providerId as AIProviderID, apiKey, label);
+    const stored = await storeAPIKey(userId, providerId as AIProviderID, apiKey, label, authMethod);
 
     return NextResponse.json({
       key: {
@@ -65,9 +77,10 @@ export async function POST(request: NextRequest) {
         providerId: stored.providerId,
         keyPrefix: stored.keyPrefix,
         label: stored.label,
+        authMethod: stored.authMethod,
         createdAt: stored.createdAt,
       },
-      message: 'API key stored successfully',
+      message: authMethod === 'oauth_token' ? 'OAuth token stored successfully' : 'API key stored successfully',
     }, { status: 201 });
   } catch (error) {
     logger.error('Key storage failed', { error });

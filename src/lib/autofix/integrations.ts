@@ -11,7 +11,7 @@
  * Enterprise tier only.
  */
 
-import { AIProviderID, IntegrationRequest, IntegrationTarget, GeneratedIntegration } from './types';
+import { AIProviderID, AuthMethod, IntegrationRequest, IntegrationTarget, GeneratedIntegration } from './types';
 import { generateFixWithProvider } from './providers';
 import { logger } from '@/lib/logger';
 
@@ -116,7 +116,8 @@ export async function generateIntegration(
   providerId: AIProviderID,
   apiKey: string,
   model: string,
-  req: IntegrationRequest
+  req: IntegrationRequest,
+  authMethod: AuthMethod = 'api_key'
 ): Promise<GeneratedIntegration> {
   const prompt = buildIntegrationPrompt(req);
 
@@ -132,7 +133,7 @@ export async function generateIntegration(
     fileContent: '',
     filePath: `integration-${req.target}.json`,
     language: 'json',
-  });
+  }, authMethod);
 
   if (!result.success || !result.fixedContent) {
     throw new Error(result.error || 'Failed to generate integration code');
@@ -173,6 +174,7 @@ export async function generateAndPushIntegration(params: {
   providerId: AIProviderID;
   apiKey: string;
   model: string;
+  authMethod?: AuthMethod;
   request: IntegrationRequest;
   githubToken: string;
   branchPrefix?: string;
@@ -184,10 +186,10 @@ export async function generateAndPushIntegration(params: {
   filesCreated: string[];
   explanation: string;
 }> {
-  const { userId, providerId, apiKey, model, request, githubToken, branchPrefix = 'bugrit/integrate', createPR = true } = params;
+  const { userId, providerId, apiKey, model, authMethod = 'api_key', request, githubToken, branchPrefix = 'bugrit/integrate', createPR = true } = params;
 
-  // 1. Generate integration code via AI
-  const integration = await generateIntegration(providerId, apiKey, model, request);
+  // 1. Generate integration code via AI (using user's BYOK key or OAuth token)
+  const integration = await generateIntegration(providerId, apiKey, model, request, authMethod);
 
   // 2. Push to branch via GitHub API (reuse autofix github module)
   const { pushFixBranch, getRepoInfo } = await import('./github');

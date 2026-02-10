@@ -14,7 +14,7 @@
 
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 import { db } from '@/lib/firebase/admin';
-import { AIProviderID, StoredAPIKey } from './types';
+import { AIProviderID, AuthMethod, StoredAPIKey } from './types';
 import { logger } from '@/lib/logger';
 
 const ALGORITHM = 'aes-256-gcm';
@@ -50,13 +50,14 @@ function decrypt(encryptedText: string): string {
 }
 
 /**
- * Store a new API key (encrypted)
+ * Store a new API key or OAuth token (encrypted)
  */
 export async function storeAPIKey(
   userId: string,
   providerId: AIProviderID,
   rawKey: string,
-  label: string
+  label: string,
+  authMethod: AuthMethod = 'api_key'
 ): Promise<StoredAPIKey> {
   const id = `key_${Date.now()}_${randomBytes(4).toString('hex')}`;
   const keyPrefix = rawKey.substring(0, 8) + '...';
@@ -69,6 +70,7 @@ export async function storeAPIKey(
     encryptedKey,
     keyPrefix,
     label,
+    authMethod,
     createdAt: new Date(),
     lastUsedAt: null,
   };
@@ -83,9 +85,13 @@ export async function storeAPIKey(
 }
 
 /**
- * Retrieve and decrypt an API key for use
+ * Retrieve and decrypt an API key/OAuth token for use.
+ * Returns both the decrypted credential and its auth method.
  */
-export async function getDecryptedKey(keyId: string, userId: string): Promise<string> {
+export async function getDecryptedKey(keyId: string, userId: string): Promise<{
+  credential: string;
+  authMethod: AuthMethod;
+}> {
   const doc = await db.collection(COLLECTION).doc(keyId).get();
   if (!doc.exists) throw new Error('API key not found');
 
@@ -95,7 +101,10 @@ export async function getDecryptedKey(keyId: string, userId: string): Promise<st
   // Update last used timestamp
   await doc.ref.update({ lastUsedAt: new Date().toISOString() });
 
-  return decrypt(data.encryptedKey);
+  return {
+    credential: decrypt(data.encryptedKey),
+    authMethod: (data.authMethod as AuthMethod) || 'api_key',
+  };
 }
 
 /**
@@ -115,6 +124,7 @@ export async function listUserKeys(userId: string): Promise<Omit<StoredAPIKey, '
       providerId: data.providerId,
       keyPrefix: data.keyPrefix,
       label: data.label,
+      authMethod: (data.authMethod as AuthMethod) || 'api_key',
       createdAt: new Date(data.createdAt),
       lastUsedAt: data.lastUsedAt ? new Date(data.lastUsedAt) : null,
     };
@@ -134,46 +144,56 @@ export async function deleteAPIKey(keyId: string, userId: string): Promise<boole
 }
 
 /**
- * Validate an API key by making a lightweight request to the provider
+ * Validate an API key or OAuth token by making a lightweight request to the provider.
+ * For OAuth tokens, validation uses Bearer auth instead of provider-specific key auth.
  */
 export async function validateProviderKey(
   providerId: AIProviderID,
-  rawKey: string
+  rawKey: string,
+  authMethod: AuthMethod = 'api_key'
 ): Promise<{ valid: boolean; error?: string }> {
   try {
     switch (providerId) {
       case 'claude': {
+        const headers: Record<string, string> = authMethod === 'oauth_token'
+          ? { 'Authorization': `Bearer ${rawKey}`, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }
+          : { 'x-api-key': rawKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' };
         const resp = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
-          headers: { 'x-api-key': rawKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+          headers,
           body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1, messages: [{ role: 'user', content: 'hi' }] }),
         });
-        return resp.status === 401 ? { valid: false, error: 'Invalid API key' } : { valid: true };
+        return resp.status === 401 ? { valid: false, error: 'Invalid credential' } : { valid: true };
       }
       case 'openai': {
         const resp = await fetch('https://api.openai.com/v1/models', {
           headers: { Authorization: `Bearer ${rawKey}` },
         });
-        return resp.ok ? { valid: true } : { valid: false, error: 'Invalid API key' };
+        return resp.ok ? { valid: true } : { valid: false, error: 'Invalid credential' };
       }
       case 'gemini': {
-        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${rawKey}`);
-        return resp.ok ? { valid: true } : { valid: false, error: 'Invalid API key' };
+        // API key: query param. OAuth token: Bearer header.
+        const resp = authMethod === 'oauth_token'
+          ? await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+              headers: { Authorization: `Bearer ${rawKey}` },
+            })
+          : await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${rawKey}`);
+        return resp.ok ? { valid: true } : { valid: false, error: 'Invalid credential' };
       }
       case 'grok': {
         const resp = await fetch('https://api.x.ai/v1/models', {
           headers: { Authorization: `Bearer ${rawKey}` },
         });
-        return resp.ok ? { valid: true } : { valid: false, error: 'Invalid API key' };
+        return resp.ok ? { valid: true } : { valid: false, error: 'Invalid credential' };
       }
       case 'deepseek': {
         const resp = await fetch('https://api.deepseek.com/v1/models', {
           headers: { Authorization: `Bearer ${rawKey}` },
         });
-        return resp.ok ? { valid: true } : { valid: false, error: 'Invalid API key' };
+        return resp.ok ? { valid: true } : { valid: false, error: 'Invalid credential' };
       }
       case 'copilot':
-        // Copilot keys are validated via GitHub token check
+        // Copilot keys/tokens are validated via GitHub token check
         return { valid: !!rawKey };
       default:
         return { valid: false, error: `Unknown provider: ${providerId}` };

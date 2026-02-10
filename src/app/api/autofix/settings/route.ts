@@ -61,6 +61,12 @@ export async function PUT(request: NextRequest) {
       if (!body.provider.keyId) {
         return NextResponse.json({ error: 'Provider requires a keyId' }, { status: 400 });
       }
+      // Validate auth method (default: api_key for backwards compat)
+      const authMethod = body.provider.authMethod || 'api_key';
+      if (authMethod !== 'api_key' && authMethod !== 'oauth_token') {
+        return NextResponse.json({ error: 'authMethod must be "api_key" or "oauth_token"' }, { status: 400 });
+      }
+      body.provider.authMethod = authMethod;
     }
 
     // Validate github settings if specified
