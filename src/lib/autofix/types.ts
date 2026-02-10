@@ -246,7 +246,8 @@ export const AI_PROVIDERS: Record<AIProviderID, AIProviderConfig> = {
     models: ['claude-sonnet-4-5-20250929', 'claude-haiku-4-5-20251001', 'claude-opus-4-6'],
     keyPlaceholder: 'sk-ant-...',
     docsUrl: 'https://docs.anthropic.com/en/docs/api-reference',
-    authMethods: ['api_key'],
+    authMethods: ['api_key', 'oauth_token'],
+    oauthHint: 'Run: claude auth token (Claude CLI) or use a Bearer token from your Anthropic workspace',
   },
   gemini: {
     id: 'gemini',
