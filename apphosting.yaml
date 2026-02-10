@@ -52,7 +52,7 @@ env:
   # Application Configuration
   # ============================================================
   # Explicit environment override — prevents hostname-based detection issues.
-  # Controls which Stripe/Slack/WhatsApp keys are used (live vs test)
+  # Controls which Stripe/Slack/WhatsApp/Telegram keys are used (live vs test)
   # and which Firestore database is targeted (default vs devdb).
   # Set to 'production' only for the bugrit.com deployment.
   # Omit or set to 'dev' for all other deployments (including bugrit-prod.web.app).
@@ -212,6 +212,30 @@ env:
     secret: whatsapp-test-phone-number-id
   - variable: WHATSAPP_TEST_VERIFY_TOKEN
     secret: whatsapp-test-verify-token
+
+  # ============================================================
+  # Telegram Integration — LIVE (Sensei on Telegram, used on bugrit.com)
+  # ============================================================
+  # Create a bot with @BotFather → save token as TELEGRAM_BOT_TOKEN
+  # Generate a random secret → save as TELEGRAM_WEBHOOK_SECRET
+  # Register webhook:
+  #   curl -X POST "https://api.telegram.org/bot<TOKEN>/setWebhook" \
+  #     -H "Content-Type: application/json" \
+  #     -d '{"url":"https://bugrit.com/api/telegram/webhook","secret_token":"<SECRET>"}'
+  - variable: TELEGRAM_BOT_TOKEN
+    secret: telegram-bot-token
+  - variable: TELEGRAM_WEBHOOK_SECRET
+    secret: telegram-webhook-secret
+
+  # ============================================================
+  # Telegram Integration — TEST/SANDBOX (used on all non-prod URLs)
+  # ============================================================
+  # Create a separate test bot with @BotFather for development/staging.
+  # The app auto-selects test vs live based on hostname detection.
+  - variable: TELEGRAM_TEST_BOT_TOKEN
+    secret: telegram-test-bot-token
+  - variable: TELEGRAM_TEST_WEBHOOK_SECRET
+    secret: telegram-test-webhook-secret
 
   # ============================================================
   # GCP Billing Cloud Function (optional - mock data used if not set)

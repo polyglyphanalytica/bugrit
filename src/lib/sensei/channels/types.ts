@@ -8,7 +8,7 @@
 import type { SenseiResponse, SenseiContext, SenseiMessage } from '@/ai/flows/sensei-chat';
 
 /** Supported messaging channels */
-export type SenseiChannel = 'web' | 'slack' | 'whatsapp';
+export type SenseiChannel = 'web' | 'slack' | 'whatsapp' | 'telegram';
 
 /** Inbound message from a channel */
 export interface InboundMessage {
@@ -57,7 +57,7 @@ export interface ChannelConnection {
 /**
  * Channel Adapter Interface
  *
- * Each channel (Slack, WhatsApp) implements this to handle
+ * Each channel (Slack, WhatsApp, Telegram) implements this to handle
  * platform-specific message formatting and delivery.
  */
 export interface ChannelAdapter {

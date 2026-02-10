@@ -2,8 +2,8 @@
  * Channel Configuration — Environment-Aware Key Selection
  *
  * Follows the same dual-key pattern as Stripe:
- * - Production (bugrit.com): uses live keys (SLACK_*, WHATSAPP_*)
- * - Non-prod: uses sandbox/test keys (SLACK_TEST_*, WHATSAPP_TEST_*),
+ * - Production (bugrit.com): uses live keys (SLACK_*, WHATSAPP_*, TELEGRAM_*)
+ * - Non-prod: uses sandbox/test keys (SLACK_TEST_*, WHATSAPP_TEST_*, TELEGRAM_TEST_*),
  *   falling back to live keys if test keys aren't set.
  *
  * All secrets are stored in Google Secret Manager and referenced
@@ -56,4 +56,20 @@ export function getWhatsAppVerifyToken(): string | undefined {
     return process.env.WHATSAPP_VERIFY_TOKEN;
   }
   return process.env.WHATSAPP_TEST_VERIFY_TOKEN || process.env.WHATSAPP_VERIFY_TOKEN;
+}
+
+// ─── Telegram ─────────────────────────────────────────────────────────
+
+export function getTelegramBotToken(): string | undefined {
+  if (isProduction()) {
+    return process.env.TELEGRAM_BOT_TOKEN;
+  }
+  return process.env.TELEGRAM_TEST_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+}
+
+export function getTelegramWebhookSecret(): string | undefined {
+  if (isProduction()) {
+    return process.env.TELEGRAM_WEBHOOK_SECRET;
+  }
+  return process.env.TELEGRAM_TEST_WEBHOOK_SECRET || process.env.TELEGRAM_WEBHOOK_SECRET;
 }
