@@ -8,6 +8,7 @@ import {
   TestResultNotification,
   UptimeNotification,
 } from './types';
+import { devConsole } from '@/lib/console';
 
 /**
  * Escape HTML special characters to prevent XSS in email templates.
@@ -48,7 +49,7 @@ export class EmailNotificationService {
     payload: NotificationPayload
   ): Promise<NotificationResult> {
     if (!this.resend) {
-      console.warn('Email notifications disabled: RESEND_API_KEY not configured');
+      devConsole.warn('Email notifications disabled: RESEND_API_KEY not configured');
       return {
         channel: 'email',
         success: false,
@@ -78,7 +79,7 @@ export class EmailNotificationService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Email notification error:', errorMessage);
+      devConsole.error('Email notification error:', errorMessage);
 
       return {
         channel: 'email',
@@ -330,7 +331,7 @@ export async function sendEmail(params: {
 }): Promise<{ success: boolean; error?: string; messageId?: string }> {
   const resend = getResendClient();
   if (!resend) {
-    console.warn('Email not configured: RESEND_API_KEY missing');
+    devConsole.warn('Email not configured: RESEND_API_KEY missing');
     return { success: false, error: 'Email service not configured' };
   }
 

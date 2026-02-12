@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { GlassCard } from '@/components/ui/glass-card';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Logo } from '@/components/ui/logo';
+import { devConsole } from '@/lib/console';
 
 type TabType = 'stripe' | 'pricing' | 'credit-packages' | 'promo-codes' | 'features' | 'admins' | 'audit';
 
@@ -219,7 +220,7 @@ function StripeConfigPanel() {
       setConnection(data.connection);
       setPublishableKey(data.config?.publishableKey || '');
     } catch (error) {
-      console.error('Failed to fetch config:', error);
+      devConsole.error('Failed to fetch config:', error);
     } finally {
       setLoading(false);
     }
@@ -244,7 +245,7 @@ function StripeConfigPanel() {
         fetchConfig();
       }
     } catch (error) {
-      console.error('Failed to save:', error);
+      devConsole.error('Failed to save:', error);
     } finally {
       setSaving(false);
     }
@@ -262,7 +263,7 @@ function StripeConfigPanel() {
       alert(data.success ? `Synced: ${data.synced.join(', ')}` : `Errors: ${JSON.stringify(data.errors)}`);
       fetchConfig();
     } catch (error) {
-      console.error('Sync failed:', error);
+      devConsole.error('Sync failed:', error);
     } finally {
       setSyncing(false);
     }
@@ -416,7 +417,7 @@ function PricingPanel() {
       const data = await res.json();
       setTiers(data.tiers || []);
     } catch (error) {
-      console.error('Failed to fetch tiers:', error);
+      devConsole.error('Failed to fetch tiers:', error);
     } finally {
       setLoading(false);
     }
@@ -429,7 +430,7 @@ function PricingPanel() {
       const data = await res.json();
       setPromoCodes(data.promoCodes || []);
     } catch (error) {
-      console.error('Failed to fetch promo codes:', error);
+      devConsole.error('Failed to fetch promo codes:', error);
     } finally {
       setPromoLoading(false);
     }
@@ -467,7 +468,7 @@ function PricingPanel() {
         fetchPromoCodes();
       }
     } catch (error) {
-      console.error('Failed to create promo code:', error);
+      devConsole.error('Failed to create promo code:', error);
       alert('Failed to create promo code');
     } finally {
       setCreatingPromo(false);
@@ -480,7 +481,7 @@ function PricingPanel() {
       await fetch(`/api/admin/promo-codes/${promoCodeId}`, { method: 'DELETE' });
       fetchPromoCodes();
     } catch (error) {
-      console.error('Failed to deactivate promo code:', error);
+      devConsole.error('Failed to deactivate promo code:', error);
     }
   };
 
@@ -494,7 +495,7 @@ function PricingPanel() {
       fetchTiers();
       setEditingTier(null);
     } catch (error) {
-      console.error('Failed to update tier:', error);
+      devConsole.error('Failed to update tier:', error);
     }
   };
 
@@ -510,7 +511,7 @@ function PricingPanel() {
       alert(data.success ? `Synced to Stripe: ${data.synced.join(', ')}` : `Errors: ${JSON.stringify(data.errors)}`);
       fetchTiers();
     } catch (error) {
-      console.error('Sync failed:', error);
+      devConsole.error('Sync failed:', error);
     } finally {
       setSyncing(false);
     }
@@ -1130,7 +1131,7 @@ function CreditPackagesPanel() {
       const data = await res.json();
       setPackages(data.packages || []);
     } catch (error) {
-      console.error('Failed to fetch packages:', error);
+      devConsole.error('Failed to fetch packages:', error);
     } finally {
       setLoading(false);
     }
@@ -1148,7 +1149,7 @@ function CreditPackagesPanel() {
       setShowCreate(false);
       fetchPackages();
     } catch (error) {
-      console.error('Failed to create package:', error);
+      devConsole.error('Failed to create package:', error);
     }
   };
 
@@ -1162,7 +1163,7 @@ function CreditPackagesPanel() {
       fetchPackages();
       setEditingPackage(null);
     } catch (error) {
-      console.error('Failed to update package:', error);
+      devConsole.error('Failed to update package:', error);
     }
   };
 
@@ -1172,7 +1173,7 @@ function CreditPackagesPanel() {
       await fetch(`/api/admin/credit-packages/${packageId}`, { method: 'DELETE' });
       fetchPackages();
     } catch (error) {
-      console.error('Failed to delete package:', error);
+      devConsole.error('Failed to delete package:', error);
     }
   };
 
@@ -1423,7 +1424,7 @@ function PromoCodesPanel() {
       const data = await res.json();
       setPromoCodes(data.promoCodes || []);
     } catch (error) {
-      console.error('Failed to fetch promo codes:', error);
+      devConsole.error('Failed to fetch promo codes:', error);
     } finally {
       setLoading(false);
     }
@@ -1461,7 +1462,7 @@ function PromoCodesPanel() {
         fetchPromoCodes();
       }
     } catch (error) {
-      console.error('Failed to create promo code:', error);
+      devConsole.error('Failed to create promo code:', error);
       alert('Failed to create promo code');
     } finally {
       setCreating(false);
@@ -1476,7 +1477,7 @@ function PromoCodesPanel() {
       });
       fetchPromoCodes();
     } catch (error) {
-      console.error('Failed to deactivate promo code:', error);
+      devConsole.error('Failed to deactivate promo code:', error);
     }
   };
 
@@ -1659,7 +1660,7 @@ function FeaturesPanel() {
       const data = await res.json();
       setFlags(data.flags || []);
     } catch (error) {
-      console.error('Failed to fetch flags:', error);
+      devConsole.error('Failed to fetch flags:', error);
     } finally {
       setLoading(false);
     }
@@ -1674,7 +1675,7 @@ function FeaturesPanel() {
       });
       fetchFlags();
     } catch (error) {
-      console.error('Failed to toggle flag:', error);
+      devConsole.error('Failed to toggle flag:', error);
     }
   };
 
@@ -1689,7 +1690,7 @@ function FeaturesPanel() {
       setNewFlag({ name: '', description: '' });
       fetchFlags();
     } catch (error) {
-      console.error('Failed to create flag:', error);
+      devConsole.error('Failed to create flag:', error);
     }
   };
 
@@ -1699,7 +1700,7 @@ function FeaturesPanel() {
       await fetch(`/api/admin/features/${flagId}`, { method: 'DELETE' });
       fetchFlags();
     } catch (error) {
-      console.error('Failed to delete flag:', error);
+      devConsole.error('Failed to delete flag:', error);
     }
   };
 
@@ -1795,7 +1796,7 @@ function AdminsPanel() {
       const data = await res.json();
       setAdmins(data.admins || []);
     } catch (error) {
-      console.error('Failed to fetch admins:', error);
+      devConsole.error('Failed to fetch admins:', error);
     } finally {
       setLoading(false);
     }
@@ -1812,7 +1813,7 @@ function AdminsPanel() {
       setNewAdmin({ userId: '', email: '', role: 'admin' });
       fetchAdmins();
     } catch (error) {
-      console.error('Failed to add admin:', error);
+      devConsole.error('Failed to add admin:', error);
     }
   };
 
@@ -1826,7 +1827,7 @@ function AdminsPanel() {
       });
       fetchAdmins();
     } catch (error) {
-      console.error('Failed to remove admin:', error);
+      devConsole.error('Failed to remove admin:', error);
     }
   };
 
@@ -1927,7 +1928,7 @@ function AuditPanel() {
       const data = await res.json();
       setLogs(data.logs || []);
     } catch (error) {
-      console.error('Failed to fetch logs:', error);
+      devConsole.error('Failed to fetch logs:', error);
     } finally {
       setLoading(false);
     }

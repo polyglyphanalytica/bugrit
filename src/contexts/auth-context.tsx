@@ -13,6 +13,7 @@ import {
   isDemoMode,
 } from '@/lib/firebase-auth';
 import { User } from '@/lib/types';
+import { devConsole } from '@/lib/console';
 
 interface AuthContextType {
   user: User | null;
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await firebaseLogout();
       setUser(null);
     } catch (error) {
-      console.error('Logout error:', error);
+      devConsole.error('Logout error:', error);
       // Still clear user on client side
       setUser(null);
     }

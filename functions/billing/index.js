@@ -16,6 +16,20 @@ const functions = require('@google-cloud/functions-framework');
 
 const bigquery = new BigQuery();
 
+// Environment-aware logger for Cloud Functions
+const isProduction = process.env.NODE_ENV === 'production';
+const fnLogger = {
+  error: (msg, error) => {
+    if (isProduction) {
+      process.stderr.write(JSON.stringify({
+        severity: 'ERROR', message: msg, error: error?.message || error, timestamp: new Date().toISOString(),
+      }) + '\n');
+    } else {
+      console.error(msg, error);
+    }
+  },
+};
+
 // Configuration
 const config = {
   projectId: process.env.GCP_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT,
@@ -84,7 +98,7 @@ functions.http('gcpBilling', async (req, res) => {
         res.status(400).json({ error: 'Invalid action. Use: costs, trend, or breakdown' });
     }
   } catch (error) {
-    console.error('Error handling request:', error);
+    fnLogger.error('Error handling request', error);
     res.status(500).json({
       error: 'Internal server error',
       message: error.message

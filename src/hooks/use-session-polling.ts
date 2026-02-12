@@ -15,6 +15,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { devConsole } from '@/lib/console';
 
 export interface SessionProgress {
   total: number;
@@ -196,7 +197,7 @@ export function useSessionPolling(
           const token = await getAuthToken();
           headers['Authorization'] = `Bearer ${token}`;
         } catch (authError) {
-          console.error('Failed to get auth token for session polling:', authError);
+          devConsole.error('Failed to get auth token for session polling:', authError);
           // Continue without auth - the API will return 401 if auth is required
         }
       }

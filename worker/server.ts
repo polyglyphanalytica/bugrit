@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { runTools, ToolResult } from '../src/lib/tools/runner';
 import { ToolCategory } from '../src/lib/tools/registry';
 import { CloudBuildRunner, createCloudBuildRunner, DockerToolId, DOCKER_TOOLS } from '../src/lib/deploy/cloud-build';
+import { workerLogger } from './logger';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -38,7 +39,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use((req: Request, res: Response, next: NextFunction) => {
   const requestId = uuidv4();
   req.headers['x-request-id'] = requestId;
-  console.log(`[${requestId}] ${req.method} ${req.path}`);
+  workerLogger.info(`${req.method} ${req.path}`, requestId);
   next();
 });
 
@@ -80,7 +81,7 @@ function authenticateRequest(req: Request, res: Response, next: NextFunction) {
   const workerSecret = process.env.WORKER_SECRET;
 
   if (!workerSecret) {
-    console.error('WORKER_SECRET not configured');
+    workerLogger.error('WORKER_SECRET not configured');
     return res.status(500).json({ error: 'Worker not properly configured' });
   }
 
@@ -145,9 +146,9 @@ app.post('/scan', authenticateRequest, async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`[${requestId}] Starting scan ${scanRequest.scanId}`);
-    console.log(`[${requestId}] Source type: ${scanRequest.source.type}`);
-    console.log(`[${requestId}] Categories: ${scanRequest.config.categories.join(', ')}`);
+    workerLogger.info(`Starting scan ${scanRequest.scanId}`, requestId);
+    workerLogger.info(`Source type: ${scanRequest.source.type}`, requestId);
+    workerLogger.info(`Categories: ${scanRequest.config.categories.join(', ')}`, requestId);
 
     // Prepare source for scanning
     const targetPath = await prepareSource(scanRequest.source);
@@ -171,8 +172,8 @@ app.post('/scan', authenticateRequest, async (req: Request, res: Response) => {
       metrics,
     };
 
-    console.log(`[${requestId}] Scan completed in ${metrics.duration}ms`);
-    console.log(`[${requestId}] Found ${metrics.totalIssues} issues`);
+    workerLogger.info(`Scan completed in ${metrics.duration}ms`, requestId);
+    workerLogger.info(`Found ${metrics.totalIssues} issues`, requestId);
 
     // If callback URL provided, POST results there
     if (scanRequest.callbackUrl) {
@@ -185,7 +186,7 @@ app.post('/scan', authenticateRequest, async (req: Request, res: Response) => {
     res.json(response);
   } catch (error: unknown) {
     const err = error as Error;
-    console.error(`[${requestId}] Scan failed:`, err);
+    workerLogger.error('Scan failed', requestId, err);
 
     const response: ScanResponse = {
       scanId: req.body?.scanId || 'unknown',
@@ -215,7 +216,7 @@ app.post('/lighthouse', authenticateRequest, async (req: Request, res: Response)
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    console.log(`[${requestId}] Running Lighthouse for ${url}`);
+    workerLogger.info(`Running Lighthouse for ${url}`, requestId);
 
     const lighthouse = await import('lighthouse');
     const puppeteer = await import('puppeteer');
@@ -248,7 +249,7 @@ app.post('/lighthouse', authenticateRequest, async (req: Request, res: Response)
     });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error(`[${requestId}] Lighthouse failed:`, err);
+    workerLogger.error('Lighthouse failed', requestId, err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -264,7 +265,7 @@ app.post('/accessibility', authenticateRequest, async (req: Request, res: Respon
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    console.log(`[${requestId}] Running accessibility scan for ${url}`);
+    workerLogger.info(`Running accessibility scan for ${url}`, requestId);
 
     const puppeteer = await import('puppeteer');
     const { AxePuppeteer } = await import('@axe-core/puppeteer');
@@ -292,7 +293,7 @@ app.post('/accessibility', authenticateRequest, async (req: Request, res: Respon
     });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error(`[${requestId}] Accessibility scan failed:`, err);
+    workerLogger.error('Accessibility scan failed', requestId, err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -308,7 +309,7 @@ app.post('/pa11y', authenticateRequest, async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'URL is required' });
     }
 
-    console.log(`[${requestId}] Running Pa11y scan for ${url} (${standard})`);
+    workerLogger.info(`Running Pa11y scan for ${url} (${standard})`, requestId);
 
     const puppeteer = await import('puppeteer');
 
@@ -426,7 +427,7 @@ app.post('/pa11y', authenticateRequest, async (req: Request, res: Response) => {
     });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error(`[${requestId}] Pa11y scan failed:`, err);
+    workerLogger.error('Pa11y scan failed', requestId, err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -483,9 +484,9 @@ app.post('/docker-scan', authenticateRequest, async (req: Request, res: Response
       });
     }
 
-    console.log(`[${requestId}] Starting Docker scan ${request.scanId}`);
-    console.log(`[${requestId}] Tool: ${request.toolId}`);
-    console.log(`[${requestId}] Target: ${request.target}`);
+    workerLogger.info(`Starting Docker scan ${request.scanId}`, requestId);
+    workerLogger.info(`Tool: ${request.toolId}`, requestId);
+    workerLogger.info(`Target: ${request.target}`, requestId);
 
     // Get Cloud Build runner
     const runner = getCloudBuildRunner();
@@ -498,13 +499,13 @@ app.post('/docker-scan', authenticateRequest, async (req: Request, res: Response
     // For source-based tools, upload source to GCS first
     let targetPath = request.target;
     if (request.sourceType === 'source') {
-      console.log(`[${requestId}] Uploading source to Cloud Storage...`);
+      workerLogger.info('Uploading source to Cloud Storage...', requestId);
       targetPath = await runner.uploadSource(request.target, request.scanId);
-      console.log(`[${requestId}] Source uploaded to: ${targetPath}`);
+      workerLogger.info(`Source uploaded to: ${targetPath}`, requestId);
     }
 
     // Run the tool via Cloud Build
-    console.log(`[${requestId}] Submitting Cloud Build job...`);
+    workerLogger.info('Submitting Cloud Build job...', requestId);
     const { result, output } = await runner.runTool({
       toolId: request.toolId,
       target: targetPath,
@@ -522,8 +523,8 @@ app.post('/docker-scan', authenticateRequest, async (req: Request, res: Response
       error: result.error,
     };
 
-    console.log(`[${requestId}] Docker scan completed in ${response.duration}ms`);
-    console.log(`[${requestId}] Status: ${response.status}`);
+    workerLogger.info(`Docker scan completed in ${response.duration}ms`, requestId);
+    workerLogger.info(`Status: ${response.status}`, requestId);
 
     // Send callback if provided
     if (request.callbackUrl) {
@@ -538,7 +539,7 @@ app.post('/docker-scan', authenticateRequest, async (req: Request, res: Response
     res.json(response);
   } catch (error: unknown) {
     const err = error as Error;
-    console.error(`[${requestId}] Docker scan failed:`, err);
+    workerLogger.error('Docker scan failed', requestId, err);
 
     const response: DockerScanResponse = {
       scanId: req.body?.scanId || 'unknown',
@@ -579,7 +580,7 @@ async function sendDockerCallback(url: string, response: DockerScanResponse): Pr
       body: JSON.stringify(response),
     });
   } catch (error) {
-    console.error('Failed to send Docker scan callback:', error);
+    workerLogger.error('Failed to send Docker scan callback', undefined, error);
   }
 }
 
@@ -682,7 +683,7 @@ async function sendCallback(url: string, response: ScanResponse): Promise<void> 
       body: JSON.stringify(response),
     });
   } catch (error) {
-    console.error('Failed to send callback:', error);
+    workerLogger.error('Failed to send callback', undefined, error);
   }
 }
 
@@ -699,13 +700,13 @@ async function cleanupSource(path: string, sourceType: string): Promise<void> {
     const fs = await import('fs/promises');
     await fs.rm(path, { recursive: true, force: true });
   } catch (error) {
-    console.error('Cleanup failed:', error);
+    workerLogger.error('Cleanup failed', undefined, error);
   }
 }
 
 // Error handling
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('Unhandled error:', err);
+  workerLogger.error('Unhandled error', undefined, err);
   res.status(500).json({
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined,
@@ -714,9 +715,9 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🔧 Bugrit Scan Worker running on port ${PORT}`);
-  console.log(`   Chromium: ${process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium'}`);
-  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+  workerLogger.info(`Bugrit Scan Worker running on port ${PORT}`);
+  workerLogger.info(`Chromium: ${process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium'}`);
+  workerLogger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 export default app;

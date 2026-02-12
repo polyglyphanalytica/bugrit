@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, CheckCircle2, ExternalLink, Github, Loader2, Unplug } from 'lucide-react';
+import { devConsole } from '@/lib/console';
 
 interface GitHubConnection {
   id: string;
@@ -63,7 +64,7 @@ export default function IntegrationsPage() {
           setGithubStatus(data);
         }
       } catch (error) {
-        console.error('Failed to fetch GitHub status:', error);
+        devConsole.error('Failed to fetch GitHub status:', error);
       } finally {
         setLoading(false);
       }

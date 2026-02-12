@@ -3,6 +3,7 @@
 import { generateContentFromTopic } from "@/ai/flows/generate-content-from-topic";
 import { z } from "zod";
 import { db, FieldValue } from "@/lib/firebase/admin";
+import { devConsole } from '@/lib/console';
 
 const formSchema = z.object({
   topic: z.string().min(2, "Topic must be at least 2 characters long."),
@@ -53,14 +54,14 @@ export async function createContent(
         });
         saved = true;
       } catch (saveError) {
-        console.error("Error saving to Firestore:", saveError);
+        devConsole.error("Error saving to Firestore:", saveError);
         // Don't fail the whole operation if saving fails
       }
     }
 
     return { data: { paragraph: result.paragraph, imageUrl: result.imageUrl, saved } };
   } catch (e) {
-    console.error(e);
+    devConsole.error(e);
     return { error: "Failed to generate content. Please try again later." };
   }
 }

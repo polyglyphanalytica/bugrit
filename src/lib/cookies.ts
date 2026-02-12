@@ -6,6 +6,8 @@
  * before initializing.
  */
 
+import { devConsole } from '@/lib/console';
+
 export interface CookiePreferences {
   necessary: boolean;
   functional: boolean;
@@ -64,7 +66,7 @@ export function getCookiePreferences(): CookiePreferences {
       return JSON.parse(stored) as CookiePreferences;
     }
   } catch (e) {
-    console.error('Failed to parse cookie preferences:', e);
+    devConsole.error('Failed to parse cookie preferences:', e);
   }
 
   return DEFAULT_PREFERENCES;

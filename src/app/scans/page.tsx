@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { formatDistanceToNow } from 'date-fns';
+import { devConsole } from '@/lib/console';
 
 interface Scan {
   id: string;
@@ -76,7 +77,7 @@ export default function ScansPage() {
         setScans(data.scans || []);
       }
     } catch (error) {
-      console.error('Failed to fetch scans:', error);
+      devConsole.error('Failed to fetch scans:', error);
     } finally {
       setLoading(false);
     }

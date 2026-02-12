@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
+import { devConsole } from '@/lib/console';
 
 interface AutofixJob {
   id: string;
@@ -115,10 +116,10 @@ export function AutofixPanel({ scanId, appId, repoUrl, totalFindings, className 
         fetchJobs();
       } else {
         const error = await res.json();
-        console.error('Autofix trigger failed:', error);
+        devConsole.error('Autofix trigger failed:', error);
       }
     } catch (error) {
-      console.error('Autofix trigger failed:', error);
+      devConsole.error('Autofix trigger failed:', error);
     } finally {
       setTriggering(false);
     }

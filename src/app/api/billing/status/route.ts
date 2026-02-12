@@ -10,6 +10,7 @@ import { SUBSCRIPTION_TIERS, SubscriptionTier } from '@/lib/billing/credits';
 import { BillingStatus } from '@/lib/billing/types';
 import { requireAuthenticatedUser, errorResponse } from '@/lib/api-auth';
 import { getDb, toDate } from '@/lib/firestore';
+import { devConsole } from '@/lib/console';
 
 interface BillingAccountData {
   tier: SubscriptionTier;
@@ -155,7 +156,7 @@ async function getBillingAccount(userId: string): Promise<BillingAccountData> {
       },
     };
   } catch (error) {
-    console.error('Error fetching billing account:', error);
+    devConsole.error('Error fetching billing account:', error);
     // Return free tier on error
     return {
       tier: 'free',
@@ -219,7 +220,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(status);
   } catch (error) {
-    console.error('Billing status error:', error);
+    devConsole.error('Billing status error:', error);
     return NextResponse.json(
       { error: 'Internal error', message: 'Failed to fetch billing status' },
       { status: 500 }

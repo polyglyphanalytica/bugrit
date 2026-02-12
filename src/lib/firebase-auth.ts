@@ -12,6 +12,7 @@ import {
 } from 'firebase/auth';
 import { auth } from './firebase'; // Import from central config
 import { User } from './types';
+import { devConsole } from '@/lib/console';
 
 // Check if running in demo mode (Firebase not configured)
 export function isDemoMode(): boolean {
@@ -89,10 +90,10 @@ async function createServerSession(user: User): Promise<void> {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.warn('Failed to create server session:', response.status, errorText);
+      devConsole.warn('Failed to create server session:', response.status, errorText);
     }
   } catch (error) {
-    console.warn('Failed to create server session:', error);
+    devConsole.warn('Failed to create server session:', error);
   } finally {
     sessionCreationInProgress = false;
   }
@@ -138,7 +139,7 @@ export async function loginWithEmailPassword(
       case 'auth/user-disabled':
         throw new Error('This account has been disabled.');
       default:
-        console.error('Login error:', firebaseError);
+        devConsole.error('Login error:', firebaseError);
         throw new Error('An error occurred during login. Please try again.');
     }
   }
@@ -151,7 +152,7 @@ async function clearServerSession(): Promise<void> {
   try {
     await fetch('/api/auth/session', { method: 'DELETE' });
   } catch (error) {
-    console.warn('Failed to clear server session:', error);
+    devConsole.warn('Failed to clear server session:', error);
   }
 }
 
@@ -170,7 +171,7 @@ export async function logout(): Promise<void> {
   try {
     await signOut(auth);
   } catch (error) {
-    console.error('Logout error:', error);
+    devConsole.error('Logout error:', error);
     throw new Error('Failed to logout');
   }
 }
@@ -187,7 +188,7 @@ export function onAuthChange(
 ): () => void {
   if (!isAuthConfigured()) {
     // If Firebase is not configured, call callback with null
-    console.warn("Auth not configured, onAuthChange will not fire.");
+    devConsole.warn("Auth not configured, onAuthChange will not fire.");
     callback(null);
     return () => {};
   }
@@ -270,7 +271,7 @@ export async function registerWithEmailPassword(
       case 'auth/weak-password':
         throw new Error('Password is too weak. Use at least 6 characters.');
       default:
-        console.error('Registration error:', firebaseError);
+        devConsole.error('Registration error:', firebaseError);
         throw new Error('An error occurred during registration. Please try again.');
     }
   }
@@ -296,7 +297,7 @@ export async function resetPassword(email: string): Promise<void> {
         // Don't reveal if user exists for security
         return;
       default:
-        console.error('Password reset error:', firebaseError);
+        devConsole.error('Password reset error:', firebaseError);
         throw new Error('An error occurred. Please try again.');
     }
   }

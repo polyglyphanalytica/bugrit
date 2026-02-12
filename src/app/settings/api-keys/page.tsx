@@ -31,6 +31,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { ApiKey, ApiKeyPermission, API_PERMISSION_GROUPS } from '@/lib/types';
+import { devConsole } from '@/lib/console';
 
 interface ApiKeyWithFullKey extends ApiKey {
   fullKey?: string;
@@ -126,7 +127,7 @@ export default function ApiKeysPage() {
         setApiKeys(data.keys || []);
       }
     } catch (error) {
-      console.error('Failed to fetch API keys:', error);
+      devConsole.error('Failed to fetch API keys:', error);
     } finally {
       setLoading(false);
     }
@@ -168,7 +169,7 @@ export default function ApiKeysPage() {
         const error = await res.json();
         toast({
           title: 'Error',
-          description: error.message || 'Failed to create API key',
+          description: 'Unable to create API key. Please try again.',
           variant: 'destructive',
         });
       }

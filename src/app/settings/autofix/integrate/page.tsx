@@ -116,10 +116,10 @@ function IntegratePageContent() {
         toast({ title: 'Integration generated!' });
       } else {
         const error = await res.json();
-        toast({ title: 'Error', description: error.error, variant: 'destructive' });
+        toast({ title: 'Error', description: 'Unable to generate integration. Please try again.', variant: 'destructive' });
       }
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to generate integration', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Unable to generate integration. Please try again.', variant: 'destructive' });
     } finally {
       setGenerating(false);
     }

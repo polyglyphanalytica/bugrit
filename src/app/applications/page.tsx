@@ -31,6 +31,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Application } from '@/lib/types';
 import { apiClient } from '@/lib/api-client';
+import { devConsole } from '@/lib/console';
 
 export default function ApplicationsPage() {
   const router = useRouter();
@@ -69,7 +70,7 @@ export default function ApplicationsPage() {
         setApplications(res.data.applications || []);
       }
     } catch (error) {
-      console.error('Failed to fetch applications:', error);
+      devConsole.error('Failed to fetch applications:', error);
     } finally {
       setLoading(false);
     }
@@ -103,7 +104,7 @@ export default function ApplicationsPage() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to create application',
+        description: 'Unable to create application. Please try again.',
         variant: 'destructive',
       });
     } finally {

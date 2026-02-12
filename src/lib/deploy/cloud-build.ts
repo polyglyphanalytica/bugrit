@@ -20,6 +20,7 @@
 import { google } from 'googleapis';
 import { Storage } from '@google-cloud/storage';
 import { getDockerImage, DOCKER_VERSIONS } from './docker-versions';
+import { devConsole } from '@/lib/console';
 
 const cloudbuild = google.cloudbuild('v1');
 
@@ -2217,7 +2218,7 @@ export class CloudBuildRunner {
         prefix: `scans/${scanId}/`,
       });
     } catch (error) {
-      console.error(`Failed to cleanup scan ${scanId}:`, error);
+      devConsole.error(`Failed to cleanup scan ${scanId}:`, error);
     }
   }
 }
@@ -2230,7 +2231,7 @@ export function createCloudBuildRunner(): CloudBuildRunner | null {
   const outputBucket = process.env.SCAN_OUTPUT_BUCKET || `${projectId}-bugrit-scans`;
 
   if (!projectId) {
-    console.warn('GOOGLE_CLOUD_PROJECT not set, Cloud Build runner unavailable');
+    devConsole.warn('GOOGLE_CLOUD_PROJECT not set, Cloud Build runner unavailable');
     return null;
   }
 
@@ -2254,7 +2255,7 @@ export function getPinnedImage(toolId: DockerToolId): string {
   // Fall back to DOCKER_TOOLS definition
   const toolConfig = DOCKER_TOOLS[toolId];
   if (toolConfig) {
-    console.warn(`Tool ${toolId} not pinned in docker-versions.ts, using default image`);
+    devConsole.warn(`Tool ${toolId} not pinned in docker-versions.ts, using default image`);
     return toolConfig.image;
   }
 

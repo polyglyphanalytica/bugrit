@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { CreditCard, Zap, TrendingUp, Clock, Package } from 'lucide-react';
+import { devConsole } from '@/lib/console';
 
 interface Subscription {
   tier: string;
@@ -146,7 +147,7 @@ export default function SubscriptionSettingsPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch subscription data:', error);
+      devConsole.error('Failed to fetch subscription data:', error);
     } finally {
       setLoading(false);
     }
@@ -160,7 +161,7 @@ export default function SubscriptionSettingsPage() {
         setCreditPackages(data.packages || []);
       }
     } catch (error) {
-      console.error('Failed to fetch credit packages:', error);
+      devConsole.error('Failed to fetch credit packages:', error);
     }
   };
 
@@ -196,7 +197,7 @@ export default function SubscriptionSettingsPage() {
         const error = await res.json();
         toast({
           title: 'Error',
-          description: error.error || 'Failed to purchase credits',
+          description: 'Unable to purchase credits. Please try again.',
           variant: 'destructive',
         });
       }
@@ -235,7 +236,7 @@ export default function SubscriptionSettingsPage() {
         const error = await res.json();
         toast({
           title: 'Error',
-          description: error.error || 'Failed to save auto top-up settings',
+          description: 'Unable to save auto top-up settings. Please try again.',
           variant: 'destructive',
         });
       }

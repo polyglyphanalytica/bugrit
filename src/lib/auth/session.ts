@@ -6,6 +6,7 @@
 
 import { cookies } from 'next/headers';
 import { getAdminAuth } from '@/lib/firebase-admin';
+import { devConsole } from '@/lib/console';
 
 export interface SessionUser {
   uid: string;
@@ -27,7 +28,7 @@ export async function verifySession(): Promise<SessionUser | null> {
 
     const auth = getAdminAuth();
     if (!auth) {
-      console.warn('Firebase Admin not configured, cannot verify session');
+      devConsole.warn('Firebase Admin not configured, cannot verify session');
       return null;
     }
 
@@ -42,9 +43,9 @@ export async function verifySession(): Promise<SessionUser | null> {
     // Log specific error types for debugging
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     if (errorMessage.includes('expired') || errorMessage.includes('revoked')) {
-      console.log('Session expired or revoked');
+      devConsole.log('Session expired or revoked');
     } else {
-      console.error('Session verification failed:', errorMessage);
+      devConsole.error('Session verification failed:', errorMessage);
     }
     return null;
   }

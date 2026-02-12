@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { UserPlus, Crown, Shield, User, Trash2 } from 'lucide-react';
+import { devConsole } from '@/lib/console';
 
 interface TeamMember {
   id: string;
@@ -81,7 +82,7 @@ export default function TeamSettingsPage() {
         setMembers(data.members || []);
       }
     } catch (error) {
-      console.error('Failed to fetch team data:', error);
+      devConsole.error('Failed to fetch team data:', error);
     } finally {
       setLoading(false);
     }
@@ -122,7 +123,7 @@ export default function TeamSettingsPage() {
         const error = await res.json();
         toast({
           title: 'Error',
-          description: error.error || 'Failed to send invitation',
+          description: 'Unable to send invitation. Please try again.',
           variant: 'destructive',
         });
       }
@@ -157,7 +158,7 @@ export default function TeamSettingsPage() {
         const error = await res.json();
         toast({
           title: 'Error',
-          description: error.error || 'Failed to remove member',
+          description: 'Unable to remove team member. Please try again.',
           variant: 'destructive',
         });
       }
@@ -192,7 +193,7 @@ export default function TeamSettingsPage() {
         const error = await res.json();
         toast({
           title: 'Error',
-          description: error.error || 'Failed to update role',
+          description: 'Unable to update role. Please try again.',
           variant: 'destructive',
         });
       }

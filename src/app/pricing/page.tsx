@@ -77,7 +77,7 @@ export default function PricingPage() {
         const error = await res.json();
         toast({
           title: 'Unable to start checkout',
-          description: error.error || 'Please try again or contact support.',
+          description: 'Please try again or contact support.',
           variant: 'destructive',
         });
       }

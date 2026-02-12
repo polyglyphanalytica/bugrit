@@ -10,6 +10,7 @@ import {
 import { TestExecution, ExecutionResult, BrowserType } from '../types';
 import { store } from '../store';
 import { safeRequire } from '@/lib/utils/safe-require';
+import { devConsole } from '@/lib/console';
 
 /**
  * Get all executions
@@ -51,7 +52,7 @@ export async function getAllExecutions(): Promise<TestExecution[]> {
       } as TestExecution;
     });
   } catch (error) {
-    console.error('Error getting executions:', error);
+    devConsole.error('Error getting executions:', error);
     return store.getAllExecutions();
   }
 }
@@ -92,7 +93,7 @@ export async function getExecution(id: string): Promise<TestExecution | null> {
       completedAt: data.completedAt ? toDate(data.completedAt) : undefined,
     } as TestExecution;
   } catch (error) {
-    console.error('Error getting execution:', error);
+    devConsole.error('Error getting execution:', error);
     return store.getExecution(id) || null;
   }
 }
@@ -133,7 +134,7 @@ export async function createExecution(
 
     return newExecution;
   } catch (error) {
-    console.error('Error creating execution:', error);
+    devConsole.error('Error creating execution:', error);
     return store.createExecution(execution);
   }
 }
@@ -174,7 +175,7 @@ export async function updateExecution(
 
     return getExecution(id);
   } catch (error) {
-    console.error('Error updating execution:', error);
+    devConsole.error('Error updating execution:', error);
     return store.updateExecution(id, updates) || null;
   }
 }
@@ -203,7 +204,7 @@ export async function addExecutionResult(
 
     return getExecution(executionId);
   } catch (error) {
-    console.error('Error adding execution result:', error);
+    devConsole.error('Error adding execution result:', error);
     return store.addExecutionResult(executionId, result) || null;
   }
 }
@@ -264,7 +265,7 @@ export async function getPendingExecutions(): Promise<TestExecution[]> {
       } as TestExecution;
     });
   } catch (error) {
-    console.error('Error getting pending executions:', error);
+    devConsole.error('Error getting pending executions:', error);
     return [];
   }
 }
@@ -300,7 +301,7 @@ export async function getRunningExecutions(): Promise<TestExecution[]> {
       } as TestExecution;
     });
   } catch (error) {
-    console.error('Error getting running executions:', error);
+    devConsole.error('Error getting running executions:', error);
     return [];
   }
 }

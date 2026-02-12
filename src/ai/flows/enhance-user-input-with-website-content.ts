@@ -7,6 +7,7 @@
 'use server';
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { devConsole } from '@/lib/console';
 
 const EnhanceUserInputWithWebsiteContentInputSchema = z.object({
   userInput: z.string().describe('The user input to enhance with website content.'),
@@ -39,7 +40,7 @@ const getWebsiteContent = ai.defineTool({
     }
     return await response.text();
   } catch (error) {
-    console.error('Failed to fetch website content:', error);
+    devConsole.error('Failed to fetch website content:', error);
     return 'Failed to retrieve website content.';
   }
 });

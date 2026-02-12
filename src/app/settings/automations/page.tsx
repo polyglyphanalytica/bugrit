@@ -48,6 +48,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
+import { devConsole } from '@/lib/console';
 
 type TriggerType =
   | 'github_push'
@@ -205,7 +206,7 @@ export default function AutomationsPage() {
         setAutomations(data.data?.automations || []);
       }
     } catch (error) {
-      console.error('Failed to fetch automations:', error);
+      devConsole.error('Failed to fetch automations:', error);
     } finally {
       setLoading(false);
     }
@@ -223,7 +224,7 @@ export default function AutomationsPage() {
         setProjects(data.data || []);
       }
     } catch (error) {
-      console.error('Failed to fetch projects:', error);
+      devConsole.error('Failed to fetch projects:', error);
     }
   };
 
@@ -326,7 +327,7 @@ export default function AutomationsPage() {
         const error = await res.json();
         toast({
           title: 'Error',
-          description: error.error?.message || 'Failed to create automation',
+          description: 'Unable to create automation. Please try again.',
           variant: 'destructive',
         });
       }

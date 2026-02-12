@@ -10,6 +10,7 @@ import {
 import { TestRun } from '../types';
 import { store } from '../store';
 import { safeRequire } from '@/lib/utils/safe-require';
+import { devConsole } from '@/lib/console';
 
 /**
  * Get all test runs
@@ -45,7 +46,7 @@ export async function getAllTestRuns(): Promise<TestRun[]> {
       } as TestRun;
     });
   } catch (error) {
-    console.error('Error getting test runs:', error);
+    devConsole.error('Error getting test runs:', error);
     return store.getAllTestRuns();
   }
 }
@@ -84,7 +85,7 @@ export async function getRecentTestRuns(limit: number = 10): Promise<TestRun[]> 
       } as TestRun;
     });
   } catch (error) {
-    console.error('Error getting recent test runs:', error);
+    devConsole.error('Error getting recent test runs:', error);
     return store.getRecentTestRuns(limit);
   }
 }
@@ -119,7 +120,7 @@ export async function getTestRun(id: string): Promise<TestRun | null> {
       browser: data.browser,
     } as TestRun;
   } catch (error) {
-    console.error('Error getting test run:', error);
+    devConsole.error('Error getting test run:', error);
     return store.getTestRun(id) || null;
   }
 }
@@ -163,7 +164,7 @@ export async function createTestRun(
 
     return newTestRun;
   } catch (error) {
-    console.error('Error creating test run:', error);
+    devConsole.error('Error creating test run:', error);
     return store.createTestRun(testRun);
   }
 }
@@ -219,7 +220,7 @@ export async function updateTestRun(
       browser: data.browser,
     } as TestRun;
   } catch (error) {
-    console.error('Error updating test run:', error);
+    devConsole.error('Error updating test run:', error);
     return store.updateTestRun(id, updates) || null;
   }
 }
@@ -249,7 +250,7 @@ export async function addTestRunLog(id: string, log: string): Promise<boolean> {
       });
     return true;
   } catch (error) {
-    console.error('Error adding test run log:', error);
+    devConsole.error('Error adding test run log:', error);
     return false;
   }
 }
@@ -306,7 +307,7 @@ export async function getTestRunsByTestCase(testCaseId: string): Promise<TestRun
       } as TestRun;
     });
   } catch (error) {
-    console.error('Error getting test runs by test case:', error);
+    devConsole.error('Error getting test runs by test case:', error);
     return [];
   }
 }
@@ -356,7 +357,7 @@ export async function getStats(): Promise<{
       passRate,
     };
   } catch (error) {
-    console.error('Error getting stats:', error);
+    devConsole.error('Error getting stats:', error);
     return store.getStats();
   }
 }

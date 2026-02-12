@@ -15,6 +15,7 @@ import {
   Timestamp,
   FieldValue,
 } from '../firestore';
+import { devConsole } from '@/lib/console';
 
 // Re-export the Firestore instance as 'db' for compatibility
 // This creates a proxy that lazily initializes Firestore.
@@ -45,13 +46,13 @@ function createMockDoc(name: string, id?: string): Record<string, unknown> {
     path: `${name}/${docId}`,
     get: async () => ({ exists: false, data: () => null, id: docId }),
     set: async () => {
-      console.warn(`Firestore not configured - skipping write to ${name}/${docId}`);
+      devConsole.warn(`Firestore not configured - skipping write to ${name}/${docId}`);
     },
     update: async () => {
-      console.warn(`Firestore not configured - skipping update to ${name}/${docId}`);
+      devConsole.warn(`Firestore not configured - skipping update to ${name}/${docId}`);
     },
     delete: async () => {
-      console.warn(`Firestore not configured - skipping delete from ${name}/${docId}`);
+      devConsole.warn(`Firestore not configured - skipping delete from ${name}/${docId}`);
     },
     collection: (subName: string) => createMockCollection(`${name}/${docId}/${subName}`),
   };
@@ -64,7 +65,7 @@ function createMockCollection(name: string): Record<string, unknown> {
     ...query,
     doc: (id?: string) => createMockDoc(name, id),
     add: async (data: unknown) => {
-      console.warn(`Firestore not configured - skipping add to ${name}`);
+      devConsole.warn(`Firestore not configured - skipping add to ${name}`);
       return createMockDoc(name);
     },
   };
@@ -76,7 +77,7 @@ function createMockBatch() {
     update: () => {},
     delete: () => {},
     commit: async () => {
-      console.warn('Firestore not configured - skipping batch commit');
+      devConsole.warn('Firestore not configured - skipping batch commit');
       return [];
     },
     create: () => {},
@@ -92,7 +93,7 @@ export const db = new Proxy(
         if (prop === 'collection') return (name: string) => createMockCollection(name);
         if (prop === 'batch') return () => createMockBatch();
         if (prop === 'runTransaction') return async (fn: (t: unknown) => unknown) => {
-          console.warn('Firestore not configured - skipping transaction');
+          devConsole.warn('Firestore not configured - skipping transaction');
           return undefined;
         };
         if (prop === 'getAll') return async () => [];

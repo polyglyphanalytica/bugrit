@@ -14,6 +14,7 @@ import { ToolCategory } from '@/lib/tools/registry';
 import { AIFeature } from '@/lib/billing/credits';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { getDb, toDate } from '@/lib/firestore';
+import { devConsole } from '@/lib/console';
 
 // Get usage summary from Firestore
 async function getUsageSummary(userId: string, periodStart: Date, periodEnd: Date): Promise<UsageSummary> {
@@ -132,7 +133,7 @@ async function getUsageSummary(userId: string, periodStart: Date, periodEnd: Dat
 
     return summary;
   } catch (error) {
-    console.error('Error fetching usage summary:', error);
+    devConsole.error('Error fetching usage summary:', error);
     return emptySummary;
   }
 }
@@ -173,7 +174,7 @@ async function getTransactions(
       } as CreditTransaction;
     });
   } catch (error) {
-    console.error('Error fetching transactions:', error);
+    devConsole.error('Error fetching transactions:', error);
     return [];
   }
 }
@@ -229,7 +230,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Usage error:', error);
+    devConsole.error('Usage error:', error);
     return NextResponse.json(
       { error: 'Internal error', message: 'Failed to fetch usage data' },
       { status: 500 }

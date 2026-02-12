@@ -4,6 +4,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { devConsole } from '@/lib/console';
 
 /**
  * Error information structure for logging and reporting
@@ -46,15 +47,15 @@ interface ErrorBoundaryState {
 function logErrorToService(errorData: ErrorLogData): void {
   // Log to console in development
   if (process.env.NODE_ENV === 'development') {
-    console.group('ErrorBoundary caught an error');
-    console.error('Error:', errorData.message);
+    devConsole.group('ErrorBoundary caught an error');
+    devConsole.error('Error:', errorData.message);
     if (errorData.stack) {
-      console.error('Stack trace:', errorData.stack);
+      devConsole.error('Stack trace:', errorData.stack);
     }
     if (errorData.componentStack) {
-      console.error('Component stack:', errorData.componentStack);
+      devConsole.error('Component stack:', errorData.componentStack);
     }
-    console.groupEnd();
+    devConsole.groupEnd();
   }
 
   // Sentry integration is optional - to enable:

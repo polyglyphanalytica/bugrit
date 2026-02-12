@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Application } from '@/lib/types';
 import { apiClient } from '@/lib/api-client';
+import { devConsole } from '@/lib/console';
 
 export default function SetupTestPage() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function SetupTestPage() {
         setApplication(res.data.application);
       }
     } catch (error) {
-      console.error('Failed to fetch application:', error);
+      devConsole.error('Failed to fetch application:', error);
     } finally {
       setLoading(false);
     }

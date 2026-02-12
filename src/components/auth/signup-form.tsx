@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { devConsole } from '@/lib/console';
 
 // Extended schema with notification preferences
 const signupSchema = authSchema.extend({
@@ -72,7 +73,7 @@ export default function SignupForm() {
         });
       } catch (prefError) {
         // Non-critical, continue with signup
-        console.error('Failed to save notification preferences:', prefError);
+        devConsole.error('Failed to save notification preferences:', prefError);
       }
 
       // If user came from pricing page with a plan, initiate checkout
@@ -99,14 +100,14 @@ export default function SignupForm() {
             }
           } else {
             // Checkout failed, but signup succeeded - go to dashboard
-            console.error('Failed to create checkout session');
+            devConsole.error('Failed to create checkout session');
             toast({
               title: "Account created!",
               description: "You can upgrade your plan from the settings page.",
             });
           }
         } catch (checkoutError) {
-          console.error('Checkout error:', checkoutError);
+          devConsole.error('Checkout error:', checkoutError);
           toast({
             title: "Account created!",
             description: "You can upgrade your plan from the settings page.",

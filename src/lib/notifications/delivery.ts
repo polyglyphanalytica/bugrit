@@ -1,4 +1,5 @@
 import { NotificationChannel } from '@/types/notification';
+import { devConsole } from '@/lib/console';
 
 export interface DeliveryPayload {
   title: string;
@@ -8,6 +9,6 @@ export interface DeliveryPayload {
 
 export async function scheduleDelivery(channel: NotificationChannel, payload: DeliveryPayload) {
   // Placeholder for channel-specific dispatch.
-  console.log(`Dispatching ${channel} notification`, payload);
+  devConsole.log(`Dispatching ${channel} notification`, payload);
   return Promise.resolve(true);
 }

@@ -8,6 +8,7 @@ import { GlassCard } from '@/components/ui/glass-card';
 import { GradientButton } from '@/components/ui/gradient-button';
 import { Logo } from '@/components/ui/logo';
 import { apiClient } from '@/lib/api-client';
+import { devConsole } from '@/lib/console';
 import {
   ArrowLeft,
   Clock,
@@ -116,7 +117,7 @@ export default function AdminTicketsPage() {
         setTickets(res.data.tickets);
       }
     } catch (error) {
-      console.error('Failed to fetch tickets:', error);
+      devConsole.error('Failed to fetch tickets:', error);
     } finally {
       setLoading(false);
     }
@@ -146,7 +147,7 @@ export default function AdminTicketsPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to send reply:', error);
+      devConsole.error('Failed to send reply:', error);
     } finally {
       setSending(false);
     }
@@ -161,7 +162,7 @@ export default function AdminTicketsPage() {
         setSelectedTicket(prev => prev ? { ...prev, status: newStatus } : null);
       }
     } catch (error) {
-      console.error('Failed to update status:', error);
+      devConsole.error('Failed to update status:', error);
     }
   };
 
@@ -177,7 +178,7 @@ export default function AdminTicketsPage() {
       });
       alert('Saved to Sensei knowledge base');
     } catch (error) {
-      console.error('Failed to save to knowledge base:', error);
+      devConsole.error('Failed to save to knowledge base:', error);
     }
   };
 

@@ -9,6 +9,7 @@ import {
   TestResultNotification,
   UptimeNotification,
 } from './types';
+import { devConsole } from '@/lib/console';
 
 export class SlackNotificationService {
   async send(
@@ -46,7 +47,7 @@ export class SlackNotificationService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Slack notification error:', errorMessage);
+      devConsole.error('Slack notification error:', errorMessage);
 
       return {
         channel: 'slack',

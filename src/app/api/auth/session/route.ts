@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getAdminAuth } from '@/lib/firebase-admin';
 import { verifyIdToken } from '@/lib/auth';
+import { devConsole } from '@/lib/console';
 
 // Session duration: 5 days
 const SESSION_DURATION_MS = 5 * 24 * 60 * 60 * 1000;
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
       const body = await request.json();
       idToken = body.idToken;
     } catch (parseError) {
-      console.error('Failed to parse request body:', parseError);
+      devConsole.error('Failed to parse request body:', parseError);
       return NextResponse.json(
         { error: 'Invalid request body' },
         { status: 400 }
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
         decodedToken = await auth.verifyIdToken(idToken);
       } catch (verifyError) {
         const errorMessage = verifyError instanceof Error ? verifyError.message : 'Unknown error';
-        console.error('ID token verification failed:', errorMessage);
+        devConsole.error('ID token verification failed:', errorMessage);
         return NextResponse.json(
           { error: 'Invalid ID token', details: errorMessage },
           { status: 401 }
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
         });
       } catch (cookieError) {
         const errorMessage = cookieError instanceof Error ? cookieError.message : 'Unknown error';
-        console.error('Session cookie creation failed:', errorMessage);
+        devConsole.error('Session cookie creation failed:', errorMessage);
 
         // Check if it's a token-too-old error
         if (errorMessage.includes('recent') || errorMessage.includes('expired')) {
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.warn('[session] Admin SDK unavailable — session cookie not created, client will use Bearer token auth');
+      devConsole.warn('[session] Admin SDK unavailable — session cookie not created, client will use Bearer token auth');
 
       return NextResponse.json({
         success: true,
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
       });
     } catch (verifyError) {
       const errorMessage = verifyError instanceof Error ? verifyError.message : 'Unknown error';
-      console.error('Token verification failed (fallback):', errorMessage);
+      devConsole.error('Token verification failed (fallback):', errorMessage);
       return NextResponse.json(
         { error: 'Invalid ID token' },
         { status: 401 }
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     // Catch-all for unexpected errors
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Unexpected error in session creation:', errorMessage);
+    devConsole.error('Unexpected error in session creation:', errorMessage);
     return NextResponse.json(
       { error: 'Internal server error', details: errorMessage },
       { status: 500 }
@@ -154,7 +155,7 @@ export async function DELETE() {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Session deletion failed:', error);
+    devConsole.error('Session deletion failed:', error);
     return NextResponse.json(
       { error: 'Failed to clear session' },
       { status: 500 }

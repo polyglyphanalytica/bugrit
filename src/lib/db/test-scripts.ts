@@ -9,6 +9,7 @@ import {
 } from '../firestore';
 import { TestScript, RunnerType, BrowserType, NativePlatform } from '../types';
 import { store } from '../store';
+import { devConsole } from '@/lib/console';
 
 /**
  * Get all test scripts
@@ -46,7 +47,7 @@ export async function getAllTestScripts(): Promise<TestScript[]> {
       } as TestScript;
     });
   } catch (error) {
-    console.error('Error getting test scripts:', error);
+    devConsole.error('Error getting test scripts:', error);
     return store.getAllTestScripts();
   }
 }
@@ -88,7 +89,7 @@ export async function getRegressionScripts(): Promise<TestScript[]> {
       } as TestScript;
     });
   } catch (error) {
-    console.error('Error getting regression scripts:', error);
+    devConsole.error('Error getting regression scripts:', error);
     return store.getRegressionScripts();
   }
 }
@@ -126,7 +127,7 @@ export async function getTestScript(id: string): Promise<TestScript | null> {
       updatedAt: toDate(data.updatedAt),
     } as TestScript;
   } catch (error) {
-    console.error('Error getting test script:', error);
+    devConsole.error('Error getting test script:', error);
     return store.getTestScript(id) || null;
   }
 }
@@ -173,7 +174,7 @@ export async function createTestScript(
 
     return newScript;
   } catch (error) {
-    console.error('Error creating test script:', error);
+    devConsole.error('Error creating test script:', error);
     return store.createTestScript(script);
   }
 }
@@ -231,7 +232,7 @@ export async function updateTestScript(
       updatedAt: toDate(data.updatedAt),
     } as TestScript;
   } catch (error) {
-    console.error('Error updating test script:', error);
+    devConsole.error('Error updating test script:', error);
     return null;
   }
 }
@@ -263,7 +264,7 @@ export async function deleteTestScript(id: string): Promise<boolean> {
     await db.collection(COLLECTIONS.TEST_SCRIPTS).doc(id).delete();
     return true;
   } catch (error) {
-    console.error('Error deleting test script:', error);
+    devConsole.error('Error deleting test script:', error);
     return false;
   }
 }
@@ -307,7 +308,7 @@ export async function getScriptsByRunnerType(
       } as TestScript;
     });
   } catch (error) {
-    console.error('Error getting scripts by runner type:', error);
+    devConsole.error('Error getting scripts by runner type:', error);
     return [];
   }
 }
@@ -353,7 +354,7 @@ export async function getScriptsByPlatform(
       } as TestScript;
     });
   } catch (error) {
-    console.error('Error getting scripts by platform:', error);
+    devConsole.error('Error getting scripts by platform:', error);
     return [];
   }
 }

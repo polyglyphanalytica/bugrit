@@ -15,6 +15,7 @@ import {
 export const hasAdminPermission = hasAdminPermissionFn;
 import { DEFAULT_SUPERADMIN_EMAIL, isProtectedSuperadmin } from './constants';
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
+import { devConsole } from '@/lib/console';
 
 // Encryption helpers for sensitive data
 // ADMIN_ENCRYPTION_KEY must be set in production via Google Secret Manager
@@ -24,7 +25,7 @@ const ALGORITHM = 'aes-256-gcm';
 
 // Warn if encryption key is not set in production
 if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !ENCRYPTION_KEY) {
-  console.error('CRITICAL: ADMIN_ENCRYPTION_KEY not set! Admin features requiring encryption will fail.');
+  devConsole.error('CRITICAL: ADMIN_ENCRYPTION_KEY not set! Admin features requiring encryption will fail.');
 }
 
 function getEncryptionKey(): string {
@@ -164,7 +165,7 @@ export async function getPlatformAdmin(userId: string): Promise<PlatformAdmin | 
         return admin;
       }
     } catch (error) {
-      console.error('Error checking user email for admin:', error);
+      devConsole.error('Error checking user email for admin:', error);
     }
   }
 

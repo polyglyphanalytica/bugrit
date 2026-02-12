@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, ArrowRight, Shield, TestTube, Check } from 'lucide-react';
 import { Application } from '@/lib/types';
 import { apiClient } from '@/lib/api-client';
+import { devConsole } from '@/lib/console';
 
 type Journey = 'scan' | 'test' | null;
 
@@ -46,7 +47,7 @@ export default function GetStartedPage() {
         setApplication(res.data.application);
       }
     } catch (error) {
-      console.error('Failed to fetch application:', error);
+      devConsole.error('Failed to fetch application:', error);
     } finally {
       setLoading(false);
     }

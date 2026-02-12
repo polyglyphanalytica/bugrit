@@ -11,6 +11,7 @@ import {
   hasPermission,
   MemberRole,
 } from '@/lib/organizations';
+import { devConsole } from '@/lib/console';
 
 // Initialize Firebase Admin if not already initialized
 function getFirebaseAuth() {
@@ -40,7 +41,7 @@ async function verifySessionAndGetUserId(sessionCookie: string): Promise<string 
     const decodedToken = await auth.verifySessionCookie(sessionCookie);
     return decodedToken.uid;
   } catch (error) {
-    console.error('Session verification failed:', error);
+    devConsole.error('Session verification failed:', error);
     return null;
   }
 }
@@ -86,7 +87,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ invites });
   } catch (error) {
-    console.error('Failed to fetch invites:', error);
+    devConsole.error('Failed to fetch invites:', error);
     return NextResponse.json({ error: 'Failed to fetch invites' }, { status: 500 });
   }
 }
@@ -156,7 +157,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       message: `Invite sent to ${email}`,
     });
   } catch (error) {
-    console.error('Failed to create invite:', error);
+    devConsole.error('Failed to create invite:', error);
     return NextResponse.json({ error: 'Failed to create invite' }, { status: 500 });
   }
 }
@@ -203,7 +204,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Failed to cancel invite:', error);
+    devConsole.error('Failed to cancel invite:', error);
     return NextResponse.json({ error: 'Failed to cancel invite' }, { status: 500 });
   }
 }

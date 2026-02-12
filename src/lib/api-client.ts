@@ -9,6 +9,7 @@
  */
 
 import { User } from './types';
+import { devConsole } from '@/lib/console';
 
 export interface ApiClientOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -73,7 +74,7 @@ export async function authenticatedFetch<T = unknown>(
       data,
     };
   } catch (error) {
-    console.error('API request failed:', error);
+    devConsole.error('API request failed:', error);
     return {
       ok: false,
       status: 0,

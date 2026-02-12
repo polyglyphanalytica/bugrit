@@ -3,6 +3,7 @@
 
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { devConsole } from '@/lib/console';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -26,7 +27,7 @@ function getFirebaseApp(): FirebaseApp | null {
   }
 
   if (!isStorageConfigured()) {
-    console.warn('Firebase Storage not configured');
+    devConsole.warn('Firebase Storage not configured');
     return null;
   }
 
@@ -66,7 +67,7 @@ export async function uploadFile(
 
   if (!firebaseApp) {
     // Demo mode - simulate upload
-    console.log('Demo mode: Simulating file upload to', path);
+    devConsole.log('Demo mode: Simulating file upload to', path);
 
     // Simulate progress
     if (onProgress) {
@@ -107,7 +108,7 @@ export async function uploadFile(
         onProgress?.(progress);
       },
       (error) => {
-        console.error('Upload error:', error);
+        devConsole.error('Upload error:', error);
         reject(new Error('Failed to upload file'));
       },
       async () => {
@@ -135,7 +136,7 @@ export async function deleteFile(path: string): Promise<void> {
   const firebaseApp = getFirebaseApp();
 
   if (!firebaseApp) {
-    console.log('Demo mode: Simulating file deletion at', path);
+    devConsole.log('Demo mode: Simulating file deletion at', path);
     return;
   }
 
@@ -145,7 +146,7 @@ export async function deleteFile(path: string): Promise<void> {
   try {
     await deleteObject(storageRef);
   } catch (error) {
-    console.error('Delete error:', error);
+    devConsole.error('Delete error:', error);
     throw new Error('Failed to delete file');
   }
 }

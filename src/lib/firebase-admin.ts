@@ -19,6 +19,7 @@ import {
   getFirestoreDatabaseId,
   DEFAULT_FIRESTORE_DATABASE_ID,
 } from '@/lib/environment';
+import { devConsole } from '@/lib/console';
 
 // Singleton instances
 let adminApp: App | null = null;
@@ -67,7 +68,7 @@ function loadAppModule(): typeof import('firebase-admin/app') | null {
     return _appModule;
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error('[firebase-admin] Failed to load firebase-admin/app:', msg);
+    devConsole.error('[firebase-admin] Failed to load firebase-admin/app:', msg);
     moduleLoadError = msg;
     return null;
   }
@@ -84,7 +85,7 @@ function loadAuthModule(): typeof import('firebase-admin/auth') | null {
     return _authModule;
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error('[firebase-admin] Failed to load firebase-admin/auth:', msg);
+    devConsole.error('[firebase-admin] Failed to load firebase-admin/auth:', msg);
     moduleLoadError = msg;
     return null;
   }
@@ -101,7 +102,7 @@ function loadFirestoreModule(): typeof import('firebase-admin/firestore') | null
     return _firestoreModule;
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error('[firebase-admin] Failed to load firebase-admin/firestore:', msg);
+    devConsole.error('[firebase-admin] Failed to load firebase-admin/firestore:', msg);
     moduleLoadError = msg;
     return null;
   }
@@ -146,11 +147,11 @@ export function initializeAdmin(): boolean {
     if (existingApps.length > 0) {
       adminApp = existingApps[0];
       initMethod = 'existing-app';
-      console.log('[firebase-admin] Using existing app instance');
+      devConsole.log('[firebase-admin] Using existing app instance');
       return true;
     }
   } catch (error) {
-    console.warn('[firebase-admin] getApps() failed:', error);
+    devConsole.warn('[firebase-admin] getApps() failed:', error);
   }
 
   const projectId = getProjectId();
@@ -165,12 +166,12 @@ export function initializeAdmin(): boolean {
         projectId: projectId || serviceAccount.project_id,
       });
       initMethod = 'service-account';
-      console.log('[firebase-admin] Initialized with service account');
+      devConsole.log('[firebase-admin] Initialized with service account');
       return true;
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       errors.push(`Service account: ${msg}`);
-      console.warn('[firebase-admin] Service account failed, trying ADC...', msg);
+      devConsole.warn('[firebase-admin] Service account failed, trying ADC...', msg);
       // DO NOT return early - fall through to try ADC
     }
   }
@@ -182,24 +183,24 @@ export function initializeAdmin(): boolean {
       projectId,
     });
     initMethod = 'adc';
-    console.log('[firebase-admin] Initialized with Application Default Credentials');
+    devConsole.log('[firebase-admin] Initialized with Application Default Credentials');
     return true;
   } catch (adcError) {
     const msg = adcError instanceof Error ? adcError.message : String(adcError);
     errors.push(`ADC: ${msg}`);
-    console.warn('[firebase-admin] ADC failed, trying auto-detection...', msg);
+    devConsole.warn('[firebase-admin] ADC failed, trying auto-detection...', msg);
   }
 
   // Method 3: Try without any options (auto-detection)
   try {
     adminApp = initializeApp();
     initMethod = 'auto';
-    console.log('[firebase-admin] Initialized with auto-detection');
+    devConsole.log('[firebase-admin] Initialized with auto-detection');
     return true;
   } catch (autoError) {
     const msg = autoError instanceof Error ? autoError.message : String(autoError);
     errors.push(`Auto: ${msg}`);
-    console.error('[firebase-admin] All initialization methods failed:', errors.join(' | '));
+    devConsole.error('[firebase-admin] All initialization methods failed:', errors.join(' | '));
     initializationError = new Error(`All init methods failed: ${errors.join(' | ')}`);
     return false;
   }

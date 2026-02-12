@@ -17,6 +17,7 @@ import Stripe from 'stripe';
 import { TierName, TIERS, getStripePriceId } from './tiers';
 import { createHash } from 'crypto';
 import { isProduction } from '@/lib/environment';
+import { devConsole } from '@/lib/console';
 
 // Stripe client singleton - uses environment variable for initialization
 // For operations requiring database-stored key, use getStripeClient()
@@ -197,7 +198,7 @@ export async function getSubscription(
       return null;
     }
     // Log unexpected errors
-    console.error('Failed to retrieve subscription from Stripe:', subscriptionId, error);
+    devConsole.error('Failed to retrieve subscription from Stripe:', subscriptionId, error);
     return null;
   }
 }
@@ -283,7 +284,7 @@ function parseSubscription(subscription: Stripe.Subscription): SubscriptionData 
   // This is safer than assuming 'pro' which could over-provision access
   const tier = (subscription.metadata.tier as TierName) || 'starter';
   if (!subscription.metadata.tier) {
-    console.warn(`Subscription ${subscription.id} missing tier metadata, defaulting to 'starter'`);
+    devConsole.warn(`Subscription ${subscription.id} missing tier metadata, defaulting to 'starter'`);
   }
   const priceInterval = subscription.items.data[0]?.price.recurring?.interval;
 

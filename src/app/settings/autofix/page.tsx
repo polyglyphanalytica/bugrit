@@ -47,6 +47,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
+import { devConsole } from '@/lib/console';
 
 interface AutofixSettings {
   enabled: boolean;
@@ -138,7 +139,7 @@ export default function AutofixSettingsPage() {
         setProviders(data.providers || []);
       }
     } catch (error) {
-      console.error('Failed to load autofix settings:', error);
+      devConsole.error('Failed to load autofix settings:', error);
     } finally {
       setLoading(false);
     }
@@ -155,7 +156,7 @@ export default function AutofixSettingsPage() {
         setKeys(data.keys || []);
       }
     } catch (error) {
-      console.error('Failed to load keys:', error);
+      devConsole.error('Failed to load keys:', error);
     }
   };
 
@@ -175,10 +176,10 @@ export default function AutofixSettingsPage() {
         toast({ title: 'Settings saved' });
       } else {
         const error = await res.json();
-        toast({ title: 'Error', description: error.error, variant: 'destructive' });
+        toast({ title: 'Error', description: 'Unable to save settings. Please try again.', variant: 'destructive' });
       }
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to save settings', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Unable to save settings. Please try again.', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -211,10 +212,10 @@ export default function AutofixSettingsPage() {
         loadKeys();
       } else {
         const error = await res.json();
-        toast({ title: 'Error', description: error.error, variant: 'destructive' });
+        toast({ title: 'Error', description: 'Unable to add key. Please try again.', variant: 'destructive' });
       }
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to add key', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Unable to add key. Please try again.', variant: 'destructive' });
     } finally {
       setAddingKey(false);
     }

@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { getAdminAuth } from '@/lib/firebase-admin';
 import { getPlatformAdmin, hasAdminPermission, updateAdminLastLogin } from './service';
 import { AdminPermission, PlatformAdmin } from './types';
+import { devConsole } from '@/lib/console';
 
 export interface AdminContext {
   admin: PlatformAdmin;
@@ -15,7 +16,7 @@ export interface AdminContext {
 async function verifySessionCookie(sessionCookie: string): Promise<string | null> {
   const auth = getAdminAuth();
   if (!auth) {
-    console.error('Firebase Admin not initialized');
+    devConsole.error('Firebase Admin not initialized');
     return null;
   }
 
@@ -24,7 +25,7 @@ async function verifySessionCookie(sessionCookie: string): Promise<string | null
     const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
     return decodedClaims.uid;
   } catch (error) {
-    console.error('Session verification failed:', error);
+    devConsole.error('Session verification failed:', error);
     return null;
   }
 }
@@ -73,7 +74,7 @@ export async function verifyAdmin(
       context: { admin, userId },
     };
   } catch (error) {
-    console.error('Admin verification failed:', error);
+    devConsole.error('Admin verification failed:', error);
     return {
       success: false,
       response: NextResponse.json({ error: 'Authentication failed' }, { status: 500 }),

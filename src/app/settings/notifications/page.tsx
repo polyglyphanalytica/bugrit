@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertCircle, Bell, CheckCircle2, Loader2, Mail, Smartphone, Monitor, Clock, Lock } from 'lucide-react';
+import { devConsole } from '@/lib/console';
 
 interface ChannelSettings {
   email: {
@@ -116,7 +117,7 @@ export default function NotificationsSettingsPage() {
           setPreferences(data);
         }
       } catch (error) {
-        console.error('Failed to fetch notification preferences:', error);
+        devConsole.error('Failed to fetch notification preferences:', error);
         setMessage({ type: 'error', text: 'Failed to load notification preferences' });
       } finally {
         setLoading(false);

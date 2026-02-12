@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Bell, Check, CheckCheck, ExternalLink, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
+import { devConsole } from '@/lib/console';
 
 interface Notification {
   id: string;
@@ -39,7 +40,7 @@ export function NotificationBell() {
         setUnreadCount(data.unreadCount);
       }
     } catch (error) {
-      console.error('Failed to fetch notifications:', error);
+      devConsole.error('Failed to fetch notifications:', error);
     }
   };
 
@@ -82,7 +83,7 @@ export function NotificationBell() {
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Failed to mark as read:', error);
+      devConsole.error('Failed to mark as read:', error);
     }
   };
 
@@ -100,7 +101,7 @@ export function NotificationBell() {
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (error) {
-      console.error('Failed to mark all as read:', error);
+      devConsole.error('Failed to mark all as read:', error);
     }
   };
 

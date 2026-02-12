@@ -2,6 +2,7 @@
 
 import crypto from 'crypto';
 import { NotificationPayload, NotificationResult } from './types';
+import { devConsole } from '@/lib/console';
 
 export class WebhookNotificationService {
   /**
@@ -76,7 +77,7 @@ export class WebhookNotificationService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Webhook notification error:', errorMessage);
+      devConsole.error('Webhook notification error:', errorMessage);
 
       return {
         channel: 'webhook',

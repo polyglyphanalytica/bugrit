@@ -11,6 +11,7 @@
 
 import { ToolCategory } from '../tools/registry';
 import { ToolResult } from '../tools/runner';
+import { devConsole } from '@/lib/console';
 
 // Environment configuration
 // SCAN_WORKER_URL must be set for browser-based tools to work
@@ -374,7 +375,7 @@ export async function runHybridScan(
       results.push(...workerResponse.results);
       totalDuration += workerResponse.metrics.duration;
     } catch (error) {
-      console.error('Worker scan failed, skipping browser-based tools:', error);
+      devConsole.error('Worker scan failed, skipping browser-based tools:', error);
       // Add placeholder results for skipped tools
       for (const category of worker.categories) {
         results.push({
@@ -387,7 +388,7 @@ export async function runHybridScan(
       }
     }
   } else if (worker.categories.length > 0) {
-    console.warn('Worker not available, skipping browser-based tools');
+    devConsole.warn('Worker not available, skipping browser-based tools');
     for (const category of worker.categories) {
       results.push({
         tool: category,

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useCookieConsent } from '@/hooks/use-cookie-consent';
+import { devConsole } from '@/lib/console';
 
 /**
  * Analytics component that respects cookie consent
@@ -81,7 +82,7 @@ function initializeAnalytics() {
   */
 
   // Example: Simple page view tracking (placeholder)
-  console.log('[Analytics] Initialized - tracking enabled');
+  devConsole.log('[Analytics] Initialized - tracking enabled');
 
   // Track initial page view
   trackPageView(window.location.pathname);
@@ -96,7 +97,7 @@ function disableAnalytics() {
   window['ga-disable-' + process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID] = true;
   */
 
-  console.log('[Analytics] Disabled - tracking stopped');
+  devConsole.log('[Analytics] Disabled - tracking stopped');
 }
 
 /**
@@ -122,14 +123,14 @@ function initializeMarketing() {
   }
   */
 
-  console.log('[Marketing] Initialized - marketing tracking enabled');
+  devConsole.log('[Marketing] Initialized - marketing tracking enabled');
 }
 
 /**
  * Disable marketing tracking
  */
 function disableMarketing() {
-  console.log('[Marketing] Disabled - marketing tracking stopped');
+  devConsole.log('[Marketing] Disabled - marketing tracking stopped');
 }
 
 /**
@@ -145,7 +146,7 @@ export function trackPageView(url: string) {
   }
   */
 
-  console.log('[Analytics] Page view:', url);
+  devConsole.log('[Analytics] Page view:', url);
 }
 
 /**
@@ -168,7 +169,7 @@ export function trackEvent(
   }
   */
 
-  console.log('[Analytics] Event:', { action, category, label, value });
+  devConsole.log('[Analytics] Event:', { action, category, label, value });
 }
 
 // Type declarations for global tracking objects

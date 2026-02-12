@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { TrustBadgeConfigurator } from '@/components/trust-badge/configurator';
 import { getDb } from '@/lib/firestore';
 import { verifySession } from '@/lib/auth/session';
+import { devConsole } from '@/lib/console';
 
 export const metadata: Metadata = {
   title: 'Trust Badge - Bugrit',
@@ -107,7 +108,7 @@ async function getUserSites() {
       };
     });
   } catch (error) {
-    console.error('Failed to fetch user sites:', error);
+    devConsole.error('Failed to fetch user sites:', error);
     return [];
   }
 }

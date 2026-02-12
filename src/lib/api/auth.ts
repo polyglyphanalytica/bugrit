@@ -19,6 +19,7 @@ import { TierName } from '../subscriptions/tiers';
 import { ApiException, ErrorCodes } from './errors';
 import { getDb } from '../firestore';
 import { getAdminAuth } from '../firebase-admin';
+import { devConsole } from '@/lib/console';
 
 // Extended key data with organization context
 export interface ApiKeyContext {
@@ -119,7 +120,7 @@ async function getOrganizationTier(ownerId: string): Promise<{ orgId: string; ti
       tier: await getOrgTier(db, orgData.organizationId),
     };
   } catch (error) {
-    console.error('Error getting organization tier:', error);
+    devConsole.error('Error getting organization tier:', error);
     return { orgId: ownerId, tier: 'free' };
   }
 }
@@ -138,7 +139,7 @@ async function getOrgTier(db: FirebaseFirestore.Firestore, orgId: string): Promi
 async function verifyFirebaseIdToken(idToken: string): Promise<{ uid: string; email?: string } | null> {
   const auth = getAdminAuth();
   if (!auth) {
-    console.error('Firebase Admin not initialized');
+    devConsole.error('Firebase Admin not initialized');
     return null;
   }
 
@@ -149,7 +150,7 @@ async function verifyFirebaseIdToken(idToken: string): Promise<{ uid: string; em
       email: decodedToken.email,
     };
   } catch (error) {
-    console.error('Firebase ID token verification failed:', error);
+    devConsole.error('Firebase ID token verification failed:', error);
     return null;
   }
 }
@@ -442,7 +443,7 @@ export async function verifyProjectAccess(
     const projectData = projectDoc.data();
     return projectData?.organizationId === context.organizationId;
   } catch (error) {
-    console.error('Error verifying project access:', error);
+    devConsole.error('Error verifying project access:', error);
     return false;
   }
 }

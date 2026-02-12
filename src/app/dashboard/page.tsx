@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/table';
 import { Application } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
+import { devConsole } from '@/lib/console';
 
 interface ScanStats {
   totalScans: number;
@@ -119,7 +120,7 @@ export default function DashboardPage() {
         setApplications(appsData.applications || []);
       }
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
+      devConsole.error('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
     }

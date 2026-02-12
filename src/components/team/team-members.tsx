@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useSubscription } from '@/lib/subscriptions/context';
+import { devConsole } from '@/lib/console';
 
 interface Member {
   userId: string;
@@ -45,7 +46,7 @@ export function TeamMembers() {
       const data = await res.json();
       setMembers(data.members || []);
     } catch (err) {
-      console.error('Failed to fetch members:', err);
+      devConsole.error('Failed to fetch members:', err);
     } finally {
       setLoading(false);
     }

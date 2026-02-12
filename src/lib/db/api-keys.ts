@@ -10,6 +10,7 @@ import {
 import { ApiKey, ApiKeyPermission, CreateApiKeyRequest } from '../types';
 import { store } from '../store';
 import crypto from 'crypto';
+import { devConsole } from '@/lib/console';
 
 const API_KEYS_COLLECTION = 'apiKeys';
 
@@ -65,7 +66,7 @@ export async function getApiKeysByApplication(applicationId: string): Promise<Ap
       } as ApiKey;
     });
   } catch (error) {
-    console.error('Error getting API keys:', error);
+    devConsole.error('Error getting API keys:', error);
     return [];
   }
 }
@@ -105,7 +106,7 @@ export async function getApiKeysByOwner(ownerId: string): Promise<ApiKey[]> {
       } as ApiKey;
     });
   } catch (error) {
-    console.error('Error getting API keys:', error);
+    devConsole.error('Error getting API keys:', error);
     return [];
   }
 }
@@ -146,7 +147,7 @@ export async function createApiKey(
   if (!db) {
     // In demo mode without Firestore, just return the key
     // The store.createApiKey signature doesn't match the new types
-    console.warn('Firestore not configured - API key not persisted');
+    devConsole.warn('Firestore not configured - API key not persisted');
     return { apiKey: newKey, fullKey };
   }
 
@@ -168,7 +169,7 @@ export async function createApiKey(
 
     return { apiKey: newKey, fullKey };
   } catch (error) {
-    console.error('Error creating API key:', error);
+    devConsole.error('Error creating API key:', error);
     throw new Error('Failed to create API key');
   }
 }
@@ -227,7 +228,7 @@ export async function validateApiKey(key: string): Promise<ApiKey | null> {
       lastUsedAt: new Date(),
     } as ApiKey;
   } catch (error) {
-    console.error('Error validating API key:', error);
+    devConsole.error('Error validating API key:', error);
     return null;
   }
 }
@@ -249,7 +250,7 @@ export async function revokeApiKey(id: string): Promise<boolean> {
     });
     return true;
   } catch (error) {
-    console.error('Error revoking API key:', error);
+    devConsole.error('Error revoking API key:', error);
     return false;
   }
 }
@@ -268,7 +269,7 @@ export async function deleteApiKey(id: string): Promise<boolean> {
     await db.collection(API_KEYS_COLLECTION).doc(id).delete();
     return true;
   } catch (error) {
-    console.error('Error deleting API key:', error);
+    devConsole.error('Error deleting API key:', error);
     return false;
   }
 }
@@ -304,7 +305,7 @@ export async function getApiKey(id: string): Promise<ApiKey | null> {
       lastUsedAt: data.lastUsedAt ? toDate(data.lastUsedAt) : undefined,
     } as ApiKey;
   } catch (error) {
-    console.error('Error getting API key:', error);
+    devConsole.error('Error getting API key:', error);
     return null;
   }
 }
@@ -371,7 +372,7 @@ export async function getAllApiKeys(): Promise<ApiKey[]> {
       } as ApiKey;
     });
   } catch (error) {
-    console.error('Error getting all API keys:', error);
+    devConsole.error('Error getting all API keys:', error);
     return [];
   }
 }

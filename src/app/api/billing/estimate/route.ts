@@ -15,6 +15,7 @@ import {
 import { ScanEstimateRequest, ScanEstimateResponse } from '@/lib/billing/types';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { getDb } from '@/lib/firestore';
+import { devConsole } from '@/lib/console';
 
 interface UserBillingContext {
   userId: string;
@@ -95,7 +96,7 @@ async function getUserBillingContext(userId: string): Promise<UserBillingContext
       credits: SUBSCRIPTION_TIERS.free.credits,
     };
   } catch (error) {
-    console.error('Error fetching user billing context:', error);
+    devConsole.error('Error fetching user billing context:', error);
     return {
       userId,
       tier: 'free',
@@ -145,7 +146,7 @@ async function estimateRepoSize(repoUrl?: string, projectId?: string): Promise<n
 
     return null;
   } catch (error) {
-    console.error('Error estimating repo size:', error);
+    devConsole.error('Error estimating repo size:', error);
     return null;
   }
 }
@@ -225,7 +226,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Estimate error:', error);
+    devConsole.error('Estimate error:', error);
     return NextResponse.json(
       { error: 'Internal error', message: 'Failed to calculate estimate' },
       { status: 500 }

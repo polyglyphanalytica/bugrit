@@ -41,6 +41,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { Application, ApiKey, ApiKeyPermission } from '@/lib/types';
 import { apiClient } from '@/lib/api-client';
+import { devConsole } from '@/lib/console';
 
 const ALL_PERMISSIONS: { value: ApiKeyPermission; label: string }[] = [
   { value: 'scripts:submit', label: 'Submit Scripts' },
@@ -132,7 +133,7 @@ export default function ApplicationDetailPage({
         router.push('/applications');
       }
     } catch (error) {
-      console.error('Failed to fetch application:', error);
+      devConsole.error('Failed to fetch application:', error);
     } finally {
       setLoading(false);
     }
@@ -145,7 +146,7 @@ export default function ApplicationDetailPage({
         setApiKeys(res.data.keys || []);
       }
     } catch (error) {
-      console.error('Failed to fetch API keys:', error);
+      devConsole.error('Failed to fetch API keys:', error);
     }
   };
 
@@ -227,7 +228,7 @@ export default function ApplicationDetailPage({
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to create API key',
+        description: 'Unable to create API key. Please try again.',
         variant: 'destructive',
       });
     } finally {

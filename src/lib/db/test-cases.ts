@@ -10,6 +10,7 @@ import {
 } from '../firestore';
 import { TestCase, TestStep } from '../types';
 import { store } from '../store';
+import { devConsole } from '@/lib/console';
 
 /**
  * Get all test cases
@@ -45,7 +46,7 @@ export async function getAllTestCases(): Promise<TestCase[]> {
       } as TestCase;
     });
   } catch (error) {
-    console.error('Error getting test cases:', error);
+    devConsole.error('Error getting test cases:', error);
     return store.getAllTestCases(); // Fallback
   }
 }
@@ -79,7 +80,7 @@ export async function getTestCase(id: string): Promise<TestCase | null> {
       updatedAt: toDate(data.updatedAt),
     } as TestCase;
   } catch (error) {
-    console.error('Error getting test case:', error);
+    devConsole.error('Error getting test case:', error);
     return store.getTestCase(id) || null;
   }
 }
@@ -120,7 +121,7 @@ export async function createTestCase(
 
     return newTestCase;
   } catch (error) {
-    console.error('Error creating test case:', error);
+    devConsole.error('Error creating test case:', error);
     return store.createTestCase(testCase);
   }
 }
@@ -173,7 +174,7 @@ export async function updateTestCase(
       updatedAt: toDate(data.updatedAt),
     } as TestCase;
   } catch (error) {
-    console.error('Error updating test case:', error);
+    devConsole.error('Error updating test case:', error);
     return store.updateTestCase(id, updates) || null;
   }
 }
@@ -192,7 +193,7 @@ export async function deleteTestCase(id: string): Promise<boolean> {
     await db.collection(COLLECTIONS.TEST_CASES).doc(id).delete();
     return true;
   } catch (error) {
-    console.error('Error deleting test case:', error);
+    devConsole.error('Error deleting test case:', error);
     return false;
   }
 }
@@ -230,7 +231,7 @@ export async function getTestCasesByCategory(category: string): Promise<TestCase
       } as TestCase;
     });
   } catch (error) {
-    console.error('Error getting test cases by category:', error);
+    devConsole.error('Error getting test cases by category:', error);
     return [];
   }
 }
@@ -270,7 +271,7 @@ export async function getTestCasesByStatus(
       } as TestCase;
     });
   } catch (error) {
-    console.error('Error getting test cases by status:', error);
+    devConsole.error('Error getting test cases by status:', error);
     return [];
   }
 }

@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import ContentDisplay from "./content-display";
 import { Card, CardContent } from "./ui/card";
 import { Skeleton } from "./ui/skeleton";
+import { devConsole } from '@/lib/console';
 
 type Content = {
   id: string;
@@ -60,7 +61,7 @@ export default function ContentList() {
       setContent(creations);
       setLoading(false);
     }, (error) => {
-        console.error("Error fetching content:", error);
+        devConsole.error("Error fetching content:", error);
         setLoading(false);
     });
 

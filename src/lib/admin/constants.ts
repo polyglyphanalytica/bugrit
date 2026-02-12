@@ -5,6 +5,8 @@
  * Set PLATFORM_SUPERADMIN_EMAIL in Google Secret Manager.
  */
 
+import { devConsole } from '@/lib/console';
+
 // Default superadmin email - bypasses all subscription limits
 // Loaded from environment variable for security (supports both env var names)
 export const DEFAULT_SUPERADMIN_EMAIL =
@@ -25,5 +27,5 @@ export function isProtectedSuperadmin(email: string): boolean {
 
 // Warn if superadmin email is not configured in production
 if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.PLATFORM_SUPERADMIN_EMAIL) {
-  console.warn('⚠️  PLATFORM_SUPERADMIN_EMAIL not set - using default. Configure in Secret Manager.');
+  devConsole.warn('PLATFORM_SUPERADMIN_EMAIL not set - using default. Configure in Secret Manager.');
 }

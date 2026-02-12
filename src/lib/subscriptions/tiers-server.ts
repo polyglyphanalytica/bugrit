@@ -9,6 +9,7 @@
 import 'server-only';
 
 import { TierDefinition, TierName, TIERS, getAllTiers } from './tiers';
+import { devConsole } from '@/lib/console';
 
 // Dynamic tier loading from database
 let cachedTiers: TierDefinition[] | null = null;
@@ -86,7 +87,7 @@ export async function loadTiersFromDatabase(): Promise<TierDefinition[]> {
     cacheTimestamp = now;
     return tiers;
   } catch (error) {
-    console.warn('Failed to load tiers from database, using hardcoded values:', error);
+    devConsole.warn('Failed to load tiers from database, using hardcoded values:', error);
     return getAllTiers();
   }
 }

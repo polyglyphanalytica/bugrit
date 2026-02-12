@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Loader2,
 } from 'lucide-react';
+import { devConsole } from '@/lib/console';
 
 interface Invoice {
   id: string;
@@ -90,7 +91,7 @@ export default function BillingHistoryPage() {
         throw new Error('Failed to fetch invoices');
       }
     } catch (error) {
-      console.error('Failed to fetch invoices:', error);
+      devConsole.error('Failed to fetch invoices:', error);
       toast({
         title: 'Error',
         description: 'Failed to load billing history',

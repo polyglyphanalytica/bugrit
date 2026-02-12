@@ -6,6 +6,7 @@
  */
 
 import { getDb, toDate, toTimestamp, generateId, COLLECTIONS } from '../firestore';
+import { devConsole } from '@/lib/console';
 
 // GitHub App configuration
 const GITHUB_APP_ID = process.env.GITHUB_APP_ID;
@@ -96,7 +97,7 @@ export async function exchangeCodeForInstallation(
   organizationId: string
 ): Promise<GitHubInstallation | null> {
   if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
-    console.warn('GitHub not configured');
+    devConsole.warn('GitHub not configured');
     return null;
   }
 
@@ -118,7 +119,7 @@ export async function exchangeCodeForInstallation(
     const tokenData = await tokenResponse.json();
 
     if (tokenData.error) {
-      console.error('GitHub OAuth error:', tokenData.error);
+      devConsole.error('GitHub OAuth error:', tokenData.error);
       return null;
     }
 
@@ -164,7 +165,7 @@ export async function exchangeCodeForInstallation(
 
     return installation;
   } catch (error) {
-    console.error('GitHub installation exchange error:', error);
+    devConsole.error('GitHub installation exchange error:', error);
     return null;
   }
 }
@@ -255,7 +256,7 @@ async function getInstallationAccessToken(installationId: number): Promise<strin
   }
 
   if (!GITHUB_APP_ID || !GITHUB_APP_PRIVATE_KEY) {
-    console.warn('GitHub App not configured for token generation');
+    devConsole.warn('GitHub App not configured for token generation');
     return null;
   }
 
@@ -276,7 +277,7 @@ async function getInstallationAccessToken(installationId: number): Promise<strin
     );
 
     if (!response.ok) {
-      console.error('Failed to get installation token:', await response.text());
+      devConsole.error('Failed to get installation token:', await response.text());
       return null;
     }
 
@@ -290,7 +291,7 @@ async function getInstallationAccessToken(installationId: number): Promise<strin
 
     return data.token;
   } catch (error) {
-    console.error('Error getting installation token:', error);
+    devConsole.error('Error getting installation token:', error);
     return null;
   }
 }
@@ -301,7 +302,7 @@ async function getInstallationAccessToken(installationId: number): Promise<strin
  */
 async function generateAppJwt(): Promise<string> {
   if (!GITHUB_APP_ID || !GITHUB_APP_PRIVATE_KEY) {
-    console.warn('GitHub App not configured - missing APP_ID or PRIVATE_KEY');
+    devConsole.warn('GitHub App not configured - missing APP_ID or PRIVATE_KEY');
     return '';
   }
 
@@ -326,7 +327,7 @@ async function generateAppJwt(): Promise<string> {
 
     return jwt;
   } catch (error) {
-    console.error('Failed to generate GitHub App JWT:', error);
+    devConsole.error('Failed to generate GitHub App JWT:', error);
     return '';
   }
 }
@@ -351,7 +352,7 @@ export async function listRepositories(
     });
 
     if (!response.ok) {
-      console.error('Failed to list repositories:', await response.text());
+      devConsole.error('Failed to list repositories:', await response.text());
       return [];
     }
 
@@ -368,7 +369,7 @@ export async function listRepositories(
       description: repo.description,
     }));
   } catch (error) {
-    console.error('Error listing repositories:', error);
+    devConsole.error('Error listing repositories:', error);
     return [];
   }
 }
@@ -411,7 +412,7 @@ export async function getRepository(
       description: data.description,
     };
   } catch (error) {
-    console.error('Error getting repository:', error);
+    devConsole.error('Error getting repository:', error);
     return null;
   }
 }
@@ -451,7 +452,7 @@ export async function listBranches(
       protected: branch.protected,
     }));
   } catch (error) {
-    console.error('Error listing branches:', error);
+    devConsole.error('Error listing branches:', error);
     return [];
   }
 }
@@ -499,7 +500,7 @@ export async function getRecentCommits(
       url: commit.html_url,
     }));
   } catch (error) {
-    console.error('Error getting commits:', error);
+    devConsole.error('Error getting commits:', error);
     return [];
   }
 }
@@ -545,7 +546,7 @@ export async function getFileContent(
     // Content is base64 encoded
     return Buffer.from(data.content, 'base64').toString('utf-8');
   } catch (error) {
-    console.error('Error getting file content:', error);
+    devConsole.error('Error getting file content:', error);
     return null;
   }
 }
@@ -594,14 +595,14 @@ export async function createCheckRun(
     });
 
     if (!response.ok) {
-      console.error('Failed to create check run:', await response.text());
+      devConsole.error('Failed to create check run:', await response.text());
       return null;
     }
 
     const data = await response.json();
     return data.id;
   } catch (error) {
-    console.error('Error creating check run:', error);
+    devConsole.error('Error creating check run:', error);
     return null;
   }
 }
@@ -645,7 +646,7 @@ export async function updateCheckRun(
 
     return response.ok;
   } catch (error) {
-    console.error('Error updating check run:', error);
+    devConsole.error('Error updating check run:', error);
     return false;
   }
 }
@@ -691,7 +692,7 @@ export async function createCommitStatus(
 
     return response.ok;
   } catch (error) {
-    console.error('Error creating commit status:', error);
+    devConsole.error('Error creating commit status:', error);
     return false;
   }
 }

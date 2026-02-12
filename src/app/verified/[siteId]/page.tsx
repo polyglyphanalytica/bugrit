@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { VibeScoreCard } from '@/components/vibe-score/score-card';
 import type { VibeScore } from '@/lib/vibe-score/types';
 import { getDb } from '@/lib/firestore';
+import { devConsole } from '@/lib/console';
 
 /**
  * Verification Landing Page
@@ -50,7 +51,7 @@ export default async function VerifiedSitePage({ params }: PageProps) {
   }
 
   // Track page view (async)
-  trackVerificationPageView(siteId).catch(console.error);
+  trackVerificationPageView(siteId).catch((err) => devConsole.error(err));
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-purple-950">
@@ -405,7 +406,7 @@ async function getVerifiedSite(siteId: string): Promise<VerifiedSite | null> {
       } : null,
     };
   } catch (error) {
-    console.error('Failed to fetch verified site:', error);
+    devConsole.error('Failed to fetch verified site:', error);
     return null;
   }
 }

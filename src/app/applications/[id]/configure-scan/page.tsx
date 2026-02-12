@@ -32,6 +32,7 @@ import {
 import { Application } from '@/lib/types';
 import { apiClient } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
+import { devConsole } from '@/lib/console';
 
 interface RepoAnalysis {
   name: string;
@@ -144,7 +145,7 @@ function ConfigureScanInner() {
         setApplication(res.data.application);
       }
     } catch (error) {
-      console.error('Failed to fetch application:', error);
+      devConsole.error('Failed to fetch application:', error);
     } finally {
       setLoading(false);
     }
@@ -217,7 +218,7 @@ function ConfigureScanInner() {
     } catch (error) {
       toast({
         title: 'Analysis failed',
-        description: error instanceof Error ? error.message : 'Something went wrong',
+        description: 'Unable to analyze your code. Please try again.',
         variant: 'destructive',
       });
       router.push(`/applications/${appId}/setup-scan`);
@@ -378,7 +379,7 @@ function ConfigureScanInner() {
     } catch (error) {
       toast({
         title: 'Failed to start scan',
-        description: error instanceof Error ? error.message : 'Something went wrong',
+        description: 'Unable to start scan. Please try again.',
         variant: 'destructive',
       });
     } finally {

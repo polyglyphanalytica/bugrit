@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ReviewMergePrompt } from '@/components/fixes/review-merge-prompt';
 import { getDb } from '@/lib/firestore';
+import { devConsole } from '@/lib/console';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -170,7 +171,7 @@ async function getScanWithFixes(scanId: string) {
       },
     };
   } catch (error) {
-    console.error('Failed to fetch scan with fixes:', error);
+    devConsole.error('Failed to fetch scan with fixes:', error);
     return null;
   }
 }

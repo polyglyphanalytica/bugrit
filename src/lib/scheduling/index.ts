@@ -7,6 +7,7 @@
 
 import { google } from 'googleapis';
 import { ToolCategory } from '../integrations/types';
+import { devConsole } from '@/lib/console';
 
 const scheduler = google.cloudscheduler('v1');
 
@@ -385,7 +386,7 @@ export function createScheduleManager(): ScheduleManager | null {
   const targetEndpoint = process.env.BUGRIT_API_ENDPOINT;
 
   if (!projectId || !targetEndpoint) {
-    console.warn('Missing GOOGLE_CLOUD_PROJECT or BUGRIT_API_ENDPOINT');
+    devConsole.warn('Missing GOOGLE_CLOUD_PROJECT or BUGRIT_API_ENDPOINT');
     return null;
   }
 

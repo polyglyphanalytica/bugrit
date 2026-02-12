@@ -14,6 +14,7 @@ import {
   NativePlatform,
   BrowserType,
 } from '../types';
+import { devConsole } from '@/lib/console';
 
 // Add to collections
 const APPLICATIONS_COLLECTION = 'applications';
@@ -73,7 +74,7 @@ export async function getApplicationsByOwner(ownerId: string): Promise<Applicati
   const db = getDb();
 
   if (!db) {
-    console.warn('Firestore not configured - returning empty applications list');
+    devConsole.warn('Firestore not configured - returning empty applications list');
     return [];
   }
 
@@ -103,7 +104,7 @@ export async function getApplicationsByOwner(ownerId: string): Promise<Applicati
       } as Application;
     });
   } catch (error) {
-    console.error('Error getting applications:', error);
+    devConsole.error('Error getting applications:', error);
     return [];
   }
 }
@@ -140,7 +141,7 @@ export async function getApplication(id: string): Promise<Application | null> {
       updatedAt: toDate(data.updatedAt),
     } as Application;
   } catch (error) {
-    console.error('Error getting application:', error);
+    devConsole.error('Error getting application:', error);
     return null;
   }
 }
@@ -212,7 +213,7 @@ export async function createApplication(
 
     return newApp;
   } catch (error) {
-    console.error('Error creating application:', error);
+    devConsole.error('Error creating application:', error);
     throw new Error('Failed to create application');
   }
 }
@@ -248,7 +249,7 @@ export async function updateApplication(
 
     return getApplication(id);
   } catch (error) {
-    console.error('Error updating application:', error);
+    devConsole.error('Error updating application:', error);
     return null;
   }
 }
@@ -296,7 +297,7 @@ export async function deleteApplication(id: string): Promise<boolean> {
     await batch.commit();
     return true;
   } catch (error) {
-    console.error('Error deleting application:', error);
+    devConsole.error('Error deleting application:', error);
     return false;
   }
 }
@@ -348,7 +349,7 @@ export async function getAllApplications(): Promise<Application[]> {
       } as Application;
     });
   } catch (error) {
-    console.error('Error getting all applications:', error);
+    devConsole.error('Error getting all applications:', error);
     return [];
   }
 }

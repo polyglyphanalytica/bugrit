@@ -7,6 +7,7 @@ import {
   getFirestoreDatabaseId,
   DEFAULT_FIRESTORE_DATABASE_ID,
 } from "@/lib/environment";
+import { devConsole } from '@/lib/console';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -26,7 +27,7 @@ function isFirebaseConfigured(): boolean {
 
 let app: FirebaseApp;
 if (!isFirebaseConfigured()) {
-  console.error("Firebase is not configured. Please check your environment variables.");
+  devConsole.error("Firebase is not configured. Please check your environment variables.");
   // Mock app for environments without firebase config
   app = {} as FirebaseApp;
 } else if (getApps().length === 0) {

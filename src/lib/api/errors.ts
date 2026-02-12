@@ -6,6 +6,7 @@
 
 import { NextResponse } from 'next/server';
 import { ApiResponse, ApiError } from './types';
+import { devConsole } from '@/lib/console';
 
 // Error codes
 export const ErrorCodes = {
@@ -101,7 +102,7 @@ export function successResponse<T>(
  * Handle caught errors and return appropriate response
  */
 export function handleError(error: unknown): NextResponse<ApiResponse<never>> {
-  console.error('API Error:', error);
+  devConsole.error('API Error:', error);
 
   if (error instanceof ApiException) {
     return errorResponse(error.code, error.message, error.statusCode, error.details);

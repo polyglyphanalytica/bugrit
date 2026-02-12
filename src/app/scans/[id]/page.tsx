@@ -20,6 +20,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ScanProgress, PrioritizedResults, NoIssuesFound, AutofixPanel, type Finding } from '@/components/scan';
 import { PlainEnglishProvider } from '@/contexts/plain-english-context';
 import { useSensei } from '@/contexts/sensei-context';
+import { devConsole } from '@/lib/console';
 
 interface ToolResult {
   toolId: string;
@@ -130,7 +131,7 @@ export default function ScanDetailPage() {
         setScan(data.scan);
       }
     } catch (error) {
-      console.error('Failed to fetch scan:', error);
+      devConsole.error('Failed to fetch scan:', error);
     } finally {
       setLoading(false);
     }

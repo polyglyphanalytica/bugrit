@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Application } from '@/lib/types';
 import { apiClient } from '@/lib/api-client';
 import { QuickScan, ScanSource } from '@/components/scan';
+import { devConsole } from '@/lib/console';
 
 type SourceType = 'url' | 'github' | 'gitlab' | 'upload' | 'docker' | 'npm' | 'mobile';
 
@@ -90,7 +91,7 @@ export default function NewScanPage() {
         router.push('/applications');
       }
     } catch (error) {
-      console.error('Failed to fetch application:', error);
+      devConsole.error('Failed to fetch application:', error);
       router.push('/applications');
     } finally {
       setLoading(false);
@@ -203,7 +204,7 @@ export default function NewScanPage() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to start scan',
+        description: 'Unable to start scan. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -274,7 +275,7 @@ export default function NewScanPage() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to start scan',
+        description: 'Unable to start scan. Please try again.',
         variant: 'destructive',
       });
     } finally {

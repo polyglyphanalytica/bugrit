@@ -13,6 +13,7 @@ import type {
   Timestamp as TimestampType,
 } from 'firebase-admin/firestore';
 import { getAdminFirestore, isAdminConfigured } from './firebase-admin';
+import { devConsole } from '@/lib/console';
 
 // Lazy-loaded firebase-admin/firestore module
 let _firestoreModule: typeof import('firebase-admin/firestore') | null = null;
@@ -27,7 +28,7 @@ function getFirestoreModule(): typeof import('firebase-admin/firestore') | null 
     _firestoreModule = require('firebase-admin/firestore');
     return _firestoreModule;
   } catch (error) {
-    console.warn('[firestore] firebase-admin/firestore not available:', error);
+    devConsole.warn('[firestore] firebase-admin/firestore not available:', error);
     return null;
   }
 }
@@ -196,7 +197,7 @@ export async function batchWrite(
     await batch.commit();
     return true;
   } catch (error) {
-    console.error('Batch write failed:', error);
+    devConsole.error('Batch write failed:', error);
     return false;
   }
 }
@@ -209,7 +210,7 @@ export const Timestamp = new Proxy({} as typeof import('firebase-admin/firestore
     if (mod?.Timestamp) {
       return (mod.Timestamp as any)[prop];
     }
-    console.warn(`[firestore] Timestamp.${String(prop)} called but firebase-admin/firestore not loaded`);
+    devConsole.warn(`[firestore] Timestamp.${String(prop)} called but firebase-admin/firestore not loaded`);
     return undefined;
   },
   construct(_target, args) {
@@ -227,7 +228,7 @@ export const FieldValue = new Proxy({} as typeof import('firebase-admin/firestor
     if (mod?.FieldValue) {
       return (mod.FieldValue as any)[prop];
     }
-    console.warn(`[firestore] FieldValue.${String(prop)} called but firebase-admin/firestore not loaded`);
+    devConsole.warn(`[firestore] FieldValue.${String(prop)} called but firebase-admin/firestore not loaded`);
     return undefined;
   },
 });

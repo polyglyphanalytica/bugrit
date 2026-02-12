@@ -5,6 +5,7 @@ import { BadgeShowcase } from '@/components/vibe-score/badge-showcase';
 import { ScoreHistory } from '@/components/vibe-score/score-history';
 import { EmbedCode } from '@/components/vibe-score/embed-code';
 import { getDb } from '@/lib/firestore';
+import { devConsole } from '@/lib/console';
 
 /**
  * Public Repo Health Profile Page
@@ -168,7 +169,7 @@ async function getRepoProfile(owner: string, repo: string) {
       badgeUrl: `https://bugrit.dev/api/badge/${owner}/${repo}`,
     };
   } catch (error) {
-    console.error('Failed to fetch repo profile:', error);
+    devConsole.error('Failed to fetch repo profile:', error);
     return null;
   }
 }

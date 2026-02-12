@@ -1,6 +1,8 @@
 // Security layer for uploaded code scanning
 // Validates uploads and enforces sandboxing policies
 
+import { devConsole } from '@/lib/console';
+
 export interface SecurityPolicy {
   maxFileSizeMb: number;
   allowedExtensions: string[];
@@ -125,7 +127,7 @@ export function validateUpload(
   // Check MIME type (less reliable but still useful)
   if (file.type && !policy.allowedMimeTypes.includes(file.type)) {
     // Don't fail on MIME type alone - it's unreliable
-    console.warn(`Unexpected MIME type: ${file.type} for file ${file.name}`);
+    devConsole.warn(`Unexpected MIME type: ${file.type} for file ${file.name}`);
   }
 
   return { valid: true };

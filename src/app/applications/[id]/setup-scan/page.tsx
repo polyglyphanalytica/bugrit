@@ -27,6 +27,7 @@ import {
 import { Application } from '@/lib/types';
 import { apiClient } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
+import { devConsole } from '@/lib/console';
 
 type SourceType = 'github' | 'upload' | null;
 
@@ -85,7 +86,7 @@ export default function SetupScanPage() {
         setApplication(res.data.application);
       }
     } catch (error) {
-      console.error('Failed to fetch application:', error);
+      devConsole.error('Failed to fetch application:', error);
     } finally {
       setLoading(false);
     }
@@ -228,7 +229,7 @@ export default function SetupScanPage() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Something went wrong',
+        description: 'Upload failed. Please try again.',
         variant: 'destructive',
       });
     } finally {

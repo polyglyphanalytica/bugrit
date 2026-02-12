@@ -8,6 +8,7 @@
  */
 
 import { google } from 'googleapis';
+import { devConsole } from '@/lib/console';
 
 // Cloud Run Admin API client
 const run = google.run('v2');
@@ -97,14 +98,14 @@ export async function deployService(config: CloudRunConfig): Promise<DeploymentR
 
     if (exists) {
       // Update existing service
-      console.log(`Updating existing service: ${config.serviceName}`);
+      devConsole.log(`Updating existing service: ${config.serviceName}`);
       operation = await run.projects.locations.services.patch({
         name: getServiceName(config.projectId, config.region, config.serviceName),
         requestBody: serviceConfig,
       });
     } else {
       // Create new service
-      console.log(`Creating new service: ${config.serviceName}`);
+      devConsole.log(`Creating new service: ${config.serviceName}`);
       operation = await run.projects.locations.services.create({
         parent: `projects/${config.projectId}/locations/${config.region}`,
         serviceId: config.serviceName,
@@ -136,7 +137,7 @@ export async function deployService(config: CloudRunConfig): Promise<DeploymentR
     return result;
   } catch (error: unknown) {
     const err = error as Error;
-    console.error('Deployment failed:', err);
+    devConsole.error('Deployment failed:', err);
     return {
       success: false,
       error: err.message,
@@ -324,14 +325,14 @@ export async function buildAndPushImage(
 
   try {
     // Build the image
-    console.log('Building Docker image...');
+    devConsole.log('Building Docker image...');
     execSync(
       `docker build -t ${imageUrl} -t ${imageUrlWithTag} -f ${dockerfilePath} ${contextPath}`,
       { stdio: 'inherit' }
     );
 
     // Push to GCR
-    console.log('Pushing to Google Container Registry...');
+    devConsole.log('Pushing to Google Container Registry...');
     execSync(`docker push ${imageUrl}`, { stdio: 'inherit' });
     execSync(`docker push ${imageUrlWithTag}`, { stdio: 'inherit' });
 
@@ -359,7 +360,7 @@ export async function fullDeploy(
   }
 ): Promise<DeploymentResult> {
   // Step 1: Build and push image
-  console.log('Step 1/2: Building and pushing Docker image...');
+  devConsole.log('Step 1/2: Building and pushing Docker image...');
   const buildResult = await buildAndPushImage(
     config.projectId,
     config.imageName,
@@ -375,7 +376,7 @@ export async function fullDeploy(
   }
 
   // Step 2: Deploy to Cloud Run
-  console.log('Step 2/2: Deploying to Cloud Run...');
+  devConsole.log('Step 2/2: Deploying to Cloud Run...');
   const deployResult = await deployService({
     ...config,
     imageUrl: buildResult.imageUrl!,
