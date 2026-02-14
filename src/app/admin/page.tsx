@@ -9,7 +9,7 @@ import { GradientButton } from '@/components/ui/gradient-button';
 import { Logo } from '@/components/ui/logo';
 import { devConsole } from '@/lib/console';
 
-type TabType = 'stripe' | 'pricing' | 'credit-packages' | 'promo-codes' | 'features' | 'admins' | 'audit';
+type TabType = 'stripe' | 'pricing' | 'credit-packages' | 'promo-codes' | 'features' | 'admins' | 'users' | 'refunds' | 'audit';
 
 const tabs: { id: TabType; label: string; icon: React.ReactElement }[] = [
   {
@@ -63,6 +63,24 @@ const tabs: { id: TabType; label: string; icon: React.ReactElement }[] = [
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'users',
+    label: 'Users',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    ),
+  },
+  {
+    id: 'refunds',
+    label: 'Refunds',
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
       </svg>
     ),
   },
@@ -181,6 +199,8 @@ export default function AdminDashboard() {
               {activeTab === 'promo-codes' && <PromoCodesPanel />}
               {activeTab === 'features' && <FeaturesPanel />}
               {activeTab === 'admins' && <AdminsPanel />}
+              {activeTab === 'users' && <UsersPanel />}
+              {activeTab === 'refunds' && <RefundsPanel />}
               {activeTab === 'audit' && <AuditPanel />}
             </div>
           </main>
@@ -1907,6 +1927,811 @@ function AdminsPanel() {
             </div>
           ))}
         </div>
+      </GlassCard>
+    </div>
+  );
+}
+
+// ==================== USERS PANEL ====================
+
+function UsersPanel() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [tierFilter, setTierFilter] = useState('');
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [adjustCredits, setAdjustCredits] = useState({ show: false, userId: '', amount: 0, note: '' });
+  const [changeTier, setChangeTier] = useState({ show: false, userId: '', tier: '' });
+  const [actionLoading, setActionLoading] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [tierFilter, offset]);
+
+  const fetchUsers = async (searchQuery?: string) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (searchQuery || search) params.set('search', searchQuery || search);
+      if (tierFilter) params.set('tier', tierFilter);
+      params.set('offset', offset.toString());
+      params.set('limit', '25');
+
+      const res = await fetch(`/api/admin/users?${params}`);
+      const data = await res.json();
+      setUsers(data.users || []);
+      setHasMore(data.hasMore || false);
+    } catch (error) {
+      devConsole.error('Failed to fetch users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = () => {
+    setOffset(0);
+    fetchUsers(search);
+  };
+
+  const viewUserDetail = async (userId: string) => {
+    setDetailLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`);
+      const data = await res.json();
+      setSelectedUser(data);
+    } catch (error) {
+      devConsole.error('Failed to fetch user details:', error);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleAdjustCredits = async () => {
+    if (!adjustCredits.userId || adjustCredits.amount === 0) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${adjustCredits.userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'adjust_credits',
+          amount: adjustCredits.amount,
+          note: adjustCredits.note,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAdjustCredits({ show: false, userId: '', amount: 0, note: '' });
+        fetchUsers();
+        if (selectedUser?.user?.userId === adjustCredits.userId) {
+          viewUserDetail(adjustCredits.userId);
+        }
+      } else {
+        alert(data.error || 'Failed to adjust credits');
+      }
+    } catch (error) {
+      devConsole.error('Failed to adjust credits:', error);
+      alert('Failed to adjust credits');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleChangeTier = async () => {
+    if (!changeTier.userId || !changeTier.tier) return;
+    setActionLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${changeTier.userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'change_tier', tier: changeTier.tier }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setChangeTier({ show: false, userId: '', tier: '' });
+        fetchUsers();
+        if (selectedUser?.user?.userId === changeTier.userId) {
+          viewUserDetail(changeTier.userId);
+        }
+      } else {
+        alert(data.error || 'Failed to change tier');
+      }
+    } catch (error) {
+      devConsole.error('Failed to change tier:', error);
+      alert('Failed to change tier');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleToggleDisable = async (userId: string, currentlyDisabled: boolean) => {
+    const action = currentlyDisabled ? 'enable' : 'disable';
+    if (!confirm(`${currentlyDisabled ? 'Enable' : 'Disable'} this user account?`)) return;
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchUsers();
+      }
+    } catch (error) {
+      devConsole.error('Failed to toggle user:', error);
+    }
+  };
+
+  const tierColors: Record<string, string> = {
+    free: 'bg-gray-100 text-gray-600',
+    starter: 'bg-blue-100 text-blue-700',
+    pro: 'bg-purple-100 text-purple-700',
+    business: 'bg-orange-100 text-orange-700',
+    enterprise: 'bg-red-100 text-red-700',
+  };
+
+  const statusColors: Record<string, string> = {
+    active: 'bg-green-100 text-green-700',
+    past_due: 'bg-yellow-100 text-yellow-700',
+    canceled: 'bg-red-100 text-red-700',
+    trialing: 'bg-blue-100 text-blue-700',
+    none: 'bg-gray-100 text-gray-500',
+  };
+
+  if (loading && users.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">Manage Users</h2>
+        <p className="text-gray-500">View and manage platform users, credits, and subscriptions</p>
+      </div>
+
+      {/* Search and Filters */}
+      <GlassCard className="p-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 flex gap-2">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder="Search by email..."
+              className="input-modern flex-1"
+            />
+            <GradientButton onClick={handleSearch}>Search</GradientButton>
+          </div>
+          <select
+            value={tierFilter}
+            onChange={(e) => { setTierFilter(e.target.value); setOffset(0); }}
+            className="input-modern w-40"
+          >
+            <option value="">All Tiers</option>
+            <option value="free">Free</option>
+            <option value="starter">Starter</option>
+            <option value="pro">Pro</option>
+            <option value="business">Business</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
+      </GlassCard>
+
+      {/* Adjust Credits Modal */}
+      {adjustCredits.show && (
+        <GlassCard className="p-6 ring-2 ring-primary">
+          <h3 className="text-lg font-semibold mb-4">Adjust Credits</h3>
+          <p className="text-sm text-gray-500 mb-4">User: {adjustCredits.userId}</p>
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Amount (positive to add, negative to deduct)</label>
+              <input
+                type="number"
+                value={adjustCredits.amount || ''}
+                onChange={(e) => setAdjustCredits({ ...adjustCredits, amount: parseInt(e.target.value) || 0 })}
+                className="input-modern"
+                placeholder="e.g., 50 or -10"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Note / Reason</label>
+              <input
+                value={adjustCredits.note}
+                onChange={(e) => setAdjustCredits({ ...adjustCredits, note: e.target.value })}
+                className="input-modern"
+                placeholder="e.g., Compensation for issue"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <GradientButton onClick={handleAdjustCredits} disabled={actionLoading || adjustCredits.amount === 0}>
+              {actionLoading ? 'Adjusting...' : 'Apply Adjustment'}
+            </GradientButton>
+            <GradientButton variant="ghost" onClick={() => setAdjustCredits({ show: false, userId: '', amount: 0, note: '' })}>
+              Cancel
+            </GradientButton>
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Change Tier Modal */}
+      {changeTier.show && (
+        <GlassCard className="p-6 ring-2 ring-primary">
+          <h3 className="text-lg font-semibold mb-4">Change Subscription Tier</h3>
+          <p className="text-sm text-gray-500 mb-4">User: {changeTier.userId}</p>
+          <p className="text-xs text-yellow-600 mb-4">
+            Note: This changes the tier in Firestore only. For Stripe subscription changes, use the Stripe dashboard.
+          </p>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">New Tier</label>
+            <select
+              value={changeTier.tier}
+              onChange={(e) => setChangeTier({ ...changeTier, tier: e.target.value })}
+              className="input-modern w-48"
+            >
+              <option value="">Select tier...</option>
+              <option value="free">Free</option>
+              <option value="starter">Starter</option>
+              <option value="pro">Pro</option>
+              <option value="business">Business</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </div>
+          <div className="flex gap-3">
+            <GradientButton onClick={handleChangeTier} disabled={actionLoading || !changeTier.tier}>
+              {actionLoading ? 'Updating...' : 'Change Tier'}
+            </GradientButton>
+            <GradientButton variant="ghost" onClick={() => setChangeTier({ show: false, userId: '', tier: '' })}>
+              Cancel
+            </GradientButton>
+          </div>
+        </GlassCard>
+      )}
+
+      {/* User Detail Panel */}
+      {selectedUser && (
+        <GlassCard className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold">User Details</h3>
+            <GradientButton variant="ghost" size="sm" onClick={() => setSelectedUser(null)}>
+              Close
+            </GradientButton>
+          </div>
+          {detailLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* User Info */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <div className="text-xs text-gray-500">Email</div>
+                  <div className="font-medium">{selectedUser.user?.email}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">User ID</div>
+                  <div className="font-mono text-xs">{selectedUser.user?.userId}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">Tier</div>
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${tierColors[selectedUser.subscription?.tier || 'free']}`}>
+                    {selectedUser.subscription?.tier || 'free'}
+                  </span>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500">Stripe Customer</div>
+                  <div className="font-mono text-xs">{selectedUser.user?.stripeCustomerId || 'None'}</div>
+                </div>
+              </div>
+
+              {/* Credit Balance */}
+              {selectedUser.billing?.credits && (
+                <div>
+                  <h4 className="text-sm font-semibold mb-2 text-primary">Credit Balance</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <StatBox label="Remaining" value={selectedUser.billing.credits.remaining ?? 0} />
+                    <StatBox label="Included" value={selectedUser.billing.credits.included ?? 0} />
+                    <StatBox label="Used" value={selectedUser.billing.credits.used ?? 0} />
+                    <StatBox label="Purchased" value={selectedUser.billing.credits.purchased ?? 0} />
+                    <StatBox label="Rollover" value={selectedUser.billing.credits.rollover ?? 0} />
+                  </div>
+                </div>
+              )}
+
+              {/* Recent Transactions */}
+              {selectedUser.recentTransactions?.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold mb-2 text-primary">Recent Transactions</h4>
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {selectedUser.recentTransactions.map((tx: any) => (
+                      <div key={tx.id} className="flex items-center justify-between p-2 rounded bg-gray-50 text-sm">
+                        <div className="flex items-center gap-3">
+                          <span className={`font-medium ${tx.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {tx.amount > 0 ? '+' : ''}{tx.amount}
+                          </span>
+                          <span className="text-gray-500">{tx.type}</span>
+                          {tx.details?.note && <span className="text-xs text-gray-400">{tx.details.note}</span>}
+                        </div>
+                        <span className="text-xs text-gray-400">
+                          {tx.timestamp?.toDate ? new Date(tx.timestamp.toDate()).toLocaleString() : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent Scans */}
+              {selectedUser.recentScans?.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold mb-2 text-primary">Recent Scans</h4>
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {selectedUser.recentScans.map((scan: any) => (
+                      <div key={scan.id} className="flex items-center justify-between p-2 rounded bg-gray-50 text-sm">
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2 py-0.5 rounded text-xs ${
+                            scan.status === 'completed' ? 'bg-green-100 text-green-700' :
+                            scan.status === 'failed' ? 'bg-red-100 text-red-700' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            {scan.status}
+                          </span>
+                          <span className="text-gray-600">{scan.creditsUsed} credits</span>
+                          <span className="text-gray-400">{scan.issuesFound} issues</span>
+                        </div>
+                        <span className="text-xs text-gray-400">
+                          {scan.createdAt?.toDate ? new Date(scan.createdAt.toDate()).toLocaleString() : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </GlassCard>
+      )}
+
+      {/* Users List */}
+      <GlassCard className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">
+            Users {!loading && <span className="text-sm font-normal text-gray-500">({users.length}{hasMore ? '+' : ''} results)</span>}
+          </h3>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : users.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">No users found</p>
+        ) : (
+          <>
+            <div className="space-y-2">
+              {users.map((user) => (
+                <div
+                  key={user.userId}
+                  className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-medium flex-shrink-0">
+                      {(user.email || '?')[0].toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{user.email}</div>
+                      <div className="text-xs text-gray-500 truncate">
+                        ID: {user.userId}
+                        {user.organizations?.length > 0 && (
+                          <span className="ml-2">
+                            Orgs: {user.organizations.map((o: any) => o.name).join(', ')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    {/* Tier Badge */}
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${tierColors[user.tier] || tierColors.free}`}>
+                      {user.tier}
+                    </span>
+
+                    {/* Status Badge */}
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[user.subscriptionStatus] || statusColors.none}`}>
+                      {user.subscriptionStatus}
+                    </span>
+
+                    {/* Credits */}
+                    {user.credits && (
+                      <span className="text-xs text-gray-500" title="Credits remaining">
+                        {user.credits.remaining ?? 0} cr
+                      </span>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex gap-1">
+                      <GradientButton variant="ghost" size="sm" onClick={() => viewUserDetail(user.userId)}>
+                        View
+                      </GradientButton>
+                      <GradientButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setAdjustCredits({ show: true, userId: user.userId, amount: 0, note: '' })}
+                      >
+                        Credits
+                      </GradientButton>
+                      <GradientButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setChangeTier({ show: true, userId: user.userId, tier: user.tier })}
+                      >
+                        Tier
+                      </GradientButton>
+                      <GradientButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleDisable(user.userId, user.disabled)}
+                      >
+                        {user.disabled ? 'Enable' : 'Disable'}
+                      </GradientButton>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+              <GradientButton
+                variant="outline"
+                size="sm"
+                onClick={() => setOffset(Math.max(0, offset - 25))}
+                disabled={offset === 0}
+              >
+                Previous
+              </GradientButton>
+              <span className="text-sm text-gray-500">
+                Showing {offset + 1}-{offset + users.length}
+              </span>
+              <GradientButton
+                variant="outline"
+                size="sm"
+                onClick={() => setOffset(offset + 25)}
+                disabled={!hasMore}
+              >
+                Next
+              </GradientButton>
+            </div>
+          </>
+        )}
+      </GlassCard>
+    </div>
+  );
+}
+
+// ==================== REFUNDS PANEL ====================
+
+function RefundsPanel() {
+  const [refunds, setRefunds] = useState<any[]>([]);
+  const [disputes, setDisputes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newRefund, setNewRefund] = useState({
+    paymentIntentId: '',
+    chargeId: '',
+    amount: 0,
+    reason: 'requested_by_customer',
+    userId: '',
+    note: '',
+  });
+
+  useEffect(() => {
+    fetchRefunds();
+  }, []);
+
+  const fetchRefunds = async () => {
+    try {
+      const res = await fetch('/api/admin/refunds?limit=50');
+      const data = await res.json();
+      setRefunds(data.refunds || []);
+      setDisputes(data.disputes || []);
+    } catch (error) {
+      devConsole.error('Failed to fetch refunds:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateRefund = async () => {
+    if (!newRefund.paymentIntentId && !newRefund.chargeId) {
+      alert('Please provide either a Payment Intent ID or Charge ID');
+      return;
+    }
+    if (!confirm('Are you sure you want to issue this refund? This action cannot be undone.')) return;
+
+    setCreating(true);
+    try {
+      const res = await fetch('/api/admin/refunds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newRefund,
+          amount: newRefund.amount || undefined, // 0 means full refund
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShowCreate(false);
+        setNewRefund({
+          paymentIntentId: '',
+          chargeId: '',
+          amount: 0,
+          reason: 'requested_by_customer',
+          userId: '',
+          note: '',
+        });
+        fetchRefunds();
+        alert(`Refund processed: $${(data.refund.amount / 100).toFixed(2)} ${data.refund.currency.toUpperCase()}`);
+      } else {
+        alert(data.error || 'Failed to process refund');
+      }
+    } catch (error) {
+      devConsole.error('Failed to create refund:', error);
+      alert('Failed to process refund');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const formatDate = (dateVal: any): string => {
+    if (!dateVal) return '';
+    if (dateVal.toDate) return new Date(dateVal.toDate()).toLocaleString();
+    if (dateVal._seconds) return new Date(dateVal._seconds * 1000).toLocaleString();
+    return new Date(dateVal).toLocaleString();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Manage Refunds</h2>
+          <p className="text-gray-500">View refund history and process new refunds</p>
+        </div>
+        <GradientButton onClick={() => setShowCreate(!showCreate)}>
+          {showCreate ? 'Cancel' : '+ New Refund'}
+        </GradientButton>
+      </div>
+
+      {/* Create Refund Form */}
+      {showCreate && (
+        <GlassCard className="p-6 ring-2 ring-primary">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+            </svg>
+            Issue Refund via Stripe
+          </h3>
+          <p className="text-sm text-yellow-600 mb-4">
+            This will process a real refund through Stripe. Double-check the details before submitting.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Payment Intent ID</label>
+              <input
+                value={newRefund.paymentIntentId}
+                onChange={(e) => setNewRefund({ ...newRefund, paymentIntentId: e.target.value, chargeId: '' })}
+                placeholder="pi_..."
+                className="input-modern font-mono text-sm"
+                disabled={!!newRefund.chargeId}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Or Charge ID</label>
+              <input
+                value={newRefund.chargeId}
+                onChange={(e) => setNewRefund({ ...newRefund, chargeId: e.target.value, paymentIntentId: '' })}
+                placeholder="ch_..."
+                className="input-modern font-mono text-sm"
+                disabled={!!newRefund.paymentIntentId}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Amount ($, 0 for full refund)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={newRefund.amount || ''}
+                onChange={(e) => setNewRefund({ ...newRefund, amount: parseFloat(e.target.value) || 0 })}
+                placeholder="0 = full refund"
+                className="input-modern"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Reason</label>
+              <select
+                value={newRefund.reason}
+                onChange={(e) => setNewRefund({ ...newRefund, reason: e.target.value })}
+                className="input-modern"
+              >
+                <option value="requested_by_customer">Requested by Customer</option>
+                <option value="duplicate">Duplicate Charge</option>
+                <option value="fraudulent">Fraudulent</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">User ID (optional)</label>
+              <input
+                value={newRefund.userId}
+                onChange={(e) => setNewRefund({ ...newRefund, userId: e.target.value })}
+                placeholder="For credit adjustment"
+                className="input-modern font-mono text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Internal Note</label>
+              <input
+                value={newRefund.note}
+                onChange={(e) => setNewRefund({ ...newRefund, note: e.target.value })}
+                placeholder="e.g., Customer reported issue #123"
+                className="input-modern"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <GradientButton onClick={handleCreateRefund} disabled={creating}>
+              {creating ? 'Processing...' : 'Process Refund'}
+            </GradientButton>
+            <GradientButton variant="ghost" onClick={() => setShowCreate(false)}>
+              Cancel
+            </GradientButton>
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Disputes Section */}
+      {disputes.length > 0 && (
+        <GlassCard className="p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            Active Disputes / Chargebacks
+            <span className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">{disputes.length}</span>
+          </h3>
+          <div className="space-y-3">
+            {disputes.map((dispute) => (
+              <div
+                key={dispute.id}
+                className="p-4 rounded-xl bg-red-50 border border-red-200"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-sm font-medium">{dispute.stripeDisputeId}</span>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                      dispute.status === 'won' ? 'bg-green-100 text-green-700' :
+                      dispute.status === 'lost' ? 'bg-red-100 text-red-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {dispute.status}
+                    </span>
+                  </div>
+                  <span className="text-xl font-bold text-red-600">
+                    ${((dispute.amount || 0) / 100).toFixed(2)}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600">
+                  <span>Reason: {dispute.reason}</span>
+                  <span className="mx-2">|</span>
+                  <span>Charge: {dispute.stripeChargeId}</span>
+                  {dispute.evidenceDueBy && (
+                    <>
+                      <span className="mx-2">|</span>
+                      <span className="text-red-600 font-medium">
+                        Evidence due: {formatDate(dispute.evidenceDueBy)}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  Created: {formatDate(dispute.createdAt)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Refunds List */}
+      <GlassCard className="p-6">
+        <h3 className="text-lg font-semibold mb-4">
+          Refund History
+          <span className="text-sm font-normal text-gray-500 ml-2">({refunds.length} records)</span>
+        </h3>
+
+        {refunds.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">No refunds recorded yet</p>
+        ) : (
+          <div className="space-y-3">
+            {refunds.map((refund) => (
+              <div
+                key={refund.id}
+                className="flex items-center justify-between p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-lg font-bold">
+                      ${((refund.amountRefunded || refund.amount || 0) / 100).toFixed(2)}
+                    </span>
+                    <span className="text-xs text-gray-500 uppercase">
+                      {refund.currency || 'usd'}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                      refund.status === 'full' || refund.status === 'succeeded'
+                        ? 'bg-green-100 text-green-700'
+                        : refund.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}>
+                      {refund.status}
+                    </span>
+                    {refund.source === 'stripe' && (
+                      <span className="px-2 py-0.5 rounded text-xs bg-purple-100 text-purple-700">Stripe</span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {refund.reason && <span>Reason: {refund.reason}</span>}
+                    {refund.stripeChargeId && (
+                      <>
+                        <span className="mx-2">|</span>
+                        <span className="font-mono text-xs">Charge: {refund.stripeChargeId}</span>
+                      </>
+                    )}
+                    {refund.userId && (
+                      <>
+                        <span className="mx-2">|</span>
+                        <span className="font-mono text-xs">User: {refund.userId}</span>
+                      </>
+                    )}
+                    {refund.issuedBy && (
+                      <>
+                        <span className="mx-2">|</span>
+                        <span>By: {refund.issuedBy}</span>
+                      </>
+                    )}
+                    {refund.note && (
+                      <>
+                        <span className="mx-2">|</span>
+                        <span className="italic">{refund.note}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="text-sm text-gray-400 flex-shrink-0 ml-4">
+                  {formatDate(refund.createdAt)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </GlassCard>
     </div>
   );

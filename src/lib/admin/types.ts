@@ -152,6 +152,8 @@ export const ADMIN_PERMISSIONS = {
     canSyncStripe: true,
     canViewAllOrganizations: true,
     canImpersonateUsers: true,
+    canManageUsers: true,
+    canManageRefunds: true,
   },
   admin: {
     canManageAdmins: false,
@@ -162,6 +164,8 @@ export const ADMIN_PERMISSIONS = {
     canSyncStripe: false,
     canViewAllOrganizations: true,
     canImpersonateUsers: false,
+    canManageUsers: true,
+    canManageRefunds: false,
   },
 } as const;
 
