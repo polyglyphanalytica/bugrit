@@ -7,7 +7,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 // Input schema
 const GenerateFixInputSchema = z.object({
@@ -66,6 +66,7 @@ export async function generateFix(input: GenerateFixInput): Promise<GenerateFixO
 
   const prompt = buildPrompt(finding, fileContent, language, context);
 
+  // @ts-expect-error — zod v3 compat layer hits TS depth limit with Genkit generics
   const response = await ai.generate({
     model: 'googleai/gemini-2.5-flash',
     prompt,

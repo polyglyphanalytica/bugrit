@@ -8,7 +8,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 
 // --- Input Schema ---
 
@@ -267,6 +267,7 @@ User: ${input.message}
 
 Respond as Sensei. Include actionType and action parameters if the user is requesting an action.`;
 
+  // @ts-expect-error — zod v3 compat layer hits TS depth limit with Genkit generics
   const response = await ai.generate({
     model: 'googleai/gemini-2.5-flash',
     prompt: fullPrompt,

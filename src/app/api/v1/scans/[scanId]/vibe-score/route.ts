@@ -34,7 +34,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       if (db) {
         const projectDoc = await db.collection('projects').doc(scan.projectId).get();
         const project = projectDoc.exists ? projectDoc.data() : null;
-        if (!project || project.organizationId !== context.apiKey.organizationId) {
+        if (!project || project.organizationId !== context.organizationId) {
           return NextResponse.json({ error: 'Scan not found' }, { status: 404 });
         }
       }

@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, Firestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, Firestore } from "firebase/firestore";
 import { getStorage, FirebaseStorage } from "firebase/storage";
 import {
   getDefaultEnvironment,
@@ -44,9 +44,8 @@ const storage: FirebaseStorage = isFirebaseConfigured() ? getStorage(app) : ({} 
 export { app, auth, db, storage };
 
 function createFirestoreInstance(app: FirebaseApp): Firestore {
-  const firestore = getFirestore(app);
   if (FIRESTORE_DATABASE_ID !== DEFAULT_FIRESTORE_DATABASE_ID) {
-    firestore.settings({ databaseId: FIRESTORE_DATABASE_ID });
+    return initializeFirestore(app, {}, FIRESTORE_DATABASE_ID);
   }
-  return firestore;
+  return getFirestore(app);
 }

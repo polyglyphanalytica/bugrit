@@ -243,6 +243,7 @@ export default function PricingPage() {
                       <FeatureItem included={tier.limits.features.oneClickFixes} text="One-Click Fixes" />
                       <FeatureItem included={tier.limits.features.aiReviewMerge} text="AI Review & Merge" />
                       <FeatureItem included={tier.limits.features.explainCodebase} text="Explain Codebase" />
+                      <FeatureItem included={false} text="AI Autofix (Enterprise)" />
                     </div>
 
                     {/* Scanning */}
@@ -388,6 +389,20 @@ export default function PricingPage() {
           <p className="text-center text-gray-500 mt-6 text-sm">
             <Link href="/docs/pricing" className="text-orange-500 hover:underline">Read the complete pricing documentation →</Link>
           </p>
+        </div>
+
+        {/* Enterprise */}
+        <div className="max-w-3xl mx-auto mt-20">
+          <GlassCard className="p-8 text-center">
+            <h2 className="text-2xl font-bold mb-3">Need Enterprise?</h2>
+            <p className="text-gray-500 mb-4 max-w-xl mx-auto">
+              Get AI Autofix — bring your own key from Claude, OpenAI, Gemini, or others and Bugrit pushes fixes
+              straight to a branch with a pull request. Plus custom credits, SSO, SLA, and dedicated support.
+            </p>
+            <Link href="mailto:enterprise@bugrit.dev" className="text-orange-500 font-medium hover:underline">
+              Contact us for Enterprise pricing →
+            </Link>
+          </GlassCard>
         </div>
 
         {/* FAQ */}

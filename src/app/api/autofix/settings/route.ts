@@ -12,6 +12,7 @@ import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { getAutofixSettings, updateAutofixSettings } from '@/lib/autofix/engine';
 import { requireEnterpriseTier } from '@/lib/autofix/gate';
 import { AI_PROVIDERS, AIProviderID } from '@/lib/autofix/types';
+import { checkAutofixRateLimit } from '@/lib/autofix/rate-limit';
 import { logger } from '@/lib/logger';
 
 const VALID_PROVIDERS = new Set(Object.keys(AI_PROVIDERS));
@@ -25,6 +26,9 @@ export async function GET(request: NextRequest) {
 
     const gateResult = await requireEnterpriseTier(userId);
     if (gateResult) return gateResult;
+
+    const rl = checkAutofixRateLimit(userId, 'settings');
+    if (rl) return rl;
 
     const settings = await getAutofixSettings(userId);
 
@@ -46,6 +50,9 @@ export async function PUT(request: NextRequest) {
 
     const gateResult = await requireEnterpriseTier(userId);
     if (gateResult) return gateResult;
+
+    const rl = checkAutofixRateLimit(userId, 'settings');
+    if (rl) return rl;
 
     const body = await request.json();
 

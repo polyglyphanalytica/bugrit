@@ -70,7 +70,7 @@ async function getBillingAccount(userId: string): Promise<BillingAccountData> {
           return {
             tier: (subscription.tier as SubscriptionTier) || 'starter',
             credits: {
-              included: billing.creditsIncluded || SUBSCRIPTION_TIERS[subscription.tier || 'starter']?.credits || 50,
+              included: billing.creditsIncluded || SUBSCRIPTION_TIERS[(subscription.tier || 'starter') as SubscriptionTier]?.credits || 50,
               used: billing.creditsUsed || 0,
               remaining: billing.creditsRemaining ?? (billing.creditsIncluded || 50) - (billing.creditsUsed || 0),
               reserved: billing.creditsReserved || 0,
@@ -210,7 +210,7 @@ export async function GET(req: NextRequest) {
       limits: {
         maxProjects: tierConfig.features.maxProjects,
         maxRepoSize: tierConfig.features.maxRepoSize,
-        aiFeatures: tierConfig.features.aiFeatures,
+        aiFeatures: [...tierConfig.features.aiFeatures],
       },
 
       canScan: account.credits.remaining > 0 || tierConfig.overageRate !== null,

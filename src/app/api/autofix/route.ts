@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { runAutofix, getJobsForScan, getUserJobs, getAutofixJob } from '@/lib/autofix/engine';
 import { requireEnterpriseTier } from '@/lib/autofix/gate';
+import { checkAutofixRateLimit } from '@/lib/autofix/rate-limit';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
@@ -23,6 +24,10 @@ export async function POST(request: NextRequest) {
     // Enterprise tier gate
     const gateResult = await requireEnterpriseTier(userId);
     if (gateResult) return gateResult;
+
+    // Rate limit expensive trigger operations
+    const rl = checkAutofixRateLimit(userId, 'trigger');
+    if (rl) return rl;
 
     const body = await request.json();
     const { scanId, appId, repoOwner, repoName } = body;
@@ -56,6 +61,9 @@ export async function GET(request: NextRequest) {
 
     const gateResult = await requireEnterpriseTier(userId);
     if (gateResult) return gateResult;
+
+    const rl = checkAutofixRateLimit(userId, 'read');
+    if (rl) return rl;
 
     const { searchParams } = new URL(request.url);
     const scanId = searchParams.get('scanId');

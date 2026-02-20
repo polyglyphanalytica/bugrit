@@ -9,7 +9,7 @@ import { ScrollReveal } from '@/components/ui/scroll-reveal';
 import { Logo } from '@/components/ui/logo';
 import { PlatformLogos } from '@/components/ui/platform-logos';
 import { TOOL_REGISTRY, CATEGORY_LABELS, CATEGORY_ICONS, ToolCategory } from '@/lib/tools/registry';
-import { Menu, X, Shield, Zap, Eye, ArrowRight, Check, Sparkles, TrendingUp, AlertTriangle, Target } from 'lucide-react';
+import { Menu, X, Shield, Zap, Eye, Wand2, ArrowRight, Check, Sparkles, TrendingUp, AlertTriangle, Target } from 'lucide-react';
 
 export default function HomePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -265,7 +265,7 @@ export default function HomePage() {
             />
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-3 gap-6 mt-16 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mt-16 max-w-6xl mx-auto">
             <ScrollReveal delay={0}>
               <GlassCard hover className="p-8 h-full">
                 <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mb-5">
@@ -298,6 +298,18 @@ export default function HomePage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">AI-Ready Fixes</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">
                   Every issue comes with plain English explanations and AI prompts you can paste right into Cursor or Copilot.
+                </p>
+              </GlassCard>
+            </ScrollReveal>
+
+            <ScrollReveal delay={300}>
+              <GlassCard hover className="p-8 h-full">
+                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mb-5">
+                  <Wand2 className="w-5 h-5 text-orange-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">AI Autofix</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  Bring your own AI key, and Bugrit pushes fixes straight to a branch with a pull request — fully automated.
                 </p>
               </GlassCard>
             </ScrollReveal>

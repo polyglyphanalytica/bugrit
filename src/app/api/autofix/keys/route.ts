@@ -13,6 +13,7 @@ import { requireAuthenticatedUser } from '@/lib/api-auth';
 import { storeAPIKey, listUserKeys, deleteAPIKey, validateProviderKey } from '@/lib/autofix/keys';
 import { requireEnterpriseTier } from '@/lib/autofix/gate';
 import { AI_PROVIDERS, AIProviderID, AuthMethod } from '@/lib/autofix/types';
+import { checkAutofixRateLimit } from '@/lib/autofix/rate-limit';
 import { logger } from '@/lib/logger';
 
 const VALID_PROVIDERS = new Set(Object.keys(AI_PROVIDERS));
@@ -25,6 +26,9 @@ export async function POST(request: NextRequest) {
 
     const gateResult = await requireEnterpriseTier(userId);
     if (gateResult) return gateResult;
+
+    const rl = checkAutofixRateLimit(userId, 'settings');
+    if (rl) return rl;
 
     const body = await request.json();
     const { providerId, apiKey, label, authMethod: rawAuthMethod } = body;
@@ -97,6 +101,9 @@ export async function GET(request: NextRequest) {
     const gateResult = await requireEnterpriseTier(userId);
     if (gateResult) return gateResult;
 
+    const rl = checkAutofixRateLimit(userId, 'settings');
+    if (rl) return rl;
+
     const keys = await listUserKeys(userId);
     return NextResponse.json({ keys });
   } catch (error) {
@@ -113,6 +120,9 @@ export async function DELETE(request: NextRequest) {
 
     const gateResult = await requireEnterpriseTier(userId);
     if (gateResult) return gateResult;
+
+    const rl = checkAutofixRateLimit(userId, 'settings');
+    if (rl) return rl;
 
     const { searchParams } = new URL(request.url);
     const keyId = searchParams.get('keyId');

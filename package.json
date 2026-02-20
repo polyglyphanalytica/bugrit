@@ -140,6 +140,12 @@
     "diff": ">=8.0.3",
     "rimraf": ">=4.0.0",
     "@humanwhocodes/config-array": "npm:@eslint/config-array@^0.19.0",
-    "@humanwhocodes/object-schema": "npm:@eslint/object-schema@^2.1.0"
+    "@humanwhocodes/object-schema": "npm:@eslint/object-schema@^2.1.0",
+    "@genkit-ai/next": {
+      "zod": "$zod"
+    },
+    "stylelint-config-standard": {
+      "stylelint": "$stylelint"
+    }
   }
 }

@@ -87,23 +87,28 @@ export async function GET(req: NextRequest) {
     });
 
     // Map to response format
-    const invoiceItems: InvoiceItem[] = invoices.data.map((invoice) => ({
-      id: invoice.id,
-      number: invoice.number,
-      status: invoice.status || 'unknown',
-      amount: invoice.amount_due,
-      currency: invoice.currency,
-      description: invoice.description || getInvoiceDescription(invoice),
-      created: invoice.created,
-      periodStart: invoice.period_start,
-      periodEnd: invoice.period_end,
-      pdfUrl: invoice.invoice_pdf ?? null,
-      hostedUrl: invoice.hosted_invoice_url ?? null,
-      paid: invoice.paid,
-      paymentIntent: typeof invoice.payment_intent === 'string'
-        ? invoice.payment_intent
-        : invoice.payment_intent?.id || null,
-    }));
+    // Cast via Record for Stripe API version compatibility — some fields
+    // were renamed or moved between Stripe API versions.
+    const invoiceItems: InvoiceItem[] = invoices.data.map((invoice) => {
+      const inv = invoice as unknown as Record<string, unknown>;
+      return {
+        id: invoice.id,
+        number: (inv.number as string) ?? null,
+        status: (invoice.status as string) || 'unknown',
+        amount: invoice.amount_due,
+        currency: invoice.currency,
+        description: ((inv.description as string) || getInvoiceDescription(invoice)),
+        created: invoice.created,
+        periodStart: (inv.period_start as number) ?? invoice.created,
+        periodEnd: (inv.period_end as number) ?? invoice.created,
+        pdfUrl: (inv.invoice_pdf as string) ?? null,
+        hostedUrl: (inv.hosted_invoice_url as string) ?? null,
+        paid: !!(inv.paid ?? invoice.status === 'paid'),
+        paymentIntent: typeof inv.payment_intent === 'string'
+          ? inv.payment_intent
+          : (inv.payment_intent as { id?: string } | null)?.id || null,
+      };
+    });
 
     return NextResponse.json({
       invoices: invoiceItems,

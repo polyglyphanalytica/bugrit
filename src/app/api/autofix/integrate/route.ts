@@ -20,6 +20,7 @@ import { getDecryptedKey } from '@/lib/autofix/keys';
 import { getGitHubToken } from '@/lib/autofix/github';
 import { generateAndPushIntegration } from '@/lib/autofix/integrations';
 import { IntegrationTarget } from '@/lib/autofix/types';
+import { checkAutofixRateLimit } from '@/lib/autofix/rate-limit';
 import { logger } from '@/lib/logger';
 
 const VALID_TARGETS: IntegrationTarget[] = [
@@ -35,6 +36,9 @@ export async function POST(request: NextRequest) {
     // Enterprise tier gate
     const gateResult = await requireEnterpriseTier(userId);
     if (gateResult) return gateResult;
+
+    const rl = checkAutofixRateLimit(userId, 'integrate');
+    if (rl) return rl;
 
     const body = await request.json();
     const { target, appId, repoOwner, repoName, language, framework, packageManager, customPrompt } = body;

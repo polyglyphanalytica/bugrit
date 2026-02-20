@@ -6,7 +6,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import type { AuditFinding } from '@/lib/integrations/types';
 import type { VibeScore } from '@/lib/vibe-score/types';
 
@@ -74,6 +74,7 @@ export async function explainCodebase(input: ExplainCodebaseInput): Promise<Expl
 
   const prompt = buildExplainPrompt(question, findings, vibeScore, repoInfo);
 
+  // @ts-expect-error — zod v3 compat layer hits TS depth limit with Genkit generics
   const response = await ai.generate({
     model: 'googleai/gemini-2.5-flash',
     prompt,
@@ -258,6 +259,7 @@ ${findings.slice(0, 20).map(f => `- [${f.severity}] ${f.title} (${f.tool})`).joi
 
 Return JSON with keys: topConcerns, quickWins, positives (each an array of strings).`;
 
+  // @ts-expect-error — zod v3 compat layer hits TS depth limit with Genkit generics
   const response = await ai.generate({
     model: 'googleai/gemini-2.5-flash',
     prompt,
