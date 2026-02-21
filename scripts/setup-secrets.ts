@@ -132,6 +132,24 @@ function run(cmd: string, opts: RunOpts = {}): string {
   }
 }
 
+/** Run a command and parse the stdout as JSON. Returns null on any failure. */
+function safeRunJson(cmd: string): any {
+  try {
+    const result = execSync(cmd, {
+      encoding: 'utf8',
+      maxBuffer: 10 * 1024 * 1024,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+    if (!result) return null;
+    return JSON.parse(result);
+  } catch (e: any) {
+    // Surface the real error: prefer stderr, then message
+    const stderr = e.stderr?.toString().trim();
+    if (stderr) throw new Error(stderr);
+    throw e;
+  }
+}
+
 function runJson(cmd: string): any {
   const out = run(cmd, { silent: true });
   if (!out) return null;
@@ -469,12 +487,10 @@ async function setupStripeMode(
   // List existing products to avoid duplicates
   let existingProducts: any[] = [];
   try {
-    const productsJson = run(
+    const parsed = safeRunJson(
       `stripe products list --limit=100${liveFlag}`,
-      { silent: true },
     );
-    const parsed = JSON.parse(productsJson);
-    existingProducts = parsed.data || [];
+    existingProducts = parsed?.data || [];
   } catch {
     warn('Could not list existing Stripe products \u2014 will create fresh');
   }
@@ -492,14 +508,13 @@ async function setupStripeMode(
       ok(`Product exists: ${product.displayName} (${productId})`);
     } else {
       try {
-        const result = run(
+        const parsed = safeRunJson(
           `stripe products create` +
-            ` -d "name=${product.displayName}"` +
-            ` -d "description=${product.description}"` +
+            ` --name="${product.displayName}"` +
+            ` --description="${product.description}"` +
             `${liveFlag}`,
-          { silent: true },
         );
-        const parsed = JSON.parse(result);
+        if (!parsed?.id) throw new Error('No product ID in response');
         productId = parsed.id;
         ok(`Created product: ${product.displayName} (${productId})`);
       } catch (e: any) {
@@ -511,11 +526,10 @@ async function setupStripeMode(
     // List existing prices for this product
     let existingPrices: any[] = [];
     try {
-      const pricesJson = run(
-        `stripe prices list -d product=${productId} -d active=true --limit=100${liveFlag}`,
-        { silent: true },
+      const parsed = safeRunJson(
+        `stripe prices list --product=${productId} --active=true --limit=100${liveFlag}`,
       );
-      existingPrices = JSON.parse(pricesJson).data || [];
+      existingPrices = parsed?.data || [];
     } catch {
       // No existing prices
     }
@@ -533,16 +547,15 @@ async function setupStripeMode(
       ok(`  Monthly: ${existingMonthly.id} ($${product.monthlyAmountCents / 100}/mo) \u2014 exists`);
     } else {
       try {
-        const result = run(
+        const parsed = safeRunJson(
           `stripe prices create` +
-            ` -d product=${productId}` +
-            ` -d unit_amount=${product.monthlyAmountCents}` +
-            ` -d currency=usd` +
+            ` --product=${productId}` +
+            ` --unit-amount=${product.monthlyAmountCents}` +
+            ` --currency=usd` +
             ` -d "recurring[interval]=month"` +
             `${liveFlag}`,
-          { silent: true },
         );
-        const parsed = JSON.parse(result);
+        if (!parsed?.id) throw new Error('No price ID in response');
         secrets[monthlySecret] = parsed.id;
         ok(`  Monthly: ${parsed.id} ($${product.monthlyAmountCents / 100}/mo) \u2014 created`);
       } catch (e: any) {
@@ -563,16 +576,15 @@ async function setupStripeMode(
       ok(`  Yearly:  ${existingYearly.id} ($${product.yearlyAmountCents / 100}/yr) \u2014 exists`);
     } else {
       try {
-        const result = run(
+        const parsed = safeRunJson(
           `stripe prices create` +
-            ` -d product=${productId}` +
-            ` -d unit_amount=${product.yearlyAmountCents}` +
-            ` -d currency=usd` +
+            ` --product=${productId}` +
+            ` --unit-amount=${product.yearlyAmountCents}` +
+            ` --currency=usd` +
             ` -d "recurring[interval]=year"` +
             `${liveFlag}`,
-          { silent: true },
         );
-        const parsed = JSON.parse(result);
+        if (!parsed?.id) throw new Error('No price ID in response');
         secrets[yearlySecret] = parsed.id;
         ok(`  Yearly:  ${parsed.id} ($${product.yearlyAmountCents / 100}/yr) \u2014 created`);
       } catch (e: any) {
