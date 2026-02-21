@@ -7,8 +7,6 @@
   packages = [
     pkgs.nodejs_20
     pkgs.zulu
-    pkgs.stripe-cli
-    pkgs.gh
   ];
   # Sets environment variables in the workspace
   env = {};
@@ -30,13 +28,8 @@
         default.openFiles = [
           "src/app/page.tsx"
         ];
-        install-claude-code = {
-          command = "npm install -g @anthropic-ai/claude-code";
-        };
-      };
-      onStart = {
-        ensure-claude-code = {
-          command = "which claude || npm install -g @anthropic-ai/claude-code";
+        install-tools = {
+          command = "npm install -g @anthropic-ai/claude-code && npm install -g @stripe/stripe-cli gh";
         };
       };
     };
