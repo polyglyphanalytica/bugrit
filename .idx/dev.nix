@@ -29,6 +29,14 @@
         default.openFiles = [
           "src/app/page.tsx"
         ];
+        install-claude-code = {
+          command = "npm install -g @anthropic-ai/claude-code";
+        };
+      };
+      onStart = {
+        ensure-claude-code = {
+          command = "which claude || npm install -g @anthropic-ai/claude-code";
+        };
       };
     };
     # Enable previews and customize configuration
