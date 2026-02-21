@@ -20,8 +20,7 @@
  * Prerequisites — authenticate each CLI via browser BEFORE running:
  *   gcloud auth login
  *   firebase login
- *   stripe login            # test mode (default)
- *   stripe login --live     # optional, for production Stripe keys
+ *   stripe login            # authenticates to your Stripe account (test + live)
  *
  * Usage:
  *   npx ts-node scripts/setup-secrets.ts
@@ -625,7 +624,7 @@ async function setupStripe(
 
   // Live mode products & prices
   if (await askYesNo('Create Stripe LIVE mode products & prices?', false)) {
-    info('Make sure you ran: stripe login --live');
+    info('Stripe CLI uses --live flag on commands (already handled). Make sure you ran: stripe login');
     const liveIds = await setupStripeMode('live');
     Object.assign(secrets, liveIds);
   }
