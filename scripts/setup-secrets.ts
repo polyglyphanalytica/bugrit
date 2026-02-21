@@ -267,15 +267,29 @@ interface CliStatus {
   stripe: boolean;
 }
 
+/** Check if a CLI tool exists on PATH by running its version command. */
+function cliExists(versionCmd: string): string | null {
+  try {
+    const out = execSync(versionCmd, {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+      timeout: 10_000,
+    }).trim();
+    return out || null;
+  } catch {
+    return null;
+  }
+}
+
 function preflight(): CliStatus {
   heading(1, 'Pre-flight Checks');
 
   const status: CliStatus = { gcloud: false, firebase: false, stripe: false };
 
   // gcloud
-  try {
-    const version = run('gcloud --version', { silent: true }).split('\n')[0];
-    ok(`gcloud: ${version}`);
+  const gcloudVersion = cliExists('gcloud --version');
+  if (gcloudVersion) {
+    ok(`gcloud: ${gcloudVersion.split('\n')[0]}`);
     const account = run(
       'gcloud auth list --filter=status:ACTIVE --format="value(account)"',
       { silent: true },
@@ -286,15 +300,14 @@ function preflight(): CliStatus {
     } else {
       fail('gcloud: not authenticated \u2014 run: gcloud auth login');
     }
-  } catch {
+  } else {
     fail('gcloud: not installed \u2014 https://cloud.google.com/sdk/docs/install');
   }
 
   // firebase
-  try {
-    const version = run('firebase --version', { silent: true });
-    ok(`firebase: ${version}`);
-    // Quick auth check: try listing projects
+  const firebaseVersion = cliExists('firebase --version');
+  if (firebaseVersion) {
+    ok(`firebase: ${firebaseVersion}`);
     const out = run('firebase projects:list 2>/dev/null', { silent: true });
     if (out) {
       ok('firebase: authenticated');
@@ -303,23 +316,22 @@ function preflight(): CliStatus {
       warn('firebase: may not be authenticated \u2014 run: firebase login');
       status.firebase = true; // let it try anyway
     }
-  } catch {
+  } else {
     fail('firebase: not installed \u2014 npm install -g firebase-tools');
   }
 
   // stripe
-  try {
-    const version = run('stripe --version', { silent: true });
-    ok(`stripe: ${version}`);
-    // Check if stripe is configured
-    try {
-      run('stripe config --list 2>/dev/null', { silent: true });
+  const stripeVersion = cliExists('stripe --version');
+  if (stripeVersion) {
+    ok(`stripe: ${stripeVersion}`);
+    const conf = cliExists('stripe config --list');
+    if (conf) {
       ok('stripe: authenticated');
       status.stripe = true;
-    } catch {
+    } else {
       warn('stripe: not authenticated \u2014 run: stripe login');
     }
-  } catch {
+  } else {
     warn('stripe: not installed (optional) \u2014 https://stripe.com/docs/stripe-cli');
   }
 
