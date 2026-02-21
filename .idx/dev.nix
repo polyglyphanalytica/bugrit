@@ -28,9 +28,6 @@
         default.openFiles = [
           "src/app/page.tsx"
         ];
-        install-tools = {
-          command = "npm install -g @anthropic-ai/claude-code && npm install -g @stripe/stripe-cli gh";
-        };
       };
     };
     # Enable previews and customize configuration
