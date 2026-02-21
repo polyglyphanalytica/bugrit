@@ -23,7 +23,8 @@
     "deploy:cloudrun": "gcloud builds submit --config cloudbuild.yaml",
     "deploy:apphosting": "firebase apphosting:backends:deploy bugrit",
     "emulators": "firebase emulators:start",
-    "emulators:firestore": "firebase emulators:start --only firestore"
+    "emulators:firestore": "firebase emulators:start --only firestore",
+    "setup:secrets": "npx ts-node scripts/setup-secrets.ts"
   },
   "dependencies": {
     "@axe-core/cli": "^4.8.0",
