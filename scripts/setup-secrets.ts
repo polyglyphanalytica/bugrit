@@ -38,9 +38,16 @@ import * as path from 'path';
 // ─── Configuration ───────────────────────────────────────────────────────────
 
 const PROJECT_ID = 'bugrit-prod';
-const BACKEND_ID = 'bugrit';
-const BACKEND_LOCATION = 'us-central1';
 const FORCE_OVERWRITE = process.argv.includes('--force');
+
+/** App Hosting backend identifier (name + location). */
+interface BackendConfig {
+  id: string;
+  location: string;
+}
+
+/** Populated interactively in Phase 1. */
+let APP_HOSTING_BACKENDS: BackendConfig[] = [];
 
 /** Stripe product catalogue — matches src/lib/subscriptions/tiers.ts */
 const STRIPE_PRODUCTS = [
@@ -230,33 +237,37 @@ function createSecret(name: string, value: string, existing: string[]): void {
 }
 
 function grantAppHostingAccess(secretName: string): void {
-  // Try firebase CLI first (knows the right service account)
-  try {
-    run(
-      `firebase apphosting:secrets:grantaccess ${secretName}` +
-        ` --project ${PROJECT_ID}` +
-        ` --backend ${BACKEND_ID}` +
-        ` --location ${BACKEND_LOCATION}`,
-      { silent: true },
-    );
-    ok(`Granted access: ${secretName}`);
-  } catch {
-    // Fallback: try the default App Hosting compute service account
+  if (APP_HOSTING_BACKENDS.length === 0) return;
+
+  for (const backend of APP_HOSTING_BACKENDS) {
+    // Try firebase CLI first (knows the right service account)
     try {
-      const sa = `firebase-apphosting-compute@${PROJECT_ID}.iam.gserviceaccount.com`;
       run(
-        `gcloud secrets add-iam-policy-binding ${secretName}` +
-          ` --member="serviceAccount:${sa}"` +
-          ` --role="roles/secretmanager.secretAccessor"` +
-          ` --project=${PROJECT_ID}`,
+        `firebase apphosting:secrets:grantaccess ${secretName}` +
+          ` --project ${PROJECT_ID}` +
+          ` --backend ${backend.id}` +
+          ` --location ${backend.location}`,
         { silent: true },
       );
-      ok(`Granted access (via IAM): ${secretName}`);
+      ok(`Granted access: ${secretName} -> ${backend.id}`);
     } catch {
-      warn(
-        `Could not grant access for ${secretName}. Run manually:\n` +
-          `    firebase apphosting:secrets:grantaccess ${secretName} --project ${PROJECT_ID} --backend ${BACKEND_ID}`,
-      );
+      // Fallback: try the default App Hosting compute service account
+      try {
+        const sa = `firebase-apphosting-compute@${PROJECT_ID}.iam.gserviceaccount.com`;
+        run(
+          `gcloud secrets add-iam-policy-binding ${secretName}` +
+            ` --member="serviceAccount:${sa}"` +
+            ` --role="roles/secretmanager.secretAccessor"` +
+            ` --project=${PROJECT_ID}`,
+          { silent: true },
+        );
+        ok(`Granted access (via IAM): ${secretName} -> ${backend.id}`);
+      } catch {
+        warn(
+          `Could not grant access for ${secretName} to ${backend.id}. Run manually:\n` +
+            `    firebase apphosting:secrets:grantaccess ${secretName} --project ${PROJECT_ID} --backend ${backend.id}`,
+        );
+      }
     }
   }
 }
@@ -351,6 +362,42 @@ function preflight(): CliStatus {
   }
 
   return status;
+}
+
+// ─── App Hosting Backend Collection ──────────────────────────────────────────
+
+async function collectBackends(): Promise<void> {
+  log('');
+  log(`  ${c.bold}Firebase App Hosting Backends${c.reset}`);
+  info('Secrets will be granted to every backend you list here.');
+  info('Press Enter to skip a field if you don\'t have that backend yet.');
+  log('');
+
+  const prodId = await ask('Production backend name', 'bugrit');
+  const prodLocation = await ask('Production backend location', 'us-central1');
+  if (prodId) {
+    APP_HOSTING_BACKENDS.push({ id: prodId, location: prodLocation || 'us-central1' });
+  }
+
+  const nonProdId = await ask('Non-production backend name (e.g. bugrit-qa, studio)');
+  if (nonProdId) {
+    const nonProdLocation = await ask('Non-production backend location', 'us-central1');
+    APP_HOSTING_BACKENDS.push({ id: nonProdId, location: nonProdLocation || 'us-central1' });
+  }
+
+  // Allow adding more backends
+  while (await askYesNo('Add another backend?', false)) {
+    const extraId = await ask('Backend name');
+    if (!extraId) break;
+    const extraLocation = await ask('Backend location', 'us-central1');
+    APP_HOSTING_BACKENDS.push({ id: extraId, location: extraLocation || 'us-central1' });
+  }
+
+  if (APP_HOSTING_BACKENDS.length === 0) {
+    warn('No backends configured — secret access grants will be skipped.');
+  } else {
+    ok(`Backends: ${APP_HOSTING_BACKENDS.map((b) => `${b.id} (${b.location})`).join(', ')}`);
+  }
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -905,11 +952,18 @@ async function provision(
     }
   }
 
-  // Grant access
-  log('');
-  info('Granting Firebase App Hosting backend access...\n');
-  for (const name of provisioned) {
-    grantAppHostingAccess(name);
+  // Grant access to all configured backends
+  if (APP_HOSTING_BACKENDS.length > 0) {
+    log('');
+    const backendNames = APP_HOSTING_BACKENDS.map((b) => b.id).join(', ');
+    info(`Granting access to backends: ${backendNames}\n`);
+    for (const name of provisioned) {
+      grantAppHostingAccess(name);
+    }
+  } else {
+    log('');
+    warn('No backends configured — skipping access grants.');
+    info('Run "firebase apphosting:secrets:grantaccess" manually for each backend.');
   }
 
   return provisioned;
@@ -945,9 +999,16 @@ function verify(required: string[]): boolean {
     );
     log('');
     log('Your next build should succeed. Trigger it with:');
-    log(
-      `  ${c.cyan}firebase apphosting:backends:deploy ${BACKEND_ID} --project ${PROJECT_ID}${c.reset}`,
-    );
+    for (const backend of APP_HOSTING_BACKENDS) {
+      log(
+        `  ${c.cyan}firebase apphosting:backends:deploy ${backend.id} --project ${PROJECT_ID}${c.reset}`,
+      );
+    }
+    if (APP_HOSTING_BACKENDS.length === 0) {
+      log(
+        `  ${c.cyan}firebase apphosting:backends:deploy <BACKEND_ID> --project ${PROJECT_ID}${c.reset}`,
+      );
+    }
   } else {
     log(
       `${c.bold}${c.yellow}${okCount} provisioned, ${missingCount} still missing.${c.reset}`,
@@ -1039,7 +1100,7 @@ async function main() {
   );
   log('');
   log(`${c.dim}  Secret Provisioning Agent for Firebase App Hosting${c.reset}`);
-  log(`${c.dim}  Project: ${PROJECT_ID} | Backend: ${BACKEND_ID}${c.reset}`);
+  log(`${c.dim}  Project: ${PROJECT_ID}${c.reset}`);
   if (FORCE_OVERWRITE) {
     log(`${c.bold}${c.yellow}  Mode: --force (overwrite existing secrets)${c.reset}`);
   }
@@ -1056,6 +1117,9 @@ async function main() {
     fail('\ngcloud is required. Install and authenticate first.');
     process.exit(1);
   }
+
+  // Collect backend names (used later for granting secret access)
+  await collectBackends();
 
   // Phase 2: Discovery
   const { required, existing, missing } = discover();
