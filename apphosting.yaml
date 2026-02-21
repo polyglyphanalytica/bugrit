@@ -20,8 +20,12 @@ env:
   # Puppeteer configuration
   - variable: PUPPETEER_SKIP_DOWNLOAD
     value: "true"
+    availability:
+      - BUILD
   - variable: PUPPETEER_EXECUTABLE_PATH
     value: "/usr/bin/chromium"
+    availability:
+      - RUNTIME
 
   # ============================================================
   # Firebase Client SDK (NEXT_PUBLIC_* = available in browser)
@@ -29,24 +33,48 @@ env:
   # ============================================================
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     secret: FIREBASE_API_KEY
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
     value: bugrit-prod.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
     value: bugrit-prod
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
     value: bugrit-prod.appspot.com
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
     secret: FIREBASE_MESSAGING_SENDER_ID
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_APP_ID
     secret: FIREBASE_APP_ID
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # Firebase Admin SDK (server-side only)
   # ============================================================
   - variable: FIREBASE_PROJECT_ID
     value: bugrit-prod
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: FIREBASE_SERVICE_ACCOUNT_KEY
     secret: FIREBASE_SERVICE_ACCOUNT_KEY
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # Application Configuration
@@ -58,34 +86,73 @@ env:
   # Omit or set to 'dev' for all other deployments (including bugrit-prod.web.app).
   - variable: BUGRIT_ENVIRONMENT
     value: "production"
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_APP_URL
     value: https://bugrit-prod.web.app
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: ADMIN_ENCRYPTION_KEY
     secret: admin-encryption-key
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: PLATFORM_SUPERADMIN_EMAIL
     secret: platform-superadmin-email
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # Stripe Billing — LIVE keys (used on bugrit.com only)
   # ============================================================
   - variable: STRIPE_SECRET_KEY
     secret: stripe-secret-key
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_WEBHOOK_SECRET
     secret: stripe-webhook-secret
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
     secret: STRIPE_PUBLISHABLE_KEY
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_STARTER_MONTHLY_PRICE_ID
     secret: stripe-starter-monthly-price-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_STARTER_YEARLY_PRICE_ID
     secret: stripe-starter-yearly-price-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_PRO_MONTHLY_PRICE_ID
     secret: stripe-pro-monthly-price-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_PRO_YEARLY_PRICE_ID
     secret: stripe-pro-yearly-price-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_BUSINESS_MONTHLY_PRICE_ID
     secret: stripe-business-monthly-price-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_BUSINESS_YEARLY_PRICE_ID
     secret: stripe-business-yearly-price-id
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # Stripe Billing — TEST/SANDBOX keys (used on all non-prod URLs)
@@ -93,32 +160,68 @@ env:
   # ============================================================
   - variable: STRIPE_TEST_SECRET_KEY
     secret: stripe-test-secret-key
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_TEST_WEBHOOK_SECRET
     secret: stripe-test-webhook-secret
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: NEXT_PUBLIC_STRIPE_TEST_PUBLISHABLE_KEY
     secret: STRIPE_TEST_PUBLISHABLE_KEY
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_TEST_STARTER_MONTHLY_PRICE_ID
     secret: stripe-test-starter-monthly-price-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_TEST_STARTER_YEARLY_PRICE_ID
     secret: stripe-test-starter-yearly-price-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_TEST_PRO_MONTHLY_PRICE_ID
     secret: stripe-test-pro-monthly-price-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_TEST_PRO_YEARLY_PRICE_ID
     secret: stripe-test-pro-yearly-price-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_TEST_BUSINESS_MONTHLY_PRICE_ID
     secret: stripe-test-business-monthly-price-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: STRIPE_TEST_BUSINESS_YEARLY_PRICE_ID
     secret: stripe-test-business-yearly-price-id
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # Google Cloud (for Docker-based scanning tools)
   # ============================================================
   - variable: GOOGLE_CLOUD_PROJECT
     value: bugrit-prod
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: SCAN_OUTPUT_BUCKET
     value: bugrit-prod-bugrit-scans
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: GCP_PROJECT_ID
     value: bugrit-prod
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # GitHub OAuth Integration
@@ -128,32 +231,56 @@ env:
   # ============================================================
   - variable: GITHUB_CLIENT_ID
     secret: github-client-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: GITHUB_CLIENT_SECRET
     secret: github-client-secret
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: GITHUB_REDIRECT_URI
     value: "https://bugrit-prod.web.app/api/auth/github/callback"
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # Email Notifications (Resend)
   # ============================================================
   - variable: RESEND_API_KEY
     secret: resend-api-key
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: EMAIL_FROM_ADDRESS
     value: "noreply@bugrit.app"
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # Scan Worker Service
   # ============================================================
   - variable: SCAN_WORKER_URL
     secret: scan-worker-url
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: WORKER_SECRET
     secret: worker-secret
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # Admin API
   # ============================================================
   - variable: ADMIN_API_KEY
     secret: admin-api-key
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # Analytics (optional)
@@ -172,8 +299,14 @@ env:
   # Set Interactivity URL to: https://bugrit.com/api/slack/interactivity
   - variable: SLACK_SIGNING_SECRET
     secret: slack-signing-secret
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: SLACK_BOT_TOKEN
     secret: slack-bot-token
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # Slack Integration — TEST/SANDBOX (used on all non-prod URLs)
@@ -182,8 +315,14 @@ env:
   # The app auto-selects test vs live based on hostname detection.
   - variable: SLACK_TEST_SIGNING_SECRET
     secret: slack-test-signing-secret
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: SLACK_TEST_BOT_TOKEN
     secret: slack-test-bot-token
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # WhatsApp Integration — LIVE (Sensei on WhatsApp, used on bugrit.com)
@@ -192,12 +331,24 @@ env:
   # Set webhook URL to: https://bugrit.com/api/whatsapp/webhook
   - variable: WHATSAPP_ACCESS_TOKEN
     secret: whatsapp-access-token
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: WHATSAPP_APP_SECRET
     secret: whatsapp-app-secret
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: WHATSAPP_PHONE_NUMBER_ID
     secret: whatsapp-phone-number-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: WHATSAPP_VERIFY_TOKEN
     secret: whatsapp-verify-token
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # WhatsApp Integration — TEST/SANDBOX (used on all non-prod URLs)
@@ -206,12 +357,24 @@ env:
   # The app auto-selects test vs live based on hostname detection.
   - variable: WHATSAPP_TEST_ACCESS_TOKEN
     secret: whatsapp-test-access-token
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: WHATSAPP_TEST_APP_SECRET
     secret: whatsapp-test-app-secret
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: WHATSAPP_TEST_PHONE_NUMBER_ID
     secret: whatsapp-test-phone-number-id
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: WHATSAPP_TEST_VERIFY_TOKEN
     secret: whatsapp-test-verify-token
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # Telegram Integration — LIVE (Sensei on Telegram, used on bugrit.com)
@@ -224,8 +387,14 @@ env:
   #     -d '{"url":"https://bugrit.com/api/telegram/webhook","secret_token":"<SECRET>"}'
   - variable: TELEGRAM_BOT_TOKEN
     secret: telegram-bot-token
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: TELEGRAM_WEBHOOK_SECRET
     secret: telegram-webhook-secret
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # Telegram Integration — TEST/SANDBOX (used on all non-prod URLs)
@@ -234,8 +403,14 @@ env:
   # The app auto-selects test vs live based on hostname detection.
   - variable: TELEGRAM_TEST_BOT_TOKEN
     secret: telegram-test-bot-token
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: TELEGRAM_TEST_WEBHOOK_SECRET
     secret: telegram-test-webhook-secret
+    availability:
+      - BUILD
+      - RUNTIME
 
   # ============================================================
   # GCP Billing Cloud Function (optional - mock data used if not set)
