@@ -492,9 +492,12 @@ async function getFirebaseConfig(
 
 async function setupStripeMode(
   mode: 'test' | 'live',
+  apiKey?: string,
 ): Promise<Record<string, string>> {
   const secrets: Record<string, string> = {};
-  const liveFlag = mode === 'live' ? ' --live' : '';
+  // Use --api-key when provided (avoids keyring issues in containerized environments).
+  // Fall back to --live flag for backward compatibility with `stripe login`.
+  const modeFlag = apiKey ? ` --api-key=${apiKey}` : mode === 'live' ? ' --live' : '';
   const secretPrefix = mode === 'test' ? 'stripe-test-' : 'stripe-';
 
   info(`Creating Stripe ${mode.toUpperCase()} mode products & prices...`);
@@ -504,7 +507,7 @@ async function setupStripeMode(
   let existingProducts: any[] = [];
   try {
     const parsed = safeRunJson(
-      `stripe products list --limit=100${liveFlag}`,
+      `stripe products list --limit=100${modeFlag}`,
     );
     existingProducts = parsed?.data || [];
   } catch {
@@ -528,7 +531,7 @@ async function setupStripeMode(
           `stripe products create` +
             ` --name="${product.displayName}"` +
             ` --description="${product.description}"` +
-            `${liveFlag}`,
+            `${modeFlag}`,
         );
         if (!parsed?.id) throw new Error('No product ID in response');
         productId = parsed.id;
@@ -543,7 +546,7 @@ async function setupStripeMode(
     let existingPrices: any[] = [];
     try {
       const parsed = safeRunJson(
-        `stripe prices list --product=${productId} --active=true --limit=100${liveFlag}`,
+        `stripe prices list --product=${productId} --active=true --limit=100${modeFlag}`,
       );
       existingPrices = parsed?.data || [];
     } catch {
@@ -569,7 +572,7 @@ async function setupStripeMode(
             ` --unit-amount=${product.monthlyAmountCents}` +
             ` --currency=usd` +
             ` -d "recurring[interval]=month"` +
-            `${liveFlag}`,
+            `${modeFlag}`,
         );
         if (!parsed?.id) throw new Error('No price ID in response');
         secrets[monthlySecret] = parsed.id;
@@ -598,7 +601,7 @@ async function setupStripeMode(
             ` --unit-amount=${product.yearlyAmountCents}` +
             ` --currency=usd` +
             ` -d "recurring[interval]=year"` +
-            `${liveFlag}`,
+            `${modeFlag}`,
         );
         if (!parsed?.id) throw new Error('No price ID in response');
         secrets[yearlySecret] = parsed.id;
@@ -629,9 +632,22 @@ async function setupStripe(
 
   // Live mode products & prices
   if (await askYesNo('Create Stripe LIVE mode products & prices?', false)) {
-    info('Stripe CLI uses --live flag on commands (already handled). Make sure you ran: stripe login');
-    const liveIds = await setupStripeMode('live');
-    Object.assign(secrets, liveIds);
+    // Prompt for the live secret key upfront so we can pass it via --api-key.
+    // This avoids the "No directory provided for file keyring" error that occurs
+    // when `stripe --live` can't access a system keyring (common in containers/Nix).
+    const liveKey = await ask('Stripe LIVE secret key for CLI auth (sk_live_...)');
+    if (liveKey && liveKey.startsWith('sk_live_')) {
+      secrets['stripe-secret-key'] = liveKey;
+      const liveIds = await setupStripeMode('live', liveKey);
+      Object.assign(secrets, liveIds);
+    } else if (liveKey) {
+      warn('Key does not start with sk_live_ — falling back to stripe login auth');
+      info('Make sure you ran: stripe login');
+      const liveIds = await setupStripeMode('live');
+      Object.assign(secrets, liveIds);
+    } else {
+      info('Skipping live mode product creation (no API key provided)');
+    }
   }
 
   // Collect API keys (these come from the Stripe Dashboard, not CLI)
@@ -640,6 +656,10 @@ async function setupStripe(
   log('');
 
   const collectKey = async (name: string, prompt: string) => {
+    if (secrets[name]) {
+      ok(`${name}: already collected \u2014 skipping`);
+      return;
+    }
     if (existing.includes(name) && !FORCE_OVERWRITE) {
       ok(`${name}: already exists \u2014 skipping`);
       return;
