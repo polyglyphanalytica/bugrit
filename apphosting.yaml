@@ -325,7 +325,7 @@ env:
       - RUNTIME
 
   # ============================================================
-  # Telegram Integration — LIVE (Sensei on Telegram, used on bugrit.com)
+  # Telegram Integration (single bot shared by prod and dev)
   # ============================================================
   # Create a bot with @BotFather → save token as TELEGRAM_BOT_TOKEN
   # Generate a random secret → save as TELEGRAM_WEBHOOK_SECRET
@@ -344,21 +344,8 @@ env:
       - BUILD
       - RUNTIME
 
-  # ============================================================
-  # Telegram Integration — TEST/SANDBOX (used on all non-prod URLs)
-  # ============================================================
-  # Create a separate test bot with @BotFather for development/staging.
-  # The app auto-selects test vs live based on hostname detection.
-  - variable: TELEGRAM_TEST_BOT_TOKEN
-    secret: telegram-test-bot-token
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: TELEGRAM_TEST_WEBHOOK_SECRET
-    secret: telegram-test-webhook-secret
-    availability:
-      - BUILD
-      - RUNTIME
+  # Telegram uses a single bot for both prod and dev (no separate test bot).
+  # Both environments share the same TELEGRAM_BOT_TOKEN and TELEGRAM_WEBHOOK_SECRET above.
 
   # ============================================================
   # GCP Billing Cloud Function (optional - mock data used if not set)

@@ -709,7 +709,6 @@ function generateCryptoSecrets(existing: string[]): Record<string, string> {
   gen('admin-api-key', 32, 'base64url', 'server-to-server auth');
   gen('worker-secret', 32, 'base64', 'scan worker shared secret');
   gen('telegram-webhook-secret', 32, 'hex', 'Telegram webhook auth');
-  gen('telegram-test-webhook-secret', 32, 'hex', 'Telegram test webhook auth');
 
   return secrets;
 }
@@ -856,20 +855,15 @@ async function collectCredentials(
     }
   }
 
-  // --- Telegram ---
+  // --- Telegram (single bot for both prod and dev) ---
   log(`\n  ${c.bold}Telegram Integration${c.reset}`);
   if (await askYesNo('Configure Telegram integration?', false)) {
-    info('Create bots with @BotFather on Telegram');
-    log(`\n    ${c.dim}Live:${c.reset}`);
-    await collect('telegram-bot-token', 'Telegram LIVE bot token');
-    log(`\n    ${c.dim}Test:${c.reset}`);
-    await collect('telegram-test-bot-token', 'Telegram TEST bot token');
+    info('Create a bot with @BotFather on Telegram (same bot for prod & dev)');
+    await collect('telegram-bot-token', 'Telegram bot token');
   } else {
-    for (const name of ['telegram-bot-token', 'telegram-test-bot-token']) {
-      if (!existing.includes(name)) {
-        secrets[name] = 'placeholder';
-        warn(`${name}: set to placeholder`);
-      }
+    if (!existing.includes('telegram-bot-token')) {
+      secrets['telegram-bot-token'] = 'placeholder';
+      warn('telegram-bot-token: set to placeholder');
     }
   }
 

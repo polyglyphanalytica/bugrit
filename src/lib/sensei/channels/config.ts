@@ -29,17 +29,13 @@ export function getSlackBotToken(): string | undefined {
 }
 
 // ─── Telegram ─────────────────────────────────────────────────────────
+// Unlike Slack, there is only one Telegram bot for both prod and dev.
+// Both environments share the same credentials.
 
 export function getTelegramBotToken(): string | undefined {
-  if (isProduction()) {
-    return process.env.TELEGRAM_BOT_TOKEN;
-  }
-  return process.env.TELEGRAM_TEST_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+  return process.env.TELEGRAM_BOT_TOKEN;
 }
 
 export function getTelegramWebhookSecret(): string | undefined {
-  if (isProduction()) {
-    return process.env.TELEGRAM_WEBHOOK_SECRET;
-  }
-  return process.env.TELEGRAM_TEST_WEBHOOK_SECRET || process.env.TELEGRAM_WEBHOOK_SECRET;
+  return process.env.TELEGRAM_WEBHOOK_SECRET;
 }
