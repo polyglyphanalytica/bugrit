@@ -24,7 +24,9 @@
  *
  * Usage:
  *   npx ts-node scripts/setup-secrets.ts
+ *   npx ts-node scripts/setup-secrets.ts --force   # overwrite existing secrets
  *   npm run setup:secrets
+ *   npm run setup:secrets -- --force
  */
 
 import { execSync, ExecSyncOptionsWithStringEncoding } from 'child_process';
@@ -38,6 +40,7 @@ import * as path from 'path';
 const PROJECT_ID = 'bugrit-prod';
 const BACKEND_ID = 'bugrit';
 const BACKEND_LOCATION = 'us-central1';
+const FORCE_OVERWRITE = process.argv.includes('--force');
 
 /** Stripe product catalogue — matches src/lib/subscriptions/tiers.ts */
 const STRIPE_PRODUCTS = [
@@ -415,8 +418,8 @@ async function getFirebaseConfig(
   // Check if all three already exist
   const needed = ['FIREBASE_API_KEY', 'FIREBASE_MESSAGING_SENDER_ID', 'FIREBASE_APP_ID'];
   const allExist = needed.every((n) => existing.includes(n));
-  if (allExist) {
-    ok('All Firebase SDK secrets already exist \u2014 skipping');
+  if (allExist && !FORCE_OVERWRITE) {
+    ok('All Firebase SDK secrets already exist \u2014 skipping (use --force to overwrite)');
     return secrets;
   }
 
@@ -637,7 +640,7 @@ async function setupStripe(
   log('');
 
   const collectKey = async (name: string, prompt: string) => {
-    if (existing.includes(name)) {
+    if (existing.includes(name) && !FORCE_OVERWRITE) {
       ok(`${name}: already exists \u2014 skipping`);
       return;
     }
@@ -673,7 +676,7 @@ function generateCryptoSecrets(existing: string[]): Record<string, string> {
     encoding: BufferEncoding = 'hex',
     description?: string,
   ) => {
-    if (existing.includes(name)) {
+    if (existing.includes(name) && !FORCE_OVERWRITE) {
       ok(`${name}: already exists \u2014 skipping`);
       return;
     }
@@ -705,7 +708,7 @@ async function collectCredentials(
   const secrets: Record<string, string> = {};
 
   const collect = async (name: string, prompt: string): Promise<void> => {
-    if (existing.includes(name)) {
+    if (existing.includes(name) && !FORCE_OVERWRITE) {
       ok(`${name}: already exists \u2014 skipping`);
       return;
     }
@@ -721,7 +724,7 @@ async function collectCredentials(
     name: string,
     prompt: string,
   ): Promise<void> => {
-    if (existing.includes(name)) {
+    if (existing.includes(name) && !FORCE_OVERWRITE) {
       ok(`${name}: already exists \u2014 skipping`);
       return;
     }
@@ -738,7 +741,7 @@ async function collectCredentials(
 
   // --- Firebase Service Account Key ---
   log(`\n  ${c.bold}Firebase Admin SDK${c.reset}`);
-  if (existing.includes('FIREBASE_SERVICE_ACCOUNT_KEY')) {
+  if (existing.includes('FIREBASE_SERVICE_ACCOUNT_KEY') && !FORCE_OVERWRITE) {
     ok('FIREBASE_SERVICE_ACCOUNT_KEY: already exists \u2014 skipping');
   } else {
     info('The Firebase Admin SDK needs a service account key (JSON).');
@@ -1056,6 +1059,9 @@ async function main() {
   log('');
   log(`${c.dim}  Secret Provisioning Agent for Firebase App Hosting${c.reset}`);
   log(`${c.dim}  Project: ${PROJECT_ID} | Backend: ${BACKEND_ID}${c.reset}`);
+  if (FORCE_OVERWRITE) {
+    log(`${c.bold}${c.yellow}  Mode: --force (overwrite existing secrets)${c.reset}`);
+  }
   log('');
 
   initReadline();
@@ -1072,8 +1078,8 @@ async function main() {
 
   // Phase 2: Discovery
   const { required, existing, missing } = discover();
-  if (missing.length === 0) {
-    ok('\nAll secrets already exist!');
+  if (missing.length === 0 && !FORCE_OVERWRITE) {
+    ok('\nAll secrets already exist! Use --force to overwrite.');
     verify(required);
     rl.close();
     return;
