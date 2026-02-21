@@ -142,9 +142,11 @@ function safeRunJson(cmd: string): any {
     if (!result) return null;
     return JSON.parse(result);
   } catch (e: any) {
-    // Surface the real error: prefer stderr, then message
+    // Surface the real error: prefer stderr, then stdout, then message
     const stderr = e.stderr?.toString().trim();
+    const stdout = e.stdout?.toString().trim();
     if (stderr) throw new Error(stderr);
+    if (stdout) throw new Error(stdout);
     throw e;
   }
 }
