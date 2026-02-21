@@ -136,41 +136,7 @@ Stripe keys can also be stored encrypted in Firestore `platform_settings.stripe`
 
 ---
 
-## 10. WhatsApp Integration - LIVE (Production: bugrit.com)
-
-| Secret Name in GCP | Env Variable | Purpose | Status |
-|---|---|---|---|
-| `whatsapp-access-token` | `WHATSAPP_ACCESS_TOKEN` | Permanent system user access token | [ ] |
-| `whatsapp-app-secret` | `WHATSAPP_APP_SECRET` | Meta app secret (webhook signature verification) | [ ] |
-| `whatsapp-phone-number-id` | `WHATSAPP_PHONE_NUMBER_ID` | WhatsApp Business phone number ID | [ ] |
-| `whatsapp-verify-token` | `WHATSAPP_VERIFY_TOKEN` | Custom token for webhook URL verification | [ ] |
-
-**WhatsApp Setup (Production):**
-- [ ] Create Meta Business app at https://developers.facebook.com
-- [ ] Set up WhatsApp Business Platform
-- [ ] Register production phone number
-- [ ] Set webhook URL: `https://bugrit.com/api/whatsapp/webhook`
-- [ ] Subscribe to `messages` webhook field
-- [ ] Generate permanent system user access token
-
----
-
-## 11. WhatsApp Integration - TEST/SANDBOX (All non-prod URLs)
-
-| Secret Name in GCP | Env Variable | Purpose | Status |
-|---|---|---|---|
-| `whatsapp-test-access-token` | `WHATSAPP_TEST_ACCESS_TOKEN` | Test access token | [ ] |
-| `whatsapp-test-app-secret` | `WHATSAPP_TEST_APP_SECRET` | Test app secret | [ ] |
-| `whatsapp-test-phone-number-id` | `WHATSAPP_TEST_PHONE_NUMBER_ID` | Meta-provided test phone number ID | [ ] |
-| `whatsapp-test-verify-token` | `WHATSAPP_TEST_VERIFY_TOKEN` | Test webhook verify token | [ ] |
-
-**WhatsApp Setup (Test/Dev):**
-- [ ] Use Meta test phone number from developer dashboard
-- [ ] Set webhook URL: `https://bugrit-prod.web.app/api/whatsapp/webhook`
-
----
-
-## 12. Not in apphosting.yaml (Optional / Future)
+## 10. Not in apphosting.yaml (Optional / Future)
 
 These are referenced in code but not yet deployed. Add to apphosting.yaml when needed:
 
@@ -198,8 +164,8 @@ These are referenced in code but not yet deployed. Add to apphosting.yaml when n
 | Email (Resend) | 1 | - | 1 |
 | Scan Worker | 2 | - | 2 |
 | Slack | 2 | 2 | 4 |
-| WhatsApp | 4 | 4 | 8 |
-| **Total** | **27** | **15** | **42** |
+| Telegram | 2 | 2 | 4 |
+| **Total** | **25** | **13** | **38** |
 
 ---
 
@@ -207,12 +173,12 @@ These are referenced in code but not yet deployed. Add to apphosting.yaml when n
 
 Before switching `BUGRIT_ENVIRONMENT=production`:
 
-- [ ] All 42 secrets created in Google Secret Manager
+- [ ] All 38 secrets created in Google Secret Manager
 - [ ] `NEXT_PUBLIC_APP_URL` updated to `https://bugrit.com`
 - [ ] `GITHUB_REDIRECT_URI` updated to `https://bugrit.com/api/auth/github/callback`
 - [ ] GitHub OAuth App callback URL updated in GitHub settings
 - [ ] Slack production app webhook URLs pointing to `bugrit.com`
-- [ ] WhatsApp production webhook URL pointing to `bugrit.com`
+- [ ] Telegram webhook registered pointing to `bugrit.com`
 - [ ] Stripe live webhook endpoint configured for `https://bugrit.com/api/webhooks/stripe`
 - [ ] `BUGRIT_ENVIRONMENT=production` uncommented in apphosting.yaml
 - [ ] Firestore `(default)` database has required indexes

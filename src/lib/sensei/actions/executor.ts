@@ -2,7 +2,7 @@
  * Server-Side Action Executor for Sensei
  *
  * Replicates the client-side executeAction logic from sensei-context.tsx
- * for use in non-web channels (Slack, WhatsApp) where there is no browser.
+ * for use in non-web channels (Slack, Telegram) where there is no browser.
  *
  * For browser-only actions (navigate, checkout), returns a link instead.
  */
@@ -36,7 +36,7 @@ export interface ExecuteActionOptions {
   /** Conversation history for escalation transcript */
   history?: Array<{ role: 'user' | 'sensei'; content: string }>;
   /** Channel the user is on */
-  channel?: 'web' | 'slack' | 'whatsapp';
+  channel?: 'web' | 'slack' | 'telegram';
 }
 
 export async function executeAction(

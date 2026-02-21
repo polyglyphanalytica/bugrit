@@ -80,7 +80,7 @@ env:
   # Application Configuration
   # ============================================================
   # Explicit environment override — prevents hostname-based detection issues.
-  # Controls which Stripe/Slack/WhatsApp/Telegram keys are used (live vs test)
+  # Controls which Stripe/Slack/Telegram keys are used (live vs test)
   # and which Firestore database is targeted (default vs devdb).
   # Set to 'production' only for the bugrit.com deployment.
   # Omit or set to 'dev' for all other deployments (including bugrit-prod.web.app).
@@ -320,58 +320,6 @@ env:
       - RUNTIME
   - variable: SLACK_TEST_BOT_TOKEN
     secret: slack-test-bot-token
-    availability:
-      - BUILD
-      - RUNTIME
-
-  # ============================================================
-  # WhatsApp Integration — LIVE (Sensei on WhatsApp, used on bugrit.com)
-  # ============================================================
-  # Set up at https://developers.facebook.com → WhatsApp Business
-  # Set webhook URL to: https://bugrit.com/api/whatsapp/webhook
-  - variable: WHATSAPP_ACCESS_TOKEN
-    secret: whatsapp-access-token
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: WHATSAPP_APP_SECRET
-    secret: whatsapp-app-secret
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: WHATSAPP_PHONE_NUMBER_ID
-    secret: whatsapp-phone-number-id
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: WHATSAPP_VERIFY_TOKEN
-    secret: whatsapp-verify-token
-    availability:
-      - BUILD
-      - RUNTIME
-
-  # ============================================================
-  # WhatsApp Integration — TEST/SANDBOX (used on all non-prod URLs)
-  # ============================================================
-  # Use WhatsApp test phone number from Meta developer dashboard.
-  # The app auto-selects test vs live based on hostname detection.
-  - variable: WHATSAPP_TEST_ACCESS_TOKEN
-    secret: whatsapp-test-access-token
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: WHATSAPP_TEST_APP_SECRET
-    secret: whatsapp-test-app-secret
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: WHATSAPP_TEST_PHONE_NUMBER_ID
-    secret: whatsapp-test-phone-number-id
-    availability:
-      - BUILD
-      - RUNTIME
-  - variable: WHATSAPP_TEST_VERIFY_TOKEN
-    secret: whatsapp-test-verify-token
     availability:
       - BUILD
       - RUNTIME

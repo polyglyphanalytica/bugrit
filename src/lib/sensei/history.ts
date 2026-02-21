@@ -2,7 +2,7 @@
  * Sensei Conversation History — Firestore Store
  *
  * Persists conversation history per user+channel so Sensei
- * maintains context across messages on Slack/WhatsApp.
+ * maintains context across messages on Slack/Telegram.
  */
 
 import { db } from '@/lib/firebase/admin';

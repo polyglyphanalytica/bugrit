@@ -1,7 +1,7 @@
 /**
  * Channel Connections — Maps external channel users to Bugrit accounts
  *
- * When a user connects their Slack, WhatsApp, or Telegram to Bugrit, a mapping
+ * When a user connects their Slack or Telegram to Bugrit, a mapping
  * is stored so incoming messages can be routed to the right user.
  */
 

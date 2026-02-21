@@ -7,7 +7,7 @@ interface NotificationTemplate {
 const templates: Record<NotificationChannel, NotificationTemplate> = {
   email: { render: (body) => `Email update:\n${body}` },
   slack: { render: (body) => `Slack alert: ${body}` },
-  whatsapp: { render: (body) => `WhatsApp message: ${body}` },
+  telegram: { render: (body) => `Telegram message: ${body}` },
   inApp: { render: (body) => `In-App: ${body}` },
   push: { render: (body) => `Push notification: ${body}` },
 };

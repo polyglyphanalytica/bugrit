@@ -46,7 +46,7 @@ The support ticketing system provides a unified support infrastructure integrate
 | `subject` | `string` | Brief subject line |
 | `message` | `string` | Full ticket description / initial message |
 | `source` | `TicketSource` | How the ticket was created (see below) |
-| `channel` | `'web' \| 'slack' \| 'whatsapp'` | Channel the user was on when the ticket was created |
+| `channel` | `'web' \| 'slack' \| 'telegram'` | Channel the user was on when the ticket was created |
 | `transcript` | `TranscriptEntry[]?` | Sensei conversation history at time of escalation |
 | `status` | `TicketStatus` | Current lifecycle state (see below) |
 | `priority` | `TicketPriority` | Urgency level (see below) |

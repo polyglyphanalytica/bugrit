@@ -1,20 +1,20 @@
 /**
  * Channel Adapter Types for Multi-Channel Sensei
  *
- * Defines the interface that all channel adapters (Slack, WhatsApp, web, etc.)
+ * Defines the interface that all channel adapters (Slack, Telegram, web)
  * must implement to enable Sensei conversations across platforms.
  */
 
 import type { SenseiResponse, SenseiContext, SenseiMessage } from '@/ai/flows/sensei-chat';
 
 /** Supported messaging channels */
-export type SenseiChannel = 'web' | 'slack' | 'whatsapp' | 'telegram';
+export type SenseiChannel = 'web' | 'slack' | 'telegram';
 
 /** Inbound message from a channel */
 export interface InboundMessage {
   /** Channel this message came from */
   channel: SenseiChannel;
-  /** Channel-specific user identifier (Slack user ID, WhatsApp phone, etc.) */
+  /** Channel-specific user identifier (Slack user ID, Telegram user ID, etc.) */
   channelUserId: string;
   /** Raw text content of the message */
   text: string;
@@ -57,7 +57,7 @@ export interface ChannelConnection {
 /**
  * Channel Adapter Interface
  *
- * Each channel (Slack, WhatsApp, Telegram) implements this to handle
+ * Each channel (Slack, Telegram) implements this to handle
  * platform-specific message formatting and delivery.
  */
 export interface ChannelAdapter {

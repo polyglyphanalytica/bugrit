@@ -3,7 +3,7 @@ import { NotificationChannel, NotificationType } from '@/types/notification';
 import { getNotificationTemplate } from './templates';
 import { scheduleDelivery } from './delivery';
 
-const TRANSACTIONAL_CHANNELS: NotificationChannel[] = ['email', 'slack', 'whatsapp'];
+const TRANSACTIONAL_CHANNELS: NotificationChannel[] = ['email', 'slack', 'telegram'];
 const MARKETING_CHANNELS: NotificationChannel[] = ['inApp', 'push'];
 
 export interface NotificationPayload {

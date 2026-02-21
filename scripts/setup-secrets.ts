@@ -688,8 +688,6 @@ function generateCryptoSecrets(existing: string[]): Record<string, string> {
   gen('admin-encryption-key', 16, 'hex', '32-char hex key');
   gen('admin-api-key', 32, 'base64url', 'server-to-server auth');
   gen('worker-secret', 32, 'base64', 'scan worker shared secret');
-  gen('whatsapp-verify-token', 16, 'hex', 'WhatsApp webhook verification');
-  gen('whatsapp-test-verify-token', 16, 'hex', 'WhatsApp test webhook verification');
   gen('telegram-webhook-secret', 32, 'hex', 'Telegram webhook auth');
   gen('telegram-test-webhook-secret', 32, 'hex', 'Telegram test webhook auth');
 
@@ -830,37 +828,6 @@ async function collectCredentials(
       'slack-bot-token',
       'slack-test-signing-secret',
       'slack-test-bot-token',
-    ]) {
-      if (!existing.includes(name)) {
-        secrets[name] = 'placeholder';
-        warn(`${name}: set to placeholder`);
-      }
-    }
-  }
-
-  // --- WhatsApp ---
-  log(`\n  ${c.bold}WhatsApp Integration${c.reset}`);
-  if (await askYesNo('Configure WhatsApp integration?', false)) {
-    info('Set up at: https://developers.facebook.com > WhatsApp Business');
-    log(`\n    ${c.dim}Live:${c.reset}`);
-    await collect('whatsapp-access-token', 'WhatsApp LIVE access token');
-    await collect('whatsapp-app-secret', 'WhatsApp LIVE app secret');
-    await collect('whatsapp-phone-number-id', 'WhatsApp LIVE phone number ID');
-    log(`\n    ${c.dim}Test:${c.reset}`);
-    await collect('whatsapp-test-access-token', 'WhatsApp TEST access token');
-    await collect('whatsapp-test-app-secret', 'WhatsApp TEST app secret');
-    await collect(
-      'whatsapp-test-phone-number-id',
-      'WhatsApp TEST phone number ID',
-    );
-  } else {
-    for (const name of [
-      'whatsapp-access-token',
-      'whatsapp-app-secret',
-      'whatsapp-phone-number-id',
-      'whatsapp-test-access-token',
-      'whatsapp-test-app-secret',
-      'whatsapp-test-phone-number-id',
     ]) {
       if (!existing.includes(name)) {
         secrets[name] = 'placeholder';

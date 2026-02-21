@@ -14,7 +14,7 @@ const CATEGORIES = ['general', 'sales', 'support', 'enterprise', 'security', 'bi
 type TicketCategory = (typeof CATEGORIES)[number];
 
 const VALID_SOURCES = ['contact_form', 'sensei_escalation', 'api'] as const;
-const VALID_CHANNELS = ['web', 'slack', 'whatsapp'] as const;
+const VALID_CHANNELS = ['web', 'slack', 'telegram'] as const;
 
 // Input length limits to prevent abuse
 const MAX_NAME_LENGTH = 200;
@@ -36,7 +36,7 @@ export interface SupportTicket {
   subject: string;
   message: string;
   source: 'contact_form' | 'sensei_escalation' | 'api';
-  channel?: 'web' | 'slack' | 'whatsapp';
+  channel?: 'web' | 'slack' | 'telegram';
   // Sensei escalation data
   transcript?: Array<{ role: 'user' | 'assistant'; text: string; timestamp?: string }>;
   // Status and management
