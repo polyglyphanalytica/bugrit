@@ -8,6 +8,7 @@
     pkgs.nodejs_20
     pkgs.zulu
     pkgs.stripe-cli
+    pkgs.gh
   ];
   # Sets environment variables in the workspace
   env = {};
