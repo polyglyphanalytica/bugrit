@@ -1,8 +1,5 @@
 import type {NextConfig} from 'next';
 
-// Detect build environment
-const isDevelopment = process.env.NODE_ENV === 'development';
-
 const nextConfig: NextConfig = {
   output: 'standalone',
 
@@ -62,9 +59,13 @@ const nextConfig: NextConfig = {
     ];
   },
   typescript: {
-    // Type errors are checked during builds
-    // Set to true only in development for faster iteration
-    ignoreBuildErrors: isDevelopment,
+    // ALWAYS skip type checking during Next.js builds
+    // Reasons:
+    // 1. The type-check pass causes OOM on Firebase App Hosting Cloud Build (limited memory)
+    // 2. Type checking should be done in a separate CI step, not during deployment
+    // 3. Same rationale as eslint.ignoreDuringBuilds below
+    // Run `npm run typecheck` separately in your CI pipeline
+    ignoreBuildErrors: true,
   },
   eslint: {
     // ALWAYS skip ESLint during Next.js builds
