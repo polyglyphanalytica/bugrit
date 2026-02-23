@@ -111,7 +111,7 @@
     "resend": "^4.8.0",
     "secretlint": "^11.3.1",
     "server-only": "^0.0.1",
-    "simple-git": "^3.22.0",
+    "simple-git": "^3.32.2",
     "size-limit": "^11.0.0",
     "stripe": "^20.3.0",
     "stylelint": "^16.0.0",
